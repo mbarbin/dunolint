@@ -1,0 +1,21 @@
+(library
+ (name dunolint_vendor_vcs)
+ (public_name dunolint-lib.vendor_vcs)
+ (wrapped false)
+ (flags
+  :standard
+  -w
+  +a-4-40-41-42-44-45-48-66
+  -warn-error
+  +a
+  -open
+  Sexplib0
+  -open
+  Sexplib0.Sexp_conv)
+ (libraries sexplib0)
+ (instrumentation
+  (backend bisect_ppx))
+ (lint
+  (pps ppx_js_style -allow-let-operators -check-doc-comments))
+ (modules_without_implementation validated_string_intf)
+ (preprocess no_preprocessing))

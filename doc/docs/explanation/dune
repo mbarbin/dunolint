@@ -1,6 +1,6 @@
 (mdx
  (package dunolint-dev)
  (deps
-  (package dunolint)
-  (package dunolinter))
+  (package dunolint-lib)
+  (package dunolint))
  (preludes prelude.txt))

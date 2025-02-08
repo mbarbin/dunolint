@@ -1,0 +1,58 @@
+(library
+ (name dunolint_engine)
+ (public_name dunolint.dunolint_engine)
+ (flags
+  :standard
+  -w
+  +a-4-40-41-42-44-45-48-66
+  -warn-error
+  +a
+  -open
+  Base
+  -open
+  Fpath_base
+  -open
+  Cmdlang
+  -open
+  Sexplib0
+  -open
+  Dunolint.Std)
+ (libraries
+  base
+  cmdlang
+  dunolint-lib
+  dunolint.dune_linter
+  dunolint.dune_project_linter
+  dunolint.dunolinter
+  dunolint.vendor_git_pager
+  dunolint.vendor_prompt
+  eio
+  eio-writer
+  file-rewriter
+  fpath
+  fpath-base
+  loc
+  logs
+  patdiff
+  patdiff.expect_test_patdiff
+  pp
+  pp-log
+  pp-log.err
+  pp-log.tty
+  sexplib0
+  sexps-rewriter
+  unix)
+ (instrumentation
+  (backend bisect_ppx))
+ (lint
+  (pps ppx_js_style -allow-let-operators -check-doc-comments))
+ (preprocess
+  (pps
+   -unused-code-warnings=force
+   ppx_compare
+   ppx_enumerate
+   ppx_hash
+   ppx_here
+   ppx_let
+   ppx_sexp_conv
+   ppx_sexp_value)))

@@ -1,2 +1,2 @@
+#require "dunolint-lib";;
 #require "dunolint";;
-#require "dunolinter";;

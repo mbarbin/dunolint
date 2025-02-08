@@ -17,7 +17,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Tutorials',
       items: [
-        { type: 'doc', id: 'tutorials/README', label: 'Introduction' },
+        { type: 'doc', id: 'tutorials/installation/README', label: 'Installation' },
       ],
     },
   ],
@@ -38,6 +38,14 @@ const sidebars: SidebarsConfig = {
       label: 'Reference',
       items: [
         { type: 'doc', id: 'reference/odoc', label: 'OCaml Packages' },
+        {
+          type: 'category', label: 'Config Language Reference',
+          link: { type: 'doc', id: 'reference/config/README' },
+          items: [
+            { type: 'doc', id: 'reference/config/dune', label: 'dune' },
+            { type: 'doc', id: 'reference/config/dune-project', label: 'dune-project' },
+          ]
+        },
       ],
     },
   ],
@@ -48,6 +56,7 @@ const sidebars: SidebarsConfig = {
       label: 'Explanation',
       items: [
         { type: 'doc', id: 'explanation/README', label: 'Introduction' },
+        { type: 'doc', id: 'explanation/config/README', label: 'Config Language Design' },
       ],
     },
   ],

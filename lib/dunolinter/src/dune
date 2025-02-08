@@ -1,0 +1,45 @@
+(library
+ (name dunolinter)
+ (public_name dunolint.dunolinter)
+ (flags
+  :standard
+  -w
+  +a-4-40-41-42-44-45-48-66
+  -warn-error
+  +a
+  -open
+  Base
+  -open
+  Fpath_base
+  -open
+  Dunolint.Std)
+ (libraries
+  base
+  dunolint-lib
+  file-rewriter
+  fpath
+  fpath-base
+  loc
+  pp
+  pp-log.err
+  pp-log.tty
+  sexps-rewriter)
+ (instrumentation
+  (backend bisect_ppx))
+ (lint
+  (pps ppx_js_style -allow-let-operators -check-doc-comments))
+ (modules_without_implementation
+  dunolinter_intf
+  linter_intf
+  sexp_handler_intf
+  stanza_linter_intf)
+ (preprocess
+  (pps
+   -unused-code-warnings=force
+   ppx_compare
+   ppx_enumerate
+   ppx_hash
+   ppx_here
+   ppx_let
+   ppx_sexp_conv
+   ppx_sexp_value)))
