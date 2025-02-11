@@ -1,7 +1,7 @@
 <h1 align="center">
   <p align="center">A Linter for Build Files in Dune Projects (OCaml)</p>
   <img
-    src="./img/dunolint.jpg?raw=true"
+    src="./img/dunolint.jpg"
     width='384'
     alt="Logo"
   />
