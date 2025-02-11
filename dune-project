@@ -171,18 +171,10 @@
  (depends
   (ocaml
    (>= 5.3))
-  (ocamlformat
-   (and
-    :with-dev-setup
-    (= 0.27.0)))
   (base
    (and
     (>= v0.17)
     (< v0.18)))
-  (bisect_ppx
-   (and
-    :with-dev-setup
-    (>= 2.8.3)))
   (cmdlang
    (>= 0.0.9))
   (cmdlang-cmdliner-runner
@@ -243,11 +235,6 @@
     (< v0.18)))
   (ppx_here
    (and
-    (>= v0.17)
-    (< v0.18)))
-  (ppx_js_style
-   (and
-    :with-dev-setup
     (>= v0.17)
     (< v0.18)))
   (ppx_let
@@ -337,6 +324,8 @@
    (>= 0.2.0))
   (logs
    (>= 0.7.0))
+  (mdx
+   (>= 2.4))
   (parsexp
    (and
     (>= v0.17)
