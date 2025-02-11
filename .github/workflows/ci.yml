@@ -43,6 +43,9 @@ jobs:
       - name: Run tests
         run: opam exec -- dune runtest
 
+      - name: Lint dunolint
+        run: ./dunolint.sh
+
       - name: Check for uncommitted changes
         run: git diff --exit-code
 
