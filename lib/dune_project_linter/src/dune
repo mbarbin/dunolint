@@ -19,9 +19,9 @@
   base
   dunolint
   dunolinter
-  file-rewriter
   fpath
   fpath-base
+  file-rewriter
   loc
   pp
   pp-log.err
