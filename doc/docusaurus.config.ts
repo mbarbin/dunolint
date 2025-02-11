@@ -117,7 +117,7 @@ const config: Config = {
           items: [
             {
               label: 'Tutorials',
-              to: '/docs/tutorials/',
+              to: '/docs/tutorials/installation/',
             },
             {
               label: 'Guides',
