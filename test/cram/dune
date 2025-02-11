@@ -1,0 +1,7 @@
+(cram
+ (package dunolint-tests)
+ (deps
+  (package dunolint-lib)
+  (package dunolint)
+  %{bin:dunolint}
+  (glob_files *.sexp)))

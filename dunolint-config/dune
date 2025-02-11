@@ -1,0 +1,7 @@
+(rule
+ (mode promote)
+ (package dunolint-dev)
+ (action
+  (with-stdout-to
+   "dunolint.sexp"
+   (run %{bin:dunolint-dunolint-config-gen}))))

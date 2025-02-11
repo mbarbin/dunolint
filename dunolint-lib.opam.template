@@ -1,0 +1,25 @@
+description: """\
+
+[dunolint] is a set of OCaml libraries and a cli tool to lint and help
+manage files in (large) dune projects.
+
+[dunolint-lib] is the package you need as a user to define a dunolint
+config, without pulling all the dependencies required by the linter
+engine and command line.
+
+It defines a configuration language in which you can express linting
+invariants for your projects. The tool will enforce these invariants,
+applying global and systematic changes automatically when able, and
+help with general ergonomics questions.
+
+For example: "I want for all libs in this subdirectory to enable
+`bisect_ppx`, please go patch my dune files". Or, "I would like all
+libraries that verify this particular predicate to supply the ppx flag
+`-unused-code-warnings=force`", and more.
+
+You can setup [dunolint] as part of your CI checks to help enforcing
+properties and linting checks going forward.
+
+"""
+tags: [ "dune" "linter" ]
+x-maintenance-intent: [ "(latest)" ]

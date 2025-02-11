@@ -1,0 +1,14 @@
+description: """\
+
+[dunolint] is a set of OCaml libraries and a cli tool to lint and help
+manage files in (large) dune projects.
+
+[dunolint] is the package that implements the linter engine for
+dunolint configs as well as the [dunolint] command line tool.
+
+You may install it to get the [dunolint] cli, and/or if you want to
+use the linting libraries to write custom rewriters and linters.
+
+"""
+tags: [ "dune" "linter" ]
+x-maintenance-intent: [ "(latest)" ]
