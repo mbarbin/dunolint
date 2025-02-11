@@ -19,24 +19,22 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.       *)
 (*******************************************************************************)
 
-type 'a env = 'a
-  constraint 'a = < stdin : _ Eio.Flow.source ; stdout : _ Eio.Flow.sink ; .. >
-
-let read_line ~env =
-  let stdin = Eio.Buf_read.of_flow (Eio.Stdenv.stdin env) ~max_size:100 in
-  Eio.Buf_read.line stdin
+let read_line () =
+  match In_channel.input_line In_channel.stdin with
+  | Some line -> line
+  | None -> raise End_of_file
 ;;
 
-let aprintf ~env fmt =
+let aprintf fmt =
   Stdlib.Format.kasprintf
     (fun str ->
-       Eio.Buf_write.with_flow (Eio.Stdenv.stdout env) (fun t ->
-         Eio.Buf_write.string t str))
+       Out_channel.output_string Out_channel.stdout str;
+       Out_channel.flush Out_channel.stdout)
     fmt
 ;;
 
-let read_char ~env =
-  let str = read_line ~env in
+let read_char () =
+  let str = read_line () in
   let len = String.length str in
   if len = 1
   then Ok (Some (Char.lowercase str.[0]))
@@ -47,14 +45,14 @@ let read_char ~env =
 
 let styled style s = Fmt.(str_like stdout "%a" (styled style string) s)
 
-let ask_gen ~env ~prompt ~f =
+let ask_gen ~prompt ~f =
   let rec loop () =
-    aprintf ~env "[%s] %s: " (styled (`Fg `Magenta) "?") prompt;
-    let line = read_line ~env in
+    aprintf "[%s] %s: " (styled (`Fg `Magenta) "?") prompt;
+    let line = read_line () in
     match f line with
     | Ok res -> res
     | Error msg ->
-      aprintf ~env "[%s] %s\n" (styled (`Fg `Red) "!") msg;
+      aprintf "[%s] %s\n" (styled (`Fg `Red) "!") msg;
       loop ()
   in
   loop ()
@@ -86,7 +84,7 @@ let choose (type a) ~(choices : (char * a) list) : char option -> (a, unit) Resu
      | None -> Error ())
 ;;
 
-let ask_internal (type a) ~env ~prompt ~(choices : (char * a) list) =
+let ask_internal (type a) ~prompt ~(choices : (char * a) list) =
   let prompt =
     let cs = List.map choices ~f:(fun (c, _) -> Char.to_string c) in
     Printf.sprintf "%s [%s]" prompt (String.concat ~sep:"/" cs)
@@ -99,11 +97,11 @@ let ask_internal (type a) ~env ~prompt ~(choices : (char * a) list) =
         Printf.sprintf "%s'%c'" sep (Char.lowercase char))
       |> String.concat
     in
-    aprintf ~env "[%s] Please answer %s.\n\n" (styled (`Fg `Red) "!") choices
+    aprintf "[%s] Please answer %s.\n\n" (styled (`Fg `Red) "!") choices
   in
   let rec loop () =
-    aprintf ~env "[%s] %s: " (styled (`Fg `Magenta) "?") prompt;
-    match read_char ~env with
+    aprintf "[%s] %s: " (styled (`Fg `Magenta) "?") prompt;
+    match read_char () with
     | Error () ->
       please_answer ();
       loop ()
@@ -117,18 +115,18 @@ let ask_internal (type a) ~env ~prompt ~(choices : (char * a) list) =
   loop ()
 ;;
 
-let ask ~env ~prompt ~choices =
+let ask ~prompt ~choices =
   let print_help () =
-    aprintf ~env "\nPlease choose among the following options:\n";
+    aprintf "\nPlease choose among the following options:\n";
     List.iter choices ~f:(fun (char, _value, help) ->
-      aprintf ~env "  %c : %s\n" (Char.lowercase char) help);
-    aprintf ~env "  ? : Print this help.\n\n"
+      aprintf "  %c : %s\n" (Char.lowercase char) help);
+    aprintf "  ? : Print this help.\n\n"
   in
   let choices =
     List.map choices ~f:(fun (char, value, _help) -> char, `Ok value) @ [ '?', `Help ]
   in
   let rec loop () =
-    match ask_internal ~env ~prompt ~choices with
+    match ask_internal ~prompt ~choices with
     | `Ok value -> value
     | `Help ->
       print_help ();
@@ -137,14 +135,14 @@ let ask ~env ~prompt ~choices =
   loop ()
 ;;
 
-let ask_yn ~env ~prompt ~default =
+let ask_yn ~prompt ~default =
   let y, n =
     match default with
     | None -> 'y', 'n'
     | Some true -> 'Y', 'n'
     | Some false -> 'y', 'N'
   in
-  ask_internal ~env ~prompt ~choices:[ y, true; n, false ]
+  ask_internal ~prompt ~choices:[ y, true; n, false ]
 ;;
 
 module Arg = struct

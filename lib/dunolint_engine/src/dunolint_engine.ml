@@ -21,6 +21,7 @@
 
 module Git_pager = Dunolint_vendor_git_pager.Git_pager
 module Prompt = Dunolint_vendor_prompt.Prompt
+module Unix = UnixLabels
 
 let src = Logs.Src.create "dunolint" ~doc:"dunolint"
 
@@ -36,53 +37,60 @@ module Edited_file = struct
     }
 end
 
-type 'a env = 'a
-  constraint
-    'a =
-    < process_mgr : _ Eio.Process.mgr
-    ; fs : _ Eio.Path.t
-    ; cwd : _ Eio.Path.t
-    ; stdin : _ Eio.Flow.source
-    ; stdout : _ Eio.Flow.sink
-    ; .. >
-    as
-    'a
-
-type env_packed = Env : 'a env -> env_packed [@@unboxed]
-
 type t =
   { config : Config.t
   ; edited_files : Edited_file.t Hashtbl.M(Relative_path).t
-  ; root_path : Eio.Fs.dir_ty Eio.Path.t
-  ; process_mgr : [ `Generic ] Eio.Process.mgr_ty Eio.Process.mgr
-  ; stdout : Eio.Flow.sink_ty Eio.Flow.sink
-  ; env : env_packed
   }
 
-let create ~env ~config =
-  { config
-  ; edited_files = Hashtbl.create (module Relative_path)
-  ; root_path = (Eio.Stdenv.fs env :> Eio.Fs.dir_ty Eio.Path.t)
-  ; process_mgr =
-      (Eio.Stdenv.process_mgr env :> [ `Generic ] Eio.Process.mgr_ty Eio.Process.mgr)
-  ; stdout = (Eio.Stdenv.stdout env :> Eio.Flow.sink_ty Eio.Flow.sink)
-  ; env = Env env
-  }
-;;
+let create ~config = { config; edited_files = Hashtbl.create (module Relative_path) }
+
+module File_kind = struct
+  type t = Unix.file_kind =
+    | S_REG
+    | S_DIR
+    | S_CHR
+    | S_BLK
+    | S_LNK
+    | S_FIFO
+    | S_SOCK
+
+  let to_string = function
+    | S_REG -> "Regular file"
+    | S_DIR -> "Directory"
+    | S_CHR -> "Character device"
+    | S_BLK -> "Block device"
+    | S_LNK -> "Symbolic link"
+    | S_FIFO -> "Named pipe"
+    | S_SOCK -> "Socket"
+  ;;
+end
 
 let lint_file ?autoformat_file ?create_file ?rewrite_file t ~path =
-  let eio_path = Eio.Path.(t.root_path / (path |> Relative_path.to_string)) in
   Pp_log.info ~src (fun () ->
     Pp.O.[ Pp.text "Linting file " ++ Pp_tty.path (module Relative_path) path ]);
   let edited_file = Hashtbl.find t.edited_files path in
-  let file_exists = Eio.Path.is_file eio_path in
+  let file_exists =
+    match (Unix.stat (Relative_path.to_string path)).st_kind with
+    | exception Unix.Unix_error (ENOENT, _, _) -> false
+    | S_REG -> true
+    | (S_DIR | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK) as file_kind ->
+      Err.raise
+        Pp.O.
+          [ Pp.text "Linted file "
+            ++ Pp_tty.path (module Relative_path) path
+            ++ Pp.text " is expected to be a regular file."
+          ; Pp.text "Actual file kind is "
+            ++ Pp_tty.id (module File_kind) file_kind
+            ++ Pp.text "."
+          ]
+  in
   match
     if file_exists || Option.is_some edited_file
     then (
       let previous_contents =
         match edited_file with
         | Some edited_file -> edited_file.new_contents
-        | None -> Eio.Path.load eio_path
+        | None -> In_channel.read_all (path |> Relative_path.to_string)
       in
       let new_contents =
         match rewrite_file with
@@ -115,12 +123,26 @@ let lint_file ?autoformat_file ?create_file ?rewrite_file t ~path =
           ~data:{ Edited_file.path; original_contents = previous_contents; new_contents })
 ;;
 
-let format_dune_file t ~new_contents =
-  Eio.Process.parse_out
-    t.process_mgr
-    Eio.Buf_read.take_all
-    ~stdin:(Eio.Flow.string_source new_contents)
-    [ "dune"; "format-dune-file" ]
+module Process_status = struct
+  type t = Unix.process_status =
+    | WEXITED of int
+    | WSIGNALED of int
+    | WSTOPPED of int
+  [@@deriving sexp_of]
+end
+
+let format_dune_file (_ : t) ~new_contents =
+  let ((in_ch, out_ch) as process) = Unix.open_process "dune format-dune-file" in
+  Out_channel.output_string out_ch new_contents;
+  Out_channel.close out_ch;
+  let output = In_channel.input_all in_ch in
+  match Unix.close_process process with
+  | WEXITED 0 -> output
+  | (WEXITED _ | WSIGNALED _ | WSTOPPED _) as process_status ->
+    Err.raise
+      [ Pp.text "Failed to format dune file."
+      ; Err.pp_of_sexp (Process_status.sexp_of_t process_status)
+      ]
 ;;
 
 let lint_dune_file ?with_linter t ~(path : Relative_path.t) ~f =
@@ -157,8 +179,27 @@ let lint_dune_project_file ?with_linter t ~(path : Relative_path.t) ~f =
     ~autoformat_file:(fun ~new_contents -> format_dune_file t ~new_contents)
 ;;
 
+let rec mkdirs path =
+  match (Unix.stat (Relative_path.to_string path)).st_kind with
+  | exception Unix.Unix_error (ENOENT, _, _) ->
+    (match Relative_path.parent path with
+     | None -> ()
+     | Some path -> mkdirs path);
+    Unix.mkdir (Relative_path.to_string path) ~perm:0o755
+  | S_DIR -> ()
+  | (S_REG | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK) as file_kind ->
+    Err.error
+      Pp.O.
+        [ Pp.text "Parent path "
+          ++ Pp_tty.path (module Relative_path) path
+          ++ Pp.text " is expected to be a directory."
+        ; Pp.text "Actual file kind is "
+          ++ Pp_tty.id (module File_kind) file_kind
+          ++ Pp.text "."
+        ]
+;;
+
 let materialize t =
-  let (Env env) = t.env in
   let running_mode = Config.running_mode t.config in
   let edited_files =
     Hashtbl.to_alist t.edited_files
@@ -168,53 +209,38 @@ let materialize t =
   let exception Quit in
   try
     List.iteri edited_files ~f:(fun i { path; original_contents; new_contents } ->
-      if i > 0 then Eio_writer.print_newline ~env;
-      let path = path |> Relative_path.to_string in
-      let eio_path = Eio.Path.(t.root_path / path) in
-      let parent_dir =
-        Eio.Path.split eio_path
-        |> Option.map ~f:fst
-        |> Option.filter ~f:(fun parent_dir -> not (String.is_empty (snd parent_dir)))
+      if i > 0 then print_endline "";
+      let should_mkdir =
+        match Relative_path.parent path with
+        | None -> None
+        | Some parent_dir as some ->
+          (match (Unix.stat (Relative_path.to_string parent_dir)).st_kind with
+           | exception Unix.Unix_error (ENOENT, _, _) -> some
+           | S_DIR -> None
+           | (S_REG | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK) as file_kind ->
+             Err.error
+               Pp.O.
+                 [ Pp.text "Parent path "
+                   ++ Pp_tty.path (module Relative_path) parent_dir
+                   ++ Pp.text " is expected to be a directory."
+                 ; Pp.text "Actual file kind is "
+                   ++ Pp_tty.id (module File_kind) file_kind
+                   ++ Pp.text "."
+                 ];
+             None)
       in
       let with_flow flow =
-        let delayed_mkdir =
-          Option.bind parent_dir ~f:(fun parent_dir ->
-            let parent_path = parent_dir |> snd |> Fpath.v in
-            match Eio.Path.kind ~follow:true parent_dir with
-            | `Symbolic_link -> assert false
-            | `Directory -> None
-            | `Not_found ->
-              Eio_writer.writef
-                flow
-                "%s `mkdir -p %s`\n"
-                (match running_mode with
-                 | Dry_run -> "dry-run: Would run"
-                 | Check -> "check: Would run"
-                 | Interactive -> "Would run"
-                 | Force_yes -> "Running")
-                (parent_path |> Fpath.to_dir_path |> Fpath.to_string);
-              Some (fun () -> Eio.Path.mkdirs ~exists_ok:true ~perm:0o777 parent_dir)
-            | ( `Unknown
-              | `Fifo
-              | `Character_special
-              | `Block_device
-              | `Regular_file
-              | `Socket ) as unexpected_kind ->
-              Err.error
-                Pp.O.
-                  [ Pp.text "Parent directory "
-                    ++ Pp_tty.path (module String) (parent_dir |> snd)
-                    ++ Pp.text " is not a directory: "
-                    ++ Pp_tty.id
-                         (module String)
-                         (Stdlib.Format.asprintf
-                            "%a"
-                            Eio.File.Stat.pp_kind
-                            unexpected_kind)
-                  ];
-              None)
-        in
-        Eio_writer.writef
+        Option.iter should_mkdir ~f:(fun parent_dir ->
+          Out_channel.fprintf
+            flow
+            "%s `mkdir -p %s`\n"
+            (match running_mode with
+             | Dry_run -> "dry-run: Would run"
+             | Check -> "check: Would run"
+             | Interactive -> "Would run"
+             | Force_yes -> "Running")
+            (Relative_path.to_string parent_dir));
+        Out_channel.fprintf
           flow
           "%s file %S:\n"
           (match running_mode with
@@ -222,42 +248,34 @@ let materialize t =
            | Check -> "check: Would edit"
            | Interactive -> "Would edit"
            | Force_yes -> "Editing")
-          path;
-        Eio_writer.write_line
+          (Relative_path.to_string path);
+        Out_channel.output_line
           flow
           (if Err.am_running_test ()
            then Expect_test_patdiff.patdiff original_contents new_contents ~context:3
-           else
+           else (
+             let name = Relative_path.to_string path in
              Patdiff.Patdiff_core.patdiff
                ~context:6
-               ~prev:{ name = path; text = original_contents }
-               ~next:{ name = path; text = new_contents }
-               ());
-        delayed_mkdir
+               ~prev:{ name; text = original_contents }
+               ~next:{ name; text = new_contents }
+               ()));
+        Out_channel.flush flow
       in
-      let delayed_mkdir =
+      let () =
         match running_mode with
-        | Dry_run | Check | Force_yes -> Eio_writer.with_flow t.stdout with_flow
+        | Dry_run | Check | Force_yes -> with_flow stdout
         | Interactive ->
-          let mkdir = ref None in
-          Git_pager.run
-            ~env
-            ~cwd:(Eio.Stdenv.cwd env :> Eio.Fs.dir_ty Eio.Path.t)
-            ~f:(fun pager ->
-              let flow = Git_pager.write_end pager in
-              let res = Eio_writer.with_flow flow with_flow in
-              mkdir := res);
-          !mkdir
+          Git_pager.run ~f:(fun pager -> with_flow (Git_pager.write_end pager))
       in
       let do_it =
         match running_mode with
         | Dry_run | Check -> false
         | Force_yes -> true
         | Interactive ->
-          Eio_writer.print_newline ~env;
+          print_endline "";
           (match
              Prompt.ask
-               ~env
                ~prompt:"Accept diff"
                ~choices:
                  [ Prompt.Choice.create
@@ -277,8 +295,8 @@ let materialize t =
       in
       if do_it
       then (
-        Option.iter delayed_mkdir ~f:(fun f -> f ());
-        Eio.Path.save ~create:(`Or_truncate 0o666) eio_path new_contents))
+        Option.iter should_mkdir ~f:mkdirs;
+        Out_channel.write_all (Relative_path.to_string path) ~data:new_contents))
   with
   | Quit -> ()
 ;;
@@ -290,69 +308,67 @@ module Visitor_decision = struct
     | Skip_subtree
 end
 
-let visit ?below (t : t) ~f =
+let visit ?below (_ : t) ~f =
   let root_path =
     match below with
-    | None -> t.root_path
-    | Some below ->
-      (match Relative_path.to_string below with
-       | "./" -> t.root_path
-       | path ->
-         let path = String.chop_suffix path ~suffix:"/" |> Option.value ~default:path in
-         Eio.Path.(t.root_path / path))
+    | None -> Relative_path.empty
+    | Some below -> Relative_path.to_dir_path below
   in
   let rec visit = function
     | [] -> ()
     | [] :: tl -> visit tl
     | (parent_dir :: tl) :: rest ->
-      let entries = Eio.Path.read_dir parent_dir in
+      let entries =
+        Stdlib.Sys.readdir (Relative_path.to_string parent_dir)
+        |> Array.to_list
+        |> List.sort ~compare:String.compare
+      in
       let subdirectories, files, _ =
         entries
         |> List.partition3_map ~f:(fun entry ->
-          match Eio.Path.kind ~follow:false Eio.Path.(parent_dir / entry) with
-          | `Directory -> `Fst entry
-          | `Regular_file -> `Snd entry
-          | `Not_found
-          | `Unknown
-          | `Fifo
-          | `Character_special
-          | `Block_device
-          | `Symbolic_link
-          | `Socket -> `Trd ())
-      in
-      let parent_dir_as_fpath =
-        match parent_dir |> snd with
-        | "" -> Relative_path.v "./"
-        | path -> path |> Relative_path.v |> Relative_path.to_dir_path
+          match
+            (Unix.lstat
+               (Stdlib.Filename.concat (Relative_path.to_string parent_dir) entry))
+              .st_kind
+          with
+          | S_DIR -> `Fst entry
+          | S_REG -> `Snd entry
+          | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK -> `Trd ()
+          | exception Unix.Unix_error (EACCES, _, _) ->
+            Err.warning
+              Pp.O.
+                [ Pp.text "Permission denied - skipping "
+                  ++ Pp_tty.path (module Relative_path) parent_dir
+                  ++ Pp.text "."
+                ];
+            `Trd ())
       in
       Pp_log.debug ~src (fun () ->
         Pp.O.
-          [ Pp.text "Visiting directory "
-            ++ Pp_tty.path (module Relative_path) parent_dir_as_fpath
+          [ Pp.text "Visiting directory " ++ Pp_tty.path (module Relative_path) parent_dir
           ]);
-      (match
-         (f ~parent_dir:parent_dir_as_fpath ~subdirectories ~files : Visitor_decision.t)
-       with
+      (match (f ~parent_dir ~subdirectories ~files : Visitor_decision.t) with
        | Break -> ()
        | Continue ->
          visit
            (List.map subdirectories ~f:(fun subdirectory ->
-              Eio.Path.(parent_dir / subdirectory))
+              Relative_path.extend parent_dir (Fsegment.v subdirectory)
+              |> Relative_path.to_dir_path)
             :: tl
             :: rest)
        | Skip_subtree ->
          Pp_log.info ~src (fun () ->
            Pp.O.
              [ Pp.text "Skipping children of directory "
-               ++ Pp_tty.path (module Relative_path) parent_dir_as_fpath
+               ++ Pp_tty.path (module Relative_path) parent_dir
              ]);
          visit (tl :: rest))
   in
   visit [ [ root_path ] ]
 ;;
 
-let run ~env ~config f =
-  let t = create ~env ~config in
+let run ~config f =
+  let t = create ~config in
   let result = f t in
   materialize t;
   let () =

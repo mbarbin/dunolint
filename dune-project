@@ -90,14 +90,6 @@
    (>= 1.3.0))
   (dunolint-lib
    (= :version))
-  (eio
-   (>= 1.0))
-  (eio-process
-   (>= 0.0.4))
-  (eio-writer
-   (>= 0.0.8))
-  (eio_main
-   (>= 1.0))
   (file-rewriter
    (>= 0.0.3))
   (fmt
@@ -187,14 +179,6 @@
    (= :version))
   (dunolint-lib
    (= :version))
-  (eio
-   (>= 1.0))
-  (eio-process
-   (>= 0.0.4))
-  (eio-writer
-   (>= 0.0.8))
-  (eio_main
-   (>= 1.0))
   (expect_test_helpers_core
    (and
     (>= v0.17)
@@ -300,12 +284,6 @@
    (= :version))
   (dunolint-tests
    (= :version))
-  (eio
-   (>= 1.0))
-  (eio-writer
-   (>= 0.0.8))
-  (eio_main
-   (>= 1.0))
   (expect_test_helpers_core
    (and
     (>= v0.17)

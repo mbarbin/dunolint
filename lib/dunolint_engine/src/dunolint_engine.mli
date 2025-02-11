@@ -89,20 +89,6 @@ val lint_file
     on files that are supported by the formatter shipped with dune. *)
 val format_dune_file : t -> new_contents:string -> string
 
-(** {1 Environment} *)
-
-type 'a env = 'a
-  constraint
-    'a =
-    < process_mgr : _ Eio.Process.mgr
-    ; fs : _ Eio.Path.t
-    ; cwd : _ Eio.Path.t
-    ; stdin : _ Eio.Flow.source
-    ; stdout : _ Eio.Flow.sink
-    ; .. >
-    as
-    'a
-
 (** This calls [f] once, registers all requests enqueued during the execution of
     [f], and then depending on the config, either do a dry-run, or actually
     perform the desired transformations.
@@ -117,11 +103,11 @@ type 'a env = 'a
     In addition to enqueuing debug messages and errors, this function outputs
     messages regarding I/O actions executed during linting. These messages are
     produced onto [stdout]. *)
-val run : env:_ env -> config:Config.t -> (t -> 'a) -> 'a
+val run : config:Config.t -> (t -> 'a) -> 'a
 
 (** {1 Step by step API} *)
 
-val create : env:_ env -> config:Config.t -> t
+val create : config:Config.t -> t
 
 (** Apply all the changes that have been saved into [t] to the file system, or
     merely print them if we're in dry-run mode. *)

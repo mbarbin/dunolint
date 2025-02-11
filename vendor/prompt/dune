@@ -11,7 +11,7 @@
   Base
   -open
   Cmdlang)
- (libraries base cmdlang eio fmt)
+ (libraries base cmdlang fmt)
  (instrumentation
   (backend bisect_ppx))
  (lint

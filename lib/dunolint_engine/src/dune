@@ -12,6 +12,8 @@
   -open
   Fpath_base
   -open
+  Stdio
+  -open
   Cmdlang
   -open
   Sexplib0
@@ -26,8 +28,6 @@
   dunolint.dunolinter
   dunolint.vendor_git_pager
   dunolint.vendor_prompt
-  eio
-  eio-writer
   file-rewriter
   fpath
   fpath-base
@@ -41,6 +41,7 @@
   pp-log.tty
   sexplib0
   sexps-rewriter
+  stdio
   unix)
  (instrumentation
   (backend bisect_ppx))
