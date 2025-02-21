@@ -1,3 +1,17 @@
+## 0.0.2025XXXX (unreleased)
+
+### Added
+
+### Changed
+
+- Replace Eio-based deps by a combination of Unix and Stdio (#PR, @mbarbin).
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
 ## 0.0.20250211 (2025-02-11)
 
 This very early draft release is intended for publication to my custom opam-repository. It allows for initial experimentation and ensures that the release cycle and distribution process are functioning correctly.
