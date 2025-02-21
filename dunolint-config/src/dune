@@ -1,6 +1,6 @@
 (library
  (name dunolint_dunolint_config)
- (public_name dunolint-dev.dunolint_dunolint_config)
+ (public_name dunolint-tests.dunolint_dunolint_config)
  (flags
   :standard
   -w

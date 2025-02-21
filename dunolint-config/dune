@@ -1,6 +1,7 @@
 (rule
  (mode promote)
- (package dunolint-dev)
+ (package dunolint-tests)
+ (alias runtest)
  (action
   (with-stdout-to
    "dunolint.sexp"

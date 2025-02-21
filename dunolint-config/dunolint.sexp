@@ -12,7 +12,7 @@
  (rules
   ((cond
     (((path (glob dunolint-config/**/*))
-      (enforce (dune (library (public_name (is_prefix dunolint-dev.))))))
+      (enforce (dune (library (public_name (is_prefix dunolint-tests.))))))
      ((path (glob **/test/*))
       (enforce
        (dune

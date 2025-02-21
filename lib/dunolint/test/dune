@@ -11,7 +11,9 @@
   -open
   Base
   -open
-  Expect_test_helpers_base)
+  Expect_test_helpers_base
+  -open
+  Dunolint.Std)
  (libraries base dunolint expect_test_helpers_core.expect_test_helpers_base)
  (instrumentation
   (backend bisect_ppx))

@@ -106,7 +106,7 @@ module type S = sig
 
   (** Produce the resulting buffer, with all the rewrites applied. Note that [t]
       may continue to be used further from here, and you can call [contents]
-      again later. This raises {!exception:File_rewriter.Invalid_rewrites} if
+      again later. This raises [File_rewriter.Invalid_rewrites] if
       inconsistent rewrites have been submitted to t's [file_rewriter].
 
       Note that this library is a rather low-level util library. In

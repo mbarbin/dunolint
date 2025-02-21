@@ -1,7 +1,7 @@
 (executable
  (name main)
  (public_name dunolint-dunolint-config-gen)
- (package dunolint-dev)
+ (package dunolint-tests)
  (libraries cmdlang-cmdliner-runner dunolint_dunolint_config)
  (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a)
  (instrumentation

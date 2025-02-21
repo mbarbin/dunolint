@@ -65,3 +65,33 @@ let emit_error_and_resume a ~loc ~f =
       ~hints:[ Pp.text "You need to attend and fix manually." ];
     Stdlib.Effect.Deep.continue k ()
 ;;
+
+module Exn = struct
+  exception
+    Enforce_failure of
+      { loc : Loc.t
+      ; condition : Sexp.t
+      }
+
+  let () =
+    Sexplib0.Sexp_conv.Exn_converter.add
+      [%extension_constructor Enforce_failure]
+      (function
+      | Enforce_failure { loc; condition } ->
+        List
+          [ Atom "Dunolinter.Handler.Enforce_failure"
+          ; List [ Atom "loc"; Loc.sexp_of_t loc ]
+          ; List [ Atom "condition"; condition ]
+          ]
+      | _ -> assert false)
+  ;;
+end
+
+let raise ~f =
+  match f () with
+  | r -> r
+  | effect Enforce_failure { condition; sexp_of_condition; loc }, k ->
+    Stdlib.Effect.Deep.discontinue
+      k
+      (Exn.Enforce_failure { loc; condition = sexp_of_condition condition })
+;;
