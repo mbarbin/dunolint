@@ -21,9 +21,6 @@ depends: [
   "dunolint" {= version}
   "dunolint-lib" {= version}
   "dunolint-tests" {= version}
-  "eio" {>= "1.0"}
-  "eio-writer" {>= "0.0.8"}
-  "eio_main" {>= "1.0"}
   "expect_test_helpers_core" {>= "v0.17" & < "v0.18"}
   "file-rewriter" {>= "0.0.3"}
   "fmt" {>= "0.9.0"}

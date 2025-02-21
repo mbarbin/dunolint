@@ -28,7 +28,7 @@
     For example:
 
     {v (name dunolint) v}
-    {v (libraries base eio) v}
+    {v (libraries base sexps-rewriter) v}
 
     A field starts with an atom (the field name), and the arguments are
     in a list of sexps.

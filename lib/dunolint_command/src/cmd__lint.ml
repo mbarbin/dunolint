@@ -155,12 +155,10 @@ let main =
          ~doc:"Add condition to enforce"
        >>| List.map ~f:(fun condition -> `enforce condition)
      in
-     Eio_main.run
-     @@ fun env ->
      let config =
        match config with
        | Some config ->
-         let contents = Eio.Path.load Eio.Path.(env#fs / config) in
+         let contents = In_channel.read_all config in
          Parsexp.Conv_single.parse_string_exn contents Dunolint.Config.t_of_sexp
        | None ->
          Dunolint.Config.create ~skip_subtree:(Common.skip_subtree ~globs:[]) ~rules:[] ()
@@ -171,7 +169,7 @@ let main =
          ~rules:(Dunolint.Config.rules config @ enforce)
          ()
      in
-     Dunolint_engine.run ~env ~config:dunolint_engine_config
+     Dunolint_engine.run ~config:dunolint_engine_config
      @@ fun dunolint_engine ->
      Dunolint_engine.visit
        dunolint_engine

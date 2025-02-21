@@ -21,10 +21,7 @@
 
 (** A library to prompt the user for simple answers in the terminal. *)
 
-type 'a env = 'a
-  constraint 'a = < stdin : _ Eio.Flow.source ; stdout : _ Eio.Flow.sink ; .. >
-
-val ask_gen : env:_ env -> prompt:string -> f:(string -> ('a, string) Result.t) -> 'a
+val ask_gen : prompt:string -> f:(string -> ('a, string) Result.t) -> 'a
 
 module Choice : sig
   type +'a t
@@ -38,8 +35,8 @@ module Choice : sig
   val default : 'a t -> 'a t
 end
 
-val ask : env:_ env -> prompt:string -> choices:'a Choice.t list -> 'a
-val ask_yn : env:_ env -> prompt:string -> default:bool option -> bool
+val ask : prompt:string -> choices:'a Choice.t list -> 'a
+val ask_yn : prompt:string -> default:bool option -> bool
 
 module Arg : sig
   val yes : bool Command.Arg.t

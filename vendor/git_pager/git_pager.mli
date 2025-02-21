@@ -30,10 +30,6 @@ type t
 val should_force_color : t -> bool
 
 (** This is where lines to be sent to the pager should be written to. *)
-val write_end : t -> Eio.Flow.sink_ty Eio.Flow.sink
+val write_end : t -> Out_channel.t
 
-val run
-  :  env:< process_mgr : _ Eio.Process.mgr ; stdout : _ Eio.Flow.sink ; .. >
-  -> cwd:Eio.Fs.dir_ty Eio.Path.t
-  -> f:(t -> unit)
-  -> unit
+val run : f:(t -> 'a) -> 'a

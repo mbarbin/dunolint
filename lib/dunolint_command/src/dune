@@ -12,6 +12,8 @@
   -open
   Fpath_base
   -open
+  Stdio
+  -open
   Cmdlang
   -open
   Dunolint.Std)
@@ -23,8 +25,6 @@
   dunolint.dune_project_linter
   dunolint.dunolint_engine
   dunolint.dunolinter
-  eio
-  eio_main
   fpath
   fpath-base
   parsexp
@@ -33,7 +33,8 @@
   pp-log.cli
   pp-log.err
   pp-log.tty
-  sexps-rewriter)
+  sexps-rewriter
+  stdio)
  (instrumentation
   (backend bisect_ppx))
  (lint
