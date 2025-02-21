@@ -2,6 +2,8 @@
 
 ### Added
 
+- Enabled sending coverage reports to Coveralls (#7, @mbarbin).
+
 ### Changed
 
 - Replace Eio-based deps by a combination of Unix and Stdio (#6, @mbarbin).
