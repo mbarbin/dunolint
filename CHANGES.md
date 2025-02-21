@@ -4,7 +4,7 @@
 
 ### Changed
 
-- Replace Eio-based deps by a combination of Unix and Stdio (#PR, @mbarbin).
+- Replace Eio-based deps by a combination of Unix and Stdio (#6, @mbarbin).
 
 ### Deprecated
 
