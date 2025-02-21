@@ -39,12 +39,7 @@ module Make (X : X) = struct
           ^ Printf.sprintf " (%d characters total)" (String.length s)
         else s
       in
-      Error
-        (`Msg
-            (Printf.sprintf
-               "%S: invalid %s"
-               shown_s
-               (String.uncapitalize_ascii X.module_name))))
+      Error (`Msg (Printf.sprintf "%S: invalid %s" shown_s X.module_name)))
   ;;
 
   let v s =
