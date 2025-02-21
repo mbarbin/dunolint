@@ -50,6 +50,14 @@ let%expect_test "read/write" =
   ()
 ;;
 
+let%expect_test "sexp_of" =
+  let sexps_rewriter, field = read {| (name lib_name) |} in
+  let t = Dune_linter.Library.Name.read ~sexps_rewriter ~field in
+  print_s [%sexp (t : Dune_linter.Library.Name.t)];
+  [%expect {| ((name lib_name)) |}];
+  ()
+;;
+
 module Predicate = struct
   (* Aliased here so we remember to add new tests when this type is modified. *)
   type t = Dune.Library.Name.Predicate.t as 'a
@@ -88,44 +96,107 @@ let%expect_test "predicate" =
 let%expect_test "enforce" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
   let sexps_rewriter, field = read {| (name pre_hello_suf) |} in
-  let rewrite conditions =
+  let enforce conditions =
     Sexps_rewriter.reset sexps_rewriter;
     let t = Dune_linter.Library.Name.read ~sexps_rewriter ~field in
-    List.iter conditions ~f:(fun condition ->
-      Dune_linter.Library.Name.enforce t ~condition);
-    Dune_linter.Library.Name.rewrite t ~sexps_rewriter ~field;
-    print_endline (Sexps_rewriter.contents sexps_rewriter)
+    Dunolinter.Handler.raise ~f:(fun () ->
+      List.iter conditions ~f:(fun condition ->
+        Dune_linter.Library.Name.enforce t ~condition);
+      Dune_linter.Library.Name.rewrite t ~sexps_rewriter ~field;
+      print_endline (Sexps_rewriter.contents sexps_rewriter))
   in
+  let equals s = Blang.base (`equals s) in
   let is_prefix s = Blang.base (`is_prefix s) in
   let is_suffix s = Blang.base (`is_suffix s) in
   let open Blang.O in
-  rewrite [];
+  enforce [];
   [%expect {| (name pre_hello_suf) |}];
+  (* Enforcing the equality with the current value has no effect. *)
+  enforce [ equals (Dune.Library.Name.v "pre_hello_suf") ];
+  [%expect {| (name pre_hello_suf) |}];
+  (* Enforcing the equality with a new value changes it. *)
+  enforce [ equals (Dune.Library.Name.v "new_name") ];
+  [%expect {| (name new_name) |}];
+  (* Enforcing the non-equality with another value has no effect. *)
+  enforce [ not_ (equals (Dune.Library.Name.v "not_equal")) ];
+  [%expect {| (name pre_hello_suf) |}];
+  require_does_raise [%here] (fun () ->
+    enforce [ not_ (equals (Dune.Library.Name.v "pre_hello_suf")) ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure
+      (loc _)
+      (condition (not (equals pre_hello_suf))))
+    |}];
   (* Setting a prefix to an existing prefix has no effect. *)
-  rewrite [ is_prefix "pre_" ];
+  enforce [ is_prefix "pre_" ];
   [%expect {| (name pre_hello_suf) |}];
-  rewrite [ not_ (is_prefix "pre_"); not_ (is_suffix "_suf") ];
+  enforce [ not_ (is_prefix "pre_"); not_ (is_suffix "_suf") ];
   [%expect {| (name hello) |}];
-  rewrite [ is_prefix "prefix_" ];
+  enforce [ not_ (is_prefix "not_a_prefix"); not_ (is_suffix "not_a_suffix") ];
+  [%expect {| (name pre_hello_suf) |}];
+  enforce [ is_prefix "prefix_" ];
   [%expect {| (name prefix_pre_hello_suf) |}];
   (* Prefixing by a package name is allowed. *)
-  rewrite [ is_prefix "priv." ];
+  enforce [ is_prefix "priv." ];
   [%expect {| (name priv.pre_hello_suf)|}];
   (* Multiple actions may be applied one by one. *)
-  rewrite [ is_prefix "world_"; is_prefix "hello_" ];
+  enforce [ is_prefix "world_"; is_prefix "hello_" ];
   [%expect {| (name hello_world_pre_hello_suf) |}];
   (* However, note that doing something like the above (adding two
      conflicting prefix in a row) doesn't stabilize to a fix point. It
      is possible some future version of dunolint reject such enforce
      conditions, if they don't stabilize (left as future work). *)
-  rewrite [ is_suffix "suf" ];
+  enforce [ is_suffix "suf" ];
   [%expect {| (name pre_hello_suf) |}];
   (* The logic doesn't try to apply the shortest suffix to make the predicate
      true. If this isn't the one the user is looking for, they can simply amend
      manually into another name that is stable across such action. *)
-  rewrite [ is_suffix "_suf_suf" ];
+  enforce [ is_suffix "_suf_suf" ];
   [%expect {| (name pre_hello_suf_suf_suf) |}];
-  rewrite [ not_ (is_suffix "_suf"); is_suffix "_suf_suf" ];
+  enforce [ not_ (is_suffix "_suf"); is_suffix "_suf_suf" ];
   [%expect {| (name pre_hello_suf_suf) |}];
+  (* Blang. *)
+  enforce [ true_ ];
+  [%expect {| (name pre_hello_suf) |}];
+  require_does_raise [%here] (fun () -> enforce [ false_ ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure
+      (loc       _)
+      (condition false))
+    |}];
+  enforce [ and_ [ not_ (is_prefix "pre_"); not_ (is_suffix "_suf") ] ];
+  [%expect {| (name hello) |}];
+  (* [or] does not have an enforcement strategy when its invariant is
+     not satisfied. *)
+  enforce [ or_ [ is_prefix "pre_"; equals (Dune.Library.Name.v "not_equal") ] ];
+  [%expect {| (name pre_hello_suf) |}];
+  require_does_raise [%here] (fun () ->
+    enforce [ or_ [ is_prefix "prefix_"; equals (Dune.Library.Name.v "not_equal") ] ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure
+      (loc _)
+      (condition (
+        or
+        (is_prefix prefix_)
+        (equals    not_equal))))
+    |}];
+  (* When defined, [if] enforces the clause that applies. *)
+  enforce
+    [ if_
+        (is_prefix "false")
+        (not_ (is_prefix "pre_"))
+        (equals (Dune.Library.Name.v "not_equal"))
+    ];
+  [%expect {| (name not_equal) |}];
+  enforce
+    [ if_
+        (is_prefix "pre_")
+        (not_ (is_prefix "pre_"))
+        (equals (Dune.Library.Name.v "not_equal"))
+    ];
+  [%expect {| (name hello_suf) |}];
   ()
 ;;
