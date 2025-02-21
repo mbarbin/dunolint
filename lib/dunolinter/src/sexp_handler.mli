@@ -86,7 +86,7 @@ val get_args
     not present in the existing [fields]. For those that are already present,
     it will be necessary to merge them with the expected value, see the
     [rewrite] functions of the module that corresponds to that particular
-    field. For example: {!Dune__library.rewrite}. *)
+    field. For example: {!Dune_linter.Library.rewrite}. *)
 val insert_new_fields
   :  sexps_rewriter:Sexps_rewriter.t
   -> indicative_field_ordering:string list
