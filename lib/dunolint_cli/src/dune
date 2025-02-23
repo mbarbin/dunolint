@@ -1,7 +1,6 @@
 (library
- (name dunolint_command_test)
- (public_name dunolint-tests.dunolint_command_test)
- (inline_tests)
+ (name dunolint_cli)
+ (public_name dunolint.dunolint_cli)
  (flags
   :standard
   -w
@@ -11,11 +10,31 @@
   -open
   Base
   -open
-  Expect_test_helpers_base)
+  Fpath_base
+  -open
+  Stdio
+  -open
+  Cmdlang
+  -open
+  Dunolint.Std)
  (libraries
   base
-  dunolint_command
-  expect_test_helpers_core.expect_test_helpers_base)
+  cmdlang
+  dunolint-lib
+  dunolint.dune_linter
+  dunolint.dune_project_linter
+  dunolint.dunolint_engine
+  dunolint.dunolinter
+  fpath
+  fpath-base
+  parsexp
+  pp
+  pp-log
+  pp-log.cli
+  pp-log.err
+  pp-log.tty
+  sexps-rewriter
+  stdio)
  (instrumentation
   (backend bisect_ppx))
  (lint
@@ -25,7 +44,6 @@
    -unused-code-warnings=force
    ppx_compare
    ppx_enumerate
-   ppx_expect
    ppx_hash
    ppx_here
    ppx_let
