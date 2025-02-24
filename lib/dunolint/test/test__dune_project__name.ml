@@ -19,27 +19,39 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module type Roundtripable = sig
-  type t [@@deriving compare, equal, sexp]
-end
+open Dunolint.Config.Std
 
-let test_roundtrip (type a) (module M : Roundtripable with type t = a) (a : a) =
-  let sexp = [%sexp (a : M.t)] in
-  let a' = [%of_sexp: M.t] sexp in
-  require_equal [%here] (module M) a a';
-  print_s sexp;
+let%expect_test "of_string" =
+  let test str =
+    print_s
+      [%sexp
+        (Dune_project.Name.of_string str
+         : (Dune_project.Name.t, [ `Msg of string ]) Result.t)]
+  in
+  test "";
+  [%expect {| (Error (Msg "\"\": invalid Dunolint.Dune_project.Name")) |}];
+  test "name";
+  [%expect {| (Ok name) |}];
+  test "name-dash";
+  [%expect {| (Ok name-dash) |}];
+  test "name_underscore";
+  [%expect {| (Ok name_underscore) |}];
+  test "name.dot";
+  [%expect {| (Ok name.dot) |}];
+  test "name#sharp";
+  [%expect {| (Error (Msg "\"name#sharp\": invalid Dunolint.Dune_project.Name")) |}];
+  test "name@at";
+  [%expect {| (Error (Msg "\"name@at\": invalid Dunolint.Dune_project.Name")) |}];
   ()
 ;;
 
-module type Predicate = sig
-  type t [@@deriving compare, equal, sexp]
-end
-
-let test_predicate (type a) (module M : Predicate with type t = a) predicate =
-  let module B = struct
-    type t = M.t Blang.t [@@deriving compare, equal, sexp]
-  end
-  in
-  test_roundtrip (module B) predicate;
+let%expect_test "predicate" =
+  let test p = Common.test_predicate (module Dune_project.Name.Predicate) p in
+  test (equals (Dune_project.Name.v "main"));
+  [%expect {| (equals main) |}];
+  test (is_prefix "prefix");
+  [%expect {| (is_prefix prefix) |}];
+  test (is_suffix "suffix");
+  [%expect {| (is_suffix suffix) |}];
   ()
 ;;

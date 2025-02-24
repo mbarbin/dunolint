@@ -19,27 +19,41 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module type Roundtripable = sig
-  type t [@@deriving compare, equal, sexp]
-end
+open Dunolint.Config.Std
 
-let test_roundtrip (type a) (module M : Roundtripable with type t = a) (a : a) =
-  let sexp = [%sexp (a : M.t)] in
-  let a' = [%of_sexp: M.t] sexp in
-  require_equal [%here] (module M) a a';
-  print_s sexp;
+let%expect_test "of_string" =
+  let test str =
+    print_s
+      [%sexp
+        (Dune.Instrumentation.Backend.Name.of_string str
+         : (Dune.Instrumentation.Backend.Name.t, [ `Msg of string ]) Result.t)]
+  in
+  test "";
+  [%expect {| (Error (Msg "\"\": invalid Dunolint.Instrumentation.Backend.Name")) |}];
+  test "bisect_ppx";
+  [%expect {| (Ok bisect_ppx) |}];
+  test "backend-dash";
+  [%expect
+    {| (Error (Msg "\"backend-dash\": invalid Dunolint.Instrumentation.Backend.Name")) |}];
+  test "backend_underscore";
+  [%expect {| (Ok backend_underscore) |}];
+  test "backend.dot";
+  [%expect {| (Ok backend.dot) |}];
+  test "backend#sharp";
+  [%expect
+    {|
+    (Error (
+      Msg "\"backend#sharp\": invalid Dunolint.Instrumentation.Backend.Name"))
+    |}];
+  test "backend@at";
+  [%expect
+    {| (Error (Msg "\"backend@at\": invalid Dunolint.Instrumentation.Backend.Name")) |}];
   ()
 ;;
 
-module type Predicate = sig
-  type t [@@deriving compare, equal, sexp]
-end
-
-let test_predicate (type a) (module M : Predicate with type t = a) predicate =
-  let module B = struct
-    type t = M.t Blang.t [@@deriving compare, equal, sexp]
-  end
-  in
-  test_roundtrip (module B) predicate;
+let%expect_test "predicate" =
+  let test p = Common.test_predicate (module Dune.Instrumentation.Predicate) p in
+  test (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"));
+  [%expect {| (backend bisect_ppx) |}];
   ()
 ;;

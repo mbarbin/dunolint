@@ -19,27 +19,33 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module type Roundtripable = sig
-  type t [@@deriving compare, equal, sexp]
-end
+open Dunolint.Config.Std
 
-let test_roundtrip (type a) (module M : Roundtripable with type t = a) (a : a) =
-  let sexp = [%sexp (a : M.t)] in
-  let a' = [%of_sexp: M.t] sexp in
-  require_equal [%here] (module M) a a';
-  print_s sexp;
-  ()
-;;
-
-module type Predicate = sig
-  type t [@@deriving compare, equal, sexp]
-end
-
-let test_predicate (type a) (module M : Predicate with type t = a) predicate =
-  let module B = struct
-    type t = M.t Blang.t [@@deriving compare, equal, sexp]
-  end
-  in
-  test_roundtrip (module B) predicate;
+let%expect_test "predicate" =
+  let test p = Common.test_predicate (module Dune.Predicate) p in
+  test (executable (name (equals (Dune.Executable.Name.v "main"))));
+  [%expect {| (executable (name (equals main))) |}];
+  test (include_subdirs (equals `unqualified));
+  [%expect {| (include_subdirs (equals unqualified)) |}];
+  test (library (name (equals (Dune.Library.Name.v "main"))));
+  [%expect {| (library (name (equals main))) |}];
+  test (stanza (Blang.base `library));
+  [%expect {| (stanza library) |}];
+  test (lint (pps (pp (Dune.Pp.Name.v "ppx_equal"))));
+  [%expect {| (lint (pps (pp ppx_equal))) |}];
+  test (instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")));
+  [%expect {| (instrumentation (backend bisect_ppx)) |}];
+  test (preprocess (pps (pp (Dune.Pp.Name.v "ppx_compare"))));
+  [%expect {| (preprocess (pps (pp ppx_compare))) |}];
+  test (has_field `name);
+  [%expect {| (has_field name) |}];
+  test (has_field `public_name);
+  [%expect {| (has_field public_name) |}];
+  test (has_field `lint);
+  [%expect {| (has_field lint) |}];
+  test (has_field `instrumentation);
+  [%expect {| (has_field instrumentation) |}];
+  test (has_field `preprocess);
+  [%expect {| (has_field preprocess) |}];
   ()
 ;;

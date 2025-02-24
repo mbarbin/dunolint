@@ -66,7 +66,7 @@ module Predicate = struct
       [ `equals of Dune.Library.Name.t | `is_prefix of string | `is_suffix of string ]
 end
 
-let%expect_test "predicate" =
+let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
   let sexps_rewriter, field = read {| (name pre_hello_suf) |} in
   let t = Dune_linter.Library.Name.read ~sexps_rewriter ~field in
@@ -140,7 +140,7 @@ let%expect_test "enforce" =
   (* Prefixing by a package name is allowed. *)
   enforce [ is_prefix "priv." ];
   [%expect {| (name priv.pre_hello_suf)|}];
-  (* Multiple actions may be applied one by one. *)
+  (* Multiple invariants may be enforced one by one. *)
   enforce [ is_prefix "world_"; is_prefix "hello_" ];
   [%expect {| (name hello_world_pre_hello_suf) |}];
   (* However, note that doing something like the above (adding two
@@ -151,7 +151,7 @@ let%expect_test "enforce" =
   [%expect {| (name pre_hello_suf) |}];
   (* The logic doesn't try to apply the shortest suffix to make the predicate
      true. If this isn't the one the user is looking for, they can simply amend
-     manually into another name that is stable across such action. *)
+     manually into another name that is stable across such invariant. *)
   enforce [ is_suffix "_suf_suf" ];
   [%expect {| (name pre_hello_suf_suf_suf) |}];
   enforce [ not_ (is_suffix "_suf"); is_suffix "_suf_suf" ];

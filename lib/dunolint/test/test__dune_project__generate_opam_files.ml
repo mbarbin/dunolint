@@ -19,27 +19,13 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module type Roundtripable = sig
-  type t [@@deriving compare, equal, sexp]
-end
+open Dunolint.Config.Std
 
-let test_roundtrip (type a) (module M : Roundtripable with type t = a) (a : a) =
-  let sexp = [%sexp (a : M.t)] in
-  let a' = [%of_sexp: M.t] sexp in
-  require_equal [%here] (module M) a a';
-  print_s sexp;
-  ()
-;;
-
-module type Predicate = sig
-  type t [@@deriving compare, equal, sexp]
-end
-
-let test_predicate (type a) (module M : Predicate with type t = a) predicate =
-  let module B = struct
-    type t = M.t Blang.t [@@deriving compare, equal, sexp]
-  end
+let%expect_test "predicate" =
+  let test p =
+    Common.test_predicate (module Dune_project.Generate_opam_files.Predicate) p
   in
-  test_roundtrip (module B) predicate;
+  test (Blang.base `is_present);
+  [%expect {| is_present |}];
   ()
 ;;
