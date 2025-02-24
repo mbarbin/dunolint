@@ -44,15 +44,15 @@ val skip_subtree : t -> Skip_subtree.t option
 
 (** {2 Generic rules} *)
 
-val rules : t -> (Predicate.t, Condition.t) Rule.t list
+module Rule : sig
+  type t = (Predicate.t, Condition.t) Rule.t [@@deriving compare, equal, sexp]
+end
+
+val rules : t -> Rule.t list
 
 (** {1 Creating configs} *)
 
-val create
-  :  ?skip_subtree:Skip_subtree.t
-  -> ?rules:(Predicate.t, Condition.t) Rule.t list
-  -> unit
-  -> t
+val create : ?skip_subtree:Skip_subtree.t -> ?rules:Rule.t list -> unit -> t
 
 (** {1 An EDSL to build configs} *)
 
@@ -71,16 +71,20 @@ module Std : sig
   val dune_project : 'a -> [> `dune_project of 'a ] Blang.t
   val enforce : 'a -> [> `enforce of 'a ]
   val equals : 'a -> [> `equals of 'a ] Blang.t
+  val executable : 'a -> [> `executable of 'a ] Blang.t
   val flag : Dune.Pps.Predicate.Flag.t -> [> `flag of Dune.Pps.Predicate.Flag.t ] Blang.t
+  val generate_opam_files : 'a -> [> `generate_opam_files of 'a ] Blang.t
   val glob : string -> [> `glob of Glob.t ] Blang.t
   val has_field : 'a -> [> `has_field of 'a ] Blang.t
   val implicit_transitive_deps : 'a -> [> `implicit_transitive_deps of 'a ] Blang.t
+  val include_subdirs : 'a -> [> `include_subdirs of 'a ] Blang.t
   val instrumentation : 'a -> [> `instrumentation of 'a ] Blang.t
   val is_prefix : string -> [> `is_prefix of string ] Blang.t
   val is_suffix : string -> [> `is_suffix of string ] Blang.t
   val library : 'a -> [> `library of 'a ] Blang.t
   val lint : 'a -> [> `lint of 'a ] Blang.t
   val name : 'a -> [> `name of 'a ] Blang.t
+  val no_preprocessing : [> `no_preprocessing ] Blang.t
   val path : 'a -> [> `path of 'a ] Blang.t
   val pp : Dune.Pp.Name.t -> [> `pp of Dune.Pp.Name.t ] Blang.t
   val pps : 'a -> [> `pps of 'a ] Blang.t
