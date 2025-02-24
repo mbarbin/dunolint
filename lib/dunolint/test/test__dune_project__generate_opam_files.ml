@@ -19,37 +19,13 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-type t =
-  { src : string
-  ; re : Re.re
-  }
+open Dunolint.Config.Std
 
-let to_string t = t.src
-
-let of_string src =
-  try
-    let t = Re.Glob.glob ~anchored:true ~expand_braces:true ~pathname:true src in
-    { src; re = Re.compile t }
-  with
-  | Re.Glob.Parse_error ->
-    let bt = Stdlib.Printexc.get_raw_backtrace () in
-    Stdlib.Printexc.raise_with_backtrace
-      (Invalid_argument (Printf.sprintf "Re.Glob.Parse_error: %s" src))
-      bt
+let%expect_test "predicate" =
+  let test p =
+    Common.test_predicate (module Dune_project.Generate_opam_files.Predicate) p
+  in
+  test (Blang.base `is_present);
+  [%expect {| is_present |}];
+  ()
 ;;
-
-let v = of_string
-let equal t1 t2 = String.equal (to_string t1) (to_string t2)
-let test t a = Re.execp t.re a
-
-include
-  Sexpable.Of_sexpable
-    (String)
-    (struct
-      type nonrec t = t
-
-      let of_sexpable = of_string
-      let to_sexpable = to_string
-    end)
-
-let compare t1 t2 = String.compare (to_string t1) (to_string t2)

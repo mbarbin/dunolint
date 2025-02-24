@@ -31,9 +31,13 @@ module Skip_subtree = struct
   type t = (Predicate.t, Result.t) Rule.t [@@deriving compare, equal, sexp]
 end
 
+module Rule = struct
+  type t = (Predicate.t, Condition.t) Rule.t [@@deriving compare, equal, sexp]
+end
+
 type t =
   { skip_subtree : Skip_subtree.t option [@sexp.option]
-  ; rules : (Predicate.t, Condition.t) Rule.t list
+  ; rules : Rule.t list
   }
 [@@deriving compare, equal, sexp]
 
@@ -53,16 +57,20 @@ module Std = struct
   let dune_project p = Blang.base (`dune_project p)
   let enforce p = `enforce p
   let equals p = Blang.base (`equals p)
+  let executable p = Blang.base (`executable p)
   let flag p = Blang.base (`flag p)
+  let generate_opam_files p = Blang.base (`generate_opam_files p)
   let glob p = Blang.base (`glob (Glob.v p))
   let has_field p = Blang.base (`has_field p)
   let implicit_transitive_deps p = Blang.base (`implicit_transitive_deps p)
+  let include_subdirs p = Blang.base (`include_subdirs p)
   let instrumentation p = Blang.base (`instrumentation p)
   let is_prefix p = Blang.base (`is_prefix p)
   let is_suffix p = Blang.base (`is_suffix p)
   let library p = Blang.base (`library p)
   let lint p = Blang.base (`lint p)
   let name p = Blang.base (`name p)
+  let no_preprocessing = Blang.base `no_preprocessing
   let path p = Blang.base (`path p)
   let pp p = Blang.base (`pp p)
   let pps p = Blang.base (`pps p)

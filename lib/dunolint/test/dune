@@ -11,10 +11,16 @@
   -open
   Base
   -open
+  Fpath_base
+  -open
   Expect_test_helpers_base
   -open
   Dunolint.Std)
- (libraries base dunolint expect_test_helpers_core.expect_test_helpers_base)
+ (libraries
+  base
+  dunolint
+  expect_test_helpers_core.expect_test_helpers_base
+  fpath-base)
  (instrumentation
   (backend bisect_ppx))
  (lint

@@ -19,37 +19,33 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-type t =
-  { src : string
-  ; re : Re.re
-  }
+open Dunolint.Config.Std
 
-let to_string t = t.src
-
-let of_string src =
-  try
-    let t = Re.Glob.glob ~anchored:true ~expand_braces:true ~pathname:true src in
-    { src; re = Re.compile t }
-  with
-  | Re.Glob.Parse_error ->
-    let bt = Stdlib.Printexc.get_raw_backtrace () in
-    Stdlib.Printexc.raise_with_backtrace
-      (Invalid_argument (Printf.sprintf "Re.Glob.Parse_error: %s" src))
-      bt
+let%expect_test "predicate" =
+  let test p = Common.test_predicate (module Dune.Predicate) p in
+  test (executable (name (equals (Dune.Executable.Name.v "main"))));
+  [%expect {| (executable (name (equals main))) |}];
+  test (include_subdirs (equals `unqualified));
+  [%expect {| (include_subdirs (equals unqualified)) |}];
+  test (library (name (equals (Dune.Library.Name.v "main"))));
+  [%expect {| (library (name (equals main))) |}];
+  test (stanza (Blang.base `library));
+  [%expect {| (stanza library) |}];
+  test (lint (pps (pp (Dune.Pp.Name.v "ppx_equal"))));
+  [%expect {| (lint (pps (pp ppx_equal))) |}];
+  test (instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")));
+  [%expect {| (instrumentation (backend bisect_ppx)) |}];
+  test (preprocess (pps (pp (Dune.Pp.Name.v "ppx_compare"))));
+  [%expect {| (preprocess (pps (pp ppx_compare))) |}];
+  test (has_field `name);
+  [%expect {| (has_field name) |}];
+  test (has_field `public_name);
+  [%expect {| (has_field public_name) |}];
+  test (has_field `lint);
+  [%expect {| (has_field lint) |}];
+  test (has_field `instrumentation);
+  [%expect {| (has_field instrumentation) |}];
+  test (has_field `preprocess);
+  [%expect {| (has_field preprocess) |}];
+  ()
 ;;
-
-let v = of_string
-let equal t1 t2 = String.equal (to_string t1) (to_string t2)
-let test t a = Re.execp t.re a
-
-include
-  Sexpable.Of_sexpable
-    (String)
-    (struct
-      type nonrec t = t
-
-      let of_sexpable = of_string
-      let to_sexpable = to_string
-    end)
-
-let compare t1 t2 = String.compare (to_string t1) (to_string t2)

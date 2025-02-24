@@ -19,37 +19,41 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-type t =
-  { src : string
-  ; re : Re.re
-  }
+open Dunolint.Config.Std
 
-let to_string t = t.src
-
-let of_string src =
-  try
-    let t = Re.Glob.glob ~anchored:true ~expand_braces:true ~pathname:true src in
-    { src; re = Re.compile t }
-  with
-  | Re.Glob.Parse_error ->
-    let bt = Stdlib.Printexc.get_raw_backtrace () in
-    Stdlib.Printexc.raise_with_backtrace
-      (Invalid_argument (Printf.sprintf "Re.Glob.Parse_error: %s" src))
-      bt
+let%expect_test "of_string" =
+  let test str =
+    print_s
+      [%sexp
+        (Dune.Instrumentation.Backend.Name.of_string str
+         : (Dune.Instrumentation.Backend.Name.t, [ `Msg of string ]) Result.t)]
+  in
+  test "";
+  [%expect {| (Error (Msg "\"\": invalid Dunolint.Instrumentation.Backend.Name")) |}];
+  test "bisect_ppx";
+  [%expect {| (Ok bisect_ppx) |}];
+  test "backend-dash";
+  [%expect
+    {| (Error (Msg "\"backend-dash\": invalid Dunolint.Instrumentation.Backend.Name")) |}];
+  test "backend_underscore";
+  [%expect {| (Ok backend_underscore) |}];
+  test "backend.dot";
+  [%expect {| (Ok backend.dot) |}];
+  test "backend#sharp";
+  [%expect
+    {|
+    (Error (
+      Msg "\"backend#sharp\": invalid Dunolint.Instrumentation.Backend.Name"))
+    |}];
+  test "backend@at";
+  [%expect
+    {| (Error (Msg "\"backend@at\": invalid Dunolint.Instrumentation.Backend.Name")) |}];
+  ()
 ;;
 
-let v = of_string
-let equal t1 t2 = String.equal (to_string t1) (to_string t2)
-let test t a = Re.execp t.re a
-
-include
-  Sexpable.Of_sexpable
-    (String)
-    (struct
-      type nonrec t = t
-
-      let of_sexpable = of_string
-      let to_sexpable = to_string
-    end)
-
-let compare t1 t2 = String.compare (to_string t1) (to_string t2)
+let%expect_test "predicate" =
+  let test p = Common.test_predicate (module Dune.Instrumentation.Predicate) p in
+  test (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"));
+  [%expect {| (backend bisect_ppx) |}];
+  ()
+;;

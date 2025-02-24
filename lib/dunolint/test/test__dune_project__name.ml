@@ -19,37 +19,39 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-type t =
-  { src : string
-  ; re : Re.re
-  }
+open Dunolint.Config.Std
 
-let to_string t = t.src
-
-let of_string src =
-  try
-    let t = Re.Glob.glob ~anchored:true ~expand_braces:true ~pathname:true src in
-    { src; re = Re.compile t }
-  with
-  | Re.Glob.Parse_error ->
-    let bt = Stdlib.Printexc.get_raw_backtrace () in
-    Stdlib.Printexc.raise_with_backtrace
-      (Invalid_argument (Printf.sprintf "Re.Glob.Parse_error: %s" src))
-      bt
+let%expect_test "of_string" =
+  let test str =
+    print_s
+      [%sexp
+        (Dune_project.Name.of_string str
+         : (Dune_project.Name.t, [ `Msg of string ]) Result.t)]
+  in
+  test "";
+  [%expect {| (Error (Msg "\"\": invalid Dunolint.Dune_project.Name")) |}];
+  test "name";
+  [%expect {| (Ok name) |}];
+  test "name-dash";
+  [%expect {| (Ok name-dash) |}];
+  test "name_underscore";
+  [%expect {| (Ok name_underscore) |}];
+  test "name.dot";
+  [%expect {| (Ok name.dot) |}];
+  test "name#sharp";
+  [%expect {| (Error (Msg "\"name#sharp\": invalid Dunolint.Dune_project.Name")) |}];
+  test "name@at";
+  [%expect {| (Error (Msg "\"name@at\": invalid Dunolint.Dune_project.Name")) |}];
+  ()
 ;;
 
-let v = of_string
-let equal t1 t2 = String.equal (to_string t1) (to_string t2)
-let test t a = Re.execp t.re a
-
-include
-  Sexpable.Of_sexpable
-    (String)
-    (struct
-      type nonrec t = t
-
-      let of_sexpable = of_string
-      let to_sexpable = to_string
-    end)
-
-let compare t1 t2 = String.compare (to_string t1) (to_string t2)
+let%expect_test "predicate" =
+  let test p = Common.test_predicate (module Dune_project.Name.Predicate) p in
+  test (equals (Dune_project.Name.v "main"));
+  [%expect {| (equals main) |}];
+  test (is_prefix "prefix");
+  [%expect {| (is_prefix prefix) |}];
+  test (is_suffix "suffix");
+  [%expect {| (is_suffix suffix) |}];
+  ()
+;;

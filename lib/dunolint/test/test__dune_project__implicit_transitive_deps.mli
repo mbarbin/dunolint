@@ -18,15 +18,3 @@
 (*_  and the LGPL-3.0 Linking Exception along with this library. If not, see      *)
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
-
-module type Roundtripable = sig
-  type t [@@deriving compare, equal, sexp]
-end
-
-val test_roundtrip : (module Roundtripable with type t = 'a) -> 'a -> unit
-
-module type Predicate = sig
-  type t [@@deriving compare, equal, sexp]
-end
-
-val test_predicate : (module Predicate with type t = 'a) -> 'a Blang.t -> unit

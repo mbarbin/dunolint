@@ -19,18 +19,27 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+module type Roundtripable = sig
+  type t [@@deriving compare, equal, sexp]
+end
+
+let test_roundtrip (type a) (module M : Roundtripable with type t = a) (a : a) =
+  let sexp = [%sexp (a : M.t)] in
+  let a' = [%of_sexp: M.t] sexp in
+  require_equal [%here] (module M) a a';
+  print_s sexp;
+  ()
+;;
+
 module type Predicate = sig
   type t [@@deriving compare, equal, sexp]
 end
 
 let test_predicate (type a) (module M : Predicate with type t = a) predicate =
   let module B = struct
-    type t = M.t Blang.t [@@deriving equal, sexp_of]
+    type t = M.t Blang.t [@@deriving compare, equal, sexp]
   end
   in
-  let sexp = [%sexp (predicate : M.t Blang.t)] in
-  let predicate' = [%of_sexp: M.t Blang.t] sexp in
-  require_equal [%here] (module B) predicate predicate';
-  print_s sexp;
+  test_roundtrip (module B) predicate;
   ()
 ;;

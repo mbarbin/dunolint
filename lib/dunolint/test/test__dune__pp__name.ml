@@ -19,37 +19,38 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-type t =
-  { src : string
-  ; re : Re.re
-  }
+open Dunolint.Config.Std
 
-let to_string t = t.src
-
-let of_string src =
-  try
-    let t = Re.Glob.glob ~anchored:true ~expand_braces:true ~pathname:true src in
-    { src; re = Re.compile t }
-  with
-  | Re.Glob.Parse_error ->
-    let bt = Stdlib.Printexc.get_raw_backtrace () in
-    Stdlib.Printexc.raise_with_backtrace
-      (Invalid_argument (Printf.sprintf "Re.Glob.Parse_error: %s" src))
-      bt
+let%expect_test "of_string" =
+  let test str =
+    print_s
+      [%sexp (Dune.Pp.Name.of_string str : (Dune.Pp.Name.t, [ `Msg of string ]) Result.t)]
+  in
+  test "";
+  [%expect {| (Error (Msg "\"\": invalid Pp_name")) |}];
+  test "pp";
+  [%expect {| (Ok pp) |}];
+  test "pp-dash";
+  [%expect {| (Ok pp-dash) |}];
+  test "pp_underscore";
+  [%expect {| (Ok pp_underscore) |}];
+  test "pp.dot";
+  [%expect {| (Ok pp.dot) |}];
+  test "pp#sharp";
+  [%expect {| (Error (Msg "\"pp#sharp\": invalid Pp_name")) |}];
+  test "pp@at";
+  [%expect {| (Error (Msg "\"pp@at\": invalid Pp_name")) |}];
+  ()
 ;;
 
-let v = of_string
-let equal t1 t2 = String.equal (to_string t1) (to_string t2)
-let test t a = Re.execp t.re a
-
-include
-  Sexpable.Of_sexpable
-    (String)
-    (struct
-      type nonrec t = t
-
-      let of_sexpable = of_string
-      let to_sexpable = to_string
-    end)
-
-let compare t1 t2 = String.compare (to_string t1) (to_string t2)
+let%expect_test "compare" =
+  let test vs =
+    let vs = List.map vs ~f:Dune.Pp.Name.v in
+    print_s [%sexp (List.sort vs ~compare:Dune.Pp.Name.compare : Dune.Pp.Name.t list)]
+  in
+  test [ "a"; "b" ];
+  [%expect {| (a b) |}];
+  test [ "ppx_this"; "that"; "ppx_that"; "lib.ppx_bcd"; "otherlib.ppx_abc" ];
+  [%expect {| (otherlib.ppx_abc lib.ppx_bcd ppx_that ppx_this that) |}];
+  ()
+;;
