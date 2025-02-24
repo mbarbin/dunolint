@@ -27,8 +27,15 @@ type t =
 let to_string t = t.src
 
 let of_string src =
-  let t = Re.Glob.glob ~anchored:true ~expand_braces:true ~pathname:true src in
-  { src; re = Re.compile t }
+  try
+    let t = Re.Glob.glob ~anchored:true ~expand_braces:true ~pathname:true src in
+    { src; re = Re.compile t }
+  with
+  | Re.Glob.Parse_error ->
+    let bt = Stdlib.Printexc.get_raw_backtrace () in
+    Stdlib.Printexc.raise_with_backtrace
+      (Invalid_argument (Printf.sprintf "Re.Glob.Parse_error: %s" src))
+      bt
 ;;
 
 let v = of_string
