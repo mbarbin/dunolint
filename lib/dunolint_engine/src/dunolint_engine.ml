@@ -66,7 +66,7 @@ module File_kind = struct
 end
 
 let lint_file ?autoformat_file ?create_file ?rewrite_file t ~path =
-  Pp_log.info ~src (fun () ->
+  Log.info ~src (fun () ->
     Pp.O.[ Pp.text "Linting file " ++ Pp_tty.path (module Relative_path) path ]);
   let edited_file = Hashtbl.find t.edited_files path in
   let file_exists =
@@ -343,7 +343,7 @@ let visit ?below (_ : t) ~f =
                 ];
             `Trd ())
       in
-      Pp_log.debug ~src (fun () ->
+      Log.debug ~src (fun () ->
         Pp.O.
           [ Pp.text "Visiting directory " ++ Pp_tty.path (module Relative_path) parent_dir
           ]);
@@ -357,7 +357,7 @@ let visit ?below (_ : t) ~f =
             :: tl
             :: rest)
        | Skip_subtree ->
-         Pp_log.info ~src (fun () ->
+         Log.info ~src (fun () ->
            Pp.O.
              [ Pp.text "Skipping children of directory "
                ++ Pp_tty.path (module Relative_path) parent_dir
