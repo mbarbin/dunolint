@@ -36,9 +36,9 @@
   patdiff
   patdiff.expect_test_patdiff
   pp
-  pp-log
-  pp-log.err
-  pp-log.tty
+  pplumbing.err
+  pplumbing.log
+  pplumbing.pp-tty
   sexplib0
   sexps-rewriter
   stdio

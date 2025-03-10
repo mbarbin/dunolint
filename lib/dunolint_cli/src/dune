@@ -29,10 +29,10 @@
   fpath-base
   parsexp
   pp
-  pp-log
-  pp-log.cli
-  pp-log.err
-  pp-log.tty
+  pplumbing.err
+  pplumbing.log
+  pplumbing.log-cli
+  pplumbing.pp-tty
   sexps-rewriter
   stdio)
  (instrumentation

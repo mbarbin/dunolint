@@ -11,7 +11,7 @@
   Base
   -open
   Stdio)
- (libraries base pp pp-log.err pp-log.tty stdio unix)
+ (libraries base pp pplumbing.err pplumbing.pp-tty stdio unix)
  (instrumentation
   (backend bisect_ppx))
  (lint

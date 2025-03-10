@@ -103,7 +103,7 @@ module Dune_lint = Lint_file (Dune_linter)
 module Dune_project_lint = Lint_file (Dune_project_linter)
 
 let visit_directory ~dunolint_engine ~config ~parent_dir ~files =
-  Pp_log.debug (fun () ->
+  Log.debug (fun () ->
     Pp.O.
       [ Pp.text "Dunolint visit_directory "
         ++ Pp_tty.path (module Relative_path) parent_dir
@@ -117,7 +117,7 @@ let visit_directory ~dunolint_engine ~config ~parent_dir ~files =
   with
   | `enforce nothing -> Nothing.unreachable_code nothing
   | `skip_subtree ->
-    Pp_log.debug (fun () ->
+    Log.debug (fun () ->
       Pp.O.
         [ Pp.text "Skipping directory " ++ Pp_tty.path (module Relative_path) parent_dir ]);
     Dunolint_engine.Visitor_decision.Skip_subtree
@@ -143,7 +143,7 @@ let main =
   Command.make
     ~summary:"lint project"
     (let%map_open.Command dunolint_engine_config = Dunolint_engine.Config.arg
-     and () = Pp_log_cli.set_config ()
+     and () = Log_cli.set_config ()
      and config =
        Arg.named_opt [ "config" ] Param.file ~doc:"Path to dunolint config file"
      and below = Common.below ~doc:"Lint only below this path"

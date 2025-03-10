@@ -21,8 +21,8 @@
   fpath-base
   loc
   pp
-  pp-log.err
-  pp-log.tty
+  pplumbing.err
+  pplumbing.pp-tty
   sexps-rewriter)
  (instrumentation
   (backend bisect_ppx))
