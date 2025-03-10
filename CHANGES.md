@@ -1,18 +1,15 @@
-## 0.0.2025XXXX (unreleased)
+## 0.0.20250310 (2025-03-10)
 
 ### Added
 
+- Added new tests (#8, #10, @mbarbin).
 - Enabled sending coverage reports to Coveralls (#7, @mbarbin).
 
 ### Changed
 
+- Replace `pp-log` deps by `pplumbing` to prepare for publishing to opam (#11, @mbarbin).
+- Internal lib rename (`command` -> `cli`) (#9, @mbarbin).
 - Replace Eio-based deps by a combination of Unix and Stdio (#6, @mbarbin).
-
-### Deprecated
-
-### Fixed
-
-### Removed
 
 ## 0.0.20250211 (2025-02-11)
 
