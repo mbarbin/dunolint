@@ -66,6 +66,8 @@ module Predicate = struct
       [ `equals of Dune.Library.Name.t | `is_prefix of string | `is_suffix of string ]
 end
 
+open Dunolint.Config.Std
+
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
   let sexps_rewriter, field = read {| (name pre_hello_suf) |} in
@@ -103,11 +105,8 @@ let%expect_test "enforce" =
       List.iter conditions ~f:(fun condition ->
         Dune_linter.Library.Name.enforce t ~condition);
       Dune_linter.Library.Name.rewrite t ~sexps_rewriter ~field;
-      print_endline (Sexps_rewriter.contents sexps_rewriter))
+      print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
   in
-  let equals s = Blang.base (`equals s) in
-  let is_prefix s = Blang.base (`is_prefix s) in
-  let is_suffix s = Blang.base (`is_suffix s) in
   let open Blang.O in
   enforce [];
   [%expect {| (name pre_hello_suf) |}];
