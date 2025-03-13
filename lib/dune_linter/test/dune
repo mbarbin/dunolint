@@ -25,6 +25,7 @@
   file-rewriter
   fpath-sexp0
   loc
+  parsexp
   pplumbing.err
   sexps-rewriter)
  (instrumentation
