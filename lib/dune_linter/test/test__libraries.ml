@@ -55,9 +55,13 @@ let%expect_test "read/write" =
 ;;
 
 let%expect_test "sexp_of" =
-  let sexps_rewriter, field =
-    Common.read
-      {|
+  let test str =
+    let sexps_rewriter, field = Common.read str in
+    let t = Dune_linter.Libraries.read ~sexps_rewriter ~field in
+    print_s [%sexp (t : Dune_linter.Libraries.t)]
+  in
+  test
+    {|
 (libraries
  ;; Hey this is a comment in its own line.
  foo ;; this is a comment for foo.
@@ -65,24 +69,80 @@ let%expect_test "sexp_of" =
  (re_export baz)
  sna
  (invalid sexp))
-|}
-  in
-  let t = Dune_linter.Libraries.read ~sexps_rewriter ~field in
-  print_s [%sexp (t : Dune_linter.Libraries.t)];
+|};
   [%expect
     {|
     ((
-      entries (
-        (Library
-          (name   foo)
-          (source "foo ;; this is a comment for foo."))
-        (Library   (name bar) (source bar))
-        (Re_export (name baz) (source "(re_export baz)"))
-        (Library   (name sna) (source sna))
-        (Unhandled
-          (original_index 4)
-          (sexp (invalid sexp))
-          (source "(invalid sexp)")))))
+      sections (((
+        entries (
+          (Library
+            (name   foo)
+            (source "foo ;; this is a comment for foo."))
+          (Library   (name bar) (source bar))
+          (Re_export (name baz) (source "(re_export baz)"))
+          (Library   (name sna) (source sna))
+          (Unhandled
+            (original_index 4)
+            (sexp (invalid sexp))
+            (source "(invalid sexp)"))))))))
+    |}];
+  (* Entries separated by more than one line are treated as belonging to
+     different sections. *)
+  test
+    {|
+(libraries
+ foo ;; this is a comment for foo.
+
+ bar
+ (re_export baz)
+ sna)
+|};
+  [%expect
+    {|
+    ((
+      sections (
+        ((
+          entries ((
+            Library
+            (name   foo)
+            (source "foo ;; this is a comment for foo.")))))
+        ((
+          entries (
+            (Library   (name bar) (source bar))
+            (Re_export (name baz) (source "(re_export baz)"))
+            (Library   (name sna) (source sna))))))))
+    |}];
+  (* In particular this can be achieved with a style where sections are
+     separated by comments. *)
+  test
+    {|
+(libraries
+ ;; First section
+ jj
+ ii
+ ;; Section section
+ bb
+ aa
+ ;; Third section
+ dd
+ cc)
+|};
+  [%expect
+    {|
+    ((
+      sections (
+        ((
+          entries (
+            (Library (name jj) (source jj))
+            (Library (name ii) (source ii)))))
+        ((
+          entries (
+            (Library (name bb) (source bb))
+            (Library (name aa) (source aa)))))
+        ((
+          entries (
+            (Library (name dd) (source dd))
+            (Library (name cc) (source cc))))))))
     |}];
   ()
 ;;
@@ -172,10 +232,22 @@ let%expect_test "rewrite" =
     bar
     (re_export sna))
     |}];
+  (* Adding library shall also work when starting from the empty set. *)
+  test {| (libraries) |} ~f:(fun t ->
+    Dune_linter.Libraries.add_libraries
+      t
+      ~libraries:[ Dune.Library.Name.v "foo"; Dune.Library.Name.v "bar" ];
+    ());
+  [%expect
+    {|
+     (libraries
+    foo
+    bar)
+    |}];
   ()
 ;;
 
-let%expect_test "dedup_and_sort" =
+let%expect_test "sort" =
   let test str =
     let sexps_rewriter, field = Common.read str in
     let t = Dune_linter.Libraries.read ~sexps_rewriter ~field in
@@ -208,13 +280,14 @@ let%expect_test "dedup_and_sort" =
     |}];
   (* Handling of comments when they are in their own lines.
 
-     Dunolint produces an output with the libraries sorted, and the comment at
-     the same original index: *)
+     When libraries are separated by more than one line, dunolint treats the
+     dependencies as belonging to different sections, and sort each section in
+     isolation. *)
   test
     {|
  (libraries
-  aa
   dd
+  aa
   ;; this a comment
   zz
   bb
@@ -224,15 +297,129 @@ let%expect_test "dedup_and_sort" =
     {|
     (libraries
      aa
-     bb
-     ;; this a comment
-     cc
      dd
+     ;; this a comment
+     bb
+     cc
      zz)
     |}];
-  (* This is surprising and probably not a sane default. Kept as
+  test
+    {|
+(libraries
+ ;; First section
+ jj
+ ii
+ ;; Section section
+ bb
+ aa
+ ;; Third section
+ dd
+ cc)
+|};
+  [%expect
+    {|
+    (libraries
+     ;; First section
+     ii
+     jj
+     ;; Section section
+     aa
+     bb
+     ;; Third section
+     cc
+     dd)
+    |}];
+  (* If a comment is meant to target a single library, and that library is meant
+     to be excluded from the sorting, it is possible to add an extra comment
+     after it to create a new section for the remaining values.
+
+     For example, consider this use-case, which will be incorrectly sorted by
+     dunolint as it is: *)
+  test
+    {|
+ (libraries
+  ;; foo needs to be first
+  foo
+  bar
+  baz)
+|};
+  [%expect
+    {|
+    (libraries
+     ;; foo needs to be first
+     bar
+     baz
+     foo)
+    |}];
+  (* It may be rewritten as follows *)
+  test
+    {|
+ (libraries
+  ;; foo needs to be first
+  foo
+  ;; The rest can be sorted as usual
+  bar
+  baz)
+|};
+  [%expect
+    {|
+    (libraries
+     ;; foo needs to be first
+     foo
+     ;; The rest can be sorted as usual
+     bar
+     baz)
+    |}];
+  (* There may be cases where dunolint's sorting behavior will not make the most
+     sense. We may further revisit at a later point. We keep these cases as
      characterization tests for now.
 
-     See: https://github.com/mbarbin/dunolint/issues/12 *)
+     See also: https://github.com/mbarbin/dunolint/issues/12 *)
+  ()
+;;
+
+let%expect_test "dedup" =
+  let test str =
+    let sexps_rewriter, field = Common.read str in
+    let t = Dune_linter.Libraries.read ~sexps_rewriter ~field in
+    Dune_linter.Libraries.dedup_and_sort t;
+    Dune_linter.Libraries.rewrite t ~sexps_rewriter ~field;
+    print_endline (Sexps_rewriter.contents sexps_rewriter)
+  in
+  (* The sorting does also perform a deduping of the entries.
+
+     Note that the space separated are not properly removed from the output.
+     This is due to the fact that we do not normally make formatting efforts in
+     dunolint itself, because we'd like to encourage dunolint users to enable
+     dune auto formatting of dune files. If this proves too big of a hurdle,
+     maybe this could be revisited on a case-by-case basis (TBD). *)
+  test {| (libraries foo bar baz foo foo bar) |};
+  [%expect {| (libraries bar baz foo   ) |}];
+  (* When the dependencies are into different sections, the deduping should
+     still remove the duplicates. *)
+  test
+    {|
+(libraries
+  ;; First section
+  foo
+  bar
+  ;; Section section
+  baz
+  foo
+  ;; Third section
+  sna foo)
+|};
+  [%expect
+    {|
+    (libraries
+      ;; First section
+      bar
+      foo
+      ;; Section section
+      baz
+
+      ;; Third section
+      sna )
+    |}];
   ()
 ;;
