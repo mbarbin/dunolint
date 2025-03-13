@@ -4,6 +4,8 @@
 
 ### Changed
 
+- Dependencies in `libraries` are now sorted by sections when separated by comments (#12, #14, @mbarbin, reported and suggested by @raphael-proust).
+
 ### Deprecated
 
 ### Fixed
