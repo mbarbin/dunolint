@@ -19,26 +19,16 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-let read original_contents =
-  let sexps_rewriter =
-    match Sexps_rewriter.create ~path:(Fpath.v "dune") ~original_contents with
-    | Ok r -> r
-    | Error _ -> assert false
-  in
-  match Sexps_rewriter.original_sexps sexps_rewriter with
-  | [ field ] -> sexps_rewriter, field
-  | _ -> assert false
-;;
-
 let%expect_test "read/write" =
   let test contents =
-    let sexps_rewriter, field = read contents in
-    let t = Dune_linter.Library.Name.read ~sexps_rewriter ~field in
-    print_s (Dune_linter.Library.Name.write t)
+    Err.For_test.protect (fun () ->
+      let sexps_rewriter, field = Common.read contents in
+      let t = Dune_linter.Library.Name.read ~sexps_rewriter ~field in
+      print_s (Dune_linter.Library.Name.write t))
   in
   test {| (name pre_hello_suf) |};
   [%expect {| (name pre_hello_suf) |}];
-  Err.For_test.protect (fun () -> test {| (name (pre (hello_suf))) |});
+  test {| (name (pre (hello_suf))) |};
   [%expect
     {|
     Internal Error:
@@ -51,7 +41,7 @@ let%expect_test "read/write" =
 ;;
 
 let%expect_test "sexp_of" =
-  let sexps_rewriter, field = read {| (name lib_name) |} in
+  let sexps_rewriter, field = Common.read {| (name lib_name) |} in
   let t = Dune_linter.Library.Name.read ~sexps_rewriter ~field in
   print_s [%sexp (t : Dune_linter.Library.Name.t)];
   [%expect {| ((name lib_name)) |}];
@@ -66,9 +56,11 @@ module Predicate = struct
       [ `equals of Dune.Library.Name.t | `is_prefix of string | `is_suffix of string ]
 end
 
+open Dunolint.Config.Std
+
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
-  let sexps_rewriter, field = read {| (name pre_hello_suf) |} in
+  let sexps_rewriter, field = Common.read {| (name pre_hello_suf) |} in
   let t = Dune_linter.Library.Name.read ~sexps_rewriter ~field in
   let is_true b = require_equal [%here] (module Dunolint.Trilang) b True in
   let is_false b = require_equal [%here] (module Dunolint.Trilang) b False in
@@ -95,7 +87,7 @@ let%expect_test "eval" =
 
 let%expect_test "enforce" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
-  let sexps_rewriter, field = read {| (name pre_hello_suf) |} in
+  let sexps_rewriter, field = Common.read {| (name pre_hello_suf) |} in
   let enforce conditions =
     Sexps_rewriter.reset sexps_rewriter;
     let t = Dune_linter.Library.Name.read ~sexps_rewriter ~field in
@@ -103,11 +95,8 @@ let%expect_test "enforce" =
       List.iter conditions ~f:(fun condition ->
         Dune_linter.Library.Name.enforce t ~condition);
       Dune_linter.Library.Name.rewrite t ~sexps_rewriter ~field;
-      print_endline (Sexps_rewriter.contents sexps_rewriter))
+      print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
   in
-  let equals s = Blang.base (`equals s) in
-  let is_prefix s = Blang.base (`is_prefix s) in
-  let is_suffix s = Blang.base (`is_suffix s) in
   let open Blang.O in
   enforce [];
   [%expect {| (name pre_hello_suf) |}];

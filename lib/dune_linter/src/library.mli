@@ -45,12 +45,11 @@ include
 module Linter : Dunolinter.Linter.S with type t = t and type predicate = Dune.Predicate.t
 
 module Private : sig
-  (** At this time we export [rewrite] with an altered type, to add the
-      extra flag [load_existing_libraries], which defaults to [false].
-      Using [true] causes existing libraries to be read and added to the
-      in-memory value prior to rewriting. This is used internally by a
-      private tool but shall disappear after some refactoring has
-      happened. *)
+  (** At this time we export [rewrite] with an altered type, to add the extra
+      flag [load_existing_libraries], which defaults to [false]. Using [true]
+      causes existing libraries to be read and added to the in-memory value
+      prior to rewriting. This is used internally by a private tool but shall
+      disappear after some refactoring has happened. *)
   val rewrite
     :  ?load_existing_libraries:bool
     -> t

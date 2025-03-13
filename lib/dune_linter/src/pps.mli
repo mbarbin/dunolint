@@ -42,7 +42,6 @@ include
 
 (** {1 Utils} *)
 
-(** A util to create a value from a list of atoms. The [loc] is used
-    for error messages, [Loc.none] may be supplied if no loc is
-    available. *)
+(** A util to create a value from a list of atoms. The [loc] is used for error
+    messages, [Loc.none] may be supplied if no loc is available. *)
 val parse : loc:Loc.t -> string list -> t

@@ -38,6 +38,13 @@ module Entry = struct
 
   let library name = Library { name; source = Dune.Library.Name.to_string name }
 
+  let re_export name =
+    Re_export
+      { name
+      ; source = Printf.sprintf "(re_export %s)" (Dune.Library.Name.to_string name)
+      }
+  ;;
+
   module For_sort = struct
     let compare t1 t2 =
       match t1, t2 with

@@ -25,8 +25,8 @@ type t
 
 val create : flags:Sexp.t list -> t
 
-(** At the moment there is not predicate nor enforceable conditions on
-    flags. TBD. *)
+(** At the moment there is not predicate nor enforceable conditions on flags.
+    TBD. *)
 include Dunolinter.Stanza_linter.S with type t := t and type predicate := Nothing.t
 
 (** {1 Getters} *)

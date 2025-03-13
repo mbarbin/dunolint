@@ -19,18 +19,4 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-(** The ["instrumentation"] field indicates the instrumentation to be used. It
-    is used in stanza such as [library], [executable], etc. *)
-
-type t
-
-val create : backend:Dune.Instrumentation.Backend.Name.t -> t
-
-(** With the appearance of the condition blang, we create a first value to
-    initialize when the field is not originally present. *)
-val initialize : condition:Dune.Instrumentation.Predicate.t Blang.t -> t
-
-include
-  Dunolinter.Stanza_linter.S
-  with type t := t
-   and type predicate := Dune.Instrumentation.Predicate.t
+val read : string -> Sexps_rewriter.t * Sexp.t
