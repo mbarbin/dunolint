@@ -23,9 +23,9 @@ let read original_contents =
   let sexps_rewriter =
     match Sexps_rewriter.create ~path:(Fpath.v "dune") ~original_contents with
     | Ok r -> r
-    | Error _ -> assert false
+    | Error { loc; message } -> Err.raise ~loc [ Pp.text message ]
   in
   match Sexps_rewriter.original_sexps sexps_rewriter with
   | [ field ] -> sexps_rewriter, field
-  | _ -> assert false
+  | sexps -> Err.raise [ Pp.textf "Expected exactly 1 sexp, got %d." (List.length sexps) ]
 ;;
