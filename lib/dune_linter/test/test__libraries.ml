@@ -388,7 +388,7 @@ let%expect_test "dedup" =
   in
   (* The sorting does also perform a deduping of the entries.
 
-     Note that the space separated are not properly removed from the output.
+     Note that the space separators are not properly removed from the output.
      This is due to the fact that we do not normally make formatting efforts in
      dunolint itself, because we'd like to encourage dunolint users to enable
      dune auto formatting of dune files. If this proves too big of a hurdle,

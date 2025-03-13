@@ -148,9 +148,6 @@ let add_libraries t ~libraries =
 let extended_range_internal ~original_contents ~(range : Loc.Range.t) =
   let len = String.length original_contents in
   let start = range.start in
-  (* With this we handle a very particular but common case of comments
-     fitting in one line indicated at the right of the value. We
-     included the comment in the source in this case. *)
   let stop =
     let rec loop i =
       if i >= len
@@ -159,8 +156,8 @@ let extended_range_internal ~original_contents ~(range : Loc.Range.t) =
         match original_contents.[i] with
         | ' ' | '\t' -> loop (i + 1)
         | ';' ->
-          (* This is the case in which we'd like to capture the
-             remaining of the line. *)
+          (* This is the case in which we'd like to capture the remaining of the
+             line. *)
           let rec eol i =
             if i >= len
             then i
@@ -171,8 +168,8 @@ let extended_range_internal ~original_contents ~(range : Loc.Range.t) =
           in
           eol i
         | _ ->
-          (* Keeping the original bound when only looped through
-             spaces and tabs. *)
+          (* Keeping the original bound when only looped through spaces and
+             tabs. *)
           range.stop)
     in
     loop range.stop
