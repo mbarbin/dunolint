@@ -51,3 +51,21 @@ val mem : t -> library:Dune.Library.Name.t -> bool
 val dedup_and_sort : t -> unit
 val add_libraries : t -> libraries:Dune.Library.Name.t list -> unit
 val add_entries : t -> entries:Entry.t list -> unit
+
+(** {1 Private}
+
+    This module is exported for tests only. Its signature may change
+    in breaking ways at any time without prior notice, and outside of
+    the guidelines set by semver. *)
+module Private : sig
+  val extended_range_internal
+    :  original_contents:string
+    -> range:Loc.Range.t
+    -> Loc.Range.t
+
+  module Entry : sig
+    type t = Entry.t
+
+    val unhandled : original_index:int -> sexp:Sexp.t -> t
+  end
+end

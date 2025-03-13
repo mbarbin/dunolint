@@ -45,6 +45,10 @@ module Entry = struct
       }
   ;;
 
+  let unhandled ~original_index ~sexp =
+    Unhandled { original_index; sexp; source = Sexp.to_string_hum sexp }
+  ;;
+
   module For_sort = struct
     let compare t1 t2 =
       match t1, t2 with
@@ -66,8 +70,9 @@ end
 type t = { mutable sections : Section.t list } [@@deriving sexp_of]
 
 let create ~libraries =
-  let entries = List.map libraries ~f:Entry.library in
-  { sections = [ { entries } ] }
+  match List.map libraries ~f:Entry.library with
+  | [] -> { sections = [] }
+  | _ :: _ as entries -> { sections = [ { entries } ] }
 ;;
 
 let field_name = "libraries"
@@ -318,13 +323,19 @@ let rewrite t ~sexps_rewriter ~field =
 type predicate = Nothing.t
 
 let eval _t ~predicate =
-  match (predicate : predicate) with
+  match[@coverage off] (predicate : predicate) with
   | x -> Nothing.unreachable_code x
 ;;
 
 let rec enforce t ~condition =
   match (condition : predicate Blang.t) with
-  | Base x -> Nothing.unreachable_code x
+  | Base x -> Nothing.unreachable_code x [@coverage off]
   | (And _ | If _ | True | False | Not _ | Or _) as condition ->
     Dunolinter.Linter.enforce_blang (module Nothing) t ~condition ~eval ~enforce
 ;;
+
+module Private = struct
+  module Entry = Entry
+
+  let extended_range_internal = extended_range_internal
+end
