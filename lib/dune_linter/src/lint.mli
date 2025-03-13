@@ -19,8 +19,8 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-(** The ["lint"] field indicates the preprocessor to be used. It is used
-    in stanza such as [library], [executable], etc. *)
+(** The ["lint"] field indicates the preprocessor to be used. It is used in
+    stanza such as [library], [executable], etc. *)
 
 type t
 

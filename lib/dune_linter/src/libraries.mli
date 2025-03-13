@@ -19,17 +19,16 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-(** The ["libraries"] fields indicates the dependencies for the
-    stanza. It is used in stanza such as [library], [executable],
-    etc. *)
+(** The ["libraries"] field indicates the dependencies for the stanza. It is
+    used in stanza such as [library], [executable], etc. *)
 
 type t
 
 val create : libraries:Dune.Library.Name.t list -> t
 
 (** At the moment there is not predicate nor enforceable conditions on
-    libraries. They are automatically sorted. We may change this in
-    the future, perhaps make the sorting optional, etc. TBD. *)
+    libraries. They are automatically sorted. We may change this in the
+    future, perhaps make the sorting optional, etc. TBD. *)
 include Dunolinter.Stanza_linter.S with type t := t and type predicate := Nothing.t
 
 (** {1 Getters} *)

@@ -26,8 +26,8 @@ type t
 
 val create : backend:Dune.Instrumentation.Backend.Name.t -> t
 
-(** With the appearance of the condition blang, we create a first value to initialize when
-    the field is not originally present. *)
+(** With the appearance of the condition blang, we create a first value to
+    initialize when the field is not originally present. *)
 val initialize : condition:Dune.Instrumentation.Predicate.t Blang.t -> t
 
 include
