@@ -102,7 +102,23 @@ let add_libraries t ~libraries =
   add_entries t ~entries:(List.map libraries ~f:Entry.library)
 ;;
 
-let get_range ~sexps_rewriter ~field =
+(* [extended_range] computes the range for a library entry, that includes the
+   original range for the entry, but where the [stop] offset of the range may be
+   shifted to the right, until the end of the line, if this captures a comment
+   placed on the same line as the value.
+
+   For example:
+
+   {v
+     (libraries
+        foo
+        bar ;; a comment for bar on the same line
+        baz)
+   v}
+
+   [extend_range foo] will be [foo]'s original range unchanged. And
+   [extend_range bar] will include bar and its comment too. *)
+let extended_range ~sexps_rewriter ~field =
   let range = Sexps_rewriter.range sexps_rewriter field in
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
   let original_contents = File_rewriter.original_contents file_rewriter in
@@ -143,7 +159,7 @@ let get_range ~sexps_rewriter ~field =
 let get_source ~sexps_rewriter ~field =
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
   let original_contents = File_rewriter.original_contents file_rewriter in
-  let { Loc.Range.start; stop } = get_range ~sexps_rewriter ~field in
+  let { Loc.Range.start; stop } = extended_range ~sexps_rewriter ~field in
   String.sub original_contents ~pos:start ~len:(stop - start)
 ;;
 
@@ -187,7 +203,7 @@ let rewrite t ~sexps_rewriter ~field =
   let last_offset =
     match List.last args with
     | None -> Loc.stop_offset (Sexps_rewriter.loc sexps_rewriter field)
-    | Some arg -> (get_range ~sexps_rewriter ~field:arg).stop
+    | Some arg -> (extended_range ~sexps_rewriter ~field:arg).stop
   in
   let write_arg = function
     | Entry.Library { name = _; source } -> source
@@ -200,7 +216,7 @@ let rewrite t ~sexps_rewriter ~field =
     | arg :: args, new_arg :: new_args ->
       File_rewriter.replace
         file_rewriter
-        ~range:(get_range ~sexps_rewriter ~field:arg)
+        ~range:(extended_range ~sexps_rewriter ~field:arg)
         ~text:(write_arg new_arg);
       iter_fields args new_args
     | [], [] -> ()
@@ -210,7 +226,9 @@ let rewrite t ~sexps_rewriter ~field =
         File_rewriter.insert file_rewriter ~offset:last_offset ~text:("\n" ^ value))
     | _ :: _, [] ->
       List.iter args ~f:(fun arg ->
-        File_rewriter.remove file_rewriter ~range:(get_range ~sexps_rewriter ~field:arg))
+        File_rewriter.remove
+          file_rewriter
+          ~range:(extended_range ~sexps_rewriter ~field:arg))
   in
   iter_fields args new_args
 ;;
