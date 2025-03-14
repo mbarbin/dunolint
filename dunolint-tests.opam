@@ -20,8 +20,8 @@ depends: [
   "fpath-sexp0" {>= "0.2.2"}
   "loc" {>= "0.2.2"}
   "logs" {>= "0.7.0"}
-  "patdiff" {>= "v0.17" & < "v0.18"}
   "parsexp" {>= "v0.17" & < "v0.18"}
+  "patdiff" {>= "v0.17" & < "v0.18"}
   "pp" {>= "2.0.0"}
   "pplumbing" {>= "0.0.9"}
   "ppx_compare" {>= "v0.17" & < "v0.18"}
