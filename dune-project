@@ -181,11 +181,11 @@
    (>= 0.2.2))
   (logs
    (>= 0.7.0))
-  (patdiff
+  (parsexp
    (and
     (>= v0.17)
     (< v0.18)))
-  (parsexp
+  (patdiff
    (and
     (>= v0.17)
     (< v0.18)))
