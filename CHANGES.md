@@ -1,16 +1,12 @@
-## 0.0.2025XXXX (unreleased)
+## 0.0.20250315 (2025-03-15)
 
 ### Added
+
+- Prepare to include more ci workflows incrementally in the future (@mbarbin).
 
 ### Changed
 
 - Dependencies in `libraries` are now sorted by sections when separated by comments (#12, #14, @mbarbin, reported and suggested by @raphael-proust).
-
-### Deprecated
-
-### Fixed
-
-### Removed
 
 ## 0.0.20250310 (2025-03-10)
 
