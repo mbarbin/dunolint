@@ -216,18 +216,29 @@ let%expect_test "rewrite" =
     {|
 (libraries
  foo ;; this is a comment for foo.
+ (unhandled)
  (re_export baz))
 |}
     ~f:(fun t ->
+      (* We also test that duplicates shall not be introduced by the [add] api. *)
+      Dune_linter.Libraries.add_libraries
+        t
+        ~libraries:[ Dune.Library.Name.v "bar"; Dune.Library.Name.v "bar" ];
       Dune_linter.Libraries.add_libraries t ~libraries:[ Dune.Library.Name.v "bar" ];
       Dune_linter.Libraries.add_entries
         t
-        ~entries:[ Dune_linter.Libraries.Entry.re_export (Dune.Library.Name.v "sna") ];
+        ~entries:
+          [ Dune_linter.Libraries.Entry.re_export (Dune.Library.Name.v "sna")
+          ; Dune_linter.Libraries.Private.Entry.unhandled
+              ~original_index:42
+              ~sexp:[%sexp Unhandled_constructs_are_not_inserted]
+          ];
       ());
   [%expect
     {|
     (libraries
      foo ;; this is a comment for foo.
+     (unhandled)
      (re_export baz)
     bar
     (re_export sna))
@@ -420,6 +431,114 @@ let%expect_test "dedup" =
 
       ;; Third section
       sna )
+    |}];
+  ()
+;;
+
+let%expect_test "sort-with-unhandled-values" =
+  (* Here we test some unreachable cases involving unhandled values. *)
+  let test str =
+    let sexps_rewriter, field = Common.read str in
+    let t = Dune_linter.Libraries.read ~sexps_rewriter ~field in
+    Dune_linter.Libraries.dedup_and_sort t;
+    Dune_linter.Libraries.rewrite t ~sexps_rewriter ~field;
+    print_endline (Sexps_rewriter.contents sexps_rewriter)
+  in
+  (* Example: *)
+  test
+    {|
+(libraries
+  foo
+  (unhandled1)
+  (re_export bbb)
+  (unhandled2)
+  bar
+  (re_export aaa))
+|};
+  [%expect
+    {|
+    (libraries
+      (re_export aaa)
+      bar
+      (re_export bbb)
+      foo
+      (unhandled1)
+      (unhandled2))
+    |}];
+  (* Testing individual ordering conventions. *)
+  test {| (libraries foo (unhandled)) |};
+  [%expect {| (libraries foo (unhandled)) |}];
+  test {| (libraries (unhandled) (re_export foo)) |};
+  [%expect {| (libraries (re_export foo) (unhandled)) |}];
+  test {| (libraries (re_export foo) (unhandled)) |};
+  [%expect {| (libraries (re_export foo) (unhandled)) |}];
+  test {| (libraries (unhandled2) (unhandled1)) |};
+  [%expect {| (libraries (unhandled2) (unhandled1)) |}];
+  ()
+;;
+
+let%expect_test "extended_range_internal" =
+  let test original_contents ~range =
+    let { Loc.Range.start; stop } =
+      Dune_linter.Libraries.Private.extended_range_internal ~original_contents ~range
+    in
+    print_s [%sexp (String.sub original_contents ~pos:start ~len:(stop - start) : string)]
+  in
+  test "foo" ~range:{ start = 0; stop = 3 };
+  [%expect {| foo |}];
+  test "foo     " ~range:{ start = 0; stop = 3 };
+  [%expect {| "foo     " |}];
+  test "foo     ; Hello comment" ~range:{ start = 0; stop = 3 };
+  [%expect {| "foo     ; Hello comment" |}];
+  test "foo     \t; Hello comment" ~range:{ start = 0; stop = 3 };
+  [%expect {| "foo     \t; Hello comment" |}];
+  test "foo     ; Hello comment\n; And new line" ~range:{ start = 0; stop = 3 };
+  [%expect {| "foo     ; Hello comment" |}];
+  ()
+;;
+
+let%expect_test "create_then_rewrite" =
+  (* This covers some unusual cases. The common code path does not involve
+     rewriting values that are created via [create]. *)
+  let test t str =
+    let sexps_rewriter, field = Common.read str in
+    Dune_linter.Libraries.rewrite t ~sexps_rewriter ~field;
+    print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
+  in
+  let t = Dune_linter.Libraries.create ~libraries:[] in
+  test t {| (libraries) |};
+  [%expect {| (libraries) |}];
+  test t {| (libraries foo bar) |};
+  [%expect {| (libraries) |}];
+  let t = Dune_linter.Libraries.create ~libraries:[ Dune.Library.Name.v "foo" ] in
+  test t {| (libraries foo bar) |};
+  [%expect {| (libraries foo) |}];
+  ()
+;;
+
+let%expect_test "enforce" =
+  let sexps_rewriter, field = Common.read {| (libraries foo bar) |} in
+  let enforce conditions =
+    Sexps_rewriter.reset sexps_rewriter;
+    let t = Dune_linter.Libraries.read ~sexps_rewriter ~field in
+    Dunolinter.Handler.raise ~f:(fun () ->
+      List.iter conditions ~f:(fun condition ->
+        Dune_linter.Libraries.enforce t ~condition);
+      Dune_linter.Libraries.rewrite t ~sexps_rewriter ~field;
+      print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
+  in
+  let open Blang.O in
+  enforce [];
+  [%expect {| (libraries foo bar) |}];
+  (* Blang. *)
+  enforce [ true_ ];
+  [%expect {| (libraries foo bar) |}];
+  require_does_raise [%here] (fun () -> enforce [ false_ ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure
+      (loc       _)
+      (condition false))
     |}];
   ()
 ;;
