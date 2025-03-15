@@ -58,8 +58,8 @@ let%expect_test "sexp_of" =
     {|
     ((name (((name main))))
      (public_name ())
-     (flags     ((flags   ())))
-     (libraries ((entries ())))
+     (flags ((flags ())))
+     (libraries ((sections (((entries ()))))))
      (instrumentation    ())
      (lint               ())
      (preprocess         ())

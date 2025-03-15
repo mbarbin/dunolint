@@ -59,34 +59,61 @@ module Entry = struct
   end
 end
 
-type t = { mutable entries : Entry.t list } [@@deriving sexp_of]
+module Section = struct
+  type t = { mutable entries : Entry.t list } [@@deriving sexp_of]
+end
+
+type t = { mutable sections : Section.t list } [@@deriving sexp_of]
 
 let create ~libraries =
   let entries = List.map libraries ~f:Entry.library in
-  { entries }
+  { sections = [ { entries } ] }
 ;;
 
 let field_name = "libraries"
-let is_empty t = List.is_empty t.entries
-let entries t = t.entries
+let is_empty t = List.for_all t.sections ~f:(fun section -> List.is_empty section.entries)
+let entries t = List.concat_map t.sections ~f:(fun section -> section.entries)
 
 let mem t ~library =
-  List.exists t.entries ~f:(function
-    | Unhandled _ -> false
-    | Re_export { name; _ } | Library { name; _ } -> Dune.Library.Name.equal name library)
+  List.exists t.sections ~f:(fun section ->
+    List.exists section.entries ~f:(function
+      | Unhandled _ -> false
+      | Re_export { name; _ } | Library { name; _ } ->
+        Dune.Library.Name.equal name library))
 ;;
 
 let dedup_and_sort t =
-  t.entries <- List.dedup_and_sort t.entries ~compare:Entry.For_sort.compare
+  let names = Hash_set.create (module Dune.Library.Name) in
+  List.iter t.sections ~f:(fun section ->
+    let entries =
+      List.dedup_and_sort section.entries ~compare:Entry.For_sort.compare
+      |> List.filter ~f:(fun (entry : Entry.t) ->
+        match entry with
+        | Unhandled _ -> true
+        | Re_export { name; _ } | Library { name; _ } ->
+          let present = Hash_set.mem names name in
+          Hash_set.add names name;
+          not present)
+    in
+    section.entries <- entries)
 ;;
 
 let add_entries t ~entries =
   let names = Hash_set.create (module Dune.Library.Name) in
-  List.iter t.entries ~f:(function
-    | Unhandled _ -> ()
-    | Re_export { name; _ } | Library { name; _ } -> Hash_set.add names name);
-  t.entries
-  <- t.entries
+  List.iter t.sections ~f:(fun section ->
+    List.iter section.entries ~f:(function
+      | Unhandled _ -> ()
+      | Re_export { name; _ } | Library { name; _ } -> Hash_set.add names name));
+  let section =
+    match List.last t.sections with
+    | Some section -> section
+    | None ->
+      let section = { Section.entries = [] } in
+      t.sections <- [ section ];
+      section
+  in
+  section.entries
+  <- section.entries
      @ List.filter_map entries ~f:(fun entry ->
        match (entry : Entry.t) with
        | Unhandled _ -> None
@@ -102,15 +129,25 @@ let add_libraries t ~libraries =
   add_entries t ~entries:(List.map libraries ~f:Entry.library)
 ;;
 
-let get_range ~sexps_rewriter ~field =
-  let range = Sexps_rewriter.range sexps_rewriter field in
-  let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
-  let original_contents = File_rewriter.original_contents file_rewriter in
+(* [extended_range] computes the range for a library entry, that includes the
+   original range for the entry, but where the [stop] offset of the range may be
+   shifted to the right, until the end of the line, if this captures a comment
+   placed on the same line as the value.
+
+   For example:
+
+   {v
+     (libraries
+        foo
+        bar ;; a comment for bar on the same line
+        baz)
+   v}
+
+   [extend_range foo] will be [foo]'s original range unchanged. And
+   [extend_range bar] will include bar and its comment too. *)
+let extended_range_internal ~original_contents ~(range : Loc.Range.t) =
   let len = String.length original_contents in
   let start = range.start in
-  (* With this we handle a very particular but common case of comments
-     fitting in one line indicated at the right of the value. We
-     included the comment in the source in this case. *)
   let stop =
     let rec loop i =
       if i >= len
@@ -119,8 +156,8 @@ let get_range ~sexps_rewriter ~field =
         match original_contents.[i] with
         | ' ' | '\t' -> loop (i + 1)
         | ';' ->
-          (* This is the case in which we'd like to capture the
-             remaining of the line. *)
+          (* This is the case in which we'd like to capture the remaining of the
+             line. *)
           let rec eol i =
             if i >= len
             then i
@@ -131,8 +168,8 @@ let get_range ~sexps_rewriter ~field =
           in
           eol i
         | _ ->
-          (* Keeping the original bound when only looped through
-             spaces and tabs. *)
+          (* Keeping the original bound when only looped through spaces and
+             tabs. *)
           range.stop)
     in
     loop range.stop
@@ -140,67 +177,118 @@ let get_range ~sexps_rewriter ~field =
   { Loc.Range.start; stop }
 ;;
 
-let get_source ~sexps_rewriter ~field =
-  let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
-  let original_contents = File_rewriter.original_contents file_rewriter in
-  let { Loc.Range.start; stop } = get_range ~sexps_rewriter ~field in
+let get_source ~original_contents ~range =
+  let { Loc.Range.start; stop } = extended_range_internal ~original_contents ~range in
   String.sub original_contents ~pos:start ~len:(stop - start)
 ;;
 
+(* Tell whether two consecutive arguments are to be treated as belonging to
+   different sections.
+
+   The way dunolint does this, is to look whether two consecutive entries are
+   separated by more than 1 line. In particular this covers the case where
+   entries are separated by a comment in its own line, in which case dunolint
+   will consider that the dependencies are in different sections.
+
+   {v
+     (libraries
+       aa
+       bb
+       ;; this a comment
+       cc
+       zz)
+   v}
+
+   [are_in_different_section] must be called with two consecutive arguments,
+   otherwise the returned value does not have any particular meaning. *)
+let are_in_different_sections
+      ~(previous : Parsexp.Positions.range)
+      ~(current : Parsexp.Positions.range)
+  =
+  let previous_line = previous.end_pos.line in
+  let current_line = current.start_pos.line in
+  previous_line + 1 < current_line
+;;
+
 let read ~sexps_rewriter ~field =
+  let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
+  let original_contents = File_rewriter.original_contents file_rewriter in
   let args = Dunolinter.Sexp_handler.get_args ~field_name ~sexps_rewriter ~field in
-  let entries =
+  let sections =
     List.mapi args ~f:(fun original_index arg ->
-      match arg with
-      | Atom name ->
-        let source = get_source ~sexps_rewriter ~field:arg in
-        Entry.Library { name = Dune.Library.Name.v name; source }
-      | List [ Atom "re_export"; Atom name ] ->
-        let source = get_source ~sexps_rewriter ~field:arg in
-        Entry.Re_export { name = Dune.Library.Name.v name; source }
-      | List _ as sexp ->
-        let source = get_source ~sexps_rewriter ~field:arg in
-        Entry.Unhandled { original_index; sexp; source })
+      let position = Sexps_rewriter.position sexps_rewriter arg in
+      let range = Sexps_rewriter.Position.range position in
+      let source = get_source ~original_contents ~range in
+      let entry =
+        match arg with
+        | Atom name -> Entry.Library { name = Dune.Library.Name.v name; source }
+        | List [ Atom "re_export"; Atom name ] ->
+          Entry.Re_export { name = Dune.Library.Name.v name; source }
+        | List _ as sexp -> Entry.Unhandled { original_index; sexp; source }
+      in
+      position, entry)
+    |> List.group ~break:(fun (previous, _) (current, _) ->
+      are_in_different_sections ~previous ~current)
+    |> List.map ~f:(fun entries -> { Section.entries = List.map entries ~f:snd })
   in
-  { entries }
+  { sections }
 ;;
 
 let write (t : t) =
   Sexp.List
     (Atom field_name
-     :: List.map t.entries ~f:(function
-       (* When producing a new sexp we cannot include the comments
-          because we are not in control of the formatting. However
-          there should not be a code path that ends up dropping
-          comment, because of a global invariant that [write] is
-          only used with [t] created via this interface in the first
-          place, and this doesn't allow populating comments. *)
-       | Library { name; _ } -> Sexp.Atom (Dune.Library.Name.to_string name)
-       | Re_export { name; _ } ->
-         Sexp.List [ Atom "re_export"; Atom (Dune.Library.Name.to_string name) ]
-       | Unhandled { original_index = _; sexp; source = _ } -> sexp))
+     :: List.concat_map t.sections ~f:(fun section ->
+       List.map section.entries ~f:(function
+         (* When producing a new sexp we cannot include the comments because we
+            are not in control of the formatting. However there should not be a
+            code path that ends up dropping comment, because of a global
+            invariant that [write] is only used with [t] values created via this
+            interface, and this code path doesn't allow populating comments in
+            the first place. *)
+         | Library { name; _ } -> Sexp.Atom (Dune.Library.Name.to_string name)
+         | Re_export { name; _ } ->
+           Sexp.List [ Atom "re_export"; Atom (Dune.Library.Name.to_string name) ]
+         | Unhandled { original_index = _; sexp; source = _ } -> sexp)))
+;;
+
+let extended_range ~sexps_rewriter ~field =
+  let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
+  let original_contents = File_rewriter.original_contents file_rewriter in
+  let range = Sexps_rewriter.range sexps_rewriter field in
+  extended_range_internal ~original_contents ~range
 ;;
 
 let rewrite t ~sexps_rewriter ~field =
-  let args = Dunolinter.Sexp_handler.get_args ~field_name ~sexps_rewriter ~field in
+  let args =
+    Dunolinter.Sexp_handler.get_args ~field_name ~sexps_rewriter ~field
+    |> List.map ~f:(fun arg ->
+      let position = Sexps_rewriter.position sexps_rewriter arg in
+      position, arg)
+    |> List.group ~break:(fun (previous, _) (current, _) ->
+      are_in_different_sections ~previous ~current)
+    |> List.map ~f:(List.map ~f:snd)
+  in
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
   let last_offset =
-    match List.last args with
-    | None -> Loc.stop_offset (Sexps_rewriter.loc sexps_rewriter field)
-    | Some arg -> (get_range ~sexps_rewriter ~field:arg).stop
+    match
+      match List.last args with
+      | None -> None
+      | Some entries -> List.last entries
+    with
+    | None -> Loc.stop_offset (Sexps_rewriter.loc sexps_rewriter field) - 1
+    | Some arg -> (extended_range ~sexps_rewriter ~field:arg).stop
   in
   let write_arg = function
     | Entry.Library { name = _; source } -> source
     | Entry.Re_export { name = _; source } -> source
     | Entry.Unhandled { original_index = _; sexp = _; source } -> source
   in
-  let new_args = t.entries in
   let rec iter_fields args new_args =
     match args, new_args with
     | arg :: args, new_arg :: new_args ->
       File_rewriter.replace
         file_rewriter
-        ~range:(get_range ~sexps_rewriter ~field:arg)
+        ~range:(extended_range ~sexps_rewriter ~field:arg)
         ~text:(write_arg new_arg);
       iter_fields args new_args
     | [], [] -> ()
@@ -210,9 +298,21 @@ let rewrite t ~sexps_rewriter ~field =
         File_rewriter.insert file_rewriter ~offset:last_offset ~text:("\n" ^ value))
     | _ :: _, [] ->
       List.iter args ~f:(fun arg ->
-        File_rewriter.remove file_rewriter ~range:(get_range ~sexps_rewriter ~field:arg))
+        File_rewriter.remove
+          file_rewriter
+          ~range:(extended_range ~sexps_rewriter ~field:arg))
   in
-  iter_fields args new_args
+  let rec iter_sections args new_args =
+    match args, new_args with
+    | [], [] -> ()
+    | args :: tl, new_args :: new_tl ->
+      iter_fields args new_args.Section.entries;
+      iter_sections tl new_tl
+    | [], new_args ->
+      List.iter new_args ~f:(fun new_args -> iter_fields [] new_args.Section.entries)
+    | args, [] -> List.iter args ~f:(fun args -> iter_fields args [])
+  in
+  iter_sections args t.sections
 ;;
 
 type predicate = Nothing.t
