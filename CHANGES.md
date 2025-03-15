@@ -2,6 +2,8 @@
 
 ### Added
 
+- Prepare to include more ci workflows incrementally in the future (@mbarbin).
+
 ### Changed
 
 - Dependencies in `libraries` are now sorted by sections when separated by comments (#12, #14, @mbarbin, reported and suggested by @raphael-proust).
