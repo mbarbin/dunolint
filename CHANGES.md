@@ -1,8 +1,20 @@
+## 0.0.2025XXXX (unreleased)
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
 ## 0.0.20250315 (2025-03-15)
 
 ### Added
 
-- Prepare to include more ci workflows incrementally in the future (@mbarbin).
+- Prepare to include more ci workflows incrementally in the future (#16, @mbarbin).
 
 ### Changed
 
