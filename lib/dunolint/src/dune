@@ -13,7 +13,6 @@
   Fpath_base)
  (libraries
   base
-  dune-glob
   dunolint-lib.vendor_blang
   dunolint-lib.vendor_vcs
   fpath-base

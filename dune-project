@@ -29,8 +29,6 @@
    (and
     (>= v0.17)
     (< v0.18)))
-  (dune-glob
-   (>= 3.17))
   (fpath-base
    (>= 0.2.2))
   (ppx_compare
