@@ -330,7 +330,14 @@ let eval _t ~predicate =
 let rec enforce t ~condition =
   match (condition : predicate Blang.t) with
   | Base x -> Nothing.unreachable_code x [@coverage off]
-  | (And _ | If _ | True | False | Not _ | Or _) as condition ->
+  | (And _ | If _ | Not _ | Or _) as condition ->
+    Dunolinter.Linter.enforce_blang
+      (module Nothing)
+      t
+      ~condition
+      ~eval
+      ~enforce [@coverage off]
+  | (True | False) as condition ->
     Dunolinter.Linter.enforce_blang (module Nothing) t ~condition ~eval ~enforce
 ;;
 
