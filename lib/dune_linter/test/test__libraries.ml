@@ -44,11 +44,11 @@ let%expect_test "read/write" =
   (* In the most common case, dependencies are specified as atoms. *)
   test {| (libraries foo bar baz) |};
   [%expect {| (libraries foo bar baz) |}];
-  (* Dunolint also support parsing more complex expressions. So far, we haven't
-     restricted the use of composite sexps, and dunolint allows constructs that
-     are invalid in dune, and not have any particular meaning. The aim is to be
-     a bit more future-proof, however if this turns out to be a bad idea, this
-     may be revisited later. Kept as characterization tests for now. *)
+  (* Dunolint also supports parsing more complex expressions. So far, we haven't
+     restricted the use of nested sexps, and dunolint allows constructs that are
+     invalid in dune, and not have any particular meaning. The aim is to be a
+     bit more future-proof, however if this turns out to be a bad idea, this may
+     be revisited later. Kept as characterization tests for now. *)
   test {| (libraries (re_export foo) bar (sexp baz)) |};
   [%expect {| (libraries (re_export foo) bar (sexp baz)) |}];
   ()
