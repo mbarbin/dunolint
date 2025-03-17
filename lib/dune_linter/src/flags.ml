@@ -37,13 +37,12 @@ let write (t : t) = Sexp.List (Atom field_name :: t.flags)
 let rewrite (t : t) ~sexps_rewriter ~field =
   let args = Dunolinter.Sexp_handler.get_args ~field_name ~sexps_rewriter ~field in
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
-  let token_list =
-    match (field : Sexp.t) with
-    | List token_list -> token_list
-    | _ -> [ field ]
-  in
   let insert_position =
-    let last_token = List.last_exn token_list in
+    let last_token =
+      match (field : Sexp.t) with
+      | List token_list -> List.last_exn token_list
+      | Atom _ -> assert false
+    in
     Sexps_rewriter.stop_offset sexps_rewriter last_token
   in
   let rec iter expected_exprs actual_exprs =
