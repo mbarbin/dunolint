@@ -56,6 +56,7 @@ const sidebars: SidebarsConfig = {
       label: 'Explanation',
       items: [
         { type: 'doc', id: 'explanation/README', label: 'Introduction' },
+        { type: 'doc', id: 'explanation/current-state/README', label: 'Current State' },
         { type: 'doc', id: 'explanation/config/README', label: 'Config Language Design' },
       ],
     },
