@@ -2,13 +2,23 @@
 
 ### Added
 
+- Added support for `library.modes` (#23, #27, @mbarbin, requested by @raphael-proust)
+- Document release process and current state (#25, @mbarbin).
+- Added coverage and regression tests (#18, #19, #30, @mbarbin).
+
 ### Changed
+
+- Upgrade Docusaurus to latest available (#24, @mbarbin).
 
 ### Deprecated
 
 ### Fixed
 
+- Fixes for `odoc.3.0.0` (#28, #32, @mbarbin, with help from @jonludlam)
+
 ### Removed
+
+- Disabled failing macos build from CI for now (#20, @mbarbin).
 
 ## 0.0.20250315 (2025-03-15)
 
