@@ -78,7 +78,7 @@ module Predicate = struct
       | `lint of Dune.Lint.Predicate.t Blang.t
       | `instrumentation of Dune.Instrumentation.Predicate.t Blang.t
       | `preprocess of Dune.Preprocess.Predicate.t Blang.t
-      | `has_field of [ `name | `public_name | `lint | `instrumentation | `preprocess ]
+      | `has_field of [ `instrumentation | `lint | `name | `preprocess | `public_name ]
       ]
 end
 
@@ -186,8 +186,8 @@ let%expect_test "enforce" =
     enforce t [ name (not_ (equals (Dune.Executable.Name.v "main"))) ]);
   [%expect
     {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (equals main)))) |}];
-  (* When there is no public_name, enforcing the equality with a value
-     results in dunolint adding a new public_name field. *)
+  (* When there is no public_name, enforcing the equality with a value results
+     in dunolint adding a new public_name field. *)
   let t = parse {| (executable (name main)) |} in
   enforce t [ public_name (equals (Dune.Executable.Public_name.v "my-cli")) ];
   [%expect
@@ -197,12 +197,11 @@ let%expect_test "enforce" =
       (public_name my-cli))
     |}];
   let t = parse {| (executable (name main)) |} in
-  (* When the require invariant is negated, and there is no
-     public_name, this currently fails. This is questionable, perhaps
-     the behavior is not yet very consistent in dunolint, and in other
-     places dunolint simply does nothing when encountering undefined
-     invariants. This may be revisited at some point, TBD, kept as
-     characterization tests for now. *)
+  (* When the required invariant is negated, and there is no public_name, this
+     currently fails. This is questionable, perhaps the behavior is not yet very
+     consistent in dunolint, and in other places dunolint simply does nothing
+     when encountering undefined invariants. This may be revisited at some
+     point, TBD, kept as characterization tests for now. *)
   require_does_raise [%here] (fun () ->
     enforce t [ public_name (not_ (equals (Dune.Executable.Public_name.v "my-cli"))) ]);
   [%expect
@@ -215,10 +214,10 @@ let%expect_test "enforce" =
 ;;
 
 let%expect_test "load_existing_libraries" =
-  (* This is covering a use-case which hopefully will be deprecated in
-     the future. Some external tool is using dunolint in such a way
-     that existing fields are linted against values obtained with
-     [create], which ends up erasing fields. *)
+  (* This is covering a use-case which hopefully will be deprecated in the
+     future. Some external tool is using dunolint in such a way that existing
+     fields are linted against values obtained with [create], which ends up
+     erasing fields. *)
   let test t str ~load_existing_libraries =
     let sexps_rewriter, field = Common.read str in
     Dune_linter.Executable.Private.rewrite

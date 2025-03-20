@@ -25,7 +25,7 @@ type t = { args : Sexp.t list } [@@deriving sexp_of]
 
 let create () = { args = [] }
 
-module Handler = Dunolinter.Sexp_handler.Make_sexps (struct
+module Handler = Dunolinter.Sexp_handler.Make_sexp_list (struct
     let field_name = field_name
   end)
 

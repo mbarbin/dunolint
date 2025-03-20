@@ -19,71 +19,62 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-type t = { mutable public_name : Dune.Library.Public_name.t } [@@deriving sexp_of]
+type t = { mutable modes : Dune.Library.Modes.t } [@@deriving sexp_of]
 
-let field_name = "public_name"
+let field_name = "modes"
 
-module Handler = Dunolinter.Sexp_handler.Make_atom (struct
-    let field_name = field_name
-  end)
+module Handler =
+  Dunolinter.Sexp_handler.Make_sexpable_list
+    (struct
+      let field_name = field_name
+    end)
+    (Dune.Compilation_mode)
 
-let create ~public_name = { public_name }
+let create ~modes = { modes }
 
 let read ~sexps_rewriter ~field =
-  let public_name = Handler.read ~sexps_rewriter ~field in
-  create ~public_name:(Dune.Library.Public_name.v public_name)
+  let modes = Handler.read ~sexps_rewriter ~field in
+  create ~modes:(Set.of_list (module Dune.Compilation_mode) modes)
 ;;
 
-let write t = Handler.write (Dune.Library.Public_name.to_string t.public_name)
+let write t = Handler.write (Set.to_list t.modes)
 
 let rewrite t ~sexps_rewriter ~field =
-  Handler.rewrite
-    (Dune.Library.Public_name.to_string t.public_name)
-    ~sexps_rewriter
-    ~field
+  Handler.rewrite (Set.to_list t.modes) ~sexps_rewriter ~field
 ;;
 
-type predicate = Dune.Library.Public_name.Predicate.t
+type predicate = Dune.Library.Modes.Predicate.t
 
 let eval t ~predicate =
   (match (predicate : predicate) with
-   | `equals public_name -> Dune.Library.Public_name.equal public_name t.public_name
-   | `is_prefix prefix ->
-     String.is_prefix (Dune.Library.Public_name.to_string t.public_name) ~prefix
-   | `is_suffix suffix ->
-     String.is_suffix (Dune.Library.Public_name.to_string t.public_name) ~suffix)
+   | `equals modes -> Set.equal t.modes modes
+   | `has_mode mode -> Set.mem t.modes mode)
   |> Dunolint.Trilang.const
 ;;
 
 let rec enforce t ~condition =
   match (condition : predicate Blang.t) with
-  | Base (`equals public_name) -> t.public_name <- public_name
-  | Base (`is_prefix prefix) ->
-    let value = Dune.Library.Public_name.to_string t.public_name in
-    if not (String.is_prefix value ~prefix)
-    then
-      t.public_name
-      <- Dune.Library.Public_name.v
-           (Dunolinter.Linter.public_name_is_prefix value ~prefix)
-  | Not (Base (`is_prefix prefix)) ->
-    let value = Dune.Library.Public_name.to_string t.public_name in
-    (match String.chop_prefix value ~prefix with
-     | None -> ()
-     | Some value -> t.public_name <- Dune.Library.Public_name.v value)
-  | Base (`is_suffix suffix) ->
-    let value = Dune.Library.Public_name.to_string t.public_name in
-    if not (String.is_suffix value ~suffix)
-    then t.public_name <- Dune.Library.Public_name.v (value ^ suffix)
-  | Not (Base (`is_suffix suffix)) ->
-    let value = Dune.Library.Public_name.to_string t.public_name in
-    (match String.chop_suffix value ~suffix with
-     | None -> ()
-     | Some value -> t.public_name <- Dune.Library.Public_name.v value)
+  | Base (`equals modes) -> t.modes <- modes
+  | Base (`has_mode mode) -> t.modes <- Set.add t.modes mode
+  | Not (Base (`has_mode mode)) -> t.modes <- Set.remove t.modes mode
   | (And _ | If _ | True | False | Not _ | Or _) as condition ->
     Dunolinter.Linter.enforce_blang
-      (module Dune.Library.Public_name.Predicate)
+      (module Dune.Library.Modes.Predicate)
       t
       ~condition
       ~eval
       ~enforce
+;;
+
+let initialize ~condition =
+  let modes =
+    let set =
+      List.map (Dunolinter.Linter.at_positive_enforcing_position condition) ~f:(function
+        | `equals modes -> modes
+        | `has_mode mode -> Set.singleton (module Dune.Compilation_mode) mode)
+      |> Set.union_list (module Dune.Compilation_mode)
+    in
+    if Set.is_empty set then Set.singleton (module Dune.Compilation_mode) `best else set
+  in
+  { modes }
 ;;

@@ -76,6 +76,7 @@ module Std : sig
   val generate_opam_files : 'a -> [> `generate_opam_files of 'a ] Blang.t
   val glob : string -> [> `glob of Glob.t ] Blang.t
   val has_field : 'a -> [> `has_field of 'a ] Blang.t
+  val has_mode : 'a -> [> `has_mode of 'a ] Blang.t
   val implicit_transitive_deps : 'a -> [> `implicit_transitive_deps of 'a ] Blang.t
   val include_subdirs : 'a -> [> `include_subdirs of 'a ] Blang.t
   val instrumentation : 'a -> [> `instrumentation of 'a ] Blang.t
@@ -83,6 +84,7 @@ module Std : sig
   val is_suffix : string -> [> `is_suffix of string ] Blang.t
   val library : 'a -> [> `library of 'a ] Blang.t
   val lint : 'a -> [> `lint of 'a ] Blang.t
+  val modes : 'a -> [> `modes of 'a ] Blang.t
   val name : 'a -> [> `name of 'a ] Blang.t
   val no_preprocessing : [> `no_preprocessing ] Blang.t
   val path : 'a -> [> `path of 'a ] Blang.t

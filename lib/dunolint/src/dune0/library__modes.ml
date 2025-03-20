@@ -19,14 +19,14 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-type t =
-  [ `executable of Executable.Predicate.t Blang.t
-  | `include_subdirs of Include_subdirs.Predicate.t Blang.t
-  | `library of Library.Predicate.t Blang.t
-  | `stanza of Stanza.Predicate.t Blang.t
-  | `lint of Lint.Predicate.t Blang.t
-  | `instrumentation of Instrumentation.Predicate.t Blang.t
-  | `preprocess of Preprocess.Predicate.t Blang.t
-  | `has_field of [ `instrumentation | `lint | `name | `preprocess | `public_name ]
-  ]
-[@@deriving compare, equal, sexp]
+type t = Set.M(Compilation_mode).t [@@deriving compare, equal, sexp]
+
+module Predicate = struct
+  type modes = t [@@deriving compare, equal, sexp]
+
+  type t =
+    [ `equals of modes
+    | `has_mode of Compilation_mode.t
+    ]
+  [@@deriving compare, equal, sexp]
+end

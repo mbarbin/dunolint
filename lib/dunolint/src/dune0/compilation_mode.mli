@@ -19,43 +19,14 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-module Modes = Library__modes
-module Name = Library__name
-module Public_name = Library__public_name
+(** A variant used by dune in the configuration of the compilation and linking
+    modes of build artifacts such as libraries and executables. *)
 
-type t
+type t =
+  [ `byte
+  | `native
+  | `best
+  ]
 
-val create
-  :  ?name:Dune.Library.Name.t
-  -> ?public_name:Dune.Library.Public_name.t
-  -> ?inline_tests:bool
-  -> ?modes:Dune.Library.Modes.t
-  -> ?flags:Sexp.t list
-  -> ?libraries:Dune.Library.Name.t list
-  -> ?libraries_to_open_via_flags:string list
-  -> ?instrumentation:Instrumentation.t
-  -> ?lint:Lint.t
-  -> ?preprocess:Preprocess.t
-  -> unit
-  -> t
-
-include
-  Dunolinter.Stanza_linter.S
-  with type t := t
-   and type predicate = Dune.Library.Predicate.t
-
-module Linter : Dunolinter.Linter.S with type t = t and type predicate = Dune.Predicate.t
-
-module Private : sig
-  (** At this time we export [rewrite] with an altered type, to add the extra
-      flag [load_existing_libraries], which defaults to [false]. Using [true]
-      causes existing libraries to be read and added to the in-memory value
-      prior to rewriting. This is used internally by a private tool but shall
-      disappear after some refactoring has happened. *)
-  val rewrite
-    :  ?load_existing_libraries:bool
-    -> t
-    -> sexps_rewriter:Sexps_rewriter.t
-    -> field:Sexp.t
-    -> unit
-end
+include Container_key.S with type t := t
+include Comparable.S with type t := t
