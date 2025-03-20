@@ -83,7 +83,7 @@ module Linter = struct
     | `include_subdirs condition ->
       Dunolint.Trilang.eval condition ~f:(fun predicate -> Top.eval t ~predicate)
     | `executable _ | `library _ | `instrumentation _ | `lint _ | `preprocess _
-    | `has_field (`name | `public_name | `lint | `instrumentation | `preprocess) ->
+    | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name) ->
       Dunolint.Trilang.Undefined
   ;;
 
@@ -100,6 +100,6 @@ module Linter = struct
        | `instrumentation _
        | `lint _
        | `preprocess _
-       | `has_field (`name | `public_name | `lint | `instrumentation | `preprocess) -> ())
+       | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name) -> ())
   ;;
 end

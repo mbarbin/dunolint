@@ -78,7 +78,7 @@ module Predicate = struct
       | `lint of Dune.Lint.Predicate.t Blang.t
       | `instrumentation of Dune.Instrumentation.Predicate.t Blang.t
       | `preprocess of Dune.Preprocess.Predicate.t Blang.t
-      | `has_field of [ `name | `public_name | `lint | `instrumentation | `preprocess ]
+      | `has_field of [ `instrumentation | `lint | `name | `preprocess | `public_name ]
       ]
 end
 
