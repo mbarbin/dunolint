@@ -88,7 +88,7 @@ module Make_atom (M : sig
   end) =
   Make_sexpable (M) (String)
 
-module Make_sexps (M : sig
+module Make_sexp_list (M : sig
     val field_name : string
   end) =
 struct
@@ -101,6 +101,27 @@ struct
   ;;
 
   let write (t : t) = Sexp.List (Atom M.field_name :: t)
+
+  let rewrite (t : t) ~sexps_rewriter ~field =
+    replace_field ~sexps_rewriter ~field ~new_field:(write t)
+  ;;
+end
+
+module Make_sexpable_list
+    (M : sig
+       val field_name : string
+     end)
+    (S : Sexpable.S) =
+struct
+  type t = S.t list [@@deriving sexp_of]
+
+  let field_name = M.field_name
+
+  let read ~sexps_rewriter ~field =
+    get_args ~field_name:M.field_name ~sexps_rewriter ~field |> List.map ~f:S.t_of_sexp
+  ;;
+
+  let write (t : t) = Sexp.List (Atom M.field_name :: List.map t ~f:S.sexp_of_t)
 
   let rewrite (t : t) ~sexps_rewriter ~field =
     replace_field ~sexps_rewriter ~field ~new_field:(write t)

@@ -19,6 +19,7 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+module Modes = Library__modes
 module Name = Library__name
 module Public_name = Library__public_name
 
@@ -29,6 +30,7 @@ module Field_name = struct
     type t =
       [ `name
       | `public_name
+      | `modes
       | `instrumentation
       | `lint
       | `preprocess
@@ -44,6 +46,7 @@ type t =
   { mutable name : Name.t option
   ; mutable public_name : Public_name.t option
   ; inline_tests : bool option
+  ; mutable modes : Modes.t option
   ; flags : Flags.t
   ; libraries : Libraries.t
   ; libraries_to_open_via_flags : string list
@@ -59,6 +62,7 @@ let indicative_field_ordering =
   ; "public_name"
   ; "package"
   ; "inline_tests"
+  ; "modes"
   ; "flags"
   ; "libraries"
   ; "instrumentation"
@@ -142,6 +146,7 @@ let create
       ?name
       ?public_name
       ?inline_tests
+      ?modes
       ?(flags = [])
       ?(libraries = [])
       ?(libraries_to_open_via_flags = [])
@@ -154,12 +159,14 @@ let create
   let public_name =
     Option.map public_name ~f:(fun public_name -> Public_name.create ~public_name)
   in
+  let modes = Option.map modes ~f:(fun modes -> Modes.create ~modes) in
   let flags = Flags.create ~flags in
   let libraries = Libraries.create ~libraries in
   let t =
     { name
     ; public_name
     ; inline_tests
+    ; modes
     ; flags
     ; libraries
     ; libraries_to_open_via_flags
@@ -178,6 +185,7 @@ let read ~sexps_rewriter ~field =
   let name = ref None in
   let public_name = ref None in
   let inline_tests = ref None in
+  let modes = ref None in
   let flags = ref None in
   let libraries = ref None in
   let instrumentation = ref None in
@@ -189,6 +197,7 @@ let read ~sexps_rewriter ~field =
     | List (Atom "public_name" :: _) ->
       public_name := Some (Public_name.read ~sexps_rewriter ~field)
     | List (Atom "inline_tests" :: _) -> inline_tests := Some true
+    | List (Atom "modes" :: _) -> modes := Some (Modes.read ~sexps_rewriter ~field)
     | List (Atom "flags" :: _) -> flags := Some (Flags.read ~sexps_rewriter ~field)
     | List (Atom "libraries" :: _) ->
       libraries := Some (Libraries.read ~sexps_rewriter ~field)
@@ -211,6 +220,7 @@ let read ~sexps_rewriter ~field =
   { name = !name
   ; public_name = !public_name
   ; inline_tests = !inline_tests
+  ; modes = !modes
   ; flags
   ; libraries
   ; libraries_to_open_via_flags = []
@@ -225,6 +235,7 @@ let write_fields
       ({ name
        ; public_name
        ; inline_tests
+       ; modes
        ; flags
        ; libraries
        ; libraries_to_open_via_flags = _
@@ -240,6 +251,7 @@ let write_fields
     ; Option.map public_name ~f:Public_name.write
     ; Option.bind inline_tests ~f:(fun inline_tests ->
         if inline_tests then Some (Sexp.List [ Atom "inline_tests" ]) else None)
+    ; Option.map modes ~f:Modes.write
     ; (if Flags.is_empty flags then None else Some (Flags.write flags))
     ; (if Libraries.is_empty libraries then None else Some (Libraries.write libraries))
     ; Option.map instrumentation ~f:Instrumentation.write
@@ -292,6 +304,9 @@ let rewrite ?(load_existing_libraries = false) t ~sexps_rewriter ~field =
           File_rewriter.remove
             file_rewriter
             ~range:(Sexps_rewriter.range sexps_rewriter field))
+    | List (Atom "modes" :: _) ->
+      Option.iter t.modes ~f:(fun t -> Modes.rewrite t ~sexps_rewriter ~field);
+      maybe_remove t.modes `modes field
     | List (Atom "flags" :: _) -> Flags.rewrite t.flags ~sexps_rewriter ~field
     | List (Atom "libraries" :: _) -> Libraries.rewrite t.libraries ~sexps_rewriter ~field
     | List (Atom "instrumentation" :: _) ->
@@ -333,6 +348,11 @@ let eval t ~predicate =
      | None -> Dunolint.Trilang.Undefined
      | Some lint ->
        Dunolint.Trilang.eval condition ~f:(fun predicate -> Lint.eval lint ~predicate))
+  | `modes condition ->
+    (match t.modes with
+     | None -> Dunolint.Trilang.Undefined
+     | Some modes ->
+       Dunolint.Trilang.eval condition ~f:(fun predicate -> Modes.eval modes ~predicate))
   | `preprocess condition ->
     (match t.preprocess with
      | None -> Dunolint.Trilang.Undefined
@@ -341,11 +361,12 @@ let eval t ~predicate =
          Preprocess.eval preprocess ~predicate))
   | `has_field field ->
     (match field with
-     | `name -> Option.is_some t.name
-     | `public_name -> Option.is_some t.public_name
-     | `lint -> Option.is_some t.lint
      | `instrumentation -> Option.is_some t.instrumentation
-     | `preprocess -> Option.is_some t.preprocess)
+     | `lint -> Option.is_some t.lint
+     | `modes -> Option.is_some t.modes
+     | `name -> Option.is_some t.name
+     | `preprocess -> Option.is_some t.preprocess
+     | `public_name -> Option.is_some t.public_name)
     |> Dunolint.Trilang.const
 ;;
 
@@ -449,6 +470,23 @@ let rec enforce t ~condition =
         lint
     in
     Lint.enforce lint ~condition
+  | Base (`has_field `modes) ->
+    (match t.name with
+     | Some _ -> ()
+     | None -> t.modes <- Some (Modes.initialize ~condition:Blang.true_))
+  | Not (Base (`has_field (`modes as to_mark))) ->
+    Hash_set.add t.marked_for_removal to_mark;
+    t.modes <- None
+  | Base (`modes condition) ->
+    let modes =
+      match t.modes with
+      | Some modes -> modes
+      | None ->
+        let modes = Modes.initialize ~condition in
+        t.modes <- Some modes;
+        modes
+    in
+    Modes.enforce modes ~condition
   | Base (`has_field `preprocess) ->
     (match t.preprocess with
      | Some _ -> ()
@@ -497,8 +535,9 @@ module Linter = struct
     | `include_subdirs _ | `executable _ -> Dunolint.Trilang.Undefined
     | `library condition ->
       Dunolint.Trilang.eval condition ~f:(fun predicate -> Top.eval t ~predicate)
-    | (`instrumentation _ | `lint _ | `preprocess _ | `has_field _) as predicate ->
-      Top.eval t ~predicate
+    | ( `instrumentation _ | `lint _ | `preprocess _
+      | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name) ) as
+      predicate -> Top.eval t ~predicate
   ;;
 
   let rec enforce t ~condition =
@@ -509,8 +548,9 @@ module Linter = struct
       (match dune with
        | `include_subdirs _ | `executable _ | `stanza _ -> ()
        | `library condition -> Top.enforce t ~condition
-       | (`instrumentation _ | `lint _ | `preprocess _ | `has_field _) as predicate ->
-         Top.enforce t ~condition:(Blang.base predicate))
+       | ( `instrumentation _ | `lint _ | `preprocess _
+         | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name) ) as
+         predicate -> Top.enforce t ~condition:(Blang.base predicate))
   ;;
 end
 

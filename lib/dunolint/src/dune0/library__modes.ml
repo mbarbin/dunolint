@@ -19,13 +19,14 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-let read original_contents =
-  let sexps_rewriter =
-    match Sexps_rewriter.create ~path:(Fpath.v "dune") ~original_contents with
-    | Ok r -> r
-    | Error { loc; message } -> Err.raise ~loc [ Pp.text message ] [@coverage off]
-  in
-  match Sexps_rewriter.original_sexps sexps_rewriter with
-  | [ field ] -> sexps_rewriter, field
-  | sexps -> Err.raise [ Pp.textf "Expected exactly 1 sexp, got %d." (List.length sexps) ]
-;;
+type t = Set.M(Compilation_mode).t [@@deriving compare, equal, sexp]
+
+module Predicate = struct
+  type modes = t [@@deriving compare, equal, sexp]
+
+  type t =
+    [ `equals of modes
+    | `has_mode of Compilation_mode.t
+    ]
+  [@@deriving compare, equal, sexp]
+end

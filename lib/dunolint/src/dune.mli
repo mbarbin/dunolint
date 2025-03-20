@@ -19,6 +19,7 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
+module Compilation_mode = Dune0.Compilation_mode
 module Executable = Dune0.Executable
 module Include_subdirs = Dune0.Include_subdirs
 module Instrumentation = Dune0.Instrumentation

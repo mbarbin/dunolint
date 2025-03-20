@@ -19,17 +19,20 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+module Modes = Library__modes
 module Name = Library__name
 module Public_name = Library__public_name
 
 module Predicate = struct
   type t =
-    [ `name of Name.Predicate.t Blang.t
-    | `public_name of Public_name.Predicate.t Blang.t
-    | `lint of Lint.Predicate.t Blang.t
+    [ `has_field of
+        [ `instrumentation | `lint | `modes | `name | `preprocess | `public_name ]
     | `instrumentation of Instrumentation.Predicate.t Blang.t
+    | `lint of Lint.Predicate.t Blang.t
+    | `modes of Modes.Predicate.t Blang.t
+    | `name of Name.Predicate.t Blang.t
     | `preprocess of Preprocess.Predicate.t Blang.t
-    | `has_field of [ `name | `public_name | `lint | `instrumentation | `preprocess ]
+    | `public_name of Public_name.Predicate.t Blang.t
     ]
   [@@deriving compare, equal, sexp]
 end

@@ -47,7 +47,7 @@ module Make_atom (_ : sig
 
 (** A util to create a generic field handler that doesn't try to parse
     its arguments. *)
-module Make_sexps (_ : sig
+module Make_sexp_list (_ : sig
     val field_name : string
   end) : S with type t = Sexp.t list
 
@@ -59,6 +59,15 @@ module Make_sexpable
        val field_name : string
      end)
     (M : Sexpable.S) : S with type t = M.t
+
+(** A util to create a handler for multiple args with the same sexpable type. The handler will
+    expect a list of arguments, which will each be parsed and written (or replaced)
+    according to the sexp serializer provided. *)
+module Make_sexpable_list
+    (_ : sig
+       val field_name : string
+     end)
+    (M : Sexpable.S) : S with type t = M.t list
 
 (** {1 Utils} *)
 
