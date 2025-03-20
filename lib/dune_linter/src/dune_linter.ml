@@ -21,6 +21,7 @@
 
 module Executable = Executable
 module Flags = Flags
+module Include_subdirs = Include_subdirs
 module Instrumentation = Instrumentation
 module Library = Library
 module Libraries = Libraries

@@ -22,6 +22,8 @@
 type t = { mutable backend : Dune.Instrumentation.Backend.Name.t } [@@deriving sexp_of]
 
 let create ~backend = { backend }
+let backend t = t.backend
+let set_backend t ~backend = t.backend <- backend
 let field_name = "instrumentation"
 
 let read ~sexps_rewriter ~field =

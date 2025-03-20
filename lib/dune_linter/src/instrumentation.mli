@@ -34,3 +34,11 @@ include
   Dunolinter.Stanza_linter.S
   with type t := t
    and type predicate := Dune.Instrumentation.Predicate.t
+
+(** {1 Getters} *)
+
+val backend : t -> Dune.Instrumentation.Backend.Name.t
+
+(** {1 Setters} *)
+
+val set_backend : t -> backend:Dune.Instrumentation.Backend.Name.t -> unit

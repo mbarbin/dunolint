@@ -73,12 +73,21 @@ module Predicate = struct
       [ `equals of Dune.Library.Modes.t | `has_mode of Dune.Compilation_mode.t ]
 end
 
+let parse str =
+  let sexps_rewriter, field = Common.read str in
+  let t = Dune_linter.Library.Modes.read ~sexps_rewriter ~field in
+  sexps_rewriter, field, t
+;;
+
 open Dunolint.Config.Std
 
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
-  let sexps_rewriter, field = Common.read {| (modes byte native) |} in
-  let t = Dune_linter.Library.Modes.read ~sexps_rewriter ~field in
+  let parse str =
+    let _, _, t = parse str in
+    t
+  in
+  let t = parse {| (modes byte native) |} in
   let is_true b = require_equal [%here] (module Dunolint.Trilang) b True in
   let is_false b = require_equal [%here] (module Dunolint.Trilang) b False in
   is_true
@@ -100,11 +109,6 @@ let%expect_test "eval" =
 ;;
 
 let%expect_test "enforce" =
-  let parse str =
-    let sexps_rewriter, field = Common.read str in
-    let t = Dune_linter.Library.Modes.read ~sexps_rewriter ~field in
-    sexps_rewriter, field, t
-  in
   let enforce (sexps_rewriter, field, t) conditions =
     Sexps_rewriter.reset sexps_rewriter;
     Dunolinter.Handler.raise ~f:(fun () ->
