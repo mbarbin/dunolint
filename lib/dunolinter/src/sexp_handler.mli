@@ -51,9 +51,9 @@ module Make_sexps (_ : sig
     val field_name : string
   end) : S with type t = Sexp.t list
 
-(** A util to create a handler from a sexpable type. The handler will
-    expect exactly one value, which will be parsed and written (or
-    replaced) according to the sexp serializer provided. *)
+(** A util to create a handler from a single sexpable type. The handler will
+    expect exactly one value, which will be parsed and written (or replaced)
+    according to the sexp serializer provided. *)
 module Make_sexpable
     (_ : sig
        val field_name : string
