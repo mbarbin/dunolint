@@ -67,6 +67,7 @@ module Std = struct
   let include_subdirs p = Blang.base (`include_subdirs p)
   let instrumentation p = Blang.base (`instrumentation p)
   let is_prefix p = Blang.base (`is_prefix p)
+  let is_present = Blang.base `is_present
   let is_suffix p = Blang.base (`is_suffix p)
   let library p = Blang.base (`library p)
   let lint p = Blang.base (`lint p)

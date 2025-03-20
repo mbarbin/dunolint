@@ -18,15 +18,3 @@
 (*_  and the LGPL-3.0 Linking Exception along with this library. If not, see      *)
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
-
-type t
-
-val create : implicit_transitive_deps:bool -> t
-
-include
-  Dunolinter.Stanza_linter.S
-  with type t := t
-   and type predicate = Dune_project.Implicit_transitive_deps.Predicate.t
-
-module Linter :
-  Dunolinter.Linter.S with type t = t and type predicate = Dune_project.Predicate.t
