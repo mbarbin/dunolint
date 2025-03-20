@@ -339,6 +339,10 @@
     (< v0.18)))
   (ppxlib
    (>= 0.35.0))
+  (odoc
+   (and
+    :with-doc
+    (= 2.4.4)))
   (sexplib0
    (and
     (>= v0.17)
