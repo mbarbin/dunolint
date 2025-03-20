@@ -342,7 +342,7 @@
   (odoc
    (and
     :with-doc
-    (= 2.4.4)))
+    (>= 2.4.4)))
   (sexplib0
    (and
     (>= v0.17)
