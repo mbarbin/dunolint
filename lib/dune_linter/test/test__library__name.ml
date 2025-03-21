@@ -58,12 +58,13 @@ end
 
 open Dunolint.Config.Std
 
+let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
+let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
+
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
   let sexps_rewriter, field = Common.read {| (name pre_hello_suf) |} in
   let t = Dune_linter.Library.Name.read ~sexps_rewriter ~field in
-  let is_true b = require_equal [%here] (module Dunolint.Trilang) b True in
-  let is_false b = require_equal [%here] (module Dunolint.Trilang) b False in
   is_true
     (Dune_linter.Library.Name.eval
        t

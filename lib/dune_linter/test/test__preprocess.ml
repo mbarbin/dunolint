@@ -74,6 +74,9 @@ let parse str =
 
 open Dunolint.Config.Std
 
+let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
+let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
+
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
   let parse str =
@@ -81,8 +84,6 @@ let%expect_test "eval" =
     t
   in
   let t = parse {| (preprocess (pps ppx_sexp_conv)) |} in
-  let is_true b = require_equal [%here] (module Dunolint.Trilang) b True in
-  let is_false b = require_equal [%here] (module Dunolint.Trilang) b False in
   is_true
     (Dune_linter.Preprocess.eval
        t

@@ -126,6 +126,9 @@ end
 
 open Dunolint.Config.Std
 
+let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
+let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
+
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
   let parse str =
@@ -133,8 +136,6 @@ let%expect_test "eval" =
     t
   in
   let t = parse {| (lint (pps ppx_js_style)) |} in
-  let is_true b = require_equal [%here] (module Dunolint.Trilang) b True in
-  let is_false b = require_equal [%here] (module Dunolint.Trilang) b False in
   is_true
     (Dune_linter.Lint.eval
        t
