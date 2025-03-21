@@ -28,7 +28,7 @@ module Running_mode = struct
   [@@deriving compare, equal, sexp_of]
 end
 
-type t = { running_mode : Running_mode.t }
+type t = { running_mode : Running_mode.t } [@@deriving sexp_of]
 
 let default = { running_mode = Interactive }
 let running_mode t = t.running_mode
@@ -76,7 +76,7 @@ let arg =
   in
   let running_mode : Running_mode.t =
     match List.filter_opt [ dry_run; interactive; yes; check ] with
-    | [] -> if Unix.isatty Unix.stdout then Interactive else Force_yes
+    | [] -> if Unix.isatty Unix.stdout then Interactive [@coverage off] else Force_yes
     | [ (_, mode) ] -> mode
     | _ :: _ :: _ as conflicts ->
       Err.raise
@@ -86,7 +86,9 @@ let arg =
             ++ Pp.concat_map ~sep:(Pp.text ", ") conflicts ~f:(fun (flag, _) ->
               Pp_tty.kwd (module String) flag)
             ++ Pp.text ". Please choose one."
-          ]
+          ] [@coverage off]
+    (* [@coverage off] is due to out edge instrumentation, but this
+       case is exercised during the tests. *)
   in
   { running_mode }
 ;;

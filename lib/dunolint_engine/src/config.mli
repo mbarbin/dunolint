@@ -19,7 +19,7 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-type t
+type t [@@deriving sexp_of]
 
 val default : t
 val arg : t Cmdlang.Command.Arg.t
