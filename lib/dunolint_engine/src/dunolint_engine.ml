@@ -134,7 +134,9 @@ end
 
 let format_dune_file_internal (_ : t) ~new_contents =
   let ((in_ch, out_ch, err_ch) as process) =
-    Unix.open_process_full "dune format-dune-file" ~env:(Unix.environment ())
+    Unix.open_process_full
+      "dune format-dune-file"
+      ~env:(Array.append [| "CLICOLOR=0" |] (Unix.environment ()))
   in
   Out_channel.output_string out_ch new_contents;
   Out_channel.close out_ch;
