@@ -120,10 +120,10 @@ let%expect_test "enforce" =
   (* Enforcing the presence of a new pp adds it. *)
   enforce t [ pps (pp (Dune.Pp.Name.v "ppx_other")) ];
   [%expect {| (preprocess (pps ppx_other ppx_sexp_conv)) |}];
-  (* Enforcing the non-equality with another value has no effect. *)
+  (* Enforcing the absence of an absent pp has no effect. *)
   enforce t [ pps (not_ (pp (Dune.Pp.Name.v "ppx_not_there"))) ];
   [%expect {| (preprocess (pps ppx_other ppx_sexp_conv)) |}];
-  (* Enforcing the negation of a present removes it. *)
+  (* Enforcing the negation of a present pp removes it. *)
   enforce t [ pps (not_ (pp (Dune.Pp.Name.v "ppx_sexp_conv"))) ];
   [%expect {| (preprocess (pps ppx_other)) |}];
   (* no_preprocessing *)
