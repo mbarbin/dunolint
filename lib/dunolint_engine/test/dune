@@ -13,18 +13,25 @@
   -open
   Fpath_sexp0
   -open
-  Expect_test_helpers_base)
+  Expect_test_helpers_base
+  -open
+  Stdio)
  (libraries
   base
   cmdlang
   cmdlang-stdlib-runner
+  dune_linter
+  dune_project_linter
   dunolint
   dunolint_engine
+  dunolinter
   expect_test_helpers_core.expect_test_helpers_base
   file-rewriter
   fpath-sexp0
   pplumbing.err
-  sexps-rewriter)
+  sexps-rewriter
+  stdio
+  unix)
  (instrumentation
   (backend bisect_ppx))
  (lint

@@ -32,8 +32,8 @@ let%expect_test "running modes" =
   eval_args [ "--check"; "--dry-run" ];
   [%expect
     {|
-    ("Evaluation Raised" (
-      "Conflicting flags [dry-run], [check]. Please choose one." (Exit 124)))
+    ("Evaluation Raised"
+     ("Conflicting flags [dry-run], [check]. Please choose one." (Exit 124)))
     |}];
   ()
 ;;

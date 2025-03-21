@@ -112,3 +112,7 @@ val create : config:Config.t -> t
 (** Apply all the changes that have been saved into [t] to the file system, or
     merely print them if we're in dry-run mode. *)
 val materialize : t -> unit
+
+module Private : sig
+  val mkdirs : Relative_path.t -> unit
+end

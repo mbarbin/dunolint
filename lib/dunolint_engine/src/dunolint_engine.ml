@@ -54,7 +54,8 @@ module File_kind = struct
     | S_FIFO
     | S_SOCK
 
-  let to_string = function
+  let to_string t =
+    match[@coverage off] t with
     | S_REG -> "Regular file"
     | S_DIR -> "Directory"
     | S_CHR -> "Character device"
@@ -131,18 +132,32 @@ module Process_status = struct
   [@@deriving sexp_of]
 end
 
-let format_dune_file (_ : t) ~new_contents =
+let format_dune_file_internal (_ : t) ~new_contents =
   let ((in_ch, out_ch) as process) = Unix.open_process "dune format-dune-file" in
   Out_channel.output_string out_ch new_contents;
   Out_channel.close out_ch;
   let output = In_channel.input_all in_ch in
   match Unix.close_process process with
-  | WEXITED 0 -> output
+  | WEXITED 0 -> Ok output
   | (WEXITED _ | WSIGNALED _ | WSTOPPED _) as process_status ->
-    Err.raise
+    Error
       [ Pp.text "Failed to format dune file."
       ; Err.pp_of_sexp (Process_status.sexp_of_t process_status)
       ]
+;;
+
+let format_dune_file t ~new_contents =
+  match format_dune_file_internal t ~new_contents with
+  | Ok output -> output
+  | Error text -> Err.raise text
+;;
+
+let format_dune_file_or_continue t ~loc ~new_contents =
+  match format_dune_file_internal t ~new_contents with
+  | Ok output -> output
+  | Error text ->
+    Err.error ~loc text;
+    new_contents
 ;;
 
 let lint_dune_file ?with_linter t ~(path : Relative_path.t) ~f =
@@ -159,7 +174,11 @@ let lint_dune_file ?with_linter t ~(path : Relative_path.t) ~f =
         Dune_linter.visit linter ~f;
         Option.iter with_linter ~f:(fun f -> f linter);
         Dune_linter.contents linter)
-    ~autoformat_file:(fun ~new_contents -> format_dune_file t ~new_contents)
+    ~autoformat_file:(fun ~new_contents ->
+      format_dune_file_or_continue
+        t
+        ~loc:(Loc.of_file ~path:(path :> Fpath.t))
+        ~new_contents)
 ;;
 
 let lint_dune_project_file ?with_linter t ~(path : Relative_path.t) ~f =
@@ -176,7 +195,11 @@ let lint_dune_project_file ?with_linter t ~(path : Relative_path.t) ~f =
         Dune_project_linter.visit linter ~f;
         Option.iter with_linter ~f:(fun f -> f linter);
         Dune_project_linter.contents linter)
-    ~autoformat_file:(fun ~new_contents -> format_dune_file t ~new_contents)
+    ~autoformat_file:(fun ~new_contents ->
+      format_dune_file_or_continue
+        t
+        ~loc:(Loc.of_file ~path:(path :> Fpath.t))
+        ~new_contents)
 ;;
 
 let rec mkdirs path =
@@ -382,3 +405,7 @@ let run ~config f =
   in
   result
 ;;
+
+module Private = struct
+  let mkdirs = mkdirs
+end
