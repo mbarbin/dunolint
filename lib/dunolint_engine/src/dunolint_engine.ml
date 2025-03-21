@@ -134,9 +134,7 @@ end
 
 let format_dune_file_internal (_ : t) ~new_contents =
   let ((in_ch, out_ch, err_ch) as process) =
-    Unix.open_process_full
-      "dune format-dune-file"
-      ~env:(Array.append [| "CLICOLOR=0" |] (Unix.environment ()))
+    Unix.open_process_full "dune format-dune-file" ~env:(Unix.environment ())
   in
   Out_channel.output_string out_ch new_contents;
   Out_channel.close out_ch;
@@ -147,7 +145,10 @@ let format_dune_file_internal (_ : t) ~new_contents =
   | (WEXITED _ | WSIGNALED _ | WSTOPPED _) as process_status ->
     Error
       [ Pp.text "Failed to format dune file:"
-      ; Pp.text (String.strip err_output)
+      ; Pp.text
+          (if Err.am_running_test ()
+           then "<REDACTED IN TEST>"
+           else String.strip err_output)
       ; Err.pp_of_sexp (Process_status.sexp_of_t process_status)
       ]
 ;;

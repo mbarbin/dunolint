@@ -125,8 +125,7 @@ let%expect_test "format_dune_file" =
   [%expect
     {|
     Error: Failed to format dune file:
-    File "", line 1, characters 8-8:
-    Error: unclosed parenthesis at end of input
+    <REDACTED IN TEST>
     WEXITED 1
     [123]
     |}];
@@ -216,8 +215,7 @@ let%expect_test "invalid files" =
 
       File "invalid/dune", line 1, characters 0-0:
       Error: Failed to format dune file:
-      File "", line 1, characters 8-8:
-      Error: unclosed parenthesis at end of input
+      <REDACTED IN TEST>
       WEXITED 1
       |}];
     Dunolint_engine.lint_dune_project_file
@@ -233,8 +231,7 @@ let%expect_test "invalid files" =
 
       File "invalid/dune-project", line 1, characters 0-0:
       Error: Failed to format dune file:
-      File "", line 1, characters 8-8:
-      Error: unclosed parenthesis at end of input
+      <REDACTED IN TEST>
       WEXITED 1
       |}];
     Dunolint_engine.lint_dune_project_file
