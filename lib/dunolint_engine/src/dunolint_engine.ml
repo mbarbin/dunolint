@@ -148,7 +148,7 @@ let format_dune_file_internal (_ : t) ~new_contents =
       ; Pp.text
           (if Err.am_running_test ()
            then "<REDACTED IN TEST>"
-           else String.strip err_output)
+           else String.strip err_output [@coverage off])
       ; Err.pp_of_sexp (Process_status.sexp_of_t process_status)
       ]
 ;;
