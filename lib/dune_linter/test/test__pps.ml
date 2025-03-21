@@ -46,10 +46,41 @@ let%expect_test "read/write" =
 ;;
 
 let%expect_test "sexp_of" =
-  let sexps_rewriter, field = Common.read {| (pps ppx_deriving) |} in
+  let sexps_rewriter, field =
+    Common.read {| (pps --driver ppx_deriving --flag --opt=param) |}
+  in
   let t = Dune_linter.Pps.read ~sexps_rewriter ~field in
   print_s [%sexp (t : Dune_linter.Pps.t)];
-  [%expect {| ((args ((Pp (pp_name ppx_deriving))))) |}];
+  [%expect
+    {|
+    ((
+      args (
+        (Flag (name --driver) (param ()) (applies_to driver))
+        (Pp (pp_name ppx_deriving))
+        (Flag (name --flag) (param ()) (applies_to (pp ppx_deriving)))
+        (Flag (name --opt) (param (param)) (applies_to (pp ppx_deriving))))))
+    |}];
+  ()
+;;
+
+let%expect_test "parse" =
+  let t =
+    Dune_linter.Pps.parse
+      ~loc:Loc.none
+      [ "--driver"; "ppx_deriving"; "--flag"; "--opt=param" ]
+  in
+  print_s [%sexp (t : Dune_linter.Pps.t)];
+  [%expect
+    {|
+    ((
+      args (
+        (Flag (name --driver) (param ()) (applies_to driver))
+        (Pp (pp_name ppx_deriving))
+        (Flag (name --flag) (param ()) (applies_to (pp ppx_deriving)))
+        (Flag (name --opt) (param (param)) (applies_to (pp ppx_deriving))))))
+    |}];
+  require_does_raise [%here] (fun () -> Dune_linter.Pps.parse ~loc:Loc.none [ "" ]);
+  [%expect {| ("Invalid empty pp." (Exit 123)) |}];
   ()
 ;;
 
@@ -81,6 +112,9 @@ let%expect_test "rewrite" =
     ignore (t : Dune_linter.Pps.t);
     ());
   [%expect {| (pps ppx_deriving -flag) |}];
+  (* Here we monitor how pps and flags get reordered. *)
+  rewrite {| (pps -b -a b --b --a --d a d c)|};
+  [%expect {| (pps -a -b a b --a --b --d c d) |}];
   ()
 ;;
 
@@ -92,15 +126,21 @@ let%expect_test "create_then_rewrite" =
     Dune_linter.Pps.rewrite t ~sexps_rewriter ~field;
     print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
   in
-  let t = Dune_linter.Pps.create ~args:[ Pp (Dune.Pp.Name.v "ppx_deriving") ] in
+  let t =
+    Dune_linter.Pps.create
+      ~args:
+        [ Flag { name = "--hello-driver"; param = None }
+        ; Pp (Dune.Pp.Name.v "ppx_deriving")
+        ]
+  in
   test t {| (pps -flag ppx_deriving -flag) |};
-  [%expect {| (pps ppx_deriving) |}];
+  [%expect {| (pps --hello-driver ppx_deriving) |}];
   (* When dunolint doesn't understand the expression to rewrite, this triggers an error. *)
   require_does_raise [%here] (fun () -> test t {| (other_field (unexpected args)) |});
   [%expect {| ("Unexpected [pps] field." (Exit 123)) |}];
   (* However if the field is [pps] the existing arguments are replaced. *)
   test t {| (pps (unexpected args)) |};
-  [%expect {| (pps ppx_deriving) |}];
+  [%expect {| (pps --hello-driver ppx_deriving) |}];
   ()
 ;;
 
@@ -128,9 +168,163 @@ let%expect_test "eval" =
   in
   let t = parse {| (pps ppx_deriving) |} in
   is_true (Dune_linter.Pps.eval t ~predicate:(`pp (Dune.Pp.Name.v "ppx_deriving")));
-  [%expect {| |}];
+  [%expect {||}];
   is_false (Dune_linter.Pps.eval t ~predicate:(`pp (Dune.Pp.Name.v "ppx_other")));
-  [%expect {| |}];
+  [%expect {||}];
+  let t =
+    parse
+      {|
+ (pps
+   --flag-for-the-ppx-driver
+   ppx_jane
+   --flag-for-jane
+   --other-flag-for-jane
+   ppx_john
+   --flag-for-john=value)
+|}
+  in
+  is_true (Dune_linter.Pps.eval t ~predicate:(`pp (Dune.Pp.Name.v "ppx_jane")));
+  [%expect {||}];
+  is_true
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:
+         (`flag
+             { name = "--flag-for-jane"
+             ; param = `none
+             ; applies_to = `pp (Dune.Pp.Name.v "ppx_jane")
+             }));
+  [%expect {||}];
+  is_true
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:(`flag { name = "--flag-for-jane"; param = `none; applies_to = `any }));
+  [%expect {||}];
+  is_true
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:(`flag { name = "--flag-for-jane"; param = `any; applies_to = `any }));
+  [%expect {||}];
+  is_false
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:
+         (`flag { name = "--flag-for-jane"; param = `none; applies_to = `driver }));
+  [%expect {||}];
+  is_false
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:(`flag { name = "--flag-for-jane"; param = `some; applies_to = `any }));
+  [%expect {||}];
+  is_false
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:
+         (`flag { name = "--flag-for-jane"; param = `equals "blah"; applies_to = `any }));
+  [%expect {||}];
+  is_true
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:(`flag { name = "--flag-for-john"; param = `some; applies_to = `any }));
+  [%expect {||}];
+  is_false
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:(`flag { name = "--flag-for-john"; param = `none; applies_to = `any }));
+  [%expect {||}];
+  is_true
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:(`flag { name = "--flag-for-john"; param = `any; applies_to = `any }));
+  [%expect {||}];
+  is_false
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:
+         (`flag { name = "--flag-for-john"; param = `equals "blah"; applies_to = `any }));
+  [%expect {||}];
+  is_true
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:
+         (`flag { name = "--flag-for-john"; param = `equals "value"; applies_to = `any }));
+  [%expect {||}];
+  is_true
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:
+         (`flag { name = "--flag-for-the-ppx-driver"; param = `none; applies_to = `any }));
+  [%expect {||}];
+  is_false
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:
+         (`flag
+             { name = "--flag-for-the-ppx-driver"
+             ; param = `none
+             ; applies_to = `pp (Dune.Pp.Name.v "ppx_jane")
+             }));
+  [%expect {||}];
+  is_true
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:
+         (`flag
+             { name = "--flag-for-the-ppx-driver"; param = `none; applies_to = `driver }));
+  [%expect {||}];
+  is_false
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:
+         (`pp_with_flag { pp = Dune.Pp.Name.v "ppx_eve"; flag = "-flag"; param = `none }));
+  [%expect {||}];
+  is_false
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:
+         (`pp_with_flag { pp = Dune.Pp.Name.v "ppx_jane"; flag = "-flag"; param = `none }));
+  [%expect {||}];
+  is_true
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:
+         (`pp_with_flag
+             { pp = Dune.Pp.Name.v "ppx_jane"; flag = "--flag-for-jane"; param = `none }));
+  [%expect {||}];
+  is_true
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:
+         (`pp_with_flag
+             { pp = Dune.Pp.Name.v "ppx_jane"; flag = "--flag-for-jane"; param = `any }));
+  [%expect {||}];
+  is_false
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:
+         (`pp_with_flag
+             { pp = Dune.Pp.Name.v "ppx_jane"; flag = "--flag-for-jane"; param = `some }));
+  [%expect {||}];
+  is_false
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:
+         (`pp_with_flag
+             { pp = Dune.Pp.Name.v "ppx_jane"
+             ; flag = "--flag-for-jane"
+             ; param = `equals "blah"
+             }));
+  [%expect {||}];
+  is_false
+    (Dune_linter.Pps.eval
+       t
+       ~predicate:
+         (`pp_with_flag
+             { pp = Dune.Pp.Name.v "ppx_jane"
+             ; flag = "--flag-for-the-ppx-driver"
+             ; param = `none
+             }));
+  [%expect {||}];
   ()
 ;;
 
@@ -158,6 +352,103 @@ let%expect_test "enforce" =
   (* Enforcing the negation of a present pp removes it. *)
   enforce t [ not_ (pp (Dune.Pp.Name.v "ppx_sexp_conv")) ];
   [%expect {| (pps ppx_other) |}];
+  (* Flags. *)
+  let t =
+    parse
+      {|
+ (pps
+   --flag-for-the-ppx-driver
+   ppx_jane
+   --flag-for-jane
+   --other-flag-for-jane
+   ppx_john
+   --flag-for-john=value)
+|}
+  in
+  enforce
+    t
+    [ pp (Dune.Pp.Name.v "ppx_eve")
+    ; pp_with_flag
+        { pp = Dune.Pp.Name.v "ppx_alice"; flag = "--with-flag"; param = `equals "param" }
+    ; flag { name = "--hello-driver"; param = `equals "p"; applies_to = `driver }
+    ; flag
+        { name = "--flag-for-jane"
+        ; param = `equals "new"
+        ; applies_to = `pp (Dune.Pp.Name.v "ppx_jane")
+        }
+    ; not_
+        (flag
+           { name = "--other-flag-for-jane"
+           ; param = `any
+           ; applies_to = `pp (Dune.Pp.Name.v "ppx_jane")
+           })
+    ];
+  [%expect
+    {|
+    (pps
+     --flag-for-the-ppx-driver
+     --hello-driver=p
+     ppx_alice
+     --with-flag=param
+     ppx_eve
+     ppx_jane
+     --flag-for-jane=new
+     ppx_john
+     --flag-for-john=value)
+    |}];
+  (* Removing a pp removes its flags too. *)
+  enforce t [ not_ (pp (Dune.Pp.Name.v "ppx_jane")) ];
+  [%expect
+    {|
+    (pps
+     --flag-for-the-ppx-driver
+     --hello-driver=p
+     ppx_alice
+     --with-flag=param
+     ppx_eve
+     ppx_john
+     --flag-for-john=value)
+    |}];
+  (* Specific params may be removed. *)
+  enforce
+    t
+    [ flag
+        { name = "--with-flag"
+        ; param = `none
+        ; applies_to = `pp (Dune.Pp.Name.v "ppx_alice")
+        }
+    ];
+  [%expect
+    {|
+    (pps
+     --flag-for-the-ppx-driver
+     --hello-driver=p
+     ppx_alice
+     --with-flag
+     ppx_eve
+     ppx_john
+     --flag-for-john=value)
+    |}];
+  (* Flags may be re-assigned to different pp or driver. *)
+  enforce
+    t
+    [ flag
+        { name = "--hello-driver"
+        ; param = `any
+        ; applies_to = `pp (Dune.Pp.Name.v "ppx_eve")
+        }
+    ];
+  [%expect
+    {|
+    (pps
+     --flag-for-the-ppx-driver
+     ppx_alice
+     --with-flag
+     ppx_eve
+     --hello-driver=p
+     ppx_john
+     --flag-for-john=value)
+    |}];
   (* Blang. *)
   let t = parse {| (pps ppx_deriving) |} in
   enforce t [ true_ ];
