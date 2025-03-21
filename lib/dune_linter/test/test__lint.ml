@@ -24,7 +24,7 @@ let%expect_test "read/write" =
     Err.For_test.protect (fun () ->
       let sexps_rewriter, field = Common.read contents in
       let t =
-        try Dune_linter.Include_subdirs.read ~sexps_rewriter ~field with
+        try Dune_linter.Lint.read ~sexps_rewriter ~field with
         | Sexp.Of_sexp_error (_, sexp) ->
           (* We redact the message because it is contains paths to source files, which
              makes it inconvenient when relocating the code in sub repos. *)
@@ -32,59 +32,65 @@ let%expect_test "read/write" =
             [%sexp Of_sexp_error, ("_", { invalid_sexp = (sexp : Sexp.t) })]
           [@coverage off]
       in
-      print_s (Dune_linter.Include_subdirs.write t))
+      print_s (Dune_linter.Lint.write t))
   in
-  test {| (include_subdirs no) |};
-  [%expect {| (include_subdirs no) |}];
+  test {| (lint (pps ppx_js_style)) |};
+  [%expect {| (lint (pps ppx_js_style)) |}];
+  test {| (lint (pps ppx_js_style -check-doc-comments)) |};
+  [%expect {| (lint (pps ppx_js_style -check-doc-comments)) |}];
   test {| (invalid field) |};
   [%expect
     {|
     File "dune", line 1, characters 1-16:
-    Error: Unexpected [Sexp] for field [include_subdirs].
+    Error: Unexpected [lint] field.
     [123]
     |}];
-  test {| (include_subdirs unqualified) |};
-  [%expect {| (include_subdirs unqualified) |}];
-  test {| (include_subdirs qualified) |};
-  [%expect {| (include_subdirs qualified) |}];
+  test {| (lint (invalid field)) |};
+  [%expect
+    {|
+    File "dune", line 1, characters 1-23:
+    Error: Unexpected [lint] field value.
+    [123]
+    |}];
   ()
 ;;
 
 let%expect_test "sexp_of" =
-  let sexps_rewriter, field = Common.read {| (include_subdirs unqualified) |} in
-  let t = Dune_linter.Include_subdirs.read ~sexps_rewriter ~field in
-  print_s [%sexp (t : Dune_linter.Include_subdirs.t)];
-  [%expect {| ((mode unqualified)) |}];
+  let sexps_rewriter, field = Common.read {| (lint (pps ppx_js_style)) |} in
+  let t = Dune_linter.Lint.read ~sexps_rewriter ~field in
+  print_s [%sexp (t : Dune_linter.Lint.t)];
+  [%expect {| ((pps ((args ((Pp (pp_name ppx_js_style))))))) |}];
   ()
 ;;
 
 let parse str =
   let sexps_rewriter, field = Common.read str in
-  let t = Dune_linter.Include_subdirs.read ~sexps_rewriter ~field in
+  let t = Dune_linter.Lint.read ~sexps_rewriter ~field in
   sexps_rewriter, field, t
 ;;
 
 let rewrite ?(f = ignore) str =
   let sexps_rewriter, field, t = parse str in
   f t;
-  Dune_linter.Include_subdirs.rewrite t ~sexps_rewriter ~field;
+  Dune_linter.Lint.rewrite t ~sexps_rewriter ~field;
   print_endline (Sexps_rewriter.contents sexps_rewriter)
 ;;
 
 let%expect_test "rewrite" =
-  rewrite {| (include_subdirs no) |};
-  [%expect {| (include_subdirs no) |}];
+  rewrite {| (lint (pps ppx_js_style)) |};
+  [%expect {| (lint (pps ppx_js_style)) |}];
   (* Exercising some getters. *)
-  rewrite {| (include_subdirs qualified) |} ~f:(fun t ->
-    print_s [%sexp (Dune_linter.Include_subdirs.mode t : Dune.Include_subdirs.Mode.t)];
-    [%expect {| qualified |}];
+  rewrite {| (lint (pps ppx_js_style -check-doc-comments)) |} ~f:(fun t ->
+    (* There are no getters to test at the moment. *)
+    ignore (t : Dune_linter.Lint.t);
     ());
-  [%expect {| (include_subdirs qualified) |}];
+  [%expect {| (lint (pps ppx_js_style -check-doc-comments)) |}];
   (* Exercising some setters. *)
-  rewrite {| (include_subdirs qualified) |} ~f:(fun t ->
-    Dune_linter.Include_subdirs.set_mode t ~mode:`unqualified;
+  rewrite {| (lint (pps ppx_js_style -check-doc-comments)) |} ~f:(fun t ->
+    (* There are no setters to test at the moment. *)
+    ignore (t : Dune_linter.Lint.t);
     ());
-  [%expect {| (include_subdirs unqualified) |}];
+  [%expect {| (lint (pps ppx_js_style -check-doc-comments)) |}];
   ()
 ;;
 
@@ -93,19 +99,29 @@ let%expect_test "create_then_rewrite" =
      rewriting values that are created via [create]. *)
   let test t str =
     let sexps_rewriter, field = Common.read str in
-    Dune_linter.Include_subdirs.rewrite t ~sexps_rewriter ~field;
+    Dune_linter.Lint.rewrite t ~sexps_rewriter ~field;
     print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
   in
-  let t = Dune_linter.Include_subdirs.create ~mode:`qualified () in
-  test t {| (include_subdirs no) |};
-  [%expect {| (include_subdirs qualified) |}];
+  let t =
+    Dune_linter.Lint.create
+      ~pps:(Dune_linter.Pps.create ~args:[ Pp (Dune.Pp.Name.v "ppx_js_style") ])
+      ()
+  in
+  test t {| (lint (pps ppx_js_style -check-doc-comments)) |};
+  [%expect {| (lint (pps ppx_js_style)) |}];
+  let t = Dune_linter.Lint.create () in
+  test t {| (lint (pps ppx_js_style -check-doc-comments)) |};
+  [%expect {| (lint (pps)) |}];
+  (* When dunolint doesn't understand the expression to rewrite, this triggers an error. *)
+  require_does_raise [%here] (fun () -> test t {| (lint (unexpected args)) |});
+  [%expect {| ("Unexpected [lint] field value." (Exit 123)) |}];
   ()
 ;;
 
 module Predicate = struct
   (* Aliased here so we remember to add new tests when this type is modified. *)
-  type t = Dune.Include_subdirs.Predicate.t as 'a
-    constraint 'a = [ `equals of Dune.Include_subdirs.Mode.t ]
+  type t = Dune.Lint.Predicate.t as 'a
+    constraint 'a = [ `pps of Dune.Pps.Predicate.t Blang.t ]
 end
 
 open Dunolint.Config.Std
@@ -119,15 +135,16 @@ let%expect_test "eval" =
     let _, _, t = parse str in
     t
   in
-  let t = parse {| (include_subdirs unqualified) |} in
-  is_true (Dune_linter.Include_subdirs.eval t ~predicate:(`equals `unqualified));
+  let t = parse {| (lint (pps ppx_js_style)) |} in
+  is_true
+    (Dune_linter.Lint.eval
+       t
+       ~predicate:(`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_js_style")))));
   [%expect {| |}];
-  is_false (Dune_linter.Include_subdirs.eval t ~predicate:(`equals `qualified));
-  [%expect {| |}];
-  is_false (Dune_linter.Include_subdirs.eval t ~predicate:(`equals `no));
-  [%expect {| |}];
-  let t = parse {| (include_subdirs no) |} in
-  is_true (Dune_linter.Include_subdirs.eval t ~predicate:(`equals `no));
+  is_false
+    (Dune_linter.Lint.eval
+       t
+       ~predicate:(`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_other")))));
   [%expect {| |}];
   ()
 ;;
@@ -136,39 +153,39 @@ let%expect_test "enforce" =
   let enforce (sexps_rewriter, field, t) conditions =
     Sexps_rewriter.reset sexps_rewriter;
     Dunolinter.Handler.raise ~f:(fun () ->
-      List.iter conditions ~f:(fun condition ->
-        Dune_linter.Include_subdirs.enforce t ~condition);
-      Dune_linter.Include_subdirs.rewrite t ~sexps_rewriter ~field;
+      List.iter conditions ~f:(fun condition -> Dune_linter.Lint.enforce t ~condition);
+      Dune_linter.Lint.rewrite t ~sexps_rewriter ~field;
       print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
   in
   let open Blang.O in
-  let t = parse {| (include_subdirs unqualified) |} in
+  let t = parse {| (lint (pps ppx_js_style)) |} in
   enforce t [];
-  [%expect {| (include_subdirs unqualified) |}];
+  [%expect {| (lint (pps ppx_js_style)) |}];
   (* Enforcing the equality with the current value has no effect. *)
-  enforce t [ equals `unqualified ];
-  [%expect {| (include_subdirs unqualified) |}];
+  enforce t [ pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_js_style"))) ];
+  [%expect {| (lint (pps ppx_js_style)) |}];
   (* Enforcing the equality with a new value changes it. *)
-  enforce t [ equals `qualified ];
-  [%expect {| (include_subdirs qualified) |}];
-  let t = parse {| (include_subdirs qualified) |} in
+  enforce t [ pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_other"))) ];
+  [%expect {| (lint (pps ppx_js_style ppx_other)) |}];
+  let t = parse {| (lint (pps ppx_other)) |} in
   (* Enforcing the negation of the equality with another value has no effect. *)
-  enforce t [ not_ (equals `unqualified) ];
-  [%expect {| (include_subdirs qualified) |}];
+  enforce t [ not_ (pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_js_style")))) ];
+  [%expect {| (lint (pps ppx_other)) |}];
   (* Enforcing the negation of a current equality triggers an error.
      Dunolint is not going to automatically invent a new setting, this
      requires the user's intervention. *)
-  require_does_raise [%here] (fun () -> enforce t [ not_ (equals `qualified) ]);
+  require_does_raise [%here] (fun () ->
+    enforce t [ not_ (pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_other")))) ]);
   [%expect
     {|
     (Dunolinter.Handler.Enforce_failure
       (loc _)
-      (condition (not (equals qualified))))
+      (condition (not (pps (pp ppx_other)))))
     |}];
   (* Blang. *)
-  let t = parse {| (include_subdirs no) |} in
+  let t = parse {| (lint (pps ppx_js_style)) |} in
   enforce t [ true_ ];
-  [%expect {| (include_subdirs no) |}];
+  [%expect {| (lint (pps ppx_js_style)) |}];
   require_does_raise [%here] (fun () -> enforce t [ false_ ]);
   [%expect
     {|
@@ -176,30 +193,53 @@ let%expect_test "enforce" =
       (loc       _)
       (condition false))
     |}];
-  enforce t [ and_ [ not_ (equals `qualified); equals `unqualified ] ];
-  [%expect {| (include_subdirs unqualified) |}];
+  enforce
+    t
+    [ and_
+        [ not_ (pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_other"))))
+        ; pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_js_style")))
+        ]
+    ];
+  [%expect {| (lint (pps ppx_js_style)) |}];
   (* [or] does not have an enforcement strategy when its invariant is
      not satisfied. *)
-  enforce t [ or_ [ equals `no; equals `unqualified ] ];
-  [%expect {| (include_subdirs unqualified) |}];
+  enforce
+    t
+    [ or_
+        [ pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_js_style")))
+        ; pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_other")))
+        ]
+    ];
+  [%expect {| (lint (pps ppx_js_style)) |}];
   require_does_raise [%here] (fun () ->
-    enforce t [ or_ [ equals `qualified; equals `no ] ]);
+    enforce
+      t
+      [ or_
+          [ pps (Blang.base (`pp (Dune.Pp.Name.v "qualified")))
+          ; pps (Blang.base (`pp (Dune.Pp.Name.v "no")))
+          ]
+      ]);
   [%expect
     {|
     (Dunolinter.Handler.Enforce_failure
       (loc _)
       (condition (
         or
-        (equals qualified)
-        (equals no))))
+        (pps (pp qualified))
+        (pps (pp no)))))
     |}];
   (* When defined, [if] enforces the clause that applies. *)
-  let invariant = if_ (equals `no) (equals `qualified) (equals `unqualified) in
-  let t = parse {| (include_subdirs no) |} in
+  let invariant =
+    if_
+      (pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_js_style"))))
+      (pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_other"))))
+      (pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_js_style"))))
+  in
+  let t = parse {| (lint (pps ppx_js_style)) |} in
   enforce t [ invariant ];
-  [%expect {| (include_subdirs qualified) |}];
-  let t = parse {| (include_subdirs unqualified) |} in
+  [%expect {| (lint (pps ppx_js_style ppx_other)) |}];
+  let t = parse {| (lint (pps ppx_other)) |} in
   enforce t [ invariant ];
-  [%expect {| (include_subdirs unqualified) |}];
+  [%expect {| (lint (pps ppx_js_style ppx_other)) |}];
   ()
 ;;

@@ -38,7 +38,7 @@
            ((name -unused-code-warnings) (param (equals force))
             (applies_to driver))))))))))
    (cond
-    (((path (glob vendor/blang/*))
+    (((path (glob vendor/**/*))
       (enforce (dune (library (not (has_field instrumentation))))))
      (true (enforce (dune (instrumentation (backend bisect_ppx)))))))
    (cond

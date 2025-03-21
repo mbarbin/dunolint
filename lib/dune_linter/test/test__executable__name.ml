@@ -23,8 +23,8 @@ let%expect_test "read/write" =
   let test contents =
     Err.For_test.protect (fun () ->
       let sexps_rewriter, field = Common.read contents in
-      let t = Dune_linter.Library.Name.read ~sexps_rewriter ~field in
-      print_s (Dune_linter.Library.Name.write t))
+      let t = Dune_linter.Executable.Name.read ~sexps_rewriter ~field in
+      print_s (Dune_linter.Executable.Name.write t))
   in
   test {| (name pre_hello_suf) |};
   [%expect {| (name pre_hello_suf) |}];
@@ -41,19 +41,19 @@ let%expect_test "read/write" =
 ;;
 
 let%expect_test "sexp_of" =
-  let sexps_rewriter, field = Common.read {| (name lib_name) |} in
-  let t = Dune_linter.Library.Name.read ~sexps_rewriter ~field in
-  print_s [%sexp (t : Dune_linter.Library.Name.t)];
-  [%expect {| ((name lib_name)) |}];
+  let sexps_rewriter, field = Common.read {| (name exe_name) |} in
+  let t = Dune_linter.Executable.Name.read ~sexps_rewriter ~field in
+  print_s [%sexp (t : Dune_linter.Executable.Name.t)];
+  [%expect {| ((name exe_name)) |}];
   ()
 ;;
 
 module Predicate = struct
   (* Aliased here so we remember to add new tests when this type is modified. *)
-  type t = Dune.Library.Name.Predicate.t as 'a
+  type t = Dune.Executable.Name.Predicate.t as 'a
     constraint
       'a =
-      [ `equals of Dune.Library.Name.t | `is_prefix of string | `is_suffix of string ]
+      [ `equals of Dune.Executable.Name.t | `is_prefix of string | `is_suffix of string ]
 end
 
 open Dunolint.Config.Std
@@ -64,24 +64,24 @@ let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
   let sexps_rewriter, field = Common.read {| (name pre_hello_suf) |} in
-  let t = Dune_linter.Library.Name.read ~sexps_rewriter ~field in
+  let t = Dune_linter.Executable.Name.read ~sexps_rewriter ~field in
   is_true
-    (Dune_linter.Library.Name.eval
+    (Dune_linter.Executable.Name.eval
        t
-       ~predicate:(`equals (Dune.Library.Name.v "pre_hello_suf")));
+       ~predicate:(`equals (Dune.Executable.Name.v "pre_hello_suf")));
   [%expect {||}];
   is_false
-    (Dune_linter.Library.Name.eval
+    (Dune_linter.Executable.Name.eval
        t
-       ~predicate:(`equals (Dune.Library.Name.v "hello_suf")));
+       ~predicate:(`equals (Dune.Executable.Name.v "hello_suf")));
   [%expect {||}];
-  is_true (Dune_linter.Library.Name.eval t ~predicate:(`is_prefix "pre_"));
+  is_true (Dune_linter.Executable.Name.eval t ~predicate:(`is_prefix "pre_"));
   [%expect {||}];
-  is_false (Dune_linter.Library.Name.eval t ~predicate:(`is_prefix "hello"));
+  is_false (Dune_linter.Executable.Name.eval t ~predicate:(`is_prefix "hello"));
   [%expect {||}];
-  is_true (Dune_linter.Library.Name.eval t ~predicate:(`is_suffix "_suf"));
+  is_true (Dune_linter.Executable.Name.eval t ~predicate:(`is_suffix "_suf"));
   [%expect {||}];
-  is_false (Dune_linter.Library.Name.eval t ~predicate:(`is_suffix "hello"));
+  is_false (Dune_linter.Executable.Name.eval t ~predicate:(`is_suffix "hello"));
   [%expect {||}];
   ()
 ;;
@@ -91,27 +91,27 @@ let%expect_test "enforce" =
   let sexps_rewriter, field = Common.read {| (name pre_hello_suf) |} in
   let enforce conditions =
     Sexps_rewriter.reset sexps_rewriter;
-    let t = Dune_linter.Library.Name.read ~sexps_rewriter ~field in
+    let t = Dune_linter.Executable.Name.read ~sexps_rewriter ~field in
     Dunolinter.Handler.raise ~f:(fun () ->
       List.iter conditions ~f:(fun condition ->
-        Dune_linter.Library.Name.enforce t ~condition);
-      Dune_linter.Library.Name.rewrite t ~sexps_rewriter ~field;
+        Dune_linter.Executable.Name.enforce t ~condition);
+      Dune_linter.Executable.Name.rewrite t ~sexps_rewriter ~field;
       print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
   in
   let open Blang.O in
   enforce [];
   [%expect {| (name pre_hello_suf) |}];
   (* Enforcing the equality with the current value has no effect. *)
-  enforce [ equals (Dune.Library.Name.v "pre_hello_suf") ];
+  enforce [ equals (Dune.Executable.Name.v "pre_hello_suf") ];
   [%expect {| (name pre_hello_suf) |}];
   (* Enforcing the equality with a new value changes it. *)
-  enforce [ equals (Dune.Library.Name.v "new_name") ];
+  enforce [ equals (Dune.Executable.Name.v "new_name") ];
   [%expect {| (name new_name) |}];
   (* Enforcing the non-equality with another value has no effect. *)
-  enforce [ not_ (equals (Dune.Library.Name.v "not_equal")) ];
+  enforce [ not_ (equals (Dune.Executable.Name.v "not_equal")) ];
   [%expect {| (name pre_hello_suf) |}];
   require_does_raise [%here] (fun () ->
-    enforce [ not_ (equals (Dune.Library.Name.v "pre_hello_suf")) ]);
+    enforce [ not_ (equals (Dune.Executable.Name.v "pre_hello_suf")) ]);
   [%expect
     {|
     (Dunolinter.Handler.Enforce_failure
@@ -160,10 +160,10 @@ let%expect_test "enforce" =
   [%expect {| (name hello) |}];
   (* [or] does not have an enforcement strategy when its invariant is
      not satisfied. *)
-  enforce [ or_ [ is_prefix "pre_"; equals (Dune.Library.Name.v "not_equal") ] ];
+  enforce [ or_ [ is_prefix "pre_"; equals (Dune.Executable.Name.v "not_equal") ] ];
   [%expect {| (name pre_hello_suf) |}];
   require_does_raise [%here] (fun () ->
-    enforce [ or_ [ is_prefix "prefix_"; equals (Dune.Library.Name.v "not_equal") ] ]);
+    enforce [ or_ [ is_prefix "prefix_"; equals (Dune.Executable.Name.v "not_equal") ] ]);
   [%expect
     {|
     (Dunolinter.Handler.Enforce_failure
@@ -178,14 +178,14 @@ let%expect_test "enforce" =
     [ if_
         (is_prefix "false")
         (not_ (is_prefix "pre_"))
-        (equals (Dune.Library.Name.v "not_equal"))
+        (equals (Dune.Executable.Name.v "not_equal"))
     ];
   [%expect {| (name not_equal) |}];
   enforce
     [ if_
         (is_prefix "pre_")
         (not_ (is_prefix "pre_"))
-        (equals (Dune.Library.Name.v "not_equal"))
+        (equals (Dune.Executable.Name.v "not_equal"))
     ];
   [%expect {| (name hello_suf) |}];
   ()

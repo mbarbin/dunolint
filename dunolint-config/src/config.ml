@@ -75,7 +75,7 @@ let bisect_ppx = Dune.Instrumentation.Backend.Name.v "bisect_ppx"
 let () =
   add_rule
     (cond
-       [ ( path (or_ [ glob "vendor/blang/*" ])
+       [ ( path (or_ [ glob "vendor/**/*" ])
          , enforce (dune (library (not_ (has_field `instrumentation)))) )
        ; true_, enforce (dune (instrumentation (backend bisect_ppx)))
        ])

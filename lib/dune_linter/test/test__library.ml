@@ -91,15 +91,16 @@ let parse str =
 
 open Dunolint.Config.Std
 
+let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
+let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
+let is_undefined b = require_equal [%here] (module Dunolint.Trilang) b Undefined
+
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
   let parse str =
     let _, _, t = parse str in
     t
   in
-  let is_true b = require_equal [%here] (module Dunolint.Trilang) b True in
-  let is_false b = require_equal [%here] (module Dunolint.Trilang) b False in
-  let is_undefined b = require_equal [%here] (module Dunolint.Trilang) b Undefined in
   let t = parse {| (library (name mylib)) |} in
   is_true
     (Dune_linter.Library.eval t ~predicate:(`name (equals (Dune.Library.Name.v "mylib"))));

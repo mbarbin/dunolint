@@ -31,9 +31,9 @@ type t =
 
 (** {1 Helpers} *)
 
-(** A helper function that can be useful to implement [enforce], in
-    particular in sharing a default logic for blang constructors that
-    cannot be automatically enforced. *)
+(** A helper function that can be useful to implement [enforce], in particular
+    in sharing a default logic for blang constructors that cannot be
+    automatically enforced. *)
 val enforce_blang
   :  (module Handler.Predicate with type t = 'predicate)
   -> 't
@@ -42,14 +42,14 @@ val enforce_blang
   -> enforce:('t -> condition:'predicate Blang.t -> unit)
   -> unit
 
-(** Returns the list of elements from the input condition that are
-    directly reachable as elements to be enforced, without going
-    through dynamic conditions or SAT logic. In practice, that is
-    [Base], and elements under [And _] recursively. *)
+(** Returns the list of elements from the input condition that are directly
+    reachable as elements to be enforced, without going through dynamic
+    conditions or SAT logic. In practice, that is [Base], and elements under
+    [And _] recursively. *)
 val at_positive_enforcing_position : 'a Blang.t -> 'a list
 
-(** A helper that applies some usually helpful heuristic when
-    proposing a new name based on the [`is_prefix] predicate. Assumed
-    to be called when the given prefix is not already a prefix of the
-    input, otherwise the output is unspecified. *)
+(** A helper that applies some usually helpful heuristic when proposing a new
+    name based on the [`is_prefix] predicate. Assumed to be called when the
+    given prefix is not already a prefix of the input, otherwise the output is
+    unspecified. *)
 val public_name_is_prefix : string -> prefix:string -> string

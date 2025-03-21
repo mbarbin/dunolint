@@ -68,10 +68,9 @@ let at_positive_enforcing_position (condition : 'a Blang.t) =
 ;;
 
 let public_name_is_prefix name ~prefix =
-  (* This helps in cases where the library public name has not the
-     correct package prefix, in favoring a strategy that proposes to
-     replace it by the enforced one, rather than producing a
-     proposition with two dots in it. *)
+  (* This helps in cases where the library public name has not the correct
+     package prefix, in favoring a strategy that proposes to replace it by the
+     enforced one, rather than producing a proposition with two dots in it. *)
   match
     if String.is_suffix prefix ~suffix:"."
     then (

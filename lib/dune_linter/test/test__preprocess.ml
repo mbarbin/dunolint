@@ -74,6 +74,9 @@ let parse str =
 
 open Dunolint.Config.Std
 
+let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
+let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
+
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
   let parse str =
@@ -81,8 +84,6 @@ let%expect_test "eval" =
     t
   in
   let t = parse {| (preprocess (pps ppx_sexp_conv)) |} in
-  let is_true b = require_equal [%here] (module Dunolint.Trilang) b True in
-  let is_false b = require_equal [%here] (module Dunolint.Trilang) b False in
   is_true
     (Dune_linter.Preprocess.eval
        t
@@ -119,10 +120,10 @@ let%expect_test "enforce" =
   (* Enforcing the presence of a new pp adds it. *)
   enforce t [ pps (pp (Dune.Pp.Name.v "ppx_other")) ];
   [%expect {| (preprocess (pps ppx_other ppx_sexp_conv)) |}];
-  (* Enforcing the non-equality with another value has no effect. *)
+  (* Enforcing the absence of an absent pp has no effect. *)
   enforce t [ pps (not_ (pp (Dune.Pp.Name.v "ppx_not_there"))) ];
   [%expect {| (preprocess (pps ppx_other ppx_sexp_conv)) |}];
-  (* Enforcing the negation of a present removes it. *)
+  (* Enforcing the negation of a present pp removes it. *)
   enforce t [ pps (not_ (pp (Dune.Pp.Name.v "ppx_sexp_conv"))) ];
   [%expect {| (preprocess (pps ppx_other)) |}];
   (* no_preprocessing *)
