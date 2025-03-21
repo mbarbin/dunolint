@@ -24,6 +24,8 @@ let field_name = "implicit_transitive_deps"
 type t = { mutable value : bool } [@@deriving sexp_of]
 
 let create ~implicit_transitive_deps:value = { value }
+let value t = t.value
+let set_value t ~value = t.value <- value
 
 module Handler =
   Dunolinter.Sexp_handler.Make_sexpable

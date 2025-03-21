@@ -74,6 +74,15 @@ let%expect_test "rewrite" =
   [%expect {| (implicit_transitive_deps true) |}];
   rewrite {| (implicit_transitive_deps false) |};
   [%expect {| (implicit_transitive_deps false) |}];
+  (* Exercising some getters and setters. *)
+  rewrite {| (implicit_transitive_deps true) |} ~f:(fun t ->
+    print_s [%sexp (Dune_project_linter.Implicit_transitive_deps.value t : bool)];
+    [%expect {| true |}];
+    Dune_project_linter.Implicit_transitive_deps.set_value t ~value:false;
+    print_s [%sexp (Dune_project_linter.Implicit_transitive_deps.value t : bool)];
+    [%expect {| false |}];
+    ());
+  [%expect {| (implicit_transitive_deps false) |}];
   ()
 ;;
 

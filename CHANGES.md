@@ -4,7 +4,7 @@
 
 - Added support for `library.modes` (#23, #27, @mbarbin, requested by @raphael-proust)
 - Document release process and current state (#25, @mbarbin).
-- Added coverage and regression tests (#18, #19, #30, @mbarbin).
+- Added coverage and regression tests (#18, #19, #30, #33, #34, @mbarbin).
 
 ### Changed
 
