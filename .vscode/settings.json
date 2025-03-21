@@ -1,12 +1,23 @@
 {
     "cSpell.words": [
         "Blang",
+        "Cmdlang",
+        "conv",
         "dedup",
         "dunolint",
         "Dunolinter",
+        "fpath",
+        "intf",
         "janestreet",
+        "lsplit",
+        "mylib",
         "odoc",
         "opam",
-        "Parsexp"
+        "Parsexp",
+        "pplumbing",
+        "subdirs",
+        "toplevel",
+        "Trilang",
+        "YYYMMDD"
     ]
 }
