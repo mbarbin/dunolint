@@ -13,8 +13,6 @@
   -open
   Sexplib0.Sexp_conv)
  (libraries sexplib0)
- (instrumentation
-  (backend bisect_ppx))
  (lint
   (pps ppx_js_style -allow-let-operators -check-doc-comments))
  (modules_without_implementation validated_string_intf)
