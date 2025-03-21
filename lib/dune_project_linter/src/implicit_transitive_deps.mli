@@ -30,3 +30,11 @@ include
 
 module Linter :
   Dunolinter.Linter.S with type t = t and type predicate = Dune_project.Predicate.t
+
+(** {1 Getters} *)
+
+val value : t -> bool
+
+(** {1 Setters} *)
+
+val set_value : t -> value:bool -> unit
