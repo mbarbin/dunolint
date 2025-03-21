@@ -20,6 +20,8 @@
 (*********************************************************************************)
 
 module Arg = struct
+  [@@@coverage off]
+
   type t =
     | Pp of Dune.Pp.Name.t
     | Flag of
@@ -54,7 +56,12 @@ module Mutable_arg = struct
     | Pp { pp_name = pp1 }, Flag { name = _; param = _; applies_to = `pp pp2 } ->
       (match Dune.Pp.Name.compare pp1 pp2 |> Ordering.of_int with
        | Less | Equal -> -1
-       | Greater -> 1)
+       | Greater ->
+         (* Due to the value coming from the parsing, a flag may not have been
+            assigned to a pp that is located to its right, so we are not
+            exercising this in tests. *)
+         (1
+         [@coverage off]))
     | ( Flag { name = n1; param = _; applies_to = a1 }
       , Flag { name = n2; param = _; applies_to = a2 } ) ->
       (match a1, a2 with
@@ -185,6 +192,17 @@ let rewrite t ~sexps_rewriter ~field =
 
 type predicate = Dune.Pps.Predicate.t
 
+let eval_param ~param ~p_condition =
+  match p_condition with
+  | `any -> true
+  | `none -> Option.is_none param
+  | `some -> Option.is_some param
+  | `equals param' ->
+    (match param with
+     | None -> false
+     | Some param -> String.equal param param')
+;;
+
 let eval t ~predicate =
   match (predicate : predicate) with
   | `pp pp_name ->
@@ -196,12 +214,8 @@ let eval t ~predicate =
     List.exists t.args ~f:(function
       | Mutable_arg.Pp { pp_name = _ } -> false
       | Flag { name = name'; param; applies_to } ->
-        [%equal: string] name name'
-        && (match p_condition with
-            | `any -> true
-            | `none -> Option.is_none param
-            | `some -> Option.is_some param
-            | `equals param' -> [%equal: string option] param (Some param'))
+        String.equal name name'
+        && eval_param ~param ~p_condition
         &&
           (match a_condition, applies_to with
           | `any, _ | `driver, `driver -> true
@@ -212,12 +226,8 @@ let eval t ~predicate =
     List.exists t.args ~f:(function
       | Mutable_arg.Pp { pp_name = _ } -> false
       | Flag { name; param; applies_to } ->
-        [%equal: string] flag name
-        && (match p_condition with
-            | `any -> true
-            | `none -> Option.is_none param
-            | `some -> Option.is_some param
-            | `equals param' -> [%equal: string option] param (Some param'))
+        String.equal flag name
+        && eval_param ~param ~p_condition
         &&
           (match applies_to with
           | `driver -> false
@@ -239,7 +249,7 @@ let rec enforce t ~condition =
       List.exists t.args ~f:(function
         | Mutable_arg.Pp { pp_name = _ } -> false
         | Flag ({ name = name'; param = _; applies_to = _ } as flag) ->
-          if [%equal: string] name name'
+          if String.equal name name'
           then (
             let () =
               match param with
@@ -317,7 +327,7 @@ let rec enforce t ~condition =
             | Pp { pp_name = _ } -> true
             | Flag { name = name'; param = _; applies_to } ->
               if
-                [%equal: string] name name'
+                String.equal name name'
                 &&
                 match a_condition, applies_to with
                 | `any, _ | `driver, `driver -> true
