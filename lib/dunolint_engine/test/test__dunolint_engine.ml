@@ -124,9 +124,9 @@ let%expect_test "format_dune_file" =
     | (_ : string) -> () [@coverage off]);
   [%expect
     {|
+    Error: Failed to format dune file:
     File "", line 1, characters 8-8:
     Error: unclosed parenthesis at end of input
-    Error: Failed to format dune file.
     WEXITED 1
     [123]
     |}];
@@ -209,15 +209,15 @@ let%expect_test "invalid files" =
       ~f:(ignore : Dune_linter.Stanza.t Dunolinter.Stanza.t -> unit);
     [%expect
       {|
-      File "", line 1, characters 8-8:
-      Error: unclosed parenthesis at end of input
       File "invalid/dune", line 1, characters 8-8:
       1 | (invalid
 
       Error: unclosed parentheses at end of input
 
       File "invalid/dune", line 1, characters 0-0:
-      Error: Failed to format dune file.
+      Error: Failed to format dune file:
+      File "", line 1, characters 8-8:
+      Error: unclosed parenthesis at end of input
       WEXITED 1
       |}];
     Dunolint_engine.lint_dune_project_file
@@ -226,15 +226,15 @@ let%expect_test "invalid files" =
       ~f:(ignore : Dune_project_linter.Stanza.t Dunolinter.Stanza.t -> unit);
     [%expect
       {|
-      File "", line 1, characters 8-8:
-      Error: unclosed parenthesis at end of input
       File "invalid/dune-project", line 1, characters 8-8:
       1 | (invalid
 
       Error: unclosed parentheses at end of input
 
       File "invalid/dune-project", line 1, characters 0-0:
-      Error: Failed to format dune file.
+      Error: Failed to format dune file:
+      File "", line 1, characters 8-8:
+      Error: unclosed parenthesis at end of input
       WEXITED 1
       |}];
     Dunolint_engine.lint_dune_project_file

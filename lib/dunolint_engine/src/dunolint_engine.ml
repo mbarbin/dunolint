@@ -133,15 +133,19 @@ module Process_status = struct
 end
 
 let format_dune_file_internal (_ : t) ~new_contents =
-  let ((in_ch, out_ch) as process) = Unix.open_process "dune format-dune-file" in
+  let ((in_ch, out_ch, err_ch) as process) =
+    Unix.open_process_full "dune format-dune-file" ~env:(Unix.environment ())
+  in
   Out_channel.output_string out_ch new_contents;
   Out_channel.close out_ch;
   let output = In_channel.input_all in_ch in
-  match Unix.close_process process with
+  let err_output = In_channel.input_all err_ch in
+  match Unix.close_process_full process with
   | WEXITED 0 -> Ok output
   | (WEXITED _ | WSIGNALED _ | WSTOPPED _) as process_status ->
     Error
-      [ Pp.text "Failed to format dune file."
+      [ Pp.text "Failed to format dune file:"
+      ; Pp.text (String.strip err_output)
       ; Err.pp_of_sexp (Process_status.sexp_of_t process_status)
       ]
 ;;
