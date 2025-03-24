@@ -15,6 +15,7 @@
         "opam",
         "Parsexp",
         "pplumbing",
+        "ppxlib",
         "subdirs",
         "toplevel",
         "Trilang",
