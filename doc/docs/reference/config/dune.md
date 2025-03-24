@@ -278,6 +278,7 @@ Flags usually start with one or two '-' characters. We recommend *dunolint* user
    ppx_compare
    ppx_enumerate
    ...
+  ))
 ```
 
 - Or flags may be custom constructs targeting a dedicated ppx. In this case, the *dunolint* recommendation is to place them right after the ppx they are targeting. This is the case for the `check-doc-comments` flag below
@@ -351,8 +352,10 @@ Stanza:
 
 The compilation modes supported are
 ```pre
-MODE := byte | native | best
+MODE := best | byte | native
 ```
+
+Compilation modes are ordered by *dunolint* as: `best < byte < native`.
 
 The predicates of the `modes` selector are:
 
@@ -360,7 +363,7 @@ The predicates of the `modes` selector are:
 
 Returns *true* iif the set defined by the compilation modes supplied is an exact match for the set of compilation modes present in the FRAGMENT.
 
-When enforced, *dunolint* suggests to replace the existing fragment with the list of values specified by the predicate, in the order defined by the set.
+When enforced, *dunolint* suggests to replace the existing fragment with the list of values specified by the predicate.
 
 2. `(has_mode MODE)`
 

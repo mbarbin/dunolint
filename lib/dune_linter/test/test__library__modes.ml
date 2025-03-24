@@ -85,6 +85,14 @@ let%expect_test "rewrite" =
   ()
 ;;
 
+let%expect_test "sort" =
+  (* The order in use to write the values is deterministic and the values are
+     sorted by dunolint when the field is linted. *)
+  rewrite {| (modes best native byte) |};
+  [%expect {| (modes best byte native) |}];
+  ()
+;;
+
 module Predicate = struct
   (* Aliased here so we remember to add new tests when this type is modified. *)
   type t = Dune.Library.Modes.Predicate.t as 'a
