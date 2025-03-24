@@ -23,11 +23,11 @@ open Dunolint.Config.Std
 
 let%expect_test "predicate" =
   let test p = Common.test_predicate (module Dune.Library.Modes.Predicate) p in
-  test (equals (Set.of_list (module Dune.Compilation_mode) []));
+  test (equals (Dune.Library.Modes.of_list []));
   [%expect {| (equals ()) |}];
-  test (equals (Set.of_list (module Dune.Compilation_mode) [ `best ]));
+  test (equals (Dune.Library.Modes.of_list [ `best ]));
   [%expect {| (equals (best)) |}];
-  test (equals (Set.of_list (module Dune.Compilation_mode) [ `byte; `native ]));
+  test (equals (Dune.Library.Modes.of_list [ `byte; `native ]));
   [%expect {| (equals (byte native)) |}];
   test (has_mode `byte);
   [%expect {| (has_mode byte) |}];

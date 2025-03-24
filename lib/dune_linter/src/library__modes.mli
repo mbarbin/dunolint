@@ -31,3 +31,11 @@ include
   Dunolinter.Stanza_linter.S
   with type t := t
    and type predicate := Dune.Library.Modes.Predicate.t
+
+(** {1 Getters} *)
+
+val modes : t -> Dune.Library.Modes.t
+
+(** {1 Setters} *)
+
+val set_modes : t -> modes:Dune.Library.Modes.t -> unit

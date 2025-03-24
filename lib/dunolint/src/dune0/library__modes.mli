@@ -31,6 +31,8 @@
 
 type t = Set.M(Compilation_mode).t [@@deriving compare, equal, sexp]
 
+val of_list : Compilation_mode.t list -> t
+
 module Predicate : sig
   type modes := t
 

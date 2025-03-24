@@ -59,6 +59,32 @@ let%expect_test "sexp_of" =
   ()
 ;;
 
+let rewrite ?(f = ignore) str =
+  let (sexps_rewriter, field), t = parse str in
+  f t;
+  Dune_linter.Library.Modes.rewrite t ~sexps_rewriter ~field;
+  print_endline (Sexps_rewriter.contents sexps_rewriter)
+;;
+
+let%expect_test "rewrite" =
+  rewrite {| (modes) |};
+  [%expect {| (modes) |}];
+  rewrite {| (modes byte) |};
+  [%expect {| (modes byte) |}];
+  (* Exercising some getters and setters. *)
+  rewrite {| (modes best) |} ~f:(fun t ->
+    print_s [%sexp (Dune_linter.Library.Modes.modes t : Dune.Library.Modes.t)];
+    [%expect {| (best) |}];
+    Dune_linter.Library.Modes.set_modes
+      t
+      ~modes:(Dune.Library.Modes.of_list [ `byte; `native ]);
+    print_s [%sexp (Dune_linter.Library.Modes.modes t : Dune.Library.Modes.t)];
+    [%expect {| (byte native) |}];
+    ());
+  [%expect {| (modes byte native) |}];
+  ()
+;;
+
 module Predicate = struct
   (* Aliased here so we remember to add new tests when this type is modified. *)
   type t = Dune.Library.Modes.Predicate.t as 'a
@@ -75,13 +101,12 @@ let%expect_test "eval" =
   Test_helpers.is_true
     (Dune_linter.Library.Modes.eval
        t
-       ~predicate:
-         (`equals (Set.of_list (module Dune.Compilation_mode) [ `byte; `native ])));
+       ~predicate:(`equals (Dune.Library.Modes.of_list [ `byte; `native ])));
   [%expect {| |}];
   Test_helpers.is_false
     (Dune_linter.Library.Modes.eval
        t
-       ~predicate:(`equals (Set.of_list (module Dune.Compilation_mode) [ `best ])));
+       ~predicate:(`equals (Dune.Library.Modes.of_list [ `best ])));
   [%expect {| |}];
   Test_helpers.is_true (Dune_linter.Library.Modes.eval t ~predicate:(`has_mode `byte));
   [%expect {| |}];
@@ -108,21 +133,21 @@ let%expect_test "enforce" =
   [%expect {| (modes byte native) |}];
   (* equals *)
   (* Enforcing the equality with the current value has no effect. *)
-  enforce t [ equals (Set.of_list (module Dune.Compilation_mode) [ `byte; `native ]) ];
+  enforce t [ equals (Dune.Library.Modes.of_list [ `byte; `native ]) ];
   [%expect {| (modes byte native) |}];
   (* Enforcing the equality with a new value changes it. *)
-  enforce t [ equals (Set.of_list (module Dune.Compilation_mode) [ `best ]) ];
+  enforce t [ equals (Dune.Library.Modes.of_list [ `best ]) ];
   [%expect {| (modes best) |}];
   (* Enforcing the non-equality with another value has no effect. *)
   let t = parse {| (modes byte native) |} in
-  enforce t [ not_ (equals (Set.of_list (module Dune.Compilation_mode) [ `best ])) ];
+  enforce t [ not_ (equals (Dune.Library.Modes.of_list [ `best ])) ];
   [%expect {| (modes byte native) |}];
   let t = parse {| (modes best) |} in
   (* Enforcing the negation of a current equality triggers an error.
      Dunolint is not going to automatically invent a new setting, this
      requires the user's intervention. *)
   require_does_raise [%here] (fun () ->
-    enforce t [ not_ (equals (Set.of_list (module Dune.Compilation_mode) [ `best ])) ]);
+    enforce t [ not_ (equals (Dune.Library.Modes.of_list [ `best ])) ]);
   [%expect
     {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (equals (best))))) |}];
   (* has_mode *)
@@ -202,7 +227,7 @@ let%expect_test "initialize" =
   [%expect {| (modes best) |}];
   test (equals (Set.empty (module Dune.Compilation_mode)));
   [%expect {| (modes best) |}];
-  test (equals (Set.of_list (module Dune.Compilation_mode) [ `byte; `native ]));
+  test (equals (Dune.Library.Modes.of_list [ `byte; `native ]));
   [%expect {| (modes byte native) |}];
   test (has_mode `byte);
   [%expect {| (modes byte) |}];
