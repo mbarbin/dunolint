@@ -24,8 +24,8 @@
     Some examples as found in dune files:
 
     {v
-      (modes exe)
-      (modes exe native)
+      (modes byte)
+      (modes byte native)
       (modes best)
     v} *)
 

@@ -35,15 +35,15 @@ Its predicates are:
 
 Returns *true* iif the NAME supplied is an exact match for the name present in the FRAGMENT.
 
-When enforced, dunolint suggests to replace any existing name with the one specified by the predicate. Doesn't support suggestion when negated.
+When enforced, *dunolint* suggests to replace any existing name with the one specified by the predicate. Doesn't support suggestion when negated.
 
 2. `(is_prefix PREFIX)`, `(is_suffix SUFFIX)`
 
 Returns *true* iif the name has the given prefix (resp. suffix).
 
-When enforced, dunolint suggests prepending or appending the supplied value directly to the existing name, with no special heuristics (it doesn't try to be smart about completing partial prefixes, etc.). You may adjust manually as you see fit.
+When enforced, *dunolint* suggests prepending or appending the supplied value directly to the existing name, with no special heuristics (it doesn't try to be smart about completing partial prefixes, etc.). You may adjust manually as you see fit.
 
-**Negation**: When the negation of the predicates *is_prefix* and *is_suffix* is enforced, dunolint suggests removing the supplied value directly from the name if applicable, if it is currently a prefix (resp. suffix).
+**Negation**: When the negation of the predicates *is_prefix* and *is_suffix* is enforced, *dunolint* suggests removing the supplied value directly from the name if applicable, if it is currently a prefix (resp. suffix).
 
 **Examples:**
 
@@ -71,7 +71,7 @@ Stanza:
  (public_name <FRAGMENT>))
 ```
 
-It is almost identical to its *name* sibling, thus we are not documenting it in details here. A notable difference is that the suggestions for the `(is_prefix my-package.)` predicate is improved when the prefix is a package name, as dunolint will indeed suggests to *replace* an existing package prefix if one if present. This is a minor ergonomic detail.
+It is almost identical to its *name* sibling, thus we are not documenting it in details here. A notable difference is that the suggestions for the `(is_prefix my-package.)` predicate is improved when the prefix is a package name, as *dunolint* will indeed suggests to *replace* an existing package prefix if one if present. This is a minor ergonomic detail.
 
 ### Fields shared with other stanzas
 
@@ -99,9 +99,9 @@ The `(executables _)` stanzas are currently not handled, and are ignored by duno
 | preprocess | executable, library
 | public_name | executable, library
 
-When enforced, dunolint suggests initializing the field if a default value can be inferred from context. Otherwise dunolint will request that you handle the linting error manually.
+When enforced, *dunolint* suggests initializing the field if a default value can be inferred from context. Otherwise *dunolint* will request that you handle the linting error manually.
 
-**Negation**: When the negation of the predicate *has_field* is enforced, dunolint suggests removing the field entirely.
+**Negation**: When the negation of the predicate *has_field* is enforced, *dunolint* suggests removing the field entirely.
 
 **Examples:**
 
@@ -135,7 +135,11 @@ Its predicates are:
 
 Returns *true* iif the MODE supplied is an exact match for the mode present in the FRAGMENT.
 
-When enforced, dunolint suggests to replace any existing mode with the one specified by the predicate. Doesn't support suggestion when negated.
+```pre
+MODE := no | qualified | unqualified
+```
+
+When enforced, *dunolint* suggests to replace any existing mode with the one specified by the predicate. Doesn't support suggestion when negated.
 
 **Examples:**
 
@@ -167,7 +171,7 @@ Its predicate are:
 
 Returns *true* iif the ARGS supplied is an exact match for the arguments present in the FRAGMENT.
 
-When enforced, dunolint suggests to replace any existing arguments with the one specified by the predicate. Doesn't support suggestion when negated.
+When enforced, *dunolint* suggests to replace any existing arguments with the one specified by the predicate. Doesn't support suggestion when negated.
 
 **Examples:**
 
@@ -250,9 +254,9 @@ Its predicates are:
 
 Returns *true* iif the FRAGMENT contains the PP_NAME supplied.
 
-When enforced, dunolint suggests to add the pp to the list of arguments, initiating the *preprocess* and *pps* field if needed.
+When enforced, *dunolint* suggests to add the pp to the list of arguments, initiating the *preprocess* and *pps* field if needed.
 
-**Negation**: When the negation of the predicate is enforced, dunolint suggests removing the pp from the list if present, along with any flags that may be associated with it.
+**Negation**: When the negation of the predicate is enforced, *dunolint* suggests removing the pp from the list if present, along with any flags that may be associated with it.
 
 2. `(flag ((name FLAG) (param PARAM) (applies_to APPLIES_TO)))`
 
@@ -261,11 +265,11 @@ When enforced, dunolint suggests to add the pp to the list of arguments, initiat
 
 Returns *true* if one of the flags present fits the specification.
 
-Flags usually start with one or two '-' characters. We recommend dunolint users to adhere strictly the the `-flag=PARAM` syntax for configuring ppx flags accepting parameters, as this ensure the entire construct is parsed as a single atom.
+Flags usually start with one or two '-' characters. We recommend *dunolint* users to adhere strictly the the `-flag=PARAM` syntax for configuring ppx flags accepting parameters, as this ensure the entire construct is parsed as a single atom.
 
 **Applies_to:**
 
-- Flags may be applied to the ppx driver itself. This is the case for generic flags implemented by ppxlib for example. In this case, the dunolint convention is to place them first, right after the `pps` field, and before any ppx. This is the case for the flag `unused-code-warnings` flag below:
+- Flags may be applied to the ppx driver itself. This is the case for generic flags implemented by ppxlib for example. In this case, the *dunolint* convention is to place them first, right after the `pps` field, and before any ppx. This is the case for the flag `unused-code-warnings` flag below:
 
 ```dune
  (preprocess
@@ -276,7 +280,7 @@ Flags usually start with one or two '-' characters. We recommend dunolint users 
    ...
 ```
 
-- Or flags may be custom constructs targeting a dedicated ppx. In this case, the dunolint recommendation is to place them right after the ppx they are targeting. This is the case for the `check-doc-comments` flag below
+- Or flags may be custom constructs targeting a dedicated ppx. In this case, the *dunolint* recommendation is to place them right after the ppx they are targeting. This is the case for the `check-doc-comments` flag below
 
 ```dune
 (lint
@@ -287,7 +291,7 @@ Flags usually start with one or two '-' characters. We recommend dunolint users 
 
 Param matching evaluation is pretty self explanatory, *any* matches anything, *none* means no param, *some* means a param with any value, and *equals* expects an exact match for the param value.
 
-It is possible to enforce the `(flag _)` predicate, when the specification is unambiguous as to how to create a new flag if a matching one is not already present (for example, it can't have PARAM=any, etc.). The `(flag _)` predicate may only be negated when `PARAM=any` in which case dunolint will suggests removing any matching flag.
+It is possible to enforce the `(flag _)` predicate, when the specification is unambiguous as to how to create a new flag if a matching one is not already present (for example, it can't have PARAM=any, etc.). The `(flag _)` predicate may only be negated when `PARAM=any` in which case *dunolint* will suggests removing any matching flag.
 
 3. `(pp_with_flag ((pp PP_NAME) (flag FLAG) (param PARAM)))`
 
@@ -327,13 +331,62 @@ It supports two forms:
 
 This is a predicate that returns *true* iif the FRAGMENT is set to exactly this value.
 
-When enforced, dunolint suggests to replace any existing setting with that field. Doesn't support suggestion when negated.
+When enforced, *dunolint* suggests to replace any existing setting with that field. Doesn't support suggestion when negated.
 
 2. `(pps _)`
 
 In this case, the construction follows with a `pps` selector.
 
-When enforced, dunolint suggests to either replace or initiate a `pps` field based on the enforcement of that selector. Doesn't support suggestion when negated.
+When enforced, *dunolint* suggests to either replace or initiate a `pps` field based on the enforcement of that selector. Doesn't support suggestion when negated.
+
+## modes
+
+`(dune (library (modes _)))` is a selector for the *modes* field of a *library* stanzas:
+
+Stanza:
+```dune
+(library
+ (modes <FRAGMENT>))
+```
+
+The compilation modes supported are
+```pre
+MODE := byte | native | best
+```
+
+The predicates of the `modes` selector are:
+
+1. `(equals MODES)`
+
+Returns *true* iif the set defined by the compilation modes supplied is an exact match for the set of compilation modes present in the FRAGMENT.
+
+When enforced, *dunolint* suggests to replace the existing fragment with the list of values specified by the predicate, in the order defined by the set.
+
+2. `(has_mode MODE)`
+
+Returns *true* iif the mode specified is present in the list of values found in the fragment.
+
+When enforced, *dunolint* suggests adding the mode to the list of values found in the fragment, if it is not already among the existing values.
+
+**Negation**: When the negation of the predicate *has_mode* is enforced, *dunolint* suggests removing the supplied mode from the fragment if this mode is currently present.
+
+**Examples:**
+
+Stanza:
+```dune
+(library
+ (modes byte native))
+```
+
+Condition: `(dune (library (modes PREDICATE)))`
+
+| Predicate | Result |
+| --------- | ------ |
+| (equals (byte native)) | True |
+| (equals (byte)) | False. Suggestion: remove *native* |
+| (has_mode byte) | True |
+| (has_mode best) | False. Suggestion: add *best*, keep existing values. |
+| (not (has_mode native)) | False. Suggestion: remove *native* |
 
 ## stanza
 
