@@ -31,10 +31,12 @@ module Handler =
     (Dune.Compilation_mode)
 
 let create ~modes = { modes }
+let modes t = t.modes
+let set_modes t ~modes = t.modes <- modes
 
 let read ~sexps_rewriter ~field =
   let modes = Handler.read ~sexps_rewriter ~field in
-  create ~modes:(Set.of_list (module Dune.Compilation_mode) modes)
+  create ~modes:(Dune.Library.Modes.of_list modes)
 ;;
 
 let write t = Handler.write (Set.to_list t.modes)

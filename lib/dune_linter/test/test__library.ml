@@ -116,7 +116,7 @@ let%expect_test "eval" =
   Test_helpers.is_undefined
     (Dune_linter.Library.eval
        t
-       ~predicate:(`modes (equals (Set.of_list (module Dune.Compilation_mode) [ `best ]))));
+       ~predicate:(`modes (equals (Dune.Library.Modes.of_list [ `best ]))));
   [%expect {||}];
   let _, t =
     parse
@@ -130,13 +130,12 @@ let%expect_test "eval" =
   Test_helpers.is_true
     (Dune_linter.Library.eval
        t
-       ~predicate:
-         (`modes (equals (Set.of_list (module Dune.Compilation_mode) [ `byte; `native ]))));
+       ~predicate:(`modes (equals (Dune.Library.Modes.of_list [ `byte; `native ]))));
   [%expect {||}];
   Test_helpers.is_false
     (Dune_linter.Library.eval
        t
-       ~predicate:(`modes (equals (Set.of_list (module Dune.Compilation_mode) [ `best ]))));
+       ~predicate:(`modes (equals (Dune.Library.Modes.of_list [ `best ]))));
   [%expect {||}];
   ()
 ;;

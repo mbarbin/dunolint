@@ -21,6 +21,8 @@
 
 type t = Set.M(Compilation_mode).t [@@deriving compare, equal, sexp]
 
+let of_list ts = Set.of_list (module Compilation_mode) ts
+
 module Predicate = struct
   type modes = t [@@deriving compare, equal, sexp]
 
