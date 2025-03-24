@@ -19,11 +19,14 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+let parse contents =
+  Test_helpers.parse (module Dune_linter.Executable) ~path:(Fpath.v "dune") contents
+;;
+
 let%expect_test "read/write" =
   let test contents =
     Err.For_test.protect (fun () ->
-      let sexps_rewriter, field = Common.read contents in
-      let t = Dune_linter.Executable.read ~sexps_rewriter ~field in
+      let _, t = parse contents in
       print_s (Dune_linter.Executable.write t))
   in
   test {| (executable (name main)) |};
@@ -42,8 +45,7 @@ let%expect_test "read/write" =
   test {| (executable (name (invalid field))) |};
   [%expect
     {|
-    Internal Error:
-    (Of_sexp_error "string_of_sexp: atom needed" (invalid_sexp (invalid field)))
+    Internal Error: (Of_sexp_error (_ ((invalid_sexp (invalid field)))))
     <backtrace disabled in tests>
     [125]
     |}];
@@ -51,8 +53,7 @@ let%expect_test "read/write" =
 ;;
 
 let%expect_test "sexp_of" =
-  let sexps_rewriter, field = Common.read {| (executable (name main)) |} in
-  let t = Dune_linter.Executable.read ~sexps_rewriter ~field in
+  let _, t = parse {| (executable (name main)) |} in
   print_s [%sexp (t : Dune_linter.Executable.t)];
   [%expect
     {|
@@ -82,57 +83,43 @@ module Predicate = struct
       ]
 end
 
-let parse str =
-  let sexps_rewriter, field = Common.read str in
-  let t = Dune_linter.Executable.read ~sexps_rewriter ~field in
-  sexps_rewriter, field, t
-;;
-
 open Dunolint.Config.Std
-
-let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
-let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
-let is_undefined b = require_equal [%here] (module Dunolint.Trilang) b Undefined
 
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
-  let parse str =
-    let _, _, t = parse str in
-    t
-  in
-  let t = parse {| (executable (name main)) |} in
-  is_true
+  let _, t = parse {| (executable (name main)) |} in
+  Test_helpers.is_true
     (Dune_linter.Executable.eval
        t
        ~predicate:(`name (equals (Dune.Executable.Name.v "main"))));
   [%expect {||}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Executable.eval
        t
        ~predicate:(`name (equals (Dune.Executable.Name.v "not-main"))));
   [%expect {||}];
-  is_undefined
+  Test_helpers.is_undefined
     (Dune_linter.Executable.eval
        t
        ~predicate:(`public_name (equals (Dune.Executable.Public_name.v "my-cli"))));
   [%expect {||}];
-  let t = parse {| (executable (name main) (public_name my-cli)) |} in
-  is_true
+  let _, t = parse {| (executable (name main) (public_name my-cli)) |} in
+  Test_helpers.is_true
     (Dune_linter.Executable.eval
        t
        ~predicate:(`public_name (equals (Dune.Executable.Public_name.v "my-cli"))));
   [%expect {||}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Executable.eval
        t
        ~predicate:(`public_name (equals (Dune.Executable.Public_name.v "main"))));
   [%expect {||}];
-  is_undefined
+  Test_helpers.is_undefined
     (Dune_linter.Executable.eval
        t
        ~predicate:(`lint (pps (pp (Dune.Pp.Name.v "ppx_linter")))));
   [%expect {||}];
-  let t =
+  let _, t =
     parse
       {|
 (executable
@@ -141,12 +128,12 @@ let%expect_test "eval" =
  (lint (pps ppx_linter -lint-flag)))
 |}
   in
-  is_true
+  Test_helpers.is_true
     (Dune_linter.Executable.eval
        t
        ~predicate:(`lint (pps (pp (Dune.Pp.Name.v "ppx_linter")))));
   [%expect {||}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Executable.eval
        t
        ~predicate:(`lint (pps (pp (Dune.Pp.Name.v "ppx_absent")))));
@@ -156,7 +143,7 @@ let%expect_test "eval" =
 
 let%expect_test "enforce" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
-  let enforce (sexps_rewriter, field, t) conditions =
+  let enforce ((sexps_rewriter, field), t) conditions =
     Sexps_rewriter.reset sexps_rewriter;
     Dunolinter.Handler.raise ~f:(fun () ->
       List.iter conditions ~f:(fun condition ->

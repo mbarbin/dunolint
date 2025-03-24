@@ -19,19 +19,14 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+let parse contents =
+  Test_helpers.parse (module Dune_linter.Library.Modes) ~path:(Fpath.v "dune") contents
+;;
+
 let%expect_test "read/write" =
   let test contents =
     Err.For_test.protect (fun () ->
-      let sexps_rewriter, field = Common.read contents in
-      let t =
-        try Dune_linter.Library.Modes.read ~sexps_rewriter ~field with
-        | Sexp.Of_sexp_error (_, sexp) ->
-          (* We redact the message because it contains paths to source files,
-             which is inconvenient when relocating the code in sub repos. *)
-          raise_s
-            [%sexp Of_sexp_error, ("_", { invalid_sexp = (sexp : Sexp.t) })]
-          [@coverage off]
-      in
+      let _, t = parse contents in
       print_s (Dune_linter.Library.Modes.write t))
   in
   test {| (modes) |};
@@ -58,8 +53,7 @@ let%expect_test "read/write" =
 ;;
 
 let%expect_test "sexp_of" =
-  let sexps_rewriter, field = Common.read {| (modes byte native) |} in
-  let t = Dune_linter.Library.Modes.read ~sexps_rewriter ~field in
+  let _, t = parse {| (modes byte native) |} in
   print_s [%sexp (t : Dune_linter.Library.Modes.t)];
   [%expect {| ((modes (byte native))) |}];
   ()
@@ -73,44 +67,31 @@ module Predicate = struct
       [ `equals of Dune.Library.Modes.t | `has_mode of Dune.Compilation_mode.t ]
 end
 
-let parse str =
-  let sexps_rewriter, field = Common.read str in
-  let t = Dune_linter.Library.Modes.read ~sexps_rewriter ~field in
-  sexps_rewriter, field, t
-;;
-
 open Dunolint.Config.Std
-
-let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
-let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
 
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
-  let parse str =
-    let _, _, t = parse str in
-    t
-  in
-  let t = parse {| (modes byte native) |} in
-  is_true
+  let _, t = parse {| (modes byte native) |} in
+  Test_helpers.is_true
     (Dune_linter.Library.Modes.eval
        t
        ~predicate:
          (`equals (Set.of_list (module Dune.Compilation_mode) [ `byte; `native ])));
   [%expect {| |}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Library.Modes.eval
        t
        ~predicate:(`equals (Set.of_list (module Dune.Compilation_mode) [ `best ])));
   [%expect {| |}];
-  is_true (Dune_linter.Library.Modes.eval t ~predicate:(`has_mode `byte));
+  Test_helpers.is_true (Dune_linter.Library.Modes.eval t ~predicate:(`has_mode `byte));
   [%expect {| |}];
-  is_false (Dune_linter.Library.Modes.eval t ~predicate:(`has_mode `best));
+  Test_helpers.is_false (Dune_linter.Library.Modes.eval t ~predicate:(`has_mode `best));
   [%expect {| |}];
   ()
 ;;
 
 let%expect_test "enforce" =
-  let enforce (sexps_rewriter, field, t) conditions =
+  let enforce ((sexps_rewriter, field), t) conditions =
     Sexps_rewriter.reset sexps_rewriter;
     Dunolinter.Handler.raise ~f:(fun () ->
       List.iter conditions ~f:(fun condition ->

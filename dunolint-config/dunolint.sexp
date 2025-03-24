@@ -13,6 +13,8 @@
   ((cond
     (((path (glob dunolint-config/**/*))
       (enforce (dune (library (public_name (is_prefix dunolint-tests.))))))
+     ((path (glob lib/test_helpers/src/*))
+      (enforce (dune (library (public_name (is_prefix dunolint-tests.))))))
      ((path (glob **/test/*))
       (enforce
        (dune

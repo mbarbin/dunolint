@@ -17,6 +17,8 @@ dirs=(
     "lib/dunolint_engine/test"
     "lib/dunolinter/src"
     "lib/dunolinter/test"
+    "lib/test_helpers/src"
+    "lib/test_helpers/test"
     "dunolint-config/bin"
     "dunolint-config/src"
 )

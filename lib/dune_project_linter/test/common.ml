@@ -20,12 +20,5 @@
 (*********************************************************************************)
 
 let read original_contents =
-  let sexps_rewriter =
-    match Sexps_rewriter.create ~path:(Fpath.v "dune-project") ~original_contents with
-    | Ok r -> r
-    | Error { loc; message } -> Err.raise ~loc [ Pp.text message ] [@coverage off]
-  in
-  match Sexps_rewriter.original_sexps sexps_rewriter with
-  | [ field ] -> sexps_rewriter, field
-  | sexps -> Err.raise [ Pp.textf "Expected exactly 1 sexp, got %d." (List.length sexps) ]
+  Test_helpers.read_sexp_field ~path:(Fpath.v "dune-project") original_contents
 ;;

@@ -19,11 +19,14 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+let parse contents =
+  Test_helpers.parse (module Dune_linter.Library.Name) ~path:(Fpath.v "dune") contents
+;;
+
 let%expect_test "read/write" =
   let test contents =
     Err.For_test.protect (fun () ->
-      let sexps_rewriter, field = Common.read contents in
-      let t = Dune_linter.Library.Name.read ~sexps_rewriter ~field in
+      let _, t = parse contents in
       print_s (Dune_linter.Library.Name.write t))
   in
   test {| (name pre_hello_suf) |};
@@ -31,9 +34,7 @@ let%expect_test "read/write" =
   test {| (name (pre (hello_suf))) |};
   [%expect
     {|
-    Internal Error:
-    (Of_sexp_error "string_of_sexp: atom needed"
-      (invalid_sexp (pre (hello_suf))))
+    Internal Error: (Of_sexp_error (_ ((invalid_sexp (pre (hello_suf))))))
     <backtrace disabled in tests>
     [125]
     |}];
@@ -41,8 +42,7 @@ let%expect_test "read/write" =
 ;;
 
 let%expect_test "sexp_of" =
-  let sexps_rewriter, field = Common.read {| (name lib_name) |} in
-  let t = Dune_linter.Library.Name.read ~sexps_rewriter ~field in
+  let _, t = parse {| (name lib_name) |} in
   print_s [%sexp (t : Dune_linter.Library.Name.t)];
   [%expect {| ((name lib_name)) |}];
   ()
@@ -58,30 +58,26 @@ end
 
 open Dunolint.Config.Std
 
-let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
-let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
-
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
-  let sexps_rewriter, field = Common.read {| (name pre_hello_suf) |} in
-  let t = Dune_linter.Library.Name.read ~sexps_rewriter ~field in
-  is_true
+  let _, t = parse {| (name pre_hello_suf) |} in
+  Test_helpers.is_true
     (Dune_linter.Library.Name.eval
        t
        ~predicate:(`equals (Dune.Library.Name.v "pre_hello_suf")));
   [%expect {||}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Library.Name.eval
        t
        ~predicate:(`equals (Dune.Library.Name.v "hello_suf")));
   [%expect {||}];
-  is_true (Dune_linter.Library.Name.eval t ~predicate:(`is_prefix "pre_"));
+  Test_helpers.is_true (Dune_linter.Library.Name.eval t ~predicate:(`is_prefix "pre_"));
   [%expect {||}];
-  is_false (Dune_linter.Library.Name.eval t ~predicate:(`is_prefix "hello"));
+  Test_helpers.is_false (Dune_linter.Library.Name.eval t ~predicate:(`is_prefix "hello"));
   [%expect {||}];
-  is_true (Dune_linter.Library.Name.eval t ~predicate:(`is_suffix "_suf"));
+  Test_helpers.is_true (Dune_linter.Library.Name.eval t ~predicate:(`is_suffix "_suf"));
   [%expect {||}];
-  is_false (Dune_linter.Library.Name.eval t ~predicate:(`is_suffix "hello"));
+  Test_helpers.is_false (Dune_linter.Library.Name.eval t ~predicate:(`is_suffix "hello"));
   [%expect {||}];
   ()
 ;;

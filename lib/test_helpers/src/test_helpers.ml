@@ -19,6 +19,35 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-let read original_contents =
-  Test_helpers.read_sexp_field ~path:(Fpath.v "dune") original_contents
+let read_sexp_field ~path original_contents =
+  let sexps_rewriter =
+    match Sexps_rewriter.create ~path ~original_contents with
+    | Ok r -> r
+    | Error { loc; message } -> Err.raise ~loc [ Pp.text message ] [@coverage off]
+  in
+  match Sexps_rewriter.original_sexps sexps_rewriter with
+  | [ field ] -> sexps_rewriter, field
+  | sexps -> Err.raise [ Pp.textf "Expected exactly 1 sexp, got %d." (List.length sexps) ]
 ;;
+
+let parse
+      (type a)
+      (module M : Dunolinter.Sexp_handler.S with type t = a)
+      ~path
+      original_contents
+  =
+  let sexps_rewriter, field = read_sexp_field ~path original_contents in
+  let t =
+    try M.read ~sexps_rewriter ~field with
+    | Sexp.Of_sexp_error (_, sexp) ->
+      (* We redact the message because it is contains paths to source files, which
+         makes it inconvenient when relocating the code in sub repos. *)
+      raise_s
+        [%sexp Of_sexp_error, ("_", { invalid_sexp = (sexp : Sexp.t) })] [@coverage off]
+  in
+  (sexps_rewriter, field), t
+;;
+
+let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
+let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
+let is_undefined b = require_equal [%here] (module Dunolint.Trilang) b Undefined

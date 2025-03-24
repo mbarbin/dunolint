@@ -19,19 +19,14 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+let parse contents =
+  Test_helpers.parse (module Dune_linter.Lint) ~path:(Fpath.v "dune") contents
+;;
+
 let%expect_test "read/write" =
   let test contents =
     Err.For_test.protect (fun () ->
-      let sexps_rewriter, field = Common.read contents in
-      let t =
-        try Dune_linter.Lint.read ~sexps_rewriter ~field with
-        | Sexp.Of_sexp_error (_, sexp) ->
-          (* We redact the message because it is contains paths to source files, which
-             makes it inconvenient when relocating the code in sub repos. *)
-          raise_s
-            [%sexp Of_sexp_error, ("_", { invalid_sexp = (sexp : Sexp.t) })]
-          [@coverage off]
-      in
+      let _, t = parse contents in
       print_s (Dune_linter.Lint.write t))
   in
   test {| (lint (pps ppx_js_style)) |};
@@ -56,21 +51,14 @@ let%expect_test "read/write" =
 ;;
 
 let%expect_test "sexp_of" =
-  let sexps_rewriter, field = Common.read {| (lint (pps ppx_js_style)) |} in
-  let t = Dune_linter.Lint.read ~sexps_rewriter ~field in
+  let _, t = parse {| (lint (pps ppx_js_style)) |} in
   print_s [%sexp (t : Dune_linter.Lint.t)];
   [%expect {| ((pps ((args ((Pp (pp_name ppx_js_style))))))) |}];
   ()
 ;;
 
-let parse str =
-  let sexps_rewriter, field = Common.read str in
-  let t = Dune_linter.Lint.read ~sexps_rewriter ~field in
-  sexps_rewriter, field, t
-;;
-
 let rewrite ?(f = ignore) str =
-  let sexps_rewriter, field, t = parse str in
+  let (sexps_rewriter, field), t = parse str in
   f t;
   Dune_linter.Lint.rewrite t ~sexps_rewriter ~field;
   print_endline (Sexps_rewriter.contents sexps_rewriter)
@@ -126,22 +114,15 @@ end
 
 open Dunolint.Config.Std
 
-let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
-let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
-
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
-  let parse str =
-    let _, _, t = parse str in
-    t
-  in
-  let t = parse {| (lint (pps ppx_js_style)) |} in
-  is_true
+  let _, t = parse {| (lint (pps ppx_js_style)) |} in
+  Test_helpers.is_true
     (Dune_linter.Lint.eval
        t
        ~predicate:(`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_js_style")))));
   [%expect {| |}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Lint.eval
        t
        ~predicate:(`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_other")))));
@@ -150,7 +131,7 @@ let%expect_test "eval" =
 ;;
 
 let%expect_test "enforce" =
-  let enforce (sexps_rewriter, field, t) conditions =
+  let enforce ((sexps_rewriter, field), t) conditions =
     Sexps_rewriter.reset sexps_rewriter;
     Dunolinter.Handler.raise ~f:(fun () ->
       List.iter conditions ~f:(fun condition -> Dune_linter.Lint.enforce t ~condition);

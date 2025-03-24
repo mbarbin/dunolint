@@ -19,21 +19,14 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-open Dunolint.Config.Std
+let parse contents =
+  Test_helpers.parse (module Dune_linter.Preprocess) ~path:(Fpath.v "dune") contents
+;;
 
 let%expect_test "read/write" =
   let test contents =
     Err.For_test.protect (fun () ->
-      let sexps_rewriter, field = Common.read contents in
-      let t =
-        try Dune_linter.Preprocess.read ~sexps_rewriter ~field with
-        | Sexp.Of_sexp_error (_, sexp) ->
-          (* We redact the message because it contains paths to source files,
-             which is inconvenient when relocating the code in sub repos. *)
-          raise_s
-            [%sexp Of_sexp_error, ("_", { invalid_sexp = (sexp : Sexp.t) })]
-          [@coverage off]
-      in
+      let _, t = parse contents in
       print_s (Dune_linter.Preprocess.write t))
   in
   test {| (preprocess no_preprocessing) |};
@@ -53,8 +46,7 @@ let%expect_test "read/write" =
 ;;
 
 let%expect_test "sexp_of" =
-  let sexps_rewriter, field = Common.read {| (preprocess (pps ppx_sexp_conv)) |} in
-  let t = Dune_linter.Preprocess.read ~sexps_rewriter ~field in
+  let _, t = parse {| (preprocess (pps ppx_sexp_conv)) |} in
   print_s [%sexp (t : Dune_linter.Preprocess.t)];
   [%expect {| ((state (Pps ((args ((Pp (pp_name ppx_sexp_conv)))))))) |}];
   ()
@@ -66,43 +58,29 @@ module Predicate = struct
     constraint 'a = [ `no_preprocessing | `pps of Dune.Pps.Predicate.t Blang.t ]
 end
 
-let parse str =
-  let sexps_rewriter, field = Common.read str in
-  let t = Dune_linter.Preprocess.read ~sexps_rewriter ~field in
-  sexps_rewriter, field, t
-;;
-
 open Dunolint.Config.Std
-
-let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
-let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
 
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
-  let parse str =
-    let _, _, t = parse str in
-    t
-  in
-  let t = parse {| (preprocess (pps ppx_sexp_conv)) |} in
-  is_true
+  let _, t = parse {| (preprocess (pps ppx_sexp_conv)) |} in
+  Test_helpers.is_true
     (Dune_linter.Preprocess.eval
        t
        ~predicate:(`pps (pp (Dune.Pp.Name.v "ppx_sexp_conv"))));
   [%expect {| |}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Preprocess.eval t ~predicate:(`pps (pp (Dune.Pp.Name.v "ppx_other"))));
   [%expect {| |}];
-  is_false (Dune_linter.Preprocess.eval t ~predicate:`no_preprocessing);
+  Test_helpers.is_false (Dune_linter.Preprocess.eval t ~predicate:`no_preprocessing);
   [%expect {| |}];
-  let sexps_rewriter, field = Common.read {| (preprocess no_preprocessing) |} in
-  let t = Dune_linter.Preprocess.read ~sexps_rewriter ~field in
-  is_true (Dune_linter.Preprocess.eval t ~predicate:`no_preprocessing);
+  let _, t = parse {| (preprocess no_preprocessing) |} in
+  Test_helpers.is_true (Dune_linter.Preprocess.eval t ~predicate:`no_preprocessing);
   [%expect {| |}];
   ()
 ;;
 
 let%expect_test "enforce" =
-  let enforce (sexps_rewriter, field, t) conditions =
+  let enforce ((sexps_rewriter, field), t) conditions =
     Sexps_rewriter.reset sexps_rewriter;
     Dunolinter.Handler.raise ~f:(fun () ->
       List.iter conditions ~f:(fun condition ->

@@ -19,19 +19,17 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+let parse contents =
+  Test_helpers.parse
+    (module Dune_project_linter.Name)
+    ~path:(Fpath.v "dune-project")
+    contents
+;;
+
 let%expect_test "read/write" =
   let test contents =
     Err.For_test.protect (fun () ->
-      let sexps_rewriter, field = Common.read contents in
-      let t =
-        try Dune_project_linter.Name.read ~sexps_rewriter ~field with
-        | Sexp.Of_sexp_error (_, sexp) ->
-          (* We redact the message because it is contains paths to source files, which
-             makes it inconvenient when relocating the code in sub repos. *)
-          raise_s
-            [%sexp Of_sexp_error, ("_", { invalid_sexp = (sexp : Sexp.t) })]
-          [@coverage off]
-      in
+      let _, t = parse contents in
       print_s (Dune_project_linter.Name.write t))
   in
   test {| (name my_project) |};
@@ -47,21 +45,14 @@ let%expect_test "read/write" =
 ;;
 
 let%expect_test "sexp_of" =
-  let sexps_rewriter, field = Common.read {| (name my_project) |} in
-  let t = Dune_project_linter.Name.read ~sexps_rewriter ~field in
+  let _, t = parse {| (name my_project) |} in
   print_s [%sexp (t : Dune_project_linter.Name.t)];
   [%expect {| ((name my_project)) |}];
   ()
 ;;
 
-let parse str =
-  let sexps_rewriter, field = Common.read str in
-  let t = Dune_project_linter.Name.read ~sexps_rewriter ~field in
-  sexps_rewriter, field, t
-;;
-
 let rewrite ?(f = ignore) str =
-  let sexps_rewriter, field, t = parse str in
+  let (sexps_rewriter, field), t = parse str in
   f t;
   Dune_project_linter.Name.rewrite t ~sexps_rewriter ~field;
   print_endline (Sexps_rewriter.contents sexps_rewriter)
@@ -108,40 +99,33 @@ end
 
 open Dunolint.Config.Std
 
-let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
-let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
-let is_undefined b = require_equal [%here] (module Dunolint.Trilang) b Undefined
-
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
-  let parse str =
-    let _, _, t = parse str in
-    t
-  in
-  let t = parse {| (name my_project) |} in
-  is_true
+  let _, t = parse {| (name my_project) |} in
+  Test_helpers.is_true
     (Dune_project_linter.Name.eval
        t
        ~predicate:(`equals (Dune_project.Name.v "my_project")));
   [%expect {| |}];
-  is_false
+  Test_helpers.is_false
     (Dune_project_linter.Name.eval
        t
        ~predicate:(`equals (Dune_project.Name.v "other_project")));
   [%expect {| |}];
-  is_true (Dune_project_linter.Name.eval t ~predicate:(`is_prefix "my_"));
+  Test_helpers.is_true (Dune_project_linter.Name.eval t ~predicate:(`is_prefix "my_"));
   [%expect {| |}];
-  is_false (Dune_project_linter.Name.eval t ~predicate:(`is_prefix "other_"));
+  Test_helpers.is_false (Dune_project_linter.Name.eval t ~predicate:(`is_prefix "other_"));
   [%expect {| |}];
-  is_true (Dune_project_linter.Name.eval t ~predicate:(`is_suffix "_project"));
+  Test_helpers.is_true
+    (Dune_project_linter.Name.eval t ~predicate:(`is_suffix "_project"));
   [%expect {| |}];
-  is_false (Dune_project_linter.Name.eval t ~predicate:(`is_suffix "_other"));
+  Test_helpers.is_false (Dune_project_linter.Name.eval t ~predicate:(`is_suffix "_other"));
   [%expect {| |}];
   ()
 ;;
 
 let%expect_test "enforce" =
-  let enforce (sexps_rewriter, field, t) conditions =
+  let enforce ((sexps_rewriter, field), t) conditions =
     Sexps_rewriter.reset sexps_rewriter;
     Dunolinter.Handler.raise ~f:(fun () ->
       List.iter conditions ~f:(fun condition ->
@@ -250,27 +234,23 @@ let%expect_test "enforce" =
 ;;
 
 let%expect_test "Linter.eval" =
-  let parse str =
-    let _, _, t = parse str in
-    t
-  in
-  let t = parse {| (name foo) |} in
-  is_true
+  let _, t = parse {| (name foo) |} in
+  Test_helpers.is_true
     (Dune_project_linter.Name.Linter.eval
        t
        ~predicate:(`name (equals (Dune_project.Name.v "foo"))));
   [%expect {||}];
-  is_undefined
+  Test_helpers.is_undefined
     (Dune_project_linter.Name.Linter.eval t ~predicate:(`implicit_transitive_deps true_));
   [%expect {||}];
-  is_undefined
+  Test_helpers.is_undefined
     (Dune_project_linter.Name.Linter.eval t ~predicate:(`generate_opam_files false_));
   [%expect {||}];
   ()
 ;;
 
 let%expect_test "Linter.enforce" =
-  let enforce (sexps_rewriter, field, t) conditions =
+  let enforce ((sexps_rewriter, field), t) conditions =
     Sexps_rewriter.reset sexps_rewriter;
     Dunolinter.Handler.raise ~f:(fun () ->
       List.iter conditions ~f:(fun condition ->
