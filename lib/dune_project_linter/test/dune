@@ -28,7 +28,8 @@
   parsexp
   pp
   pplumbing.err
-  sexps-rewriter)
+  sexps-rewriter
+  test_helpers)
  (instrumentation
   (backend bisect_ppx))
  (lint

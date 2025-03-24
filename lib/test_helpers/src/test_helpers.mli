@@ -18,3 +18,11 @@
 (*_  and the LGPL-3.0 Linking Exception along with this library. If not, see      *)
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
+
+(** Helpers for dunolint tests.
+
+    This module defines utils used by the tests of dunolint. It is not meant to
+    be exported outside of the dunolint project, and thus is simply named
+    "Test_helpers" rather than have a dunolint part in its name. *)
+
+val read_sexp_field : path:Fpath.t -> string -> Sexps_rewriter.t * Sexp.t

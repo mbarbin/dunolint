@@ -1,6 +1,6 @@
 (library
- (name dune_linter_test)
- (public_name dunolint-tests.dune_linter_test)
+ (name test_helpers)
+ (public_name dunolint-tests.test_helpers)
  (inline_tests)
  (flags
   :standard
@@ -11,25 +11,24 @@
   -open
   Base
   -open
-  Fpath_sexp0
+  Fpath_base
   -open
   Expect_test_helpers_base
   -open
-  Dunolint.Std)
+  Stdio)
  (libraries
   base
   dune_linter
+  dune_project_linter
   dunolint
   dunolinter
   expect_test_helpers_core.expect_test_helpers_base
-  file-rewriter
-  fpath-sexp0
+  fpath-base
   loc
-  parsexp
   pp
   pplumbing.err
   sexps-rewriter
-  test_helpers)
+  stdio)
  (instrumentation
   (backend bisect_ppx))
  (lint
