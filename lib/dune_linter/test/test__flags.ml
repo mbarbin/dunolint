@@ -19,11 +19,14 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+let parse contents =
+  Test_helpers.parse (module Dune_linter.Flags) ~path:(Fpath.v "dune") contents
+;;
+
 let%expect_test "read/write" =
   let test contents =
     Err.For_test.protect (fun () ->
-      let sexps_rewriter, field = Common.read contents in
-      let t = Dune_linter.Flags.read ~sexps_rewriter ~field in
+      let _, t = parse contents in
       print_s (Dune_linter.Flags.write t))
   in
   test {||};
@@ -66,8 +69,7 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let test str =
-    let sexps_rewriter, field = Common.read str in
-    let t = Dune_linter.Flags.read ~sexps_rewriter ~field in
+    let _, t = parse str in
     print_s [%sexp (t : Dune_linter.Flags.t)]
   in
   test
@@ -90,8 +92,7 @@ let%expect_test "sexp_of" =
    We'll revisit when we add some. *)
 
 let rewrite ?(f = ignore) str =
-  let sexps_rewriter, field = Common.read str in
-  let t = Dune_linter.Flags.read ~sexps_rewriter ~field in
+  let (sexps_rewriter, field), t = parse str in
   f t;
   Dune_linter.Flags.rewrite t ~sexps_rewriter ~field;
   print_endline (Sexps_rewriter.contents sexps_rewriter)
@@ -150,22 +151,21 @@ let%expect_test "create_then_rewrite" =
 ;;
 
 let%expect_test "enforce" =
-  let sexps_rewriter, field = Common.read {| (flags :standard -open Foo) |} in
-  let enforce conditions =
+  let enforce ((sexps_rewriter, field), t) conditions =
     Sexps_rewriter.reset sexps_rewriter;
-    let t = Dune_linter.Flags.read ~sexps_rewriter ~field in
     Dunolinter.Handler.raise ~f:(fun () ->
       List.iter conditions ~f:(fun condition -> Dune_linter.Flags.enforce t ~condition);
       Dune_linter.Flags.rewrite t ~sexps_rewriter ~field;
       print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
   in
   let open Blang.O in
-  enforce [];
+  let t = parse {| (flags :standard -open Foo) |} in
+  enforce t [];
   [%expect {| (flags :standard -open Foo) |}];
   (* Blang. *)
-  enforce [ true_ ];
+  enforce t [ true_ ];
   [%expect {| (flags :standard -open Foo) |}];
-  require_does_raise [%here] (fun () -> enforce [ false_ ]);
+  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
   [%expect
     {|
     (Dunolinter.Handler.Enforce_failure

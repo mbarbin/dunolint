@@ -19,11 +19,14 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+let parse contents =
+  Test_helpers.parse (module Dune_linter.Pps) ~path:(Fpath.v "dune") contents
+;;
+
 let%expect_test "read/write" =
   let test contents =
     Err.For_test.protect (fun () ->
-      let sexps_rewriter, field = Common.read contents in
-      let t = Dune_linter.Pps.read ~sexps_rewriter ~field in
+      let _, t = parse contents in
       print_s (Dune_linter.Pps.write t))
   in
   test {| (pps ppx_deriving) |};
@@ -46,10 +49,7 @@ let%expect_test "read/write" =
 ;;
 
 let%expect_test "sexp_of" =
-  let sexps_rewriter, field =
-    Common.read {| (pps --driver ppx_deriving --flag --opt=param) |}
-  in
-  let t = Dune_linter.Pps.read ~sexps_rewriter ~field in
+  let _, t = parse {| (pps --driver ppx_deriving --flag --opt=param) |} in
   print_s [%sexp (t : Dune_linter.Pps.t)];
   [%expect
     {|
@@ -84,14 +84,8 @@ let%expect_test "parse" =
   ()
 ;;
 
-let parse str =
-  let sexps_rewriter, field = Common.read str in
-  let t = Dune_linter.Pps.read ~sexps_rewriter ~field in
-  sexps_rewriter, field, t
-;;
-
 let rewrite ?(f = ignore) str =
-  let sexps_rewriter, field, t = parse str in
+  let (sexps_rewriter, field), t = parse str in
   f t;
   Dune_linter.Pps.rewrite t ~sexps_rewriter ~field;
   print_endline (Sexps_rewriter.contents sexps_rewriter)
@@ -157,21 +151,16 @@ end
 
 open Dunolint.Config.Std
 
-let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
-let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
-
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
-  let parse str =
-    let _, _, t = parse str in
-    t
-  in
-  let t = parse {| (pps ppx_deriving) |} in
-  is_true (Dune_linter.Pps.eval t ~predicate:(`pp (Dune.Pp.Name.v "ppx_deriving")));
+  let _, t = parse {| (pps ppx_deriving) |} in
+  Test_helpers.is_true
+    (Dune_linter.Pps.eval t ~predicate:(`pp (Dune.Pp.Name.v "ppx_deriving")));
   [%expect {||}];
-  is_false (Dune_linter.Pps.eval t ~predicate:(`pp (Dune.Pp.Name.v "ppx_other")));
+  Test_helpers.is_false
+    (Dune_linter.Pps.eval t ~predicate:(`pp (Dune.Pp.Name.v "ppx_other")));
   [%expect {||}];
-  let t =
+  let _, t =
     parse
       {|
  (pps
@@ -183,9 +172,10 @@ let%expect_test "eval" =
    --flag-for-john=value)
 |}
   in
-  is_true (Dune_linter.Pps.eval t ~predicate:(`pp (Dune.Pp.Name.v "ppx_jane")));
+  Test_helpers.is_true
+    (Dune_linter.Pps.eval t ~predicate:(`pp (Dune.Pp.Name.v "ppx_jane")));
   [%expect {||}];
-  is_true
+  Test_helpers.is_true
     (Dune_linter.Pps.eval
        t
        ~predicate:
@@ -195,67 +185,67 @@ let%expect_test "eval" =
              ; applies_to = `pp (Dune.Pp.Name.v "ppx_jane")
              }));
   [%expect {||}];
-  is_true
+  Test_helpers.is_true
     (Dune_linter.Pps.eval
        t
        ~predicate:(`flag { name = "--flag-for-jane"; param = `none; applies_to = `any }));
   [%expect {||}];
-  is_true
+  Test_helpers.is_true
     (Dune_linter.Pps.eval
        t
        ~predicate:(`flag { name = "--flag-for-jane"; param = `any; applies_to = `any }));
   [%expect {||}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Pps.eval
        t
        ~predicate:
          (`flag { name = "--flag-for-jane"; param = `none; applies_to = `driver }));
   [%expect {||}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Pps.eval
        t
        ~predicate:(`flag { name = "--flag-for-jane"; param = `some; applies_to = `any }));
   [%expect {||}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Pps.eval
        t
        ~predicate:
          (`flag { name = "--flag-for-jane"; param = `equals "blah"; applies_to = `any }));
   [%expect {||}];
-  is_true
+  Test_helpers.is_true
     (Dune_linter.Pps.eval
        t
        ~predicate:(`flag { name = "--flag-for-john"; param = `some; applies_to = `any }));
   [%expect {||}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Pps.eval
        t
        ~predicate:(`flag { name = "--flag-for-john"; param = `none; applies_to = `any }));
   [%expect {||}];
-  is_true
+  Test_helpers.is_true
     (Dune_linter.Pps.eval
        t
        ~predicate:(`flag { name = "--flag-for-john"; param = `any; applies_to = `any }));
   [%expect {||}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Pps.eval
        t
        ~predicate:
          (`flag { name = "--flag-for-john"; param = `equals "blah"; applies_to = `any }));
   [%expect {||}];
-  is_true
+  Test_helpers.is_true
     (Dune_linter.Pps.eval
        t
        ~predicate:
          (`flag { name = "--flag-for-john"; param = `equals "value"; applies_to = `any }));
   [%expect {||}];
-  is_true
+  Test_helpers.is_true
     (Dune_linter.Pps.eval
        t
        ~predicate:
          (`flag { name = "--flag-for-the-ppx-driver"; param = `none; applies_to = `any }));
   [%expect {||}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Pps.eval
        t
        ~predicate:
@@ -265,47 +255,47 @@ let%expect_test "eval" =
              ; applies_to = `pp (Dune.Pp.Name.v "ppx_jane")
              }));
   [%expect {||}];
-  is_true
+  Test_helpers.is_true
     (Dune_linter.Pps.eval
        t
        ~predicate:
          (`flag
              { name = "--flag-for-the-ppx-driver"; param = `none; applies_to = `driver }));
   [%expect {||}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Pps.eval
        t
        ~predicate:
          (`pp_with_flag { pp = Dune.Pp.Name.v "ppx_eve"; flag = "-flag"; param = `none }));
   [%expect {||}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Pps.eval
        t
        ~predicate:
          (`pp_with_flag { pp = Dune.Pp.Name.v "ppx_jane"; flag = "-flag"; param = `none }));
   [%expect {||}];
-  is_true
+  Test_helpers.is_true
     (Dune_linter.Pps.eval
        t
        ~predicate:
          (`pp_with_flag
              { pp = Dune.Pp.Name.v "ppx_jane"; flag = "--flag-for-jane"; param = `none }));
   [%expect {||}];
-  is_true
+  Test_helpers.is_true
     (Dune_linter.Pps.eval
        t
        ~predicate:
          (`pp_with_flag
              { pp = Dune.Pp.Name.v "ppx_jane"; flag = "--flag-for-jane"; param = `any }));
   [%expect {||}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Pps.eval
        t
        ~predicate:
          (`pp_with_flag
              { pp = Dune.Pp.Name.v "ppx_jane"; flag = "--flag-for-jane"; param = `some }));
   [%expect {||}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Pps.eval
        t
        ~predicate:
@@ -315,7 +305,7 @@ let%expect_test "eval" =
              ; param = `equals "blah"
              }));
   [%expect {||}];
-  is_false
+  Test_helpers.is_false
     (Dune_linter.Pps.eval
        t
        ~predicate:
@@ -329,7 +319,7 @@ let%expect_test "eval" =
 ;;
 
 let%expect_test "enforce" =
-  let enforce (sexps_rewriter, field, t) conditions =
+  let enforce ((sexps_rewriter, field), t) conditions =
     Sexps_rewriter.reset sexps_rewriter;
     Dunolinter.Handler.raise ~f:(fun () ->
       List.iter conditions ~f:(fun condition -> Dune_linter.Pps.enforce t ~condition);

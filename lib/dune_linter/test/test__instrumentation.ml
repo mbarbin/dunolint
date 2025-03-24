@@ -19,19 +19,14 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+let parse contents =
+  Test_helpers.parse (module Dune_linter.Instrumentation) ~path:(Fpath.v "dune") contents
+;;
+
 let%expect_test "read/write" =
   let test contents =
     Err.For_test.protect (fun () ->
-      let sexps_rewriter, field = Common.read contents in
-      let t =
-        try Dune_linter.Instrumentation.read ~sexps_rewriter ~field with
-        | Sexp.Of_sexp_error (_, sexp) ->
-          (* We redact the message because it is contains paths to source files, which
-             makes it inconvenient when relocating the code in sub repos. *)
-          raise_s
-            [%sexp Of_sexp_error, ("_", { invalid_sexp = (sexp : Sexp.t) })]
-          [@coverage off]
-      in
+      let _, t = parse contents in
       print_s (Dune_linter.Instrumentation.write t))
   in
   test {| (instrumentation (backend bisect_ppx)) |};
@@ -59,21 +54,14 @@ let%expect_test "read/write" =
 ;;
 
 let%expect_test "sexp_of" =
-  let sexps_rewriter, field = Common.read {| (instrumentation (backend bisect_ppx)) |} in
-  let t = Dune_linter.Instrumentation.read ~sexps_rewriter ~field in
+  let _, t = parse {| (instrumentation (backend bisect_ppx)) |} in
   print_s [%sexp (t : Dune_linter.Instrumentation.t)];
   [%expect {| ((backend bisect_ppx)) |}];
   ()
 ;;
 
-let parse str =
-  let sexps_rewriter, field = Common.read str in
-  let t = Dune_linter.Instrumentation.read ~sexps_rewriter ~field in
-  sexps_rewriter, field, t
-;;
-
 let rewrite ?(f = ignore) str =
-  let sexps_rewriter, field, t = parse str in
+  let (sexps_rewriter, field), t = parse str in
   f t;
   Dune_linter.Instrumentation.rewrite t ~sexps_rewriter ~field;
   print_endline (Sexps_rewriter.contents sexps_rewriter)
@@ -137,31 +125,24 @@ end
 
 open Dunolint.Config.Std
 
-let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
-let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
-
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
-  let parse str =
-    let _, _, t = parse str in
-    t
-  in
-  let t = parse {| (instrumentation (backend bisect_ppx)) |} in
-  is_true
+  let _, t = parse {| (instrumentation (backend bisect_ppx)) |} in
+  Test_helpers.is_true
     (Dune_linter.Instrumentation.eval
        t
        ~predicate:(`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")));
-  [%expect {| |}];
-  is_false
+  [%expect {||}];
+  Test_helpers.is_false
     (Dune_linter.Instrumentation.eval
        t
        ~predicate:(`backend (Dune.Instrumentation.Backend.Name.v "other_backend")));
-  [%expect {| |}];
+  [%expect {||}];
   ()
 ;;
 
 let%expect_test "enforce" =
-  let enforce (sexps_rewriter, field, t) conditions =
+  let enforce ((sexps_rewriter, field), t) conditions =
     Sexps_rewriter.reset sexps_rewriter;
     Dunolinter.Handler.raise ~f:(fun () ->
       List.iter conditions ~f:(fun condition ->

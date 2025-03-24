@@ -25,4 +25,18 @@
     be exported outside of the dunolint project, and thus is simply named
     "Test_helpers" rather than have a dunolint part in its name. *)
 
+(** {1 Parsing Fields} *)
+
 val read_sexp_field : path:Fpath.t -> string -> Sexps_rewriter.t * Sexp.t
+
+val parse
+  :  (module Dunolinter.Sexp_handler.S with type t = 'a)
+  -> path:Fpath.t
+  -> string
+  -> (Sexps_rewriter.t * Sexp.t) * 'a
+
+(** {1 Trilang} *)
+
+val is_true : Dunolint.Trilang.t -> unit
+val is_false : Dunolint.Trilang.t -> unit
+val is_undefined : Dunolint.Trilang.t -> unit

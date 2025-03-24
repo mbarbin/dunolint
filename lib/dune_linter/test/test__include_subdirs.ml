@@ -19,19 +19,14 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+let parse contents =
+  Test_helpers.parse (module Dune_linter.Include_subdirs) ~path:(Fpath.v "dune") contents
+;;
+
 let%expect_test "read/write" =
   let test contents =
     Err.For_test.protect (fun () ->
-      let sexps_rewriter, field = Common.read contents in
-      let t =
-        try Dune_linter.Include_subdirs.read ~sexps_rewriter ~field with
-        | Sexp.Of_sexp_error (_, sexp) ->
-          (* We redact the message because it is contains paths to source files, which
-             makes it inconvenient when relocating the code in sub repos. *)
-          raise_s
-            [%sexp Of_sexp_error, ("_", { invalid_sexp = (sexp : Sexp.t) })]
-          [@coverage off]
-      in
+      let _, t = parse contents in
       print_s (Dune_linter.Include_subdirs.write t))
   in
   test {| (include_subdirs no) |};
@@ -51,21 +46,14 @@ let%expect_test "read/write" =
 ;;
 
 let%expect_test "sexp_of" =
-  let sexps_rewriter, field = Common.read {| (include_subdirs unqualified) |} in
-  let t = Dune_linter.Include_subdirs.read ~sexps_rewriter ~field in
+  let _, t = parse {| (include_subdirs unqualified) |} in
   print_s [%sexp (t : Dune_linter.Include_subdirs.t)];
   [%expect {| ((mode unqualified)) |}];
   ()
 ;;
 
-let parse str =
-  let sexps_rewriter, field = Common.read str in
-  let t = Dune_linter.Include_subdirs.read ~sexps_rewriter ~field in
-  sexps_rewriter, field, t
-;;
-
 let rewrite ?(f = ignore) str =
-  let sexps_rewriter, field, t = parse str in
+  let (sexps_rewriter, field), t = parse str in
   f t;
   Dune_linter.Include_subdirs.rewrite t ~sexps_rewriter ~field;
   print_endline (Sexps_rewriter.contents sexps_rewriter)
@@ -110,30 +98,25 @@ end
 
 open Dunolint.Config.Std
 
-let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
-let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
-
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
-  let parse str =
-    let _, _, t = parse str in
-    t
-  in
-  let t = parse {| (include_subdirs unqualified) |} in
-  is_true (Dune_linter.Include_subdirs.eval t ~predicate:(`equals `unqualified));
+  let _, t = parse {| (include_subdirs unqualified) |} in
+  Test_helpers.is_true
+    (Dune_linter.Include_subdirs.eval t ~predicate:(`equals `unqualified));
   [%expect {| |}];
-  is_false (Dune_linter.Include_subdirs.eval t ~predicate:(`equals `qualified));
+  Test_helpers.is_false
+    (Dune_linter.Include_subdirs.eval t ~predicate:(`equals `qualified));
   [%expect {| |}];
-  is_false (Dune_linter.Include_subdirs.eval t ~predicate:(`equals `no));
+  Test_helpers.is_false (Dune_linter.Include_subdirs.eval t ~predicate:(`equals `no));
   [%expect {| |}];
-  let t = parse {| (include_subdirs no) |} in
-  is_true (Dune_linter.Include_subdirs.eval t ~predicate:(`equals `no));
+  let _, t = parse {| (include_subdirs no) |} in
+  Test_helpers.is_true (Dune_linter.Include_subdirs.eval t ~predicate:(`equals `no));
   [%expect {| |}];
   ()
 ;;
 
 let%expect_test "enforce" =
-  let enforce (sexps_rewriter, field, t) conditions =
+  let enforce ((sexps_rewriter, field), t) conditions =
     Sexps_rewriter.reset sexps_rewriter;
     Dunolinter.Handler.raise ~f:(fun () ->
       List.iter conditions ~f:(fun condition ->
