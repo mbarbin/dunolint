@@ -34,7 +34,8 @@
   pplumbing.log-cli
   pplumbing.pp-tty
   sexps-rewriter
-  stdio)
+  stdio
+  unix)
  (instrumentation
   (backend bisect_ppx))
  (lint

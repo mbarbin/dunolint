@@ -25,6 +25,7 @@ module Config = Config
 module Dune = Dune
 module Dune_project = Dune_project
 module Glob = Glob
+module Linted_file_kind = Linted_file_kind
 module Path = Path
 module Predicate = Predicate
 module Rule = Rule

@@ -87,7 +87,7 @@ val lint_file
 (** Spawn a [dune format-dune-file] on the new linted contents before
     materializing into a file. Exposed if you need to write your own linters
     on files that are supported by the formatter shipped with dune. *)
-val format_dune_file : t -> new_contents:string -> string
+val format_dune_file : new_contents:string -> string
 
 (** This calls [f] once, registers all requests enqueued during the execution of
     [f], and then depending on the config, either do a dry-run, or actually
