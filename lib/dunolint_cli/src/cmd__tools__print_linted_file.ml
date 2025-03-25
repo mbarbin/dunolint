@@ -19,7 +19,7 @@ let lint_stanza ~rules ~stanza =
 
 let print_linted_file
       (module Linter : Dunolinter.S)
-      ~format_with_dune
+      ~format_file
       ~rules
       ~path
       ~original_contents
@@ -33,9 +33,7 @@ let print_linted_file
     in
     let new_contents = Linter.contents linter in
     let output =
-      if format_with_dune
-      then Dunolint_engine.format_dune_file ~new_contents
-      else new_contents
+      if format_file then Dunolint_engine.format_dune_file ~new_contents else new_contents
     in
     print_string output
 ;;
@@ -72,9 +70,9 @@ When the contents of the file is read from stdin, or if the file given does not 
             to name the input when it comes from $(b,stdin)."
      and config =
        Arg.named_opt [ "config" ] Param.file ~doc:"Path to dunolint config file."
-     and format_with_dune =
+     and format_file =
        Arg.named_with_default
-         [ "format-with-dune" ]
+         [ "format-file" ]
          Param.bool
          ~default:true
          ~doc:"Format file with [dune format-file] after linting."
@@ -143,5 +141,5 @@ When the contents of the file is read from stdin, or if the file given does not 
        | None -> In_channel.input_all In_channel.stdin
      in
      let rules = Dunolint.Config.rules config in
-     print_linted_file linter ~format_with_dune ~rules ~path ~original_contents)
+     print_linted_file linter ~format_file ~rules ~path ~original_contents)
 ;;
