@@ -95,7 +95,7 @@ When the contents of the file is read from stdin, or if the file given does not 
        | None ->
          Dunolint.Config.create ~skip_subtree:(Common.skip_subtree ~globs:[]) ~rules:[] ()
      in
-     let _config =
+     let config =
        Dunolint.Config.create
          ?skip_subtree:(Dunolint.Config.skip_subtree config)
          ~rules:(Dunolint.Config.rules config @ enforce)
