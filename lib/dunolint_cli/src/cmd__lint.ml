@@ -126,10 +126,12 @@ let visit_directory ~dunolint_engine ~config ~parent_dir ~files =
       | file :: files ->
         let path = Relative_path.extend parent_dir (Fsegment.v file) in
         (match
-           match file with
-           | "dune" -> Dune_lint.lint_file ~dunolint_engine ~rules ~path
-           | "dune-project" -> Dune_project_lint.lint_file ~dunolint_engine ~rules ~path
-           | _ -> Dunolint_engine.Visitor_decision.Continue
+           match Dunolint.Linted_file_kind.of_string file with
+           | Error (`Msg _) -> Dunolint_engine.Visitor_decision.Continue
+           | Ok linted_file_kind ->
+             (match linted_file_kind with
+              | `dune -> Dune_lint.lint_file ~dunolint_engine ~rules ~path
+              | `dune_project -> Dune_project_lint.lint_file ~dunolint_engine ~rules ~path)
          with
          | Dunolint_engine.Visitor_decision.Continue -> loop files
          | (Break | Skip_subtree) as visitor_decision -> visitor_decision)
