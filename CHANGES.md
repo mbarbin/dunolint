@@ -14,6 +14,7 @@
 
 ### Fixed
 
+- Add missing `melange` library mode (#43, #44, @mbarbin, reported by @arvidj).
 - Fixes for `odoc.3.0.0` (#28, #32, @mbarbin, with help from @jonludlam)
 
 ### Removed

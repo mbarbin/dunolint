@@ -352,10 +352,10 @@ Stanza:
 
 The compilation modes supported are
 ```pre
-MODE := best | byte | native
+MODE := byte | native | best | melange
 ```
 
-Compilation modes are ordered by *dunolint* as: `best < byte < native`.
+Compilation modes are ordered by *dunolint* as: `byte < native < best < melange`.
 
 The predicates of the `modes` selector are:
 

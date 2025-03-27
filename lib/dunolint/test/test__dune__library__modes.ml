@@ -27,11 +27,13 @@ let%expect_test "predicate" =
   [%expect {| (equals ()) |}];
   test (equals (Dune.Library.Modes.of_list [ `best ]));
   [%expect {| (equals (best)) |}];
-  test (equals (Dune.Library.Modes.of_list [ `byte; `native ]));
-  [%expect {| (equals (byte native)) |}];
+  test (equals (Dune.Library.Modes.of_list [ `byte; `native; `melange ]));
+  [%expect {| (equals (byte native melange)) |}];
   test (has_mode `byte);
   [%expect {| (has_mode byte) |}];
   test (has_mode `native);
   [%expect {| (has_mode native) |}];
+  test (has_mode `melange);
+  [%expect {| (has_mode melange) |}];
   ()
 ;;

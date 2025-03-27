@@ -26,6 +26,7 @@ type t =
   [ `byte
   | `native
   | `best
+  | `melange
   ]
 
 include Container_key.S with type t := t

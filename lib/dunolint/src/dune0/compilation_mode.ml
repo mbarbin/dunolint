@@ -24,8 +24,18 @@ module T = struct
     [ `byte
     | `native
     | `best
+    | `melange
     ]
-  [@@deriving compare, hash, sexp]
+  [@@deriving hash, sexp]
+
+  let to_comparable_int = function
+    | `byte -> 0
+    | `native -> 1
+    | `best -> 2
+    | `melange -> 3
+  ;;
+
+  let compare a b = Int.compare (to_comparable_int a) (to_comparable_int b)
 end
 
 include T
