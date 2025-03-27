@@ -29,12 +29,11 @@ let eval_path ~path ~predicate =
     |> Dunolint.Trilang.const
 ;;
 
-let maybe_autoformat_file ~dunolint_engine ~previous_contents ~new_contents =
-  (* For the time being we are using here a heuristic to drive
-     whether to autoformat linted files. This is motivated by
-     pragmatic reasoning and lower friction for onboarding in
-     various situation where formatting may or may not be used in
-     projects. *)
+let maybe_autoformat_file ~previous_contents ~new_contents =
+  (* For the time being we are using here a heuristic to drive whether to
+     autoformat linted files. This is motivated by pragmatic reasoning and lower
+     friction for onboarding in various situation where formatting may or may
+     not be used in projects. *)
   if String.equal previous_contents new_contents
   then new_contents
   else (
