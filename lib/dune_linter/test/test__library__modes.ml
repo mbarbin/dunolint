@@ -89,7 +89,7 @@ let%expect_test "sort" =
   (* The order in use to write the values is deterministic and the values are
      sorted by dunolint when the field is linted. *)
   rewrite {| (modes best native byte) |};
-  [%expect {| (modes best byte native) |}];
+  [%expect {| (modes byte native best) |}];
   ()
 ;;
 
@@ -177,7 +177,7 @@ let%expect_test "enforce" =
   enforce t [ has_mode `native ];
   [%expect {| (modes native) |}];
   enforce t [ has_mode `best ];
-  [%expect {| (modes best native) |}];
+  [%expect {| (modes native best) |}];
   enforce t [ not_ (has_mode `best) ];
   [%expect {| (modes native) |}];
   enforce t [ not_ (has_mode `native) ];
