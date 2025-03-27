@@ -18,3 +18,16 @@
 (*  and the LGPL-3.0 Linking Exception along with this library. If not, see      *)
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
+
+let%expect_test "all" =
+  List.iter Dune.Compilation_mode.all ~f:(fun compilation_mode ->
+    print_s [%sexp (compilation_mode : Dune.Compilation_mode.t)]);
+  [%expect
+    {|
+    byte
+    native
+    best
+    melange
+    |}];
+  ()
+;;
