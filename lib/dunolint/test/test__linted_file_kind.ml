@@ -19,20 +19,38 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Blang = Blang
-module Condition = Condition
-module Config = Config
-module Dune = Dune
-module Dune_project = Dune_project
-module Glob = Glob
-module Linted_file_kind = Linted_file_kind
-module Path = Path
-module Predicate = Predicate
-module Rule = Rule
-module Trilang = Trilang
+let%expect_test "all" =
+  List.iter Dunolint.Linted_file_kind.all ~f:(fun linted_file_kind ->
+    print_s [%sexp (linted_file_kind : Dunolint.Linted_file_kind.t)]);
+  [%expect
+    {|
+    dune
+    dune_project
+    |}];
+  ()
+;;
 
-module Std = struct
-  module Blang = Blang
-  module Dune = Dune
-  module Dune_project = Dune_project
-end
+let%expect_test "to_string/of_string" =
+  List.iter Dunolint.Linted_file_kind.all ~f:(fun linted_file_kind ->
+    let str = Dunolint.Linted_file_kind.to_string linted_file_kind in
+    let t =
+      match Dunolint.Linted_file_kind.of_string str with
+      | Ok v -> v
+      | Error (`Msg _) -> assert false
+    in
+    require_equal [%here] (module Dunolint.Linted_file_kind) linted_file_kind t;
+    print_endline str);
+  [%expect
+    {|
+    dune
+    dune-project
+    |}];
+  let () =
+    match Dunolint.Linted_file_kind.of_string "invalid" with
+    | Ok _ -> assert false
+    | Error (`Msg _) as error ->
+      print_s [%sexp (error : (_, [ `Msg of string ]) Result.t)]
+  in
+  [%expect {| (Error (Msg "Invalid linted file kind: \"invalid\"")) |}];
+  ()
+;;

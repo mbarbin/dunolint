@@ -19,20 +19,26 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Blang = Blang
-module Condition = Condition
-module Config = Config
-module Dune = Dune
-module Dune_project = Dune_project
-module Glob = Glob
-module Linted_file_kind = Linted_file_kind
-module Path = Path
-module Predicate = Predicate
-module Rule = Rule
-module Trilang = Trilang
+module T = struct
+  type t =
+    [ `dune
+    | `dune_project
+    ]
+  [@@deriving compare, enumerate, hash, sexp]
 
-module Std = struct
-  module Blang = Blang
-  module Dune = Dune
-  module Dune_project = Dune_project
+  let to_string = function
+    | `dune -> "dune"
+    | `dune_project -> "dune-project"
+  ;;
+
+  let of_string = function
+    | "dune" -> Ok `dune
+    | "dune-project" -> Ok `dune_project
+    | str -> Error (`Msg (Printf.sprintf "Invalid linted file kind: %S" str))
+  ;;
 end
+
+include T
+include Comparable.Make (T)
+
+let seeded_hash : int -> t -> int = Stdlib.Hashtbl.seeded_hash
