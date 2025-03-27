@@ -101,12 +101,8 @@ let%expect_test "lint" =
 ;;
 
 let%expect_test "format_dune_file" =
-  let t =
-    Dunolint_engine.create ~config:(Dunolint_engine.Config.create ~running_mode:Dry_run)
-  in
   let fmt =
     Dunolint_engine.format_dune_file
-      t
       ~new_contents:
         {|
 (lang dune 3.17) (name dunolint)
@@ -120,7 +116,7 @@ let%expect_test "format_dune_file" =
     (name dunolint)
     |}];
   Err.For_test.protect (fun () ->
-    match Dunolint_engine.format_dune_file t ~new_contents:{|(invalid|} with
+    match Dunolint_engine.format_dune_file ~new_contents:{|(invalid|} with
     | (_ : string) -> () [@coverage off]);
   [%expect
     {|

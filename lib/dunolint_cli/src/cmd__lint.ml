@@ -40,14 +40,14 @@ let maybe_autoformat_file ~previous_contents ~new_contents =
     let was_originally_well_formatted =
       try
         let formatted =
-          Dunolint_engine.format_dune_file dunolint_engine ~new_contents:previous_contents
+          Dunolint_engine.format_dune_file ~new_contents:previous_contents
         in
         String.equal formatted previous_contents
       with
       | _ -> false
     in
     if was_originally_well_formatted
-    then Dunolint_engine.format_dune_file dunolint_engine ~new_contents
+    then Dunolint_engine.format_dune_file ~new_contents
     else new_contents)
 ;;
 
@@ -75,7 +75,7 @@ module Lint_file (Linter : Dunolinter.S) = struct
           Linter.contents linter)
       ~autoformat_file:(fun ~new_contents ->
         let previous_contents = !previous_contents_ref in
-        maybe_autoformat_file ~dunolint_engine ~previous_contents ~new_contents);
+        maybe_autoformat_file ~previous_contents ~new_contents);
     !visitor_decision
   ;;
 

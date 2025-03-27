@@ -132,7 +132,7 @@ module Process_status = struct
   [@@deriving sexp_of]
 end
 
-let format_dune_file_internal (_ : t) ~new_contents =
+let format_dune_file_internal ~new_contents =
   let ((in_ch, out_ch, err_ch) as process) =
     Unix.open_process_full "dune format-dune-file" ~env:(Unix.environment ())
   in
@@ -153,14 +153,14 @@ let format_dune_file_internal (_ : t) ~new_contents =
       ]
 ;;
 
-let format_dune_file t ~new_contents =
-  match format_dune_file_internal t ~new_contents with
+let format_dune_file ~new_contents =
+  match format_dune_file_internal ~new_contents with
   | Ok output -> output
   | Error text -> Err.raise text
 ;;
 
-let format_dune_file_or_continue t ~loc ~new_contents =
-  match format_dune_file_internal t ~new_contents with
+let format_dune_file_or_continue ~loc ~new_contents =
+  match format_dune_file_internal ~new_contents with
   | Ok output -> output
   | Error text ->
     Err.error ~loc text;
@@ -183,7 +183,6 @@ let lint_dune_file ?with_linter t ~(path : Relative_path.t) ~f =
         Dune_linter.contents linter)
     ~autoformat_file:(fun ~new_contents ->
       format_dune_file_or_continue
-        t
         ~loc:(Loc.of_file ~path:(path :> Fpath.t))
         ~new_contents)
 ;;
@@ -204,7 +203,6 @@ let lint_dune_project_file ?with_linter t ~(path : Relative_path.t) ~f =
         Dune_project_linter.contents linter)
     ~autoformat_file:(fun ~new_contents ->
       format_dune_file_or_continue
-        t
         ~loc:(Loc.of_file ~path:(path :> Fpath.t))
         ~new_contents)
 ;;
