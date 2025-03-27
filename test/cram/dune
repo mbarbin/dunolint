@@ -4,4 +4,8 @@
   (package dunolint-lib)
   (package dunolint)
   %{bin:dunolint}
+  (glob_files *.exe)
   (glob_files *.sexp)))
+
+(rule
+ (copy ./bin/lint_file_config_gen.exe lint_file_config_gen.exe))

@@ -19,6 +19,18 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+let skip_subtree ~config ~path =
+  match Dunolint.Config.skip_subtree config with
+  | None -> `return
+  | Some condition ->
+    (match
+       Dunolint.Rule.eval condition ~f:(fun predicate ->
+         Dunolinter.eval_path ~path ~predicate:(predicate :> Dunolint.Predicate.t))
+     with
+     | `enforce nothing -> Nothing.unreachable_code nothing [@coverage off]
+     | (`return | `skip_subtree) as result -> result)
+;;
+
 exception Skip_subtree
 
 let lint_stanza ~rules ~stanza =
@@ -38,13 +50,7 @@ let lint_stanza ~rules ~stanza =
         | `skip_subtree -> raise Skip_subtree))
 ;;
 
-let print_linted_file
-      (module Linter : Dunolinter.S)
-      ~format_file
-      ~rules
-      ~path
-      ~original_contents
-  =
+let lint_file (module Linter : Dunolinter.S) ~format_file ~rules ~path ~original_contents =
   match Linter.create ~path ~original_contents with
   | Error { loc; message } -> Err.raise ~loc [ Pp.textf "%s" message ]
   | Ok linter ->
@@ -53,10 +59,47 @@ let print_linted_file
       | Skip_subtree -> ()
     in
     let new_contents = Linter.contents linter in
-    let output =
-      if format_file then Dunolint_engine.format_dune_file ~new_contents else new_contents
-    in
-    print_string output
+    if format_file then Dunolint_engine.format_dune_file ~new_contents else new_contents
+;;
+
+let select_linter ~path =
+  let filename = Fpath.filename path in
+  match Dunolint.Linted_file_kind.of_string filename with
+  | Ok linted_file_kind ->
+    (match linted_file_kind with
+     | `dune -> (module Dune_linter : Dunolinter.S)
+     | `dune_project -> (module Dune_project_linter : Dunolinter.S))
+  | Error (`Msg _msg) ->
+    Err.raise
+      Pp.O.
+        [ Pp.text "Cannot infer the file kind from the filename "
+          ++ Pp_tty.path (module String) filename
+          ++ Pp.verbatim "."
+        ]
+      ~hints:
+        Pp.O.
+          [ Pp.text "You may override the filename with the flag "
+            ++ Pp_tty.kwd (module String) "--filename"
+            ++ Pp.verbatim "."
+          ]
+;;
+
+let select_path ~cwd ~filename ~file =
+  match Option.first_some filename file with
+  | None -> Relative_path.v "stdin"
+  | Some file ->
+    (match Fpath.classify file with
+     | `Relative path -> path
+     | `Absolute path ->
+       (match Absolute_path.chop_prefix path ~prefix:cwd with
+        | Some path -> path
+        | None ->
+          Err.raise
+            Pp.O.
+              [ Pp.text "Invalid absolute file path, must be within cwd."
+              ; Pp.verbatim "file: " ++ Pp_tty.path (module Absolute_path) path
+              ; Pp.verbatim "cwd: " ++ Pp_tty.path (module Absolute_path) cwd
+              ]))
 ;;
 
 let main =
@@ -120,49 +163,19 @@ When the contents of the file is read from stdin, or if the file given does not 
          ~rules:(Dunolint.Config.rules config @ enforce)
          ()
      in
-     let path =
-       match Option.first_some filename file with
-       | None -> Relative_path.v "stdin"
-       | Some file ->
-         (match Fpath.classify file with
-          | `Relative path -> path
-          | `Absolute path ->
-            (match Absolute_path.chop_prefix path ~prefix:cwd with
-             | Some path -> path
-             | None ->
-               Err.raise
-                 Pp.O.
-                   [ Pp.text "Invalid absolute file path, must be within cwd."
-                   ; Pp.verbatim "file: " ++ Pp_tty.path (module Absolute_path) path
-                   ; Pp.verbatim "cwd: " ++ Pp_tty.path (module Absolute_path) cwd
-                   ]))
-     in
-     let linter =
-       let filename = Fpath.filename (path :> Fpath.t) in
-       match Dunolint.Linted_file_kind.of_string filename with
-       | Ok linted_file_kind ->
-         (match linted_file_kind with
-          | `dune -> (module Dune_linter : Dunolinter.S)
-          | `dune_project -> (module Dune_project_linter : Dunolinter.S))
-       | Error (`Msg _msg) ->
-         Err.raise
-           Pp.O.
-             [ Pp.text "Cannot infer the file kind from the filename "
-               ++ Pp_tty.path (module String) filename
-               ++ Pp.verbatim "."
-             ]
-           ~hints:
-             Pp.O.
-               [ Pp.text "You may override the filename with the flag "
-                 ++ Pp_tty.kwd (module String) "--filename"
-                 ++ Pp.verbatim "."
-               ]
-     in
+     let path = select_path ~cwd ~filename ~file in
+     let linter = select_linter ~path:(path :> Fpath.t) in
      let original_contents =
        match file with
        | Some file -> In_channel.read_all (file |> Fpath.to_string)
        | None -> In_channel.input_all In_channel.stdin
      in
-     let rules = Dunolint.Config.rules config in
-     print_linted_file linter ~format_file ~rules ~path ~original_contents)
+     let output =
+       match skip_subtree ~config ~path with
+       | `skip_subtree -> original_contents
+       | `return ->
+         let rules = Dunolint.Config.rules config in
+         lint_file linter ~format_file ~rules ~path ~original_contents
+     in
+     print_string output)
 ;;

@@ -19,16 +19,6 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-let eval_path ~path ~predicate =
-  match (predicate : Dunolint.Predicate.t) with
-  | `dune _ | `dune_project _ -> Dunolint.Trilang.Undefined
-  | `path condition ->
-    Blang.eval condition (function
-      | `equals value -> Relative_path.equal path value
-      | `glob glob -> Dunolint.Glob.test glob (Relative_path.to_string path))
-    |> Dunolint.Trilang.const
-;;
-
 let maybe_autoformat_file ~previous_contents ~new_contents =
   (* For the time being we are using here a heuristic to drive whether to
      autoformat linted files. This is motivated by pragmatic reasoning and lower
@@ -111,7 +101,9 @@ let visit_directory ~dunolint_engine ~config ~parent_dir ~files =
     | None -> `return
     | Some condition ->
       Dunolint.Rule.eval condition ~f:(fun predicate ->
-        eval_path ~path:parent_dir ~predicate:(predicate :> Dunolint.Predicate.t))
+        Dunolinter.eval_path
+          ~path:parent_dir
+          ~predicate:(predicate :> Dunolint.Predicate.t))
   with
   | `enforce nothing -> Nothing.unreachable_code nothing
   | `skip_subtree ->
