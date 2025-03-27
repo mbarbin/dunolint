@@ -54,7 +54,24 @@ let maybe_autoformat_file ~previous_contents ~new_contents =
 module Lint_file (Linter : Dunolinter.S) = struct
   exception Skip_subtree
 
-  let lint_file ~dunolint_engine ~(path : Relative_path.t) ~f =
+  let lint_stanza ~rules ~stanza =
+    let loc =
+      Sexps_rewriter.loc
+        (Dunolinter.sexps_rewriter stanza)
+        (Dunolinter.original_sexp stanza)
+    in
+    Dunolinter.Handler.emit_error_and_resume () ~loc ~f:(fun () ->
+      match Dunolinter.linter stanza with
+      | Unhandled -> ()
+      | T { eval; enforce } ->
+        List.iter rules ~f:(fun rule ->
+          match Dunolint.Rule.eval rule ~f:eval with
+          | `return -> ()
+          | `enforce condition -> enforce condition
+          | `skip_subtree -> raise Skip_subtree))
+  ;;
+
+  let lint_file ~dunolint_engine ~rules ~(path : Relative_path.t) =
     let previous_contents_ref = ref "" in
     let visitor_decision = ref Dunolint_engine.Visitor_decision.Continue in
     Dunolint_engine.lint_file
@@ -69,7 +86,7 @@ module Lint_file (Linter : Dunolinter.S) = struct
           previous_contents
         | Ok linter ->
           let () =
-            try Linter.visit linter ~f with
+            try Linter.visit linter ~f:(fun stanza -> lint_stanza ~rules ~stanza) with
             | Skip_subtree -> visitor_decision := Skip_subtree
           in
           Linter.contents linter)
@@ -77,24 +94,6 @@ module Lint_file (Linter : Dunolinter.S) = struct
         let previous_contents = !previous_contents_ref in
         maybe_autoformat_file ~previous_contents ~new_contents);
     !visitor_decision
-  ;;
-
-  let visit_file ~dunolint_engine ~rules ~path =
-    lint_file ~dunolint_engine ~path ~f:(fun stanza ->
-      let loc =
-        Sexps_rewriter.loc
-          (Dunolinter.sexps_rewriter stanza)
-          (Dunolinter.original_sexp stanza)
-      in
-      Dunolinter.Handler.emit_error_and_resume () ~loc ~f:(fun () ->
-        match Dunolinter.linter stanza with
-        | Unhandled -> ()
-        | T { eval; enforce } ->
-          List.iter rules ~f:(fun rule ->
-            match Dunolint.Rule.eval rule ~f:eval with
-            | `return -> ()
-            | `enforce condition -> enforce condition
-            | `skip_subtree -> raise Skip_subtree)))
   ;;
 end
 
@@ -128,8 +127,8 @@ let visit_directory ~dunolint_engine ~config ~parent_dir ~files =
         let path = Relative_path.extend parent_dir (Fsegment.v file) in
         (match
            match file with
-           | "dune" -> Dune_lint.visit_file ~dunolint_engine ~rules ~path
-           | "dune-project" -> Dune_project_lint.visit_file ~dunolint_engine ~rules ~path
+           | "dune" -> Dune_lint.lint_file ~dunolint_engine ~rules ~path
+           | "dune-project" -> Dune_project_lint.lint_file ~dunolint_engine ~rules ~path
            | _ -> Dunolint_engine.Visitor_decision.Continue
          with
          | Dunolint_engine.Visitor_decision.Continue -> loop files
