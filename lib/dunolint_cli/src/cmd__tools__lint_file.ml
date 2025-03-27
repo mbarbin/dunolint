@@ -19,6 +19,40 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+module Unix = UnixLabels
+
+module Save_in_place = struct
+  type t =
+    { file : Fpath.t
+    ; perm : int
+    }
+
+  let invalid_file_kind ~file ~file_kind =
+    Err.raise
+      Pp.O.
+        [ Pp.text "Linted file "
+          ++ Pp_tty.path (module Fpath) file
+          ++ Pp.text " is expected to be a regular file."
+        ; Pp.text "Actual file kind is "
+          ++ Pp_tty.id (module Dunolint_engine.File_kind) file_kind
+          ++ Pp.text "."
+        ]
+  ;;
+
+  let of_file ~file =
+    match Unix.lstat (Fpath.to_string file) with
+    | exception Unix.Unix_error (ENOENT, _, _) ->
+      Err.raise
+        Pp.O.[ Pp.text "No such file " ++ Pp_tty.path (module Fpath) file ++ Pp.text "." ]
+    | stat ->
+      (match stat.st_kind with
+       | S_REG -> { file; perm = stat.st_perm }
+       | (S_DIR | S_LNK) as file_kind -> invalid_file_kind ~file ~file_kind
+       | (S_CHR | S_BLK | S_FIFO | S_SOCK) as file_kind ->
+         invalid_file_kind ~file ~file_kind [@coverage off])
+  ;;
+end
+
 let skip_subtree ~config ~path =
   match Dunolint.Config.skip_subtree config with
   | None -> `return
@@ -103,6 +137,20 @@ let select_path ~cwd ~filename ~file =
 ;;
 
 let main =
+  let in_place_switch = "in-place" in
+  let save_in_place ~in_place ~file =
+    match in_place, file with
+    | false, (None | Some _) -> None
+    | true, Some file -> Some (Save_in_place.of_file ~file)
+    | true, None ->
+      Err.raise
+        ~exit_code:Err.Exit_code.cli_error
+        Pp.O.
+          [ Pp.text "The flag "
+            ++ Pp_tty.kwd (module String) in_place_switch
+            ++ Pp.text " may only be used when the input is read from a regular file."
+          ]
+  in
   Command.make
     ~summary:"Lint a single file."
     ~readme:(fun () ->
@@ -132,6 +180,14 @@ When the contents of the file is read from stdin, or if the file given does not 
             derive the linted file kind from its basename, but that path is not used to \
             load contents from disk. This may be used to override an actual file name or \
             to name the input when it comes from $(b,stdin)."
+     and in_place =
+       Arg.flag
+         [ in_place_switch ]
+         ~doc:
+           "When the input is a regular file, you may use this option to save the linted \
+            result in the file directly, instead of printing it to $(b,stdout). \
+            Supplying this flag results in failure when the input is read from \
+            $(b,stdin)."
      and config =
        Arg.named_opt [ "config" ] Param.file ~doc:"Path to dunolint config file."
      and format_file =
@@ -148,6 +204,7 @@ When the contents of the file is read from stdin, or if the file given does not 
          ~doc:"Add condition to enforce."
        >>| List.map ~f:(fun condition -> `enforce condition)
      in
+     let save_in_place = save_in_place ~in_place ~file in
      let cwd = Unix.getcwd () |> Absolute_path.v in
      let config =
        match config with
@@ -177,5 +234,12 @@ When the contents of the file is read from stdin, or if the file given does not 
          let rules = Dunolint.Config.rules config in
          lint_file linter ~format_file ~rules ~path ~original_contents
      in
-     print_string output)
+     let () =
+       match save_in_place with
+       | None -> print_string output
+       | Some { file; perm } ->
+         Out_channel.with_file ~perm (Fpath.to_string file) ~f:(fun oc ->
+           Out_channel.output_string oc output)
+     in
+     ())
 ;;

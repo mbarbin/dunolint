@@ -203,3 +203,58 @@ line.
   (dune lang 3.17)
   
   (name bar)
+
+The lint result may be saved directly to the input file with the flag
+`--in-place`. There are a few corner cases to cover here, such as what happens
+when the filename is overridden. The intention is to target the actual input
+file when provided.
+
+  $ cat dune
+  (library (name mylib)
+   (libraries b c a))
+
+  $ cat dune | dunolint tools lint-file --in-place
+  Error: The flag [in-place] may only be used when the input is read from a
+  regular file.
+  [124]
+
+The command shall not create non-existing files when the filename is overridden.
+
+  $ cat dune | dunolint tools lint-file --in-place --filename=path/to/dune
+  Error: The flag [in-place] may only be used when the input is read from a
+  regular file.
+  [124]
+
+  $ dunolint tools lint-file absent --in-place --filename=dune
+  Error: No such file "absent".
+  [123]
+
+We only support regular files with this option.
+
+  $ ln -sf dune dune-link
+
+  $ dunolint tools lint-file dune-link --in-place --filename=dune
+  Error: Linted file "dune-link" is expected to be a regular file.
+  Actual file kind is [Symbolic link].
+  [123]
+
+  $ mkdir bogus
+
+  $ dunolint tools lint-file bogus --in-place --filename=dune
+  Error: Linted file "bogus" is expected to be a regular file.
+  Actual file kind is [Directory].
+  [123]
+
+We make sure to test that when both the file and an override are supplied, the
+contents is saved in the input file and not at the overridden path.
+
+  $ dunolint tools lint-file dune --in-place --filename=path/to/dune
+
+  $ cat dune
+  (library
+   (name mylib)
+   (libraries a b c))
+
+  $ ls -l path/to/dune
+  ls: cannot access 'path/to/dune': No such file or directory
+  [2]

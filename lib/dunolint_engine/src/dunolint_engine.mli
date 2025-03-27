@@ -20,6 +20,7 @@
 (*_********************************************************************************)
 
 module Config = Config
+module File_kind = File_kind
 
 type t
 

@@ -26,6 +26,7 @@ module Unix = UnixLabels
 let src = Logs.Src.create "dunolint" ~doc:"dunolint"
 
 module Config = Config
+module File_kind = File_kind
 
 module Edited_file = struct
   (* Edited files are indexed by their path relative to the root_path provided
@@ -43,28 +44,6 @@ type t =
   }
 
 let create ~config = { config; edited_files = Hashtbl.create (module Relative_path) }
-
-module File_kind = struct
-  type t = Unix.file_kind =
-    | S_REG
-    | S_DIR
-    | S_CHR
-    | S_BLK
-    | S_LNK
-    | S_FIFO
-    | S_SOCK
-
-  let to_string t =
-    match[@coverage off] t with
-    | S_REG -> "Regular file"
-    | S_DIR -> "Directory"
-    | S_CHR -> "Character device"
-    | S_BLK -> "Block device"
-    | S_LNK -> "Symbolic link"
-    | S_FIFO -> "Named pipe"
-    | S_SOCK -> "Socket"
-  ;;
-end
 
 let lint_file ?autoformat_file ?create_file ?rewrite_file t ~path =
   Log.info ~src (fun () ->
