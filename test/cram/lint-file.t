@@ -258,3 +258,11 @@ contents is saved in the input file and not at the overridden path.
   $ ls -l path/to/dune
   ls: cannot access 'path/to/dune': No such file or directory
   [2]
+
+The command is idempotent.
+
+  $ cp dune dune-backup
+
+  $ dunolint tools lint-file dune --in-place
+
+  $ diff dune dune-backup

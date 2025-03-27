@@ -236,10 +236,17 @@ When the contents of the file is read from stdin, or if the file given does not 
      in
      let () =
        match save_in_place with
-       | None -> print_string output
+       | None ->
+         Out_channel.flush Out_channel.stdout;
+         Out_channel.set_binary_mode Out_channel.stdout true;
+         Out_channel.output_string Out_channel.stdout output;
+         Out_channel.flush Out_channel.stdout;
+         Out_channel.set_binary_mode Out_channel.stdout false
        | Some { file; perm } ->
-         Out_channel.with_file ~perm (Fpath.to_string file) ~f:(fun oc ->
-           Out_channel.output_string oc output)
+         if not (String.equal original_contents output)
+         then
+           Out_channel.with_file ~perm (Fpath.to_string file) ~f:(fun oc ->
+             Out_channel.output_string oc output)
      in
      ())
 ;;
