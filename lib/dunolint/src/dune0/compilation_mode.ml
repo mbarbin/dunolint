@@ -26,7 +26,7 @@ module T = struct
     | `best
     | `melange
     ]
-  [@@deriving hash, sexp]
+  [@@deriving enumerate, hash, sexp]
 
   let to_comparable_int = function
     | `byte -> 0

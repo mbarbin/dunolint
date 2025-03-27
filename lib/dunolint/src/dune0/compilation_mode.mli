@@ -28,6 +28,7 @@ type t =
   | `best
   | `melange
   ]
+[@@deriving enumerate]
 
 include Container_key.S with type t := t
 include Comparable.S with type t := t

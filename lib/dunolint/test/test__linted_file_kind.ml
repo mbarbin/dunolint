@@ -20,14 +20,37 @@
 (*********************************************************************************)
 
 let%expect_test "all" =
-  List.iter Dune.Compilation_mode.all ~f:(fun compilation_mode ->
-    print_s [%sexp (compilation_mode : Dune.Compilation_mode.t)]);
+  List.iter Dunolint.Linted_file_kind.all ~f:(fun linted_file_kind ->
+    print_s [%sexp (linted_file_kind : Dunolint.Linted_file_kind.t)]);
   [%expect
     {|
-    byte
-    native
-    best
-    melange
+    dune
+    dune_project
     |}];
+  ()
+;;
+
+let%expect_test "to_string/of_string" =
+  List.iter Dunolint.Linted_file_kind.all ~f:(fun linted_file_kind ->
+    let str = Dunolint.Linted_file_kind.to_string linted_file_kind in
+    let t =
+      match Dunolint.Linted_file_kind.of_string str with
+      | Ok v -> v
+      | Error (`Msg _) -> assert false
+    in
+    require_equal [%here] (module Dunolint.Linted_file_kind) linted_file_kind t;
+    print_endline str);
+  [%expect
+    {|
+    dune
+    dune-project
+    |}];
+  let () =
+    match Dunolint.Linted_file_kind.of_string "invalid" with
+    | Ok _ -> assert false
+    | Error (`Msg _) as error ->
+      print_s [%sexp (error : (_, [ `Msg of string ]) Result.t)]
+  in
+  [%expect {| (Error (Msg "Invalid linted file kind: \"invalid\"")) |}];
   ()
 ;;

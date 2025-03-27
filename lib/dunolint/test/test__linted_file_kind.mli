@@ -18,23 +18,3 @@
 (*_  and the LGPL-3.0 Linking Exception along with this library. If not, see      *)
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
-
-module Blang = Blang
-module Condition = Condition
-module Config = Config
-module Dune = Dune
-module Dune_project = Dune_project
-module Glob = Glob
-module Linted_file_kind = Linted_file_kind
-module Path = Path
-module Predicate = Predicate
-module Rule = Rule
-module Trilang = Trilang
-
-module Std : sig
-  (** [Std] is meant to be open to access common modules from the root path. *)
-
-  module Blang = Blang
-  module Dune = Dune
-  module Dune_project = Dune_project
-end

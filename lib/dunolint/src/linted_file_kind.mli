@@ -19,22 +19,14 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-module Blang = Blang
-module Condition = Condition
-module Config = Config
-module Dune = Dune
-module Dune_project = Dune_project
-module Glob = Glob
-module Linted_file_kind = Linted_file_kind
-module Path = Path
-module Predicate = Predicate
-module Rule = Rule
-module Trilang = Trilang
+type t =
+  [ `dune
+  | `dune_project
+  ]
+[@@deriving enumerate]
 
-module Std : sig
-  (** [Std] is meant to be open to access common modules from the root path. *)
+val to_string : t -> string
+val of_string : string -> (t, [ `Msg of string ]) Result.t
 
-  module Blang = Blang
-  module Dune = Dune
-  module Dune_project = Dune_project
-end
+include Container_key.S with type t := t
+include Comparable.S with type t := t
