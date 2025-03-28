@@ -136,8 +136,12 @@ let%expect_test "create-files" =
   Dunolint_engine.lint_file t ~path:(Relative_path.v "lib/a/dune") ~create_file:(fun () ->
     let library = Dune_linter.Library.create ~name:(Dune.Library.Name.v "my-lib") () in
     Sexp.to_string_mach (Dune_linter.Library.write library));
-  (* And you can do several passes of linting before materializing. In this case
+  (* You can do several passes of linting before materializing. In this case
      the contents that is linted is the contents that is held in memory. *)
+  (* If you do not supply a [rewrite_file] argument to [lint_file], existing
+     files will stay untouched. *)
+  Dunolint_engine.lint_file t ~path:(Relative_path.v "lib/a/dune");
+  (* Another option to apply lints is to go through the [Dunolinter] API. *)
   Dunolint_engine.lint_dune_file t ~path:(Relative_path.v "lib/a/dune") ~f:(fun stanza ->
     match Dunolinter.linter stanza with
     | Unhandled ->
@@ -171,6 +175,19 @@ let%expect_test "create-files" =
      (public_name a-public-name))
     |}];
   ()
+;;
+
+let%expect_test "lint-absent-files" =
+  (* By default, [lint-file] will not create a file if no initializer is supplied. *)
+  let t =
+    Dunolint_engine.create ~config:(Dunolint_engine.Config.create ~running_mode:Force_yes)
+  in
+  Dunolint_engine.lint_file t ~path:(Relative_path.v "absent/file/dune");
+  [%expect {||}];
+  Err.For_test.protect (fun () -> Dunolint_engine.materialize t);
+  [%expect {||}];
+  print_s [%sexp (Stdlib.Sys.file_exists "absent/file/dune" : bool)];
+  [%expect {| false |}]
 ;;
 
 let%expect_test "mkdirs" =
