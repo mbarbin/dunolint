@@ -3,7 +3,7 @@
 The `libraries` dependencies listed in `library` stanzas are sorted alphabetically. For example, this dune file:
 
 ```sh
-$ cat > dune <<EOF\
+$ cat > dune0 <<EOF\
 > (library\
 >  (name my_lib)\
 >  (libraries foo bar baz))
@@ -12,7 +12,7 @@ $ cat > dune <<EOF\
 is linted as follows:
 
 ```sh
-$ dunolint tools lint-file dune
+$ dunolint tools lint-file dune0 --filename=dune
 (library
  (name my_lib)
  (libraries bar baz foo))
@@ -25,7 +25,7 @@ The process of reordering the libraries items becomes more complex in the presen
 When a comment is placed next to an entry, the tool assumes that it is attached to that item and moves it along with the item during reordering.
 
 ```sh
-$ cat > dune <<EOF\
+$ cat > dune0 <<EOF\
 > (library\
 >  (name my_lib)\
 >  (libraries\
@@ -38,7 +38,7 @@ $ cat > dune <<EOF\
 ```
 
 ```sh
-$ dunolint tools lint-file dune
+$ dunolint tools lint-file dune0 --filename=dune
 (library
  (name my_lib)
  (libraries
@@ -56,7 +56,7 @@ So far, so good.
 When a comment is placed on its own line, it is less clear whether it applies to the following line only or to multiple lines. The reordering implemented in *dunolint* assumes that comments on their own lines are *section delimiters*. Libraries within each section are reordered, but no reordering occurs between or across sections:
 
 ```sh
-$ cat > dune <<EOF\
+$ cat > dune0 <<EOF\
 > (library\
 >  (name my_lib)\
 >  (libraries\
@@ -73,7 +73,7 @@ $ cat > dune <<EOF\
 ```
 
 ```sh
-$ dunolint tools lint-file dune
+$ dunolint tools lint-file dune0 --filename=dune
 (library
  (name my_lib)
  (libraries
@@ -93,7 +93,7 @@ $ dunolint tools lint-file dune
 This behavior may not produce the desired result when a comment is intended to apply only to the immediate subsequent line. For example:
 
 ```sh
-$ cat > dune <<EOF\
+$ cat > dune0 <<EOF\
 > (library\
 >  (name my_lib)\
 >  (libraries\
@@ -107,7 +107,7 @@ $ cat > dune <<EOF\
 The linter processes this as follows:
 
 ```sh
-$ dunolint tools lint-file dune
+$ dunolint tools lint-file dune0 --filename=dune
 (library
  (name my_lib)
  (libraries
@@ -120,7 +120,7 @@ $ dunolint tools lint-file dune
 To achieve the intended result, we recommend converting the comment into a section comment:
 
 ```sh
-$ cat > dune <<EOF\
+$ cat > dune0 <<EOF\
 > (library\
 >  (name my_lib)\
 >  (libraries\
@@ -135,7 +135,7 @@ $ cat > dune <<EOF\
 The linter preserves the sections, ensuring the comment's scope is clear. This approach not only satisfies the linter but also makes the intent of the comment clearer to human readers:
 
 ```sh
-$ dunolint tools lint-file dune
+$ dunolint tools lint-file dune0 --filename=dune
 (library
  (name my_lib)
  (libraries
