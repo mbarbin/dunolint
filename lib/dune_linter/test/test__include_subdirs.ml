@@ -62,15 +62,13 @@ let rewrite ?(f = ignore) str =
 let%expect_test "rewrite" =
   rewrite {| (include_subdirs no) |};
   [%expect {| (include_subdirs no) |}];
-  (* Exercising some getters. *)
+  (* Exercising some getters and setters. *)
   rewrite {| (include_subdirs qualified) |} ~f:(fun t ->
     print_s [%sexp (Dune_linter.Include_subdirs.mode t : Dune.Include_subdirs.Mode.t)];
     [%expect {| qualified |}];
-    ());
-  [%expect {| (include_subdirs qualified) |}];
-  (* Exercising some setters. *)
-  rewrite {| (include_subdirs qualified) |} ~f:(fun t ->
     Dune_linter.Include_subdirs.set_mode t ~mode:`unqualified;
+    print_s [%sexp (Dune_linter.Include_subdirs.mode t : Dune.Include_subdirs.Mode.t)];
+    [%expect {| unqualified |}];
     ());
   [%expect {| (include_subdirs unqualified) |}];
   ()
