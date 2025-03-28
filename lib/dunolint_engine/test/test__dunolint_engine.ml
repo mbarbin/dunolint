@@ -129,10 +129,10 @@ let%expect_test "format_dune_file" =
 ;;
 
 let%expect_test "create-files" =
+  (* The engine may be used to create files where they are not initially present. *)
   let t =
     Dunolint_engine.create ~config:(Dunolint_engine.Config.create ~running_mode:Force_yes)
   in
-  (* The engine may be used to create files where they are not initially present. *)
   Dunolint_engine.lint_file t ~path:(Relative_path.v "lib/a/dune") ~create_file:(fun () ->
     let library = Dune_linter.Library.create ~name:(Dune.Library.Name.v "my-lib") () in
     Sexp.to_string_mach (Dune_linter.Library.write library));
