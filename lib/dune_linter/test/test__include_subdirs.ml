@@ -82,7 +82,7 @@ let%expect_test "create_then_rewrite" =
     Dune_linter.Include_subdirs.rewrite t ~sexps_rewriter ~field;
     print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
   in
-  let t = Dune_linter.Include_subdirs.create ~mode:`qualified () in
+  let t = Dune_linter.Include_subdirs.create ~mode:`qualified in
   test t {| (include_subdirs no) |};
   [%expect {| (include_subdirs qualified) |}];
   ()

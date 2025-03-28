@@ -21,7 +21,7 @@
 
 type t
 
-val create : ?mode:Dune.Include_subdirs.Mode.t -> unit -> t
+val create : mode:Dune.Include_subdirs.Mode.t -> t
 
 include
   Dunolinter.Stanza_linter.S

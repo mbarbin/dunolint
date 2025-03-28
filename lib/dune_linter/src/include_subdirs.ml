@@ -23,7 +23,7 @@ let field_name = "include_subdirs"
 
 type t = { mutable mode : Dune.Include_subdirs.Mode.t } [@@deriving sexp_of]
 
-let create ?(mode = `no) () = { mode }
+let create ~mode = { mode }
 let mode t = t.mode
 let set_mode t ~mode = t.mode <- mode
 
@@ -36,7 +36,7 @@ module Handler =
 
 let read ~sexps_rewriter ~field =
   let mode = Handler.read ~sexps_rewriter ~field in
-  create ~mode ()
+  create ~mode
 ;;
 
 let write t = Handler.write t.mode
