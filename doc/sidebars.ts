@@ -58,6 +58,13 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'explanation/README', label: 'Introduction' },
         { type: 'doc', id: 'explanation/current-state/README', label: 'Current State' },
         { type: 'doc', id: 'explanation/config/README', label: 'Config Language Design' },
+        {
+          type: 'category', label: 'Linting Equilibrium',
+          link: { type: 'doc', id: 'explanation/linting-equilibrium/README' },
+          items: [
+            { type: 'doc', id: 'explanation/linting-equilibrium/comments-in-libraries', label: 'Comments in libraries' },
+          ]
+        },
       ],
     },
   ],
