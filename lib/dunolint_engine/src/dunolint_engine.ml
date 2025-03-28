@@ -104,6 +104,8 @@ let lint_file ?autoformat_file ?create_file ?rewrite_file t ~path =
 ;;
 
 module Process_status = struct
+  [@@@coverage off]
+
   type t = Unix.process_status =
     | WEXITED of int
     | WSIGNALED of int
@@ -190,7 +192,7 @@ let rec mkdirs path =
   match (Unix.stat (Relative_path.to_string path)).st_kind with
   | exception Unix.Unix_error (ENOENT, _, _) ->
     (match Relative_path.parent path with
-     | None -> ()
+     | None -> () [@coverage off]
      | Some path -> mkdirs path);
     Unix.mkdir (Relative_path.to_string path) ~perm:0o755
   | S_DIR -> ()
@@ -219,7 +221,7 @@ let materialize t =
       if i > 0 then print_endline "";
       let should_mkdir =
         match Relative_path.parent path with
-        | None -> None
+        | None -> None [@coverage off]
         | Some parent_dir as some ->
           (match (Unix.stat (Relative_path.to_string parent_dir)).st_kind with
            | exception Unix.Unix_error (ENOENT, _, _) -> some

@@ -51,20 +51,31 @@ module Process_status = struct
 end
 
 let get_git_pager () =
-  let ((in_ch, _) as process) =
-    Unix.open_process_args "git" [| "git"; "var"; "GIT_PAGER" |]
-  in
-  let output = In_channel.input_all in_ch in
-  match Unix.close_process process with
-  | WEXITED 0 -> output |> String.strip
-  | (WEXITED _ | WSIGNALED _ | WSTOPPED _) as process_status ->
-    Err.raise
-      Pp.O.
-        [ Pp.text "Failed to get the value of "
-          ++ Pp_tty.kwd (module String) "GIT_PAGER"
-          ++ Pp.text "."
-        ; Err.pp_of_sexp (Process_status.sexp_of_t process_status)
-        ]
+  match
+    (* We shortcut git entirely when [GIT_PAGER=cat] so we can run this code in
+       tests that do not have an actual git environment, such as in the dune
+       [.sandbox/.git]. *)
+    match Unix.getenv "GIT_PAGER" with
+    | exception Not_found -> None
+    | "cat" -> Some "cat"
+    | _ -> None
+  with
+  | Some value -> value
+  | None ->
+    let ((in_ch, _) as process) =
+      Unix.open_process_args "git" [| "git"; "var"; "GIT_PAGER" |]
+    in
+    let output = In_channel.input_all in_ch in
+    (match Unix.close_process process with
+     | WEXITED 0 -> output |> String.strip
+     | (WEXITED _ | WSIGNALED _ | WSTOPPED _) as process_status ->
+       Err.raise
+         Pp.O.
+           [ Pp.text "Failed to get the value of "
+             ++ Pp_tty.kwd (module String) "GIT_PAGER"
+             ++ Pp.text "."
+           ; Err.pp_of_sexp (Process_status.sexp_of_t process_status)
+           ])
 ;;
 
 let get_git_color () =
@@ -107,7 +118,6 @@ let rec waitpid_non_intr pid =
 
 let run ~f =
   let git_pager = force git_pager in
-  let color = force get_git_color in
   let stdout_isatty = Unix.isatty Unix.stdout in
   let pager_is_disabled = (not stdout_isatty) || String.equal git_pager "cat" in
   let output_kind =
@@ -118,8 +128,9 @@ let run ~f =
     | false, false -> assert false
   in
   match output_kind with
-  | `Tty | `Other -> f { output_kind; color; write_end = stdout }
+  | `Tty | `Other -> f { output_kind; color = `Auto; write_end = stdout }
   | `Pager ->
+    let color = force get_git_color in
     let process_env =
       let env = Unix.environment () in
       if Array.exists env ~f:(fun s -> String.is_prefix s ~prefix:"LESS=")

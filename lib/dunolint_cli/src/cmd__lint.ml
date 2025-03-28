@@ -91,11 +91,6 @@ module Dune_lint = Lint_file (Dune_linter)
 module Dune_project_lint = Lint_file (Dune_project_linter)
 
 let visit_directory ~dunolint_engine ~config ~parent_dir ~files =
-  Log.debug (fun () ->
-    Pp.O.
-      [ Pp.text "Dunolint visit_directory "
-        ++ Pp_tty.path (module Relative_path) parent_dir
-      ]);
   match
     match Dunolint.Config.skip_subtree config with
     | None -> `return
@@ -106,11 +101,7 @@ let visit_directory ~dunolint_engine ~config ~parent_dir ~files =
           ~predicate:(predicate :> Dunolint.Predicate.t))
   with
   | `enforce nothing -> Nothing.unreachable_code nothing
-  | `skip_subtree ->
-    Log.debug (fun () ->
-      Pp.O.
-        [ Pp.text "Skipping directory " ++ Pp_tty.path (module Relative_path) parent_dir ]);
-    Dunolint_engine.Visitor_decision.Skip_subtree
+  | `skip_subtree -> Dunolint_engine.Visitor_decision.Skip_subtree
   | `return ->
     let rules = Dunolint.Config.rules config in
     let rec loop = function

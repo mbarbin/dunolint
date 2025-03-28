@@ -256,10 +256,10 @@ let write (t : t) =
          | Unhandled { original_index = _; sexp; source = _ } -> sexp)))
 ;;
 
-let extended_range ~sexps_rewriter ~field =
+let extended_range ~sexps_rewriter ~arg =
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
   let original_contents = File_rewriter.original_contents file_rewriter in
-  let range = Sexps_rewriter.range sexps_rewriter field in
+  let range = Sexps_rewriter.range sexps_rewriter arg in
   extended_range_internal ~original_contents ~range
 ;;
 
@@ -274,14 +274,13 @@ let rewrite t ~sexps_rewriter ~field =
     |> List.map ~f:(List.map ~f:snd)
   in
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
-  let last_offset =
-    match
-      match List.last args with
-      | None -> None
-      | Some entries -> List.last entries
-    with
-    | None -> Loc.stop_offset (Sexps_rewriter.loc sexps_rewriter field) - 1
-    | Some arg -> (extended_range ~sexps_rewriter ~field:arg).stop
+  let insert_position =
+    let last_token =
+      match (field : Sexp.t) with
+      | List token_list -> List.last_exn token_list
+      | Atom _ -> assert false
+    in
+    (extended_range ~sexps_rewriter ~arg:last_token).stop
   in
   let write_arg = function
     | Entry.Library { name = _; source } -> source
@@ -293,19 +292,17 @@ let rewrite t ~sexps_rewriter ~field =
     | arg :: args, new_arg :: new_args ->
       File_rewriter.replace
         file_rewriter
-        ~range:(extended_range ~sexps_rewriter ~field:arg)
+        ~range:(extended_range ~sexps_rewriter ~arg)
         ~text:(write_arg new_arg);
       iter_fields args new_args
     | [], [] -> ()
     | [], _ :: _ ->
       List.iter new_args ~f:(fun new_arg ->
         let value = write_arg new_arg in
-        File_rewriter.insert file_rewriter ~offset:last_offset ~text:("\n" ^ value))
+        File_rewriter.insert file_rewriter ~offset:insert_position ~text:("\n" ^ value))
     | _ :: _, [] ->
       List.iter args ~f:(fun arg ->
-        File_rewriter.remove
-          file_rewriter
-          ~range:(extended_range ~sexps_rewriter ~field:arg))
+        File_rewriter.remove file_rewriter ~range:(extended_range ~sexps_rewriter ~arg))
   in
   let rec iter_sections args new_args =
     match args, new_args with

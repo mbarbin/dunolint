@@ -129,18 +129,27 @@ let%expect_test "format_dune_file" =
 ;;
 
 let%expect_test "create-files" =
+  (* The engine may be used to create files where they are not initially present. *)
   let t =
     Dunolint_engine.create ~config:(Dunolint_engine.Config.create ~running_mode:Force_yes)
   in
-  (* The engine may be used to create files where they are not initially present. *)
   Dunolint_engine.lint_file t ~path:(Relative_path.v "lib/a/dune") ~create_file:(fun () ->
     let library = Dune_linter.Library.create ~name:(Dune.Library.Name.v "my-lib") () in
     Sexp.to_string_mach (Dune_linter.Library.write library));
-  (* And you can do several passes of linting before materializing. In this case the contents
-     that is linted is the contents that is held in memory. *)
+  (* You can do several passes of linting before materializing. In this case
+     the contents that is linted is the contents that is held in memory. *)
+  (* If you do not supply a [rewrite_file] argument to [lint_file], existing
+     files will stay untouched. *)
+  Dunolint_engine.lint_file t ~path:(Relative_path.v "lib/a/dune");
+  (* Another option to apply lints is to go through the [Dunolinter] API. *)
   Dunolint_engine.lint_dune_file t ~path:(Relative_path.v "lib/a/dune") ~f:(fun stanza ->
     match Dunolinter.linter stanza with
-    | Unhandled -> ()
+    | Unhandled ->
+      (* The file was created above, and only contains stanzas supported by
+         dunolint. Thus we are not exercising this [Unhandled] case during this
+         test. In general, you want to ignore unsupported stanzas - they will
+         not be linted and kept untouched. *)
+      () [@coverage off]
     | T { eval = _; enforce } ->
       enforce
         (dune
@@ -166,6 +175,19 @@ let%expect_test "create-files" =
      (public_name a-public-name))
     |}];
   ()
+;;
+
+let%expect_test "lint-absent-files" =
+  (* By default, [lint-file] will not create a file if no initializer is supplied. *)
+  let t =
+    Dunolint_engine.create ~config:(Dunolint_engine.Config.create ~running_mode:Force_yes)
+  in
+  Dunolint_engine.lint_file t ~path:(Relative_path.v "absent/file/dune");
+  [%expect {||}];
+  Err.For_test.protect (fun () -> Dunolint_engine.materialize t);
+  [%expect {||}];
+  print_s [%sexp (Stdlib.Sys.file_exists "absent/file/dune" : bool)];
+  [%expect {| false |}]
 ;;
 
 let%expect_test "mkdirs" =
@@ -247,7 +269,7 @@ let%expect_test "file errors" =
   let t =
     Dunolint_engine.create ~config:(Dunolint_engine.Config.create ~running_mode:Force_yes)
   in
-  (* If you are trying to lint a path that is not a regular file, you can an
+  (* If you are trying to lint a path that is not a regular file, you get an
      error right away (rather than during [materialize]. *)
   Err.For_test.protect (fun () ->
     Dunolint_engine.lint_file t ~path:(Relative_path.v "tempdir"));
