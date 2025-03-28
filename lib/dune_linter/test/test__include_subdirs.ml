@@ -184,3 +184,24 @@ let%expect_test "enforce" =
   [%expect {| (include_subdirs unqualified) |}];
   ()
 ;;
+
+let%expect_test "Linter.eval" =
+  let _, t = parse {| (include_subdirs unqualified) |} in
+  Test_helpers.is_true
+    (Dune_linter.Include_subdirs.Linter.eval
+       t
+       ~predicate:(`include_subdirs (equals `unqualified)));
+  [%expect {||}];
+  Test_helpers.is_true
+    (Dune_linter.Include_subdirs.Linter.eval
+       t
+       ~predicate:(`stanza (Blang.base `include_subdirs)));
+  [%expect {||}];
+  Test_helpers.is_false
+    (Dune_linter.Include_subdirs.Linter.eval t ~predicate:(`stanza (Blang.base `library)));
+  [%expect {||}];
+  Test_helpers.is_undefined
+    (Dune_linter.Include_subdirs.Linter.eval t ~predicate:(`library true_));
+  [%expect {||}];
+  ()
+;;
