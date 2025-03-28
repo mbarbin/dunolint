@@ -136,11 +136,16 @@ let%expect_test "create-files" =
   Dunolint_engine.lint_file t ~path:(Relative_path.v "lib/a/dune") ~create_file:(fun () ->
     let library = Dune_linter.Library.create ~name:(Dune.Library.Name.v "my-lib") () in
     Sexp.to_string_mach (Dune_linter.Library.write library));
-  (* And you can do several passes of linting before materializing. In this case the contents
-     that is linted is the contents that is held in memory. *)
+  (* And you can do several passes of linting before materializing. In this case
+     the contents that is linted is the contents that is held in memory. *)
   Dunolint_engine.lint_dune_file t ~path:(Relative_path.v "lib/a/dune") ~f:(fun stanza ->
     match Dunolinter.linter stanza with
-    | Unhandled -> ()
+    | Unhandled ->
+      (* The file was created above, and only contains stanzas supported by
+         dunolint. Thus we are not exercising this [Unhandled] case during this
+         test. In general, you want to ignore unsupported stanzas - they will
+         not be linted and kept untouched. *)
+      () [@coverage off]
     | T { eval = _; enforce } ->
       enforce
         (dune
@@ -247,7 +252,7 @@ let%expect_test "file errors" =
   let t =
     Dunolint_engine.create ~config:(Dunolint_engine.Config.create ~running_mode:Force_yes)
   in
-  (* If you are trying to lint a path that is not a regular file, you can an
+  (* If you are trying to lint a path that is not a regular file, you get an
      error right away (rather than during [materialize]. *)
   Err.For_test.protect (fun () ->
     Dunolint_engine.lint_file t ~path:(Relative_path.v "tempdir"));
