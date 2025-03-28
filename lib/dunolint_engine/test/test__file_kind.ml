@@ -19,52 +19,18 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Handler = Handler
-module Linter = Linter
-module Linters = Linters
-module Sexp_handler = Sexp_handler
-module Stanza_linter = Stanza_linter
-
-module Stanza = struct
-  type 'a t =
-    { stanza : 'a
-    ; path : Relative_path.t
-    ; original_sexp : Sexp.t
-    ; sexps_rewriter : Sexps_rewriter.t
-    ; linter : Linter.t
-    }
-end
-
-module type S = Dunolinter_intf.S with type 'a stanza := 'a Stanza.t
-
-let match_stanza (t : _ Stanza.t) = t.stanza
-let path (t : _ Stanza.t) = t.path
-let original_sexp (t : _ Stanza.t) = t.original_sexp
-let sexps_rewriter (t : _ Stanza.t) = t.sexps_rewriter
-let linter (t : _ Stanza.t) = t.linter
-
-let eval_path ~path ~predicate =
-  match (predicate : Dunolint.Predicate.t) with
-  | `dune _ | `dune_project _ -> Dunolint.Trilang.Undefined
-  | `path condition ->
-    Blang.eval condition (function
-      | `equals value -> Relative_path.equal path value
-      | `glob glob -> Dunolint.Glob.test glob (Relative_path.to_string path))
-    |> Dunolint.Trilang.const
+let%expect_test "to_string" =
+  List.iter Dunolint_engine.File_kind.all ~f:(fun t ->
+    print_endline (Dunolint_engine.File_kind.to_string t));
+  [%expect
+    {|
+    Regular file
+    Directory
+    Character device
+    Block device
+    Symbolic link
+    Named pipe
+    Socket
+    |}];
+  ()
 ;;
-
-module Private = struct
-  module Stanza = struct
-    module For_create = struct
-      type nonrec 'a t = 'a Stanza.t =
-        { stanza : 'a
-        ; path : Relative_path.t
-        ; original_sexp : Sexp.t
-        ; sexps_rewriter : Sexps_rewriter.t
-        ; linter : Linter.t
-        }
-    end
-
-    let create t = t
-  end
-end

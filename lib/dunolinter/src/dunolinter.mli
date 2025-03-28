@@ -62,6 +62,13 @@ val original_sexp : _ Stanza.t -> Sexp.t
     held by this rewriter. *)
 val sexps_rewriter : _ Stanza.t -> Sexps_rewriter.t
 
+(** A shared util to evaluate a predicate on paths. This is used to evaluate the
+    skip_subtree part of a dunolint config. *)
+val eval_path
+  :  path:Relative_path.t
+  -> predicate:Dunolint.Predicate.t
+  -> Dunolint.Trilang.t
+
 module Private : sig
   module Stanza : sig
     module For_create : sig

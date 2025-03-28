@@ -1,6 +1,5 @@
-(library
- (name dunolint_cli)
- (public_name dunolint.dunolint_cli)
+(executable
+ (name lint_file_config_gen)
  (flags
   :standard
   -w
@@ -10,32 +9,18 @@
   -open
   Base
   -open
-  Fpath_base
+  Fpath_sexp0
   -open
   Stdio
   -open
-  Cmdlang
-  -open
-  Dunolint.Std)
+  Cmdlang)
  (libraries
   base
   cmdlang
-  dunolint-lib
-  dunolint.dune_linter
-  dunolint.dune_project_linter
-  dunolint.dunolint_engine
-  dunolint.dunolinter
-  fpath
-  fpath-base
-  parsexp
-  pp
-  pplumbing.err
-  pplumbing.log
-  pplumbing.log-cli
-  pplumbing.pp-tty
-  sexps-rewriter
-  stdio
-  unix)
+  dunolint
+  fpath-sexp0
+  pplumbing.cmdlang-cmdliner-runner
+  stdio)
  (instrumentation
   (backend bisect_ppx))
  (lint

@@ -21,6 +21,7 @@ dirs=(
     "lib/test_helpers/test"
     "dunolint-config/bin"
     "dunolint-config/src"
+    "test/cram/bin"
 )
 
 for dir in "${dirs[@]}"; do

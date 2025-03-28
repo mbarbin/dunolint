@@ -19,4 +19,24 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-let main = Command.group ~summary:"dunolint" [ "lint", Cmd__lint.main ]
+let main =
+  Command.group
+    ~summary:"dunolint"
+    ~readme:(fun () ->
+      {|
+A cli tool to lint and help manage build files in dune projects (OCaml).
+
+The goal of $(b,dunolint) is to check customizable invariants in your repo and help with ergonomic issues, such as applying systematic changes across many files. It supports things like enabling instrumentation, configuring recurring lint or preprocess flags, sorting libraries alphabetically, and more. You can use it at your convenience during development, and enforce consistency by integrating it into your CI pipeline.
+
+Main commands include:
+
+- $(b,lint): apply linting configuration to an entire project at once, perhaps interactively.
+
+- $(b,tools): a collection of more specific commands, for example to facilitate the integration with other tools.
+
+For more information, use the $(b,--help) flag on a subcommand.
+|})
+    [ "lint", Cmd__lint.main
+    ; "tools", Command.group ~summary:"tools" [ "lint-file", Cmd__tools__lint_file.main ]
+    ]
+;;
