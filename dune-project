@@ -39,23 +39,7 @@
    (and
     (>= v0.17)
     (< v0.18)))
-  (ppx_hash
-   (and
-    (>= v0.17)
-    (< v0.18)))
-  (ppx_here
-   (and
-    (>= v0.17)
-    (< v0.18)))
-  (ppx_let
-   (and
-    (>= v0.17)
-    (< v0.18)))
   (ppx_sexp_conv
-   (and
-    (>= v0.17)
-    (< v0.18)))
-  (ppx_sexp_value
    (and
     (>= v0.17)
     (< v0.18)))

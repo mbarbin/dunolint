@@ -24,7 +24,7 @@ module T = struct
     [ `dune
     | `dune_project
     ]
-  [@@deriving compare, enumerate, hash, sexp]
+  [@@deriving compare, enumerate, sexp]
 
   let to_string = function
     | `dune -> "dune"
@@ -41,4 +41,5 @@ end
 include T
 include Comparable.Make (T)
 
+let hash : t -> int = Stdlib.Hashtbl.hash
 let seeded_hash : int -> t -> int = Stdlib.Hashtbl.seeded_hash

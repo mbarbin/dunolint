@@ -46,7 +46,7 @@ module T : sig
     | Not of 'a t
     | If of 'a t * 'a t * 'a t
     | Base of 'a
-  [@@deriving compare, equal, hash]
+  [@@deriving compare, equal]
 
   val invariant : 'a t -> unit
   val true_ : 'a t
@@ -65,7 +65,7 @@ end = struct
     | Not of 'a t
     | If of 'a t * 'a t * 'a t
     | Base of 'a
-  [@@deriving compare, equal, hash]
+  [@@deriving compare, equal]
 
   let invariant =
     let subterms = function
@@ -153,7 +153,7 @@ module Stable = struct
       | Not of 'a t
       | If of 'a t * 'a t * 'a t
       | Base of 'a
-    [@@deriving compare, equal, hash, sexp]
+    [@@deriving compare, equal, sexp]
 
     (* the remainder of this signature consists of functions used in the
        definitions of sexp conversions that are also useful more generally *)
@@ -175,7 +175,7 @@ module Stable = struct
     include (
       T :
         sig
-          type 'a t [@@deriving compare, equal, hash]
+          type 'a t [@@deriving compare, equal]
         end
         with type 'a t := 'a t)
 
@@ -211,7 +211,10 @@ module Stable = struct
        quadratic behavior with [andalso] or [orelse], respectively. *)
     let and_ ts = List.fold_right ts ~init:true_ ~f:andalso
     let or_ ts = List.fold_right ts ~init:false_ ~f:orelse
-    let of_sexp_error str sexp = raise_s [%sexp (str : string), (sexp : Sexp.t)]
+
+    let of_sexp_error str sexp =
+      raise_s (Sexp.List [ Atom (str : string); (sexp : Sexp.t) ])
+    ;;
 
     let unary name args sexp =
       match args with

@@ -108,7 +108,7 @@ type +'a t = private
   | Not of 'a t
   | If of 'a t * 'a t * 'a t
   | Base of 'a
-[@@deriving compare, equal, hash, sexp]
+[@@deriving compare, equal, sexp]
 
 (** [Raw] provides the automatically derived [sexp_of_t], useful in debugging
     the actual structure of the blang. *)
@@ -272,6 +272,6 @@ module Stable : sig
       | Not of 'a t
       | If of 'a t * 'a t * 'a t
       | Base of 'a
-    [@@deriving compare, equal, hash, sexp]
+    [@@deriving compare, equal, sexp]
   end
 end

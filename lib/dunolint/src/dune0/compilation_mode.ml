@@ -26,7 +26,7 @@ module T = struct
     | `best
     | `melange
     ]
-  [@@deriving enumerate, hash, sexp]
+  [@@deriving enumerate, sexp]
 
   let to_comparable_int = function
     | `byte -> 0
@@ -41,4 +41,5 @@ end
 include T
 include Comparable.Make (T)
 
+let hash : t -> int = Stdlib.Hashtbl.hash
 let seeded_hash : int -> t -> int = Stdlib.Hashtbl.seeded_hash
