@@ -8,4 +8,6 @@
   (glob_files *.sexp)))
 
 (rule
- (copy ./bin/lint_file_config_gen.exe lint_file_config_gen.exe))
+ (package dunolint-tests)
+ (action
+  (copy ./bin/lint_file_config_gen.exe lint_file_config_gen.exe)))
