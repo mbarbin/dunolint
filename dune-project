@@ -24,7 +24,7 @@
  (synopsis "A library to create dunolint configs")
  (depends
   (ocaml
-   (>= 5.3))
+   (>= 5.2))
   (base
    (and
     (>= v0.17)

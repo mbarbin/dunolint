@@ -1,0 +1,59 @@
+# This workflow compiles only a subset of the packages that is meant
+# to be containing only what users needs to define a dunolint config.
+#
+# It is very closed to 'more-ci.yml' job, except it includes more
+# ocaml versions and only build certain packages.
+
+name: config-libs-ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "**" # This will match pull requests targeting any branch
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+        ocaml-compiler:
+          - 5.3.x
+          - 5.2.x
+        exclude:
+          # We exclude the combination already tested in the 'ci' workflow.
+          - os: ubuntu-latest
+            ocaml-compiler: 5.3.x
+          # We exclude macos-5.3 - this fails when building core_unix.
+          - os: macos-latest
+            ocaml-compiler: 5.3.x
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: ${{ matrix.ocaml-compiler }}
+          opam-repositories: |
+            default: https://github.com/ocaml/opam-repository.git
+            mbarbin: https://github.com/mbarbin/opam-repository.git
+      #     janestreet-bleeding: https://github.com/janestreet/opam-repository.git
+      #     janestreet-bleeding-external: https://github.com/janestreet/opam-repository.git#external-packages
+
+      # We build and run tests for a subset of packages. More tests are run in
+      # the development workflow and as part of the main CI job. These are the
+      # tests that are checked for every combination of os and ocaml-compiler.
+      - name: Install dependencies
+        run: opam install ./dunolint-lib.opam --deps-only --with-test
+
+      - name: Build & Run tests
+        run: opam exec -- dune build @all @runtest -p dunolint-lib
