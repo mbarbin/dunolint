@@ -1,5 +1,7 @@
 (executable
  (name lint_file_config_gen)
+ (public_name lint_file_config_gen)
+ (package dunolint-tests)
  (flags
   :standard
   -w
