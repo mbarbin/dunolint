@@ -13,9 +13,9 @@
   -open
   Fpath_base
   -open
-  Expect_test_helpers_base
+  Stdio
   -open
-  Stdio)
+  Expect_test_helpers_base)
  (libraries
   base
   dune_linter
