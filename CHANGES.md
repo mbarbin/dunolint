@@ -1,3 +1,15 @@
+## 0.0.2025XXXX (unreleased)
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
 ## 0.0.20250403 (2025-04-03)
 
 ### Added
