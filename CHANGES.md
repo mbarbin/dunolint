@@ -5,10 +5,12 @@
 - Added command `tools lint-file` to ease editor integration (#39, #40, #46, @mbarbin, requested by and with help from @arvidj).
 - Added support for `library.modes` (#23, #27, @mbarbin, requested by @raphael-proust)
 - Document release process and current state (#25, @mbarbin).
-- Added coverage and regression tests (#18, #19, #30, #33, #34, @mbarbin).
+- Added coverage and regression tests (#18, #19, #30, #33, #34, #48, @mbarbin).
 
 ### Changed
 
+- Reduce dependencies of config library (#49, #51, @mbarbin).
+- Enabled setup-ocaml's *dune-cache* in CI (#52, @mbarbin).
 - Upgrade Docusaurus to latest available (#24, @mbarbin).
 
 ### Deprecated
