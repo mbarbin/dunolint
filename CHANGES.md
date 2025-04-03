@@ -1,4 +1,4 @@
-## 0.0.2025XXXX (unreleased)
+## 0.0.20250403 (2025-04-03)
 
 ### Added
 
@@ -12,8 +12,6 @@
 - Reduce dependencies of config library (#49, #51, @mbarbin).
 - Enabled setup-ocaml's *dune-cache* in CI (#52, @mbarbin).
 - Upgrade Docusaurus to latest available (#24, @mbarbin).
-
-### Deprecated
 
 ### Fixed
 
