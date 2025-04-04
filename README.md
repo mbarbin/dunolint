@@ -16,6 +16,17 @@ The goal of **dunolint** is to check customizable invariants in your repo and he
 
 Published [here](https://mbarbin.github.io/dunolint).
 
+## Usage 
+
+**dunolint** can be used to automatically reformat dune files during editing with Emacs using the [reformatter](https://github.com/purcell/emacs-reformatter) package. Once the latter is installed, a dunolint reformatter can be configured as such:
+
+```elisp
+(reformatter-define dunolint-format
+  :program "dunolint"
+  :args (list "tools" "lint-file" "--filename" (buffer-file-name))
+  :lighter " DoF")
+```
+
 ## Current State
 
 It's currently in the early stages of development and there's little code and features at this point. I'm seeking feedback and early discussions about the project next steps.
