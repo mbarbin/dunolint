@@ -1,1 +1,5 @@
+/.pre-commit-hooks.yaml @arvidj
+/doc/docs/guides/pre-commit.md @arvidj
+/doc/docs/guides/reformatter.md @arvidj
+
 * @mbarbin
