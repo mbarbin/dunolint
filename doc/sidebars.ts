@@ -28,6 +28,7 @@ const sidebars: SidebarsConfig = {
       label: 'Guides',
       items: [
         { type: 'doc', id: 'guides/README', label: 'Introduction' },
+        { type: 'doc', id: 'guides/reformatter', label: 'Using dunolint as an Emacs reformatter' },
       ],
     },
   ],
