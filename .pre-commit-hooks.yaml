@@ -1,0 +1,7 @@
+---
+- id: dunolint
+  name: Dunolint
+  description: Linter and formatter for Dune files
+  language: system
+  entry: bash -c 'for n in $(seq 0 "$#"); do dunolint tools lint-file --in-place "${!n}"; done'
+  files: "^(.*/)?dune(-project)?$"
