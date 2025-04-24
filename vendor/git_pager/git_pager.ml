@@ -147,6 +147,7 @@ let run ~f =
         ~stdout:Unix.stdout
         ~stderr:Unix.stderr
     in
+    Unix.close pager_in;
     let out_ch = Unix.out_channel_of_descr pager_out in
     Exn.protect
       ~f:(fun () ->
