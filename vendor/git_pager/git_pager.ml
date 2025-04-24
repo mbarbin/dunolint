@@ -56,7 +56,7 @@ let get_git_pager () =
        tests that do not have an actual git environment, such as in the dune
        [.sandbox/.git]. *)
     match Unix.getenv "GIT_PAGER" with
-    | exception Not_found -> None
+    | exception Stdlib.Not_found -> None
     | "cat" -> Some "cat"
     | _ -> None
   with
@@ -147,6 +147,7 @@ let run ~f =
         ~stdout:Unix.stdout
         ~stderr:Unix.stderr
     in
+    Unix.close pager_in;
     let out_ch = Unix.out_channel_of_descr pager_out in
     Exn.protect
       ~f:(fun () ->
@@ -157,7 +158,6 @@ let run ~f =
         Out_channel.close out_ch;
         match waitpid_non_intr process |> snd with
         | WEXITED 0 -> ()
-        | WSIGNALED signal when Int.equal signal Stdlib.Sys.sigpipe -> ()
         | (WEXITED _ | WSIGNALED _ | WSTOPPED _) as process_status ->
           Err.raise
             Pp.O.

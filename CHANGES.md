@@ -8,6 +8,8 @@
 
 ### Fixed
 
+- Fix git pager clean termination when displayed diff exceeds 1 page (#61, @mbarbin).
+
 ### Removed
 
 ## 0.0.20250403 (2025-04-03)
