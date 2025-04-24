@@ -157,7 +157,6 @@ let run ~f =
         Out_channel.close out_ch;
         match waitpid_non_intr process |> snd with
         | WEXITED 0 -> ()
-        | WSIGNALED signal when Int.equal signal Stdlib.Sys.sigpipe -> ()
         | (WEXITED _ | WSIGNALED _ | WSTOPPED _) as process_status ->
           Err.raise
             Pp.O.
