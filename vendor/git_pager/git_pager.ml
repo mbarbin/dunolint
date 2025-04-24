@@ -56,7 +56,7 @@ let get_git_pager () =
        tests that do not have an actual git environment, such as in the dune
        [.sandbox/.git]. *)
     match Unix.getenv "GIT_PAGER" with
-    | exception Not_found -> None
+    | exception Stdlib.Not_found -> None
     | "cat" -> Some "cat"
     | _ -> None
   with
