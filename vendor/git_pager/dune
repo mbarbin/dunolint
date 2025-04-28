@@ -1,18 +1,8 @@
 (library
  (name dunolint_vendor_git_pager)
  (public_name dunolint.vendor_git_pager)
- (flags
-  :standard
-  -w
-  +a-4-40-41-42-44-45-48-66
-  -warn-error
-  +a
-  -open
-  Base
-  -open
-  Stdio)
- (libraries base pp pplumbing.err pplumbing.pp-tty stdio unix)
+ (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a)
+ (libraries pp pplumbing.err pplumbing.pp-tty unix)
  (lint
-  (pps ppx_js_style -allow-let-operators -check-doc-comments))
- (preprocess
-  (pps -unused-code-warnings=force ppx_sexp_conv)))
+  (pps ppx_js_style -check-doc-comments))
+ (preprocess no_preprocessing))
