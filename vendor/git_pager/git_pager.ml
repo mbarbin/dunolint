@@ -56,13 +56,10 @@ let git_pager_value =
        (* We shortcut git entirely when [GIT_PAGER=cat] so we can run this code in
           tests that do not have an actual git environment, such as in the dune
           [.sandbox/.git]. *)
-       match Unix.getenv "GIT_PAGER" with
-       | exception Stdlib.Not_found -> None
-       | "cat" -> Some "cat"
-       | _ -> None
+       Stdlib.Sys.getenv_opt "GIT_PAGER"
      with
-     | Some value -> value
-     | None ->
+     | Some ("cat" as cat) -> cat
+     | None | Some _ ->
        let ((in_ch, _) as process) =
          Unix.open_process_args "git" [| "git"; "var"; "GIT_PAGER" |]
        in
