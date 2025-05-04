@@ -122,7 +122,7 @@ let%expect_test "format_dune_file" =
     {|
     Error: Failed to format dune file:
     <REDACTED IN TEST>
-    WEXITED 1
+    Exited 1
     [123]
     |}];
   ()
@@ -234,7 +234,7 @@ let%expect_test "invalid files" =
       File "invalid/dune", line 1, characters 0-0:
       Error: Failed to format dune file:
       <REDACTED IN TEST>
-      WEXITED 1
+      Exited 1
       |}];
     Dunolint_engine.lint_dune_project_file
       t
@@ -250,7 +250,7 @@ let%expect_test "invalid files" =
       File "invalid/dune-project", line 1, characters 0-0:
       Error: Failed to format dune file:
       <REDACTED IN TEST>
-      WEXITED 1
+      Exited 1
       |}];
     Dunolint_engine.lint_dune_project_file
       t

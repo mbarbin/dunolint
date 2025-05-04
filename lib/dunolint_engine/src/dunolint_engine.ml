@@ -110,7 +110,12 @@ module Process_status = struct
     | WEXITED of int
     | WSIGNALED of int
     | WSTOPPED of int
-  [@@deriving sexp_of]
+
+  let pp = function
+    | WEXITED i -> Pp.verbatimf "Exited %d" i
+    | WSIGNALED i -> Pp.verbatimf "Signaled %d" i
+    | WSTOPPED i -> Pp.verbatimf "Stopped %d" i
+  ;;
 end
 
 let format_dune_file_internal ~new_contents =
@@ -130,7 +135,7 @@ let format_dune_file_internal ~new_contents =
           (if Err.am_running_test ()
            then "<REDACTED IN TEST>"
            else String.strip err_output [@coverage off])
-      ; Err.pp_of_sexp (Process_status.sexp_of_t process_status)
+      ; Process_status.pp process_status
       ]
 ;;
 
