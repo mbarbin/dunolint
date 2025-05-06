@@ -80,7 +80,7 @@ let%expect_test "parse" =
         (Flag (name --opt) (param (param)) (applies_to (pp ppx_deriving))))))
     |}];
   require_does_raise [%here] (fun () -> Dune_linter.Pps.parse ~loc:Loc.none [ "" ]);
-  [%expect {| ("Invalid empty pp." (Exit 123)) |}];
+  [%expect {| "Invalid empty pp." |}];
   ()
 ;;
 
@@ -131,7 +131,7 @@ let%expect_test "create_then_rewrite" =
   [%expect {| (pps --hello-driver ppx_deriving) |}];
   (* When dunolint doesn't understand the expression to rewrite, this triggers an error. *)
   require_does_raise [%here] (fun () -> test t {| (other_field (unexpected args)) |});
-  [%expect {| ("Unexpected [pps] field." (Exit 123)) |}];
+  [%expect {| "Unexpected [pps] field." |}];
   (* However if the field is [pps] the existing arguments are replaced. *)
   test t {| (pps (unexpected args)) |};
   [%expect {| (pps --hello-driver ppx_deriving) |}];
