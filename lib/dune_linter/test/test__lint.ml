@@ -102,7 +102,7 @@ let%expect_test "create_then_rewrite" =
   [%expect {| (lint (pps)) |}];
   (* When dunolint doesn't understand the expression to rewrite, this triggers an error. *)
   require_does_raise [%here] (fun () -> test t {| (lint (unexpected args)) |});
-  [%expect {| ("Unexpected [lint] field value." (Exit 123)) |}];
+  [%expect {| "Unexpected [lint] field value." |}];
   ()
 ;;
 
