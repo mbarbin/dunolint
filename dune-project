@@ -29,7 +29,7 @@
    (and
     (>= v0.17)
     (< v0.18)))
-  (fpath-base
+  (fpath-sexp0
    (>= 0.2.2))
   (ppx_compare
    (and
