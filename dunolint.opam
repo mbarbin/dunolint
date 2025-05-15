@@ -16,8 +16,8 @@ depends: [
   "file-rewriter" {>= "0.0.3"}
   "fmt" {>= "0.9.0"}
   "fpath" {>= "0.7.3"}
-  "fpath-base" {>= "0.2.2"}
-  "fpath-sexp0" {>= "0.2.2"}
+  "fpath-base" {>= "0.3.0"}
+  "fpath-sexp0" {>= "0.3.0"}
   "loc" {>= "0.2.2"}
   "logs" {>= "0.7.0"}
   "parsexp" {>= "v0.17" & < "v0.18"}

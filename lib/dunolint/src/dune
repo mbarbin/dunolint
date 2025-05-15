@@ -10,12 +10,12 @@
   -open
   Base
   -open
-  Fpath_base)
+  Fpath_sexp0)
  (libraries
   base
   dunolint-lib.vendor_blang
   dunolint-lib.vendor_vcs
-  fpath-base
+  fpath-sexp0
   re)
  (instrumentation
   (backend bisect_ppx))

@@ -35,8 +35,11 @@ module String_impl = struct
 
   let compare = String.compare
   let equal = String.equal
-  let hash = String.hash
-  let seeded_hash = String.seeded_hash
   let sexp_of_t = sexp_of_string
   let t_of_sexp = string_of_sexp
+
+  (* [hash] and [seeded_hash] were changed from [String.*] to [Hashtbl.*]
+     equivalent in order to achieve compatibility with OCaml 4.14 stdlib. *)
+  let hash : string -> int = Hashtbl.hash
+  let seeded_hash : int -> string -> int = Hashtbl.seeded_hash
 end
