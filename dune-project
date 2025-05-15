@@ -24,24 +24,24 @@
  (synopsis "A library to create dunolint configs")
  (depends
   (ocaml
-   (>= 5.2))
+   (>= 4.14))
   (base
    (and
-    (>= v0.17)
+    (>= v0.16)
     (< v0.18)))
   (fpath-sexp0
-   (>= 0.2.2))
+   (>= 0.3.0))
   (ppx_compare
    (and
-    (>= v0.17)
+    (>= v0.16)
     (< v0.18)))
   (ppx_enumerate
    (and
-    (>= v0.17)
+    (>= v0.16)
     (< v0.18)))
   (ppx_sexp_conv
    (and
-    (>= v0.17)
+    (>= v0.16)
     (< v0.18)))
   (ppxlib
    (>= 0.35.0))
@@ -49,7 +49,7 @@
    (>= 1.8.0))
   (sexplib0
    (and
-    (>= v0.17)
+    (>= v0.16)
     (< v0.18)))))
 
 (package
@@ -73,9 +73,9 @@
   (fpath
    (>= 0.7.3))
   (fpath-base
-   (>= 0.2.2))
+   (>= 0.3.0))
   (fpath-sexp0
-   (>= 0.2.2))
+   (>= 0.3.0))
   (loc
    (>= 0.2.2))
   (logs
@@ -158,9 +158,9 @@
   (file-rewriter
    (>= 0.0.3))
   (fpath-base
-   (>= 0.2.2))
+   (>= 0.3.0))
   (fpath-sexp0
-   (>= 0.2.2))
+   (>= 0.3.0))
   (loc
    (>= 0.2.2))
   (logs
@@ -267,9 +267,9 @@
   (fpath
    (>= 0.7.3))
   (fpath-base
-   (>= 0.2.2))
+   (>= 0.3.0))
   (fpath-sexp0
-   (>= 0.2.2))
+   (>= 0.3.0))
   (loc
    (>= 0.2.2))
   (logs
