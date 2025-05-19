@@ -23,16 +23,16 @@ open Dunolint.Config.Std
 
 let%expect_test "predicate" =
   let test p = Common.test_predicate (module Dune.Library.Predicate) p in
-  test (has_field `name);
-  [%expect {| (has_field name) |}];
-  test (has_field `public_name);
-  [%expect {| (has_field public_name) |}];
-  test (has_field `lint);
-  [%expect {| (has_field lint) |}];
   test (has_field `instrumentation);
   [%expect {| (has_field instrumentation) |}];
+  test (has_field `lint);
+  [%expect {| (has_field lint) |}];
+  test (has_field `name);
+  [%expect {| (has_field name) |}];
   test (has_field `preprocess);
   [%expect {| (has_field preprocess) |}];
+  test (has_field `public_name);
+  [%expect {| (has_field public_name) |}];
   test (instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")));
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
   test (lint (pps (pp (Dune.Pp.Name.v "ppx_compare"))));
