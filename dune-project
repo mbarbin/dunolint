@@ -26,26 +26,21 @@
   (ocaml
    (>= 4.14))
   (base
-   (and
-    (>= v0.16)))
+   (>= v0.16))
   (fpath-sexp0
    (>= 0.3.0))
   (ppx_compare
-   (and
-    (>= v0.16)))
+   (>= v0.16))
   (ppx_enumerate
-   (and
-    (>= v0.16)))
+   (>= v0.16))
   (ppx_sexp_conv
-   (and
-    (>= v0.16)))
+   (>= v0.16))
   (ppxlib
    (>= 0.35.0))
   (re
    (>= 1.8.0))
   (sexplib0
-   (and
-    (>= v0.16)))))
+   (>= v0.16))))
 
 (package
  (name dunolint)
