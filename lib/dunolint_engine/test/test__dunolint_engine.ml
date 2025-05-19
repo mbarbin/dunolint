@@ -270,7 +270,7 @@ let%expect_test "file errors" =
     Dunolint_engine.create ~config:(Dunolint_engine.Config.create ~running_mode:Force_yes)
   in
   (* If you are trying to lint a path that is not a regular file, you get an
-     error right away (rather than during [materialize]. *)
+     error right away rather than during [materialize]. *)
   Err.For_test.protect (fun () ->
     Dunolint_engine.lint_file t ~path:(Relative_path.v "tempdir"));
   [%expect
