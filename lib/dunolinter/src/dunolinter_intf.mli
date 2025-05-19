@@ -122,13 +122,6 @@ module type S = sig
       exposed. *)
   val sexps_rewriter : t -> Sexps_rewriter.t
 
-  (** If you need access to the internal file_rewriter, this accessor is
-      exposed. *)
-  val file_rewriter : t -> File_rewriter.t
-
-  (** Access the raw sexps that were parsed from the original contents. *)
-  val original_sexps : t -> Sexp.t list
-
   (** Retrieve the path provided when [t] was created. *)
   val path : t -> Relative_path.t
 end
