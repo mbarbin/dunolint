@@ -81,17 +81,33 @@ let%expect_test "lint" =
             users to write future proof code, where new constructs can be added
             to the dunolint engine, and added over time to client codes. *)
          ());
+      ())
+    ~with_linter:(fun linter ->
+      (* It is also possible to access the linter value that holds the stanzas
+         and using it directly. Here we'll illustrate this use case with an
+         example involving access to the low-level sexps-rewriter. *)
+      print_s [%sexp (Dune_project_linter.path linter : Relative_path.t)];
+      [%expect {| dune-project |}];
+      let sexps_rewriter = Dune_project_linter.sexps_rewriter linter in
+      Sexps_rewriter.visit sexps_rewriter ~f:(fun sexp ~range ~file_rewriter ->
+        match sexp with
+        | Atom "3.17" ->
+          File_rewriter.replace file_rewriter ~range ~text:"3.19";
+          Break
+        | _ -> Continue);
       ());
   Err.For_test.protect (fun () -> Dunolint_engine.materialize t);
   [%expect
     {|
     dry-run: Would edit file "dune-project":
     -1,8 +1,7
-      (lang dune 3.17)
+    +|(lang dune 3.19)
 
-    -|(name dunolint)
+    -|(lang dune 3.17)
     +|(name a-better-name)
 
+    -|(name dunolint)
+    -|
     -|(implicit_transitive_deps true)
     +|(implicit_transitive_deps false)
 
