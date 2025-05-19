@@ -21,7 +21,10 @@
 
 let%expect_test "all" =
   List.iter Dunolint.Linted_file_kind.all ~f:(fun linted_file_kind ->
-    print_s [%sexp (linted_file_kind : Dunolint.Linted_file_kind.t)]);
+    let sexp = [%sexp (linted_file_kind : Dunolint.Linted_file_kind.t)] in
+    let t = Dunolint.Linted_file_kind.t_of_sexp sexp in
+    require_equal [%here] (module Dunolint.Linted_file_kind) linted_file_kind t;
+    print_s sexp);
   [%expect
     {|
     dune
