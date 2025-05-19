@@ -27,6 +27,8 @@ let%expect_test "predicate" =
   [%expect {| (has_field instrumentation) |}];
   test (has_field `lint);
   [%expect {| (has_field lint) |}];
+  test (has_field `modes);
+  [%expect {| (has_field modes) |}];
   test (has_field `name);
   [%expect {| (has_field name) |}];
   test (has_field `preprocess);
@@ -37,6 +39,8 @@ let%expect_test "predicate" =
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
   test (lint (pps (pp (Dune.Pp.Name.v "ppx_compare"))));
   [%expect {| (lint (pps (pp ppx_compare))) |}];
+  test (modes (has_mode `melange));
+  [%expect {| (modes (has_mode melange)) |}];
   test (name (equals (Dune.Library.Name.v "main")));
   [%expect {| (name (equals main)) |}];
   test (preprocess (pps (pp (Dune.Pp.Name.v "ppx_compare"))));
