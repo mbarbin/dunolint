@@ -23,25 +23,25 @@ open Dunolint.Config.Std
 
 let%expect_test "predicate" =
   let test p = Common.test_predicate (module Dune.Executable.Predicate) p in
-  test (name (equals (Dune.Executable.Name.v "main")));
-  [%expect {| (name (equals main)) |}];
-  test (public_name (equals (Dune.Executable.Public_name.v "dunolint")));
-  [%expect {| (public_name (equals dunolint)) |}];
-  test (lint (pps (pp (Dune.Pp.Name.v "ppx_compare"))));
-  [%expect {| (lint (pps (pp ppx_compare))) |}];
-  test (instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")));
-  [%expect {| (instrumentation (backend bisect_ppx)) |}];
-  test (preprocess (pps (pp (Dune.Pp.Name.v "ppx_compare"))));
-  [%expect {| (preprocess (pps (pp ppx_compare))) |}];
-  test (has_field `name);
-  [%expect {| (has_field name) |}];
-  test (has_field `public_name);
-  [%expect {| (has_field public_name) |}];
-  test (has_field `lint);
-  [%expect {| (has_field lint) |}];
   test (has_field `instrumentation);
   [%expect {| (has_field instrumentation) |}];
+  test (has_field `lint);
+  [%expect {| (has_field lint) |}];
+  test (has_field `name);
+  [%expect {| (has_field name) |}];
   test (has_field `preprocess);
   [%expect {| (has_field preprocess) |}];
+  test (has_field `public_name);
+  [%expect {| (has_field public_name) |}];
+  test (instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")));
+  [%expect {| (instrumentation (backend bisect_ppx)) |}];
+  test (lint (pps (pp (Dune.Pp.Name.v "ppx_compare"))));
+  [%expect {| (lint (pps (pp ppx_compare))) |}];
+  test (name (equals (Dune.Executable.Name.v "main")));
+  [%expect {| (name (equals main)) |}];
+  test (preprocess (pps (pp (Dune.Pp.Name.v "ppx_compare"))));
+  [%expect {| (preprocess (pps (pp ppx_compare))) |}];
+  test (public_name (equals (Dune.Executable.Public_name.v "dunolint")));
+  [%expect {| (public_name (equals dunolint)) |}];
   ()
 ;;
