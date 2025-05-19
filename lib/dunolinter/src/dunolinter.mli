@@ -43,11 +43,11 @@ val path : _ Stanza.t -> Relative_path.t
     when using this interface, they will be left untouched by dunolint. *)
 val linter : _ Stanza.t -> Linter.t
 
-(** If you are writing a custom rewriter perhaps perhaps you'll find it easier
-    to use directly the stanza API provided by a linter library, in which case
-    you'll need this accessor. In this use of the library, you perform side
-    effects to ['a] directly using the linter api, rather than going through
-    the enforcement of configurable conditions. *)
+(** If you are writing a custom rewriter perhaps you'll find it easier to use
+    directly the stanza API provided by a linter library, in which case you'll
+    need this accessor. In this use of the library, you perform side effects to
+    ['a] directly using the linter api, rather than going through the
+    enforcement of configurable conditions. *)
 val match_stanza : 'a Stanza.t -> 'a
 
 (** That is the [sexp] that correspond to the entire stanza held by
