@@ -2,7 +2,12 @@
 
 ### Added
 
+- Add testst (#67, #68, @mbarbin).
+
 ### Changed
+
+- Support building dunolint-lib with OCaml 4.14 (#65, @mbarbin).
+- Updated git-pager and err dependencies (#63, #64, @mbarbin).
 
 ### Deprecated
 
