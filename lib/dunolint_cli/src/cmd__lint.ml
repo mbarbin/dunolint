@@ -41,6 +41,13 @@ let maybe_autoformat_file ~previous_contents ~new_contents =
     else new_contents)
 ;;
 
+module Visitor_decision = struct
+  (* A subtype of [Dunolint_engine.Visitor_decision] used by [Lint_file]. *)
+  type t =
+    | Continue
+    | Skip_subtree
+end
+
 module Lint_file (Linter : Dunolinter.S) = struct
   exception Skip_subtree
 
@@ -63,7 +70,7 @@ module Lint_file (Linter : Dunolinter.S) = struct
 
   let lint_file ~dunolint_engine ~rules ~(path : Relative_path.t) =
     let previous_contents_ref = ref "" in
-    let visitor_decision = ref Dunolint_engine.Visitor_decision.Continue in
+    let visitor_decision = ref Visitor_decision.Continue in
     Dunolint_engine.lint_file
       dunolint_engine
       ~path
@@ -100,7 +107,7 @@ let visit_directory ~dunolint_engine ~config ~parent_dir ~files =
           ~path:parent_dir
           ~predicate:(predicate :> Dunolint.Predicate.t))
   with
-  | `enforce nothing -> Nothing.unreachable_code nothing
+  | `enforce nothing -> Nothing.unreachable_code nothing [@coverage off]
   | `skip_subtree -> Dunolint_engine.Visitor_decision.Skip_subtree
   | `return ->
     let rules = Dunolint.Config.rules config in
@@ -110,14 +117,14 @@ let visit_directory ~dunolint_engine ~config ~parent_dir ~files =
         let path = Relative_path.extend parent_dir (Fsegment.v file) in
         (match
            match Dunolint.Linted_file_kind.of_string file with
-           | Error (`Msg _) -> Dunolint_engine.Visitor_decision.Continue
+           | Error (`Msg _) -> Visitor_decision.Continue
            | Ok linted_file_kind ->
              (match linted_file_kind with
               | `dune -> Dune_lint.lint_file ~dunolint_engine ~rules ~path
               | `dune_project -> Dune_project_lint.lint_file ~dunolint_engine ~rules ~path)
          with
-         | Dunolint_engine.Visitor_decision.Continue -> loop files
-         | (Break | Skip_subtree) as visitor_decision -> visitor_decision)
+         | Continue -> loop files
+         | Skip_subtree -> Dunolint_engine.Visitor_decision.Skip_subtree)
     in
     loop files
 ;;
