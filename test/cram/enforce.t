@@ -83,11 +83,7 @@ Let's exercise cases where the sexp supplied is invalid.
   Try 'dunolint lint --help' or 'dunolint --help' for more information.
   [124]
 
-  $ dunolint lint --dry-run --enforce '(blah)'
-  dunolint: option '--enforce': (Of_sexp_error
-              "lib/dunolint/src/predicate.ml.t_of_sexp: no matching variant
-            found"
-              (invalid_sexp (blah)))
-  Usage: dunolint lint [OPTION]…
-  Try 'dunolint lint --help' or 'dunolint --help' for more information.
+We hide the output of this one because it contains an unstable file path.
+
+  $ dunolint lint --dry-run --enforce '(blah)' 2> /dev/null
   [124]
