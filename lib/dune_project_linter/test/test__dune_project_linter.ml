@@ -41,7 +41,9 @@ let print_diff t =
 let%expect_test "lint" =
   let t =
     match
-      Dune_project_linter.create ~path:(Relative_path.v "path/to/dune") ~original_contents
+      Dune_project_linter.create
+        ~path:(Relative_path.v "path/to/dune-project")
+        ~original_contents
     with
     | Ok t -> t
     | Error _ -> assert false
@@ -49,7 +51,7 @@ let%expect_test "lint" =
   print_diff t;
   [%expect {||}];
   print_s [%sexp (Dune_project_linter.path t : Relative_path.t)];
-  [%expect {| path/to/dune |}];
+  [%expect {| path/to/dune-project |}];
   (* We can use the low-level sexps-rewriter API if we wish. *)
   Sexps_rewriter.visit
     (Dune_project_linter.sexps_rewriter t)
