@@ -23,7 +23,7 @@ module type S = sig
   (** [t] is type OCaml representation of what the field encodes. It does not
       need to encapsulate the complete information that code be represented by
       dune, only that part that dunolint wants to lint. *)
-  type t [@@deriving sexp_of]
+  type t
 
   val field_name : string
 

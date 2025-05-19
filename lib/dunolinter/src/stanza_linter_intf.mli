@@ -21,7 +21,7 @@
 
 module type S = sig
   type predicate
-  type t
+  type t [@@deriving sexp_of]
 
   include Sexp_handler_intf.S with type t := t
   include Linter_intf.S with type t := t and type predicate := predicate
