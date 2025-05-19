@@ -32,7 +32,7 @@ module type S = sig
       linted contents of the result. *)
   type t
 
-  (** This type will be available as ['a Dunolint.Stanza.t] however it
+  (** This type will be available as ['a Dunolinter.Stanza.t] however it
       is needed here in this interface to avoid a circular dependency.
       This is the type for the stanza that will be iterated on during
       linting. *)

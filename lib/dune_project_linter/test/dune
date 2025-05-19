@@ -26,6 +26,7 @@
   fpath-sexp0
   loc
   parsexp
+  patdiff.expect_test_patdiff
   pp
   pplumbing.err
   sexps-rewriter
