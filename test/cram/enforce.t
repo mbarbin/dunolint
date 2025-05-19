@@ -72,3 +72,22 @@ Let's add some files.
   when a strategy is implemented, however in this case there is none available.
   Hint: You need to attend and fix manually.
   [123]
+
+Let's exercise cases where the sexp supplied is invalid.
+
+  $ dunolint lint --dry-run --enforce '(blah'
+  dunolint: option '--enforce': (parse_error.ml.Parse_error
+              ((position ((line 1) (col 5) (offset 5)))
+                (message "unclosed parentheses at end of input")))
+  Usage: dunolint lint [OPTION]…
+  Try 'dunolint lint --help' or 'dunolint --help' for more information.
+  [124]
+
+  $ dunolint lint --dry-run --enforce '(blah)'
+  dunolint: option '--enforce': (Of_sexp_error
+              "lib/dunolint/src/predicate.ml.t_of_sexp: no matching variant
+            found"
+              (invalid_sexp (blah)))
+  Usage: dunolint lint [OPTION]…
+  Try 'dunolint lint --help' or 'dunolint --help' for more information.
+  [124]

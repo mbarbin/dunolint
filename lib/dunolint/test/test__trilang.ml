@@ -56,12 +56,13 @@ let%expect_test "eval" =
     let open List.Let_syntax in
     let%bind a = Trilang.all in
     let%bind b = Trilang.all in
-    [ Blang.and_ [ Blang.base a; Blang.base b ] ]
+    [ a, b, Blang.and_ [ Blang.base a; Blang.base b ] ]
   in
-  List.iter and_table ~f:(fun expr ->
-    print_s
-      [%sexp
-        { expr : Trilang.t Blang.t; eval = (Trilang.eval expr ~f:Fn.id : Trilang.t) }]);
+  List.iter and_table ~f:(fun (a, b, expr) ->
+    let result = Trilang.eval expr ~f:Fn.id in
+    let and_ = Trilang.Private.and_ a b in
+    require_equal [%here] (module Trilang) result and_;
+    print_s [%sexp { expr : Trilang.t Blang.t; eval = (result : Trilang.t) }]);
   [%expect
     {|
     ((expr (and True True)) (eval True))
@@ -78,12 +79,13 @@ let%expect_test "eval" =
     let open List.Let_syntax in
     let%bind a = Trilang.all in
     let%bind b = Trilang.all in
-    [ Blang.or_ [ Blang.base a; Blang.base b ] ]
+    [ a, b, Blang.or_ [ Blang.base a; Blang.base b ] ]
   in
-  List.iter or_table ~f:(fun expr ->
-    print_s
-      [%sexp
-        { expr : Trilang.t Blang.t; eval = (Trilang.eval expr ~f:Fn.id : Trilang.t) }]);
+  List.iter or_table ~f:(fun (a, b, expr) ->
+    let result = Trilang.eval expr ~f:Fn.id in
+    let or_ = Trilang.Private.or_ a b in
+    require_equal [%here] (module Trilang) result or_;
+    print_s [%sexp { expr : Trilang.t Blang.t; eval = (result : Trilang.t) }]);
   [%expect
     {|
     ((expr (or True True)) (eval True))
@@ -114,7 +116,7 @@ let%expect_test "eval" =
   let if_table =
     let open List.Let_syntax in
     let%bind a = Trilang.all in
-    [ Blang.if_ (Blang.base a) Blang.true_ Blang.false_ ]
+    [ Blang.if_ (Blang.base a) (Blang.base Trilang.True) (Blang.base Trilang.False) ]
   in
   List.iter if_table ~f:(fun expr ->
     print_s
@@ -122,12 +124,47 @@ let%expect_test "eval" =
         { expr : Trilang.t Blang.t; eval = (Trilang.eval expr ~f:Fn.id : Trilang.t) }]);
   [%expect
     {|
-    ((expr True)
-     (eval True))
-    ((expr False)
-     (eval False))
-    ((expr Undefined)
-     (eval Undefined))
+    ((expr (if True True False)) (eval True))
+    ((expr (if False True False)) (eval False))
+    ((expr (if Undefined True False)) (eval Undefined))
     |}];
+  ()
+;;
+
+let%expect_test "disjunction" =
+  let test ts = print_s [%sexp (Trilang.disjunction ts : Trilang.t)] in
+  test [];
+  [%expect {| False |}];
+  test [ True ];
+  [%expect {| True |}];
+  test [ True; Undefined ];
+  [%expect {| True |}];
+  test [ False ];
+  [%expect {| False |}];
+  test [ False; Undefined ];
+  [%expect {| Undefined |}];
+  test [ Undefined; True ];
+  [%expect {| True |}];
+  test [ Undefined; False ];
+  [%expect {| Undefined |}];
+  ()
+;;
+
+let%expect_test "conjunction" =
+  let test ts = print_s [%sexp (Trilang.conjunction ts : Trilang.t)] in
+  test [];
+  [%expect {| True |}];
+  test [ True ];
+  [%expect {| True |}];
+  test [ True; Undefined ];
+  [%expect {| Undefined |}];
+  test [ False ];
+  [%expect {| False |}];
+  test [ False; Undefined ];
+  [%expect {| False |}];
+  test [ Undefined; True ];
+  [%expect {| Undefined |}];
+  test [ Undefined; False ];
+  [%expect {| False |}];
   ()
 ;;

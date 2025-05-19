@@ -59,3 +59,8 @@ val conjunction : t list -> t
     of the input, [f] won't be called on the remaining values. Such case happens
     when [f] returns [False] for one of the elements. *)
 val for_all : 'a list -> f:('a -> t) -> t
+
+module Private : sig
+  val and_ : t -> t -> t
+  val or_ : t -> t -> t
+end

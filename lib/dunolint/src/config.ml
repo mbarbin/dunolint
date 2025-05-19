@@ -20,6 +20,8 @@
 (*********************************************************************************)
 
 module Skip_subtree = struct
+  [@@@coverage off]
+
   module Predicate = struct
     type t = [ `path of Path.Predicate.t Blang.t ] [@@deriving compare, equal, sexp]
   end
@@ -32,14 +34,22 @@ module Skip_subtree = struct
 end
 
 module Rule = struct
+  [@@@coverage off]
+
   type t = (Predicate.t, Condition.t) Rule.t [@@deriving compare, equal, sexp]
 end
 
-type t =
-  { skip_subtree : Skip_subtree.t option [@sexp.option]
-  ; rules : Rule.t list
-  }
-[@@deriving compare, equal, sexp]
+module T = struct
+  [@@@coverage off]
+
+  type t =
+    { skip_subtree : Skip_subtree.t option [@sexp.option]
+    ; rules : Rule.t list
+    }
+  [@@deriving compare, equal, sexp]
+end
+
+include T
 
 let skip_subtree t = t.skip_subtree
 let rules t = t.rules

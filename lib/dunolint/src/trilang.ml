@@ -113,3 +113,8 @@ let rec eval (t : 'a Blang.t) ~f:base_eval : t =
      | False -> eval el ~f:base_eval
      | Undefined -> Undefined)
 ;;
+
+module Private = struct
+  let and_ = and_
+  let or_ = or_
+end

@@ -58,7 +58,7 @@ module Make_sexpable
      end)
     (S : Sexpable.S) =
 struct
-  type t = S.t [@@deriving sexp_of]
+  type t = S.t
 
   let field_name = M.field_name
 
@@ -92,7 +92,7 @@ module Make_sexp_list (M : sig
     val field_name : string
   end) =
 struct
-  type t = Sexp.t list [@@deriving sexp_of]
+  type t = Sexp.t list
 
   let field_name = M.field_name
 
@@ -113,7 +113,7 @@ module Make_sexpable_list
      end)
     (S : Sexpable.S) =
 struct
-  type t = S.t list [@@deriving sexp_of]
+  type t = S.t list
 
   let field_name = M.field_name
 

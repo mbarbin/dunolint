@@ -19,13 +19,19 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-type ('predicate, 'invariant) t =
-  [ `enforce of 'invariant
-  | `return
-  | `skip_subtree
-  | `cond of ('predicate Blang.t * ('predicate, 'invariant) t) list
-  ]
-[@@deriving compare, equal, sexp]
+module T = struct
+  [@@@coverage off]
+
+  type ('predicate, 'invariant) t =
+    [ `enforce of 'invariant
+    | `return
+    | `skip_subtree
+    | `cond of ('predicate Blang.t * ('predicate, 'invariant) t) list
+    ]
+  [@@deriving compare, equal, sexp]
+end
+
+include T
 
 let eval t ~f =
   let rec aux_t t =
