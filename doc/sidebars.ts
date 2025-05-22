@@ -17,7 +17,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Tutorials',
       items: [
-        { type: 'doc', id: 'tutorials/installation/README', label: 'Installation' },
+        { type: 'doc', id: 'tutorials/README', label: 'Introduction' },
       ],
     },
   ],
@@ -27,7 +27,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Guides',
       items: [
-        { type: 'doc', id: 'guides/README', label: 'Introduction' },
+        { type: 'doc', id: 'guides/installation', label: 'Installation' },
         { type: 'doc', id: 'guides/reformatter', label: 'Using dunolint as an Emacs reformatter' },
         { type: 'doc', id: 'guides/pre-commit', label: 'Using dunolint in pre-commit hooks' },
       ],
