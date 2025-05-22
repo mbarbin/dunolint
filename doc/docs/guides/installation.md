@@ -8,7 +8,7 @@ You can choose to install dunolint from either:
 
 Releases are currently versioned using the scheme `0.0.YYYMMDD` while we are in the early stages of development.
 
-For more information about the versioning scheme and the current state of *dunolint*, please see [this page](../../explanation/current-state/README.md).
+For more information about the versioning scheme and the current state of *dunolint*, please see [this page](../explanation/current-state/README.md).
 
 ## Release Process
 
