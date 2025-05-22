@@ -305,7 +305,7 @@ let materialize t =
            with
            | `Yes -> true
            | `No -> false
-           | `Quit -> raise Quit)
+           | (exception End_of_file) | `Quit -> raise Quit)
       in
       if do_it
       then (
