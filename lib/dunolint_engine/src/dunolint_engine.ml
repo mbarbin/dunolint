@@ -243,7 +243,7 @@ let materialize t =
                  ];
              None)
       in
-      let with_flow flow =
+      let with_flow ~should_enable_color flow =
         Option.iter should_mkdir ~f:(fun parent_dir ->
           Out_channel.fprintf
             flow
@@ -269,7 +269,13 @@ let materialize t =
            then Expect_test_patdiff.patdiff original_contents new_contents ~context:3
            else (
              let name = Relative_path.to_string path in
+             let rules =
+               if should_enable_color
+               then None
+               else Some Patdiff.Format.Rules.(strip_styles default)
+             in
              Patdiff.Patdiff_core.patdiff
+               ?rules
                ~context:6
                ~prev:{ name; text = original_contents }
                ~next:{ name; text = new_contents }
@@ -278,9 +284,19 @@ let materialize t =
       in
       let () =
         match running_mode with
-        | Dry_run | Check | Force_yes -> with_flow stdout
+        | Dry_run | Check | Force_yes ->
+          let should_enable_color =
+            match Err.color_mode () with
+            | `Auto -> Unix.isatty Unix.stdout
+            | `Always -> true
+            | `Never -> false
+          in
+          with_flow ~should_enable_color stdout
         | Interactive ->
-          Git_pager.run ~f:(fun pager -> with_flow (Git_pager.write_end pager))
+          Git_pager.run ~f:(fun pager ->
+            with_flow
+              ~should_enable_color:(Git_pager.should_enable_color pager)
+              (Git_pager.write_end pager))
       in
       let do_it =
         match running_mode with
