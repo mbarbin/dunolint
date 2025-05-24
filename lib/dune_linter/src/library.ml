@@ -370,147 +370,157 @@ let eval t ~predicate =
     |> Dunolint.Trilang.const
 ;;
 
-let rec enforce t ~condition =
-  let top_condition = condition in
-  match (condition : predicate Blang.t) with
-  | Base (`has_field `name) ->
-    (match t.name with
-     | Some _ -> ()
-     | None ->
-       Dunolinter.Handler.enforce_failure
-         (module Dune.Library.Predicate)
-         ~loc:Loc.none
-         ~condition)
-  | Not (Base (`has_field (`name as to_mark))) ->
-    Hash_set.add t.marked_for_removal to_mark;
-    t.name <- None
-  | Base (`name condition) ->
-    (match t.name with
-     | Some name -> Name.enforce name ~condition
-     | None ->
-       (match
-          List.find_map
-            (Dunolinter.Linter.at_positive_enforcing_position condition)
-            ~f:(function
-            | `equals name -> Some name
-            | `is_prefix _ | `is_suffix _ -> None)
-        with
-        | Some name ->
-          let name = Name.create ~name in
-          t.name <- Some name;
-          Name.enforce name ~condition
-        | None ->
-          Dunolinter.Handler.enforce_failure
-            (module Dune.Library.Predicate)
-            ~loc:Loc.none
-            ~condition:top_condition))
-  | Base (`has_field `public_name) ->
-    (match t.public_name with
-     | Some _ -> ()
-     | None ->
-       Dunolinter.Handler.enforce_failure
-         (module Dune.Library.Predicate)
-         ~loc:Loc.none
-         ~condition)
-  | Not (Base (`has_field (`public_name as to_mark))) ->
-    Hash_set.add t.marked_for_removal to_mark;
-    t.public_name <- None
-  | Base (`public_name condition) ->
-    (match t.public_name with
-     | Some public_name -> Public_name.enforce public_name ~condition
-     | None ->
-       (match
-          List.find_map
-            (Dunolinter.Linter.at_positive_enforcing_position condition)
-            ~f:(function
-            | `equals public_name -> Some public_name
-            | `is_prefix _ | `is_suffix _ -> None)
-        with
-        | Some public_name ->
-          let public_name = Public_name.create ~public_name in
-          t.public_name <- Some public_name;
-          Public_name.enforce public_name ~condition
-        | None ->
-          Dunolinter.Handler.enforce_failure
-            (module Dune.Library.Predicate)
-            ~loc:Loc.none
-            ~condition:top_condition))
-  | Base (`has_field `instrumentation) ->
-    (match t.instrumentation with
-     | Some _ -> ()
-     | None ->
-       t.instrumentation <- Some (Instrumentation.initialize ~condition:Blang.true_))
-  | Not (Base (`has_field (`instrumentation as to_mark))) ->
-    Hash_set.add t.marked_for_removal to_mark;
-    t.instrumentation <- None
-  | Base (`instrumentation condition) ->
-    let instrumentation =
-      match t.instrumentation with
-      | Some instrumentation -> instrumentation
-      | None ->
-        let instrumentation = Instrumentation.initialize ~condition in
-        t.instrumentation <- Some instrumentation;
-        instrumentation
-    in
-    Instrumentation.enforce instrumentation ~condition
-  | Base (`has_field `lint) ->
-    (match t.lint with
-     | Some _ -> ()
-     | None -> t.lint <- Some (Lint.create ()))
-  | Not (Base (`has_field (`lint as to_mark))) ->
-    Hash_set.add t.marked_for_removal to_mark;
-    t.lint <- None
-  | Base (`lint condition) ->
-    let lint =
-      match t.lint with
-      | Some lint -> lint
-      | None ->
-        let lint = Lint.create () in
-        t.lint <- Some lint;
-        lint
-    in
-    Lint.enforce lint ~condition
-  | Base (`has_field `modes) ->
-    (match t.name with
-     | Some _ -> ()
-     | None -> t.modes <- Some (Modes.initialize ~condition:Blang.true_))
-  | Not (Base (`has_field (`modes as to_mark))) ->
-    Hash_set.add t.marked_for_removal to_mark;
-    t.modes <- None
-  | Base (`modes condition) ->
-    let modes =
-      match t.modes with
-      | Some modes -> modes
-      | None ->
-        let modes = Modes.initialize ~condition in
-        t.modes <- Some modes;
-        modes
-    in
-    Modes.enforce modes ~condition
-  | Base (`has_field `preprocess) ->
-    (match t.preprocess with
-     | Some _ -> ()
-     | None -> t.preprocess <- Some (Preprocess.create ()))
-  | Not (Base (`has_field (`preprocess as to_mark))) ->
-    Hash_set.add t.marked_for_removal to_mark;
-    t.preprocess <- None
-  | Base (`preprocess condition) ->
-    let preprocess =
-      match t.preprocess with
-      | Some preprocess -> preprocess
-      | None ->
-        let preprocess = Preprocess.create () in
-        t.preprocess <- Some preprocess;
-        preprocess
-    in
-    Preprocess.enforce preprocess ~condition
-  | (And _ | If _ | True | False | Not _ | Or _) as condition ->
-    Dunolinter.Linter.enforce_blang
-      (module Dune.Library.Predicate)
-      t
-      ~condition
-      ~eval
-      ~enforce
+let enforce =
+  Dunolinter.Linter.enforce
+    (module Dune.Library.Predicate)
+    ~eval
+    ~enforce:(fun t predicate ->
+      match predicate with
+      | T (`has_field `name) ->
+        (match t.name with
+         | Some _ -> Ok
+         | None -> Fail)
+      | Not (`has_field (`name as to_mark)) ->
+        Hash_set.add t.marked_for_removal to_mark;
+        t.name <- None;
+        Ok
+      | T (`name condition) ->
+        (match t.name with
+         | Some name ->
+           Name.enforce name ~condition;
+           Ok
+         | None ->
+           (match
+              List.find_map
+                (Dunolinter.Linter.at_positive_enforcing_position condition)
+                ~f:(function
+                | `equals name -> Some name
+                | `is_prefix _ | `is_suffix _ -> None)
+            with
+            | None -> Eval
+            | Some name ->
+              let name = Name.create ~name in
+              t.name <- Some name;
+              Name.enforce name ~condition;
+              Ok))
+      | T (`has_field `public_name) ->
+        (match t.public_name with
+         | Some _ -> Ok
+         | None -> Fail)
+      | Not (`has_field (`public_name as to_mark)) ->
+        Hash_set.add t.marked_for_removal to_mark;
+        t.public_name <- None;
+        Ok
+      | T (`public_name condition) ->
+        (match t.public_name with
+         | Some public_name ->
+           Public_name.enforce public_name ~condition;
+           Ok
+         | None ->
+           (match
+              List.find_map
+                (Dunolinter.Linter.at_positive_enforcing_position condition)
+                ~f:(function
+                | `equals public_name -> Some public_name
+                | `is_prefix _ | `is_suffix _ -> None)
+            with
+            | None -> Fail
+            | Some public_name ->
+              let public_name = Public_name.create ~public_name in
+              t.public_name <- Some public_name;
+              Public_name.enforce public_name ~condition;
+              Ok))
+      | T (`has_field `instrumentation) ->
+        (match t.instrumentation with
+         | Some _ -> Ok
+         | None ->
+           t.instrumentation <- Some (Instrumentation.initialize ~condition:Blang.true_);
+           Ok)
+      | Not (`has_field (`instrumentation as to_mark)) ->
+        Hash_set.add t.marked_for_removal to_mark;
+        t.instrumentation <- None;
+        Ok
+      | T (`instrumentation condition) ->
+        let instrumentation =
+          match t.instrumentation with
+          | Some instrumentation -> instrumentation
+          | None ->
+            let instrumentation = Instrumentation.initialize ~condition in
+            t.instrumentation <- Some instrumentation;
+            instrumentation
+        in
+        Instrumentation.enforce instrumentation ~condition;
+        Ok
+      | T (`has_field `lint) ->
+        (match t.lint with
+         | Some _ -> Ok
+         | None ->
+           t.lint <- Some (Lint.create ());
+           Ok)
+      | Not (`has_field (`lint as to_mark)) ->
+        Hash_set.add t.marked_for_removal to_mark;
+        t.lint <- None;
+        Ok
+      | T (`lint condition) ->
+        let lint =
+          match t.lint with
+          | Some lint -> lint
+          | None ->
+            let lint = Lint.create () in
+            t.lint <- Some lint;
+            lint
+        in
+        Lint.enforce lint ~condition;
+        Ok
+      | T (`has_field `modes) ->
+        (match t.name with
+         | Some _ -> Ok
+         | None ->
+           t.modes <- Some (Modes.initialize ~condition:Blang.true_);
+           Ok)
+      | Not (`has_field (`modes as to_mark)) ->
+        Hash_set.add t.marked_for_removal to_mark;
+        t.modes <- None;
+        Ok
+      | T (`modes condition) ->
+        let modes =
+          match t.modes with
+          | Some modes -> modes
+          | None ->
+            let modes = Modes.initialize ~condition in
+            t.modes <- Some modes;
+            modes
+        in
+        Modes.enforce modes ~condition;
+        Ok
+      | T (`has_field `preprocess) ->
+        (match t.preprocess with
+         | Some _ -> Ok
+         | None ->
+           t.preprocess <- Some (Preprocess.create ());
+           Ok)
+      | Not (`has_field (`preprocess as to_mark)) ->
+        Hash_set.add t.marked_for_removal to_mark;
+        t.preprocess <- None;
+        Ok
+      | T (`preprocess condition) ->
+        let preprocess =
+          match t.preprocess with
+          | Some preprocess -> preprocess
+          | None ->
+            let preprocess = Preprocess.create () in
+            t.preprocess <- Some preprocess;
+            preprocess
+        in
+        Preprocess.enforce preprocess ~condition;
+        Ok
+      | Not
+          ( `modes _
+          | `instrumentation _
+          | `public_name _
+          | `preprocess _
+          | `name _
+          | `lint _ ) -> Eval)
 ;;
 
 module Top = struct
@@ -540,17 +550,24 @@ module Linter = struct
       predicate -> Top.eval t ~predicate
   ;;
 
-  let rec enforce t ~condition =
-    match (condition : predicate Blang.t) with
-    | (True | False | And _ | If _ | Not _ | Or _) as condition ->
-      Dunolinter.Linter.enforce_blang (module Dune.Predicate) t ~condition ~eval ~enforce
-    | Base dune ->
-      (match dune with
-       | `include_subdirs _ | `executable _ | `stanza _ -> ()
-       | `library condition -> Top.enforce t ~condition
-       | ( `instrumentation _ | `lint _ | `preprocess _
-         | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name) ) as
-         predicate -> Top.enforce t ~condition:(Blang.base predicate))
+  let enforce =
+    Dunolinter.Linter.enforce
+      (module Dune.Predicate)
+      ~eval
+      ~enforce:(fun t predicate ->
+        match predicate with
+        | Not _ -> Eval
+        | T dune ->
+          (match dune with
+           | `include_subdirs _ | `executable _ | `stanza _ -> Unapplicable
+           | `library condition ->
+             Top.enforce t ~condition;
+             Ok
+           | ( `instrumentation _ | `lint _ | `preprocess _
+             | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name)
+               ) as predicate ->
+             Top.enforce t ~condition:(Blang.base predicate);
+             Ok))
   ;;
 end
 

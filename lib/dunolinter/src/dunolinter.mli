@@ -19,6 +19,7 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
+module Enforce_result = Enforce_result
 module Handler = Handler
 module Linter = Linter
 module Linters = Linters

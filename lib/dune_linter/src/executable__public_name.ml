@@ -55,35 +55,39 @@ let eval t ~predicate =
   |> Dunolint.Trilang.const
 ;;
 
-let rec enforce t ~condition =
-  match (condition : Dune.Executable.Public_name.Predicate.t Blang.t) with
-  | Base (`equals public_name) -> t.public_name <- public_name
-  | Base (`is_prefix prefix) ->
-    let value = Dune.Executable.Public_name.to_string t.public_name in
-    if not (String.is_prefix value ~prefix)
-    then
-      t.public_name
-      <- Dune.Executable.Public_name.v
-           (Dunolinter.Linter.public_name_is_prefix value ~prefix)
-  | Not (Base (`is_prefix prefix)) ->
-    let value = Dune.Executable.Public_name.to_string t.public_name in
-    (match String.chop_prefix value ~prefix with
-     | None -> ()
-     | Some value -> t.public_name <- Dune.Executable.Public_name.v value)
-  | Base (`is_suffix suffix) ->
-    let value = Dune.Executable.Public_name.to_string t.public_name in
-    if not (String.is_suffix value ~suffix)
-    then t.public_name <- Dune.Executable.Public_name.v (value ^ suffix)
-  | Not (Base (`is_suffix suffix)) ->
-    let value = Dune.Executable.Public_name.to_string t.public_name in
-    (match String.chop_suffix value ~suffix with
-     | None -> ()
-     | Some value -> t.public_name <- Dune.Executable.Public_name.v value)
-  | (And _ | If _ | True | False | Not _ | Or _) as condition ->
-    Dunolinter.Linter.enforce_blang
-      (module Dune.Executable.Public_name.Predicate)
-      t
-      ~condition
-      ~eval
-      ~enforce
+let enforce =
+  Dunolinter.Linter.enforce
+    (module Dune.Executable.Public_name.Predicate)
+    ~eval
+    ~enforce:(fun t predicate ->
+      match predicate with
+      | T (`equals public_name) ->
+        t.public_name <- public_name;
+        Ok
+      | Not (`equals _) -> Eval
+      | T (`is_prefix prefix) ->
+        let value = Dune.Executable.Public_name.to_string t.public_name in
+        if not (String.is_prefix value ~prefix)
+        then
+          t.public_name
+          <- Dune.Executable.Public_name.v
+               (Dunolinter.Linter.public_name_is_prefix value ~prefix);
+        Ok
+      | Not (`is_prefix prefix) ->
+        let value = Dune.Executable.Public_name.to_string t.public_name in
+        (match String.chop_prefix value ~prefix with
+         | None -> ()
+         | Some value -> t.public_name <- Dune.Executable.Public_name.v value);
+        Ok
+      | T (`is_suffix suffix) ->
+        let value = Dune.Executable.Public_name.to_string t.public_name in
+        if not (String.is_suffix value ~suffix)
+        then t.public_name <- Dune.Executable.Public_name.v (value ^ suffix);
+        Ok
+      | Not (`is_suffix suffix) ->
+        let value = Dune.Executable.Public_name.to_string t.public_name in
+        (match String.chop_suffix value ~suffix with
+         | None -> ()
+         | Some value -> t.public_name <- Dune.Executable.Public_name.v value);
+        Ok)
 ;;

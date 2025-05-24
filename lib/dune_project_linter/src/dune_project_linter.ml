@@ -69,17 +69,17 @@ module Linter = struct
       | `dune_project condition ->
         Dunolint.Trilang.eval condition ~f:(fun predicate -> M.eval t ~predicate)
     in
-    let rec enforce (t : m) ~condition =
-      match (condition : Dunolint.Condition.t) with
-      | (True | False | And _ | If _ | Not _ | Or _) as condition ->
-        Dunolinter.Linter.enforce_blang
-          (module Dunolint.Predicate)
-          t
-          ~condition
-          ~eval
-          ~enforce
-      | Base (`dune _ | `path _) -> ()
-      | Base (`dune_project dune_project) -> M.enforce t ~condition:dune_project
+    let enforce =
+      Dunolinter.Linter.enforce
+        (module Dunolint.Predicate)
+        ~eval
+        ~enforce:(fun t predicate ->
+          match predicate with
+          | Not _ -> Eval
+          | T (`dune _ | `path _) -> Unapplicable
+          | T (`dune_project condition) ->
+            M.enforce t ~condition;
+            Ok)
     in
     let eval predicate = eval inner_stanza ~predicate in
     let enforce condition = enforce inner_stanza ~condition in

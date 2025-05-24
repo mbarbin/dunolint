@@ -55,35 +55,41 @@ let eval t ~predicate =
   |> Dunolint.Trilang.const
 ;;
 
-let rec enforce t ~condition =
-  match (condition : predicate Blang.t) with
-  | Base (`equals public_name) -> t.public_name <- public_name
-  | Base (`is_prefix prefix) ->
-    let value = Dune.Library.Public_name.to_string t.public_name in
-    if not (String.is_prefix value ~prefix)
-    then
-      t.public_name
-      <- Dune.Library.Public_name.v
-           (Dunolinter.Linter.public_name_is_prefix value ~prefix)
-  | Not (Base (`is_prefix prefix)) ->
-    let value = Dune.Library.Public_name.to_string t.public_name in
-    (match String.chop_prefix value ~prefix with
-     | None -> ()
-     | Some value -> t.public_name <- Dune.Library.Public_name.v value)
-  | Base (`is_suffix suffix) ->
-    let value = Dune.Library.Public_name.to_string t.public_name in
-    if not (String.is_suffix value ~suffix)
-    then t.public_name <- Dune.Library.Public_name.v (value ^ suffix)
-  | Not (Base (`is_suffix suffix)) ->
-    let value = Dune.Library.Public_name.to_string t.public_name in
-    (match String.chop_suffix value ~suffix with
-     | None -> ()
-     | Some value -> t.public_name <- Dune.Library.Public_name.v value)
-  | (And _ | If _ | True | False | Not _ | Or _) as condition ->
-    Dunolinter.Linter.enforce_blang
-      (module Dune.Library.Public_name.Predicate)
-      t
-      ~condition
-      ~eval
-      ~enforce
+let enforce =
+  Dunolinter.Linter.enforce
+    (module Dune.Library.Public_name.Predicate)
+    ~eval
+    ~enforce:(fun t predicate ->
+      match predicate with
+      | Not (`equals _) -> Eval
+      | T (`equals public_name) ->
+        t.public_name <- public_name;
+        Ok
+      | T (`is_prefix prefix) ->
+        let value = Dune.Library.Public_name.to_string t.public_name in
+        if not (String.is_prefix value ~prefix)
+        then
+          t.public_name
+          <- Dune.Library.Public_name.v
+               (Dunolinter.Linter.public_name_is_prefix value ~prefix);
+        Ok
+      | Not (`is_prefix prefix) ->
+        let value = Dune.Library.Public_name.to_string t.public_name in
+        (match String.chop_prefix value ~prefix with
+         | None -> Ok
+         | Some value ->
+           t.public_name <- Dune.Library.Public_name.v value;
+           Ok)
+      | T (`is_suffix suffix) ->
+        let value = Dune.Library.Public_name.to_string t.public_name in
+        if not (String.is_suffix value ~suffix)
+        then t.public_name <- Dune.Library.Public_name.v (value ^ suffix);
+        Ok
+      | Not (`is_suffix suffix) ->
+        let value = Dune.Library.Public_name.to_string t.public_name in
+        (match String.chop_suffix value ~suffix with
+         | None -> Ok
+         | Some value ->
+           t.public_name <- Dune.Library.Public_name.v value;
+           Ok))
 ;;

@@ -44,16 +44,14 @@ let eval _t ~predicate =
   | `is_present -> true |> Dunolint.Trilang.const
 ;;
 
-let rec enforce t ~condition =
-  match (condition : predicate Blang.t) with
-  | Base `is_present -> ()
-  | (And _ | If _ | True | False | Not _ | Or _) as condition ->
-    Dunolinter.Linter.enforce_blang
-      (module Dune_project.Generate_opam_files.Predicate)
-      t
-      ~condition
-      ~eval
-      ~enforce
+let enforce =
+  Dunolinter.Linter.enforce
+    (module Dune_project.Generate_opam_files.Predicate)
+    ~eval
+    ~enforce:(fun _ predicate ->
+      match predicate with
+      | Not `is_present -> Eval
+      | T `is_present -> Ok)
 ;;
 
 module Top = struct
@@ -74,18 +72,18 @@ module Linter = struct
     | `implicit_transitive_deps _ | `name _ -> Dunolint.Trilang.Undefined
   ;;
 
-  let rec enforce (t : t) ~condition =
-    match (condition : predicate Blang.t) with
-    | (True | False | And _ | If _ | Not _ | Or _) as condition ->
-      Dunolinter.Linter.enforce_blang
-        (module Dune_project.Predicate)
-        t
-        ~condition
-        ~eval
-        ~enforce
-    | Base dune_project ->
-      (match dune_project with
-       | `generate_opam_files condition -> Top.enforce t ~condition
-       | `implicit_transitive_deps _ | `name _ -> ())
+  let enforce =
+    Dunolinter.Linter.enforce
+      (module Dune_project.Predicate)
+      ~eval
+      ~enforce:(fun t predicate ->
+        match predicate with
+        | Not _ -> Eval
+        | T dune_project ->
+          (match dune_project with
+           | `generate_opam_files condition ->
+             Top.enforce t ~condition;
+             Ok
+           | `implicit_transitive_deps _ | `name _ -> Unapplicable))
   ;;
 end

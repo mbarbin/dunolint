@@ -125,21 +125,22 @@ let eval t ~predicate =
      | No_preprocessing | Unhandled _ -> false |> Dunolint.Trilang.const)
 ;;
 
-let rec enforce t ~condition =
-  match (condition : predicate Blang.t) with
-  | Base `no_preprocessing -> t.state <- No_preprocessing
-  | Base (`pps condition) ->
-    (match t.state with
-     | Pps pps -> Pps.enforce pps ~condition
-     | No_preprocessing | Unhandled _ ->
-       let pps = Pps.create ~args:[] in
-       Pps.enforce pps ~condition;
-       t.state <- Pps pps)
-  | (And _ | If _ | True | False | Not _ | Or _) as condition ->
-    Dunolinter.Linter.enforce_blang
-      (module Dune.Preprocess.Predicate)
-      t
-      ~condition
-      ~eval
-      ~enforce
+let enforce =
+  Dunolinter.Linter.enforce
+    (module Dune.Preprocess.Predicate)
+    ~eval
+    ~enforce:(fun t predicate ->
+      match predicate with
+      | Not (`no_preprocessing | `pps _) -> Eval
+      | T `no_preprocessing ->
+        t.state <- No_preprocessing;
+        Ok
+      | T (`pps condition) ->
+        (match t.state with
+         | Pps pps -> Pps.enforce pps ~condition
+         | No_preprocessing | Unhandled _ ->
+           let pps = Pps.create ~args:[] in
+           Pps.enforce pps ~condition;
+           t.state <- Pps pps);
+        Ok)
 ;;

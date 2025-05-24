@@ -73,14 +73,14 @@ let eval t ~predicate =
     Dunolint.Trilang.eval condition ~f:(fun predicate -> Pps.eval t.pps ~predicate)
 ;;
 
-let rec enforce t ~condition =
-  match (condition : predicate Blang.t) with
-  | Base (`pps condition) -> Pps.enforce t.pps ~condition
-  | (And _ | If _ | True | False | Not _ | Or _) as condition ->
-    Dunolinter.Linter.enforce_blang
-      (module Dune.Lint.Predicate)
-      t
-      ~condition
-      ~eval
-      ~enforce
+let enforce =
+  Dunolinter.Linter.enforce
+    (module Dune.Lint.Predicate)
+    ~eval
+    ~enforce:(fun t predicate ->
+      match predicate with
+      | Not (`pps _) -> Eval
+      | T (`pps condition) ->
+        Pps.enforce t.pps ~condition;
+        Ok)
 ;;

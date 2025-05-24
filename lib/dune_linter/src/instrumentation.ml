@@ -75,16 +75,16 @@ let eval t ~predicate =
     Dune.Instrumentation.Backend.Name.equal name t.backend |> Dunolint.Trilang.const
 ;;
 
-let rec enforce t ~condition =
-  match (condition : predicate Blang.t) with
-  | Base (`backend name) -> t.backend <- name
-  | (And _ | If _ | True | False | Not _ | Or _) as condition ->
-    Dunolinter.Linter.enforce_blang
-      (module Dune.Instrumentation.Predicate)
-      t
-      ~condition
-      ~eval
-      ~enforce
+let enforce =
+  Dunolinter.Linter.enforce
+    (module Dune.Instrumentation.Predicate)
+    ~eval
+    ~enforce:(fun t predicate ->
+      match predicate with
+      | Not (`backend _) -> Eval
+      | T (`backend name) ->
+        t.backend <- name;
+        Ok)
 ;;
 
 let default_backend = Dune.Instrumentation.Backend.Name.v "bisect_ppx"

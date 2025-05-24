@@ -235,118 +235,100 @@ let eval t ~predicate =
     |> Dunolint.Trilang.const
 ;;
 
-let rec enforce t ~condition =
-  match (condition : predicate Blang.t) with
-  | Base (`pp pp_name) ->
-    let handled =
-      List.exists t.args ~f:(function
-        | Mutable_arg.Pp { pp_name = pp_name' } -> Dune.Pp.Name.equal pp_name pp_name'
-        | Flag { name = _; param = _; applies_to = _ } -> false)
-    in
-    if not handled then t.args <- Mutable_arg.Pp { pp_name } :: t.args
-  | Base (`flag { name; param; applies_to }) ->
-    let handled =
-      List.exists t.args ~f:(function
-        | Mutable_arg.Pp { pp_name = _ } -> false
-        | Flag ({ name = name'; param = _; applies_to = _ } as flag) ->
-          if String.equal name name'
-          then (
-            let () =
-              match param with
-              | `any -> ()
-              | `equals param -> flag.param <- Some param
-              | `none -> flag.param <- None
-              | `some ->
-                (match flag.param with
-                 | Some _ -> ()
-                 | None ->
-                   Dunolinter.Handler.enforce_failure
-                     (module Dune.Pps.Predicate)
-                     ~loc:Loc.none
-                     ~condition)
-            in
-            let () =
-              match applies_to with
-              | `any -> ()
-              | (`pp _ | `driver) as applies_to -> flag.applies_to <- applies_to
-            in
-            true)
-          else false)
-    in
-    if not handled
-    then (
-      match param with
-      | `some ->
-        Dunolinter.Handler.enforce_failure
-          (module Dune.Pps.Predicate)
-          ~loc:Loc.none
-          ~condition
-      | (`equals _ | `any | `none) as param ->
-        let param =
+let enforce =
+  let rec enforce t predicate : Dunolinter.Enforce_result.t =
+    match (predicate : Dune.Pps.Predicate.t Dunolinter.Linter.Predicate.t) with
+    | T (`pp pp_name) ->
+      let handled =
+        List.exists t.args ~f:(function
+          | Mutable_arg.Pp { pp_name = pp_name' } -> Dune.Pp.Name.equal pp_name pp_name'
+          | Flag { name = _; param = _; applies_to = _ } -> false)
+      in
+      if not handled then t.args <- Mutable_arg.Pp { pp_name } :: t.args;
+      Ok
+    | T (`flag { name; param; applies_to }) ->
+      With_return.with_return (fun { return : Dunolinter.Enforce_result.t -> unit } ->
+        let handled =
+          List.exists t.args ~f:(function
+            | Mutable_arg.Pp { pp_name = _ } -> false
+            | Flag ({ name = name'; param = _; applies_to = _ } as flag) ->
+              if String.equal name name'
+              then (
+                let () =
+                  match param with
+                  | `any -> ()
+                  | `equals param -> flag.param <- Some param
+                  | `none -> flag.param <- None
+                  | `some ->
+                    (match flag.param with
+                     | Some _ -> ()
+                     | None -> return Fail)
+                in
+                let () =
+                  match applies_to with
+                  | `any -> ()
+                  | (`pp _ | `driver) as applies_to -> flag.applies_to <- applies_to
+                in
+                true)
+              else false)
+        in
+        if not handled
+        then (
           match param with
-          | `equals value -> Some value
-          | `any | `none -> None
-        in
-        let applies_to =
-          match applies_to with
-          | `any | `driver -> `driver
-          | `pp _ as pp -> pp
-        in
-        t.args <- Mutable_arg.Flag { name; param; applies_to } :: t.args)
-  | Base (`pp_with_flag { pp; flag; param }) ->
-    enforce t ~condition:(Blang.base (`pp pp));
-    enforce
-      t
-      ~condition:
-        (Blang.base
-           (`flag
-               { Dunolint.Dune.Pps.Predicate.Flag.name = flag
-               ; param
-               ; applies_to = `pp pp
-               }))
-  | Not (Base (`pp pp)) ->
-    t.args
-    <- List.filter t.args ~f:(function
-         | Pp { pp_name } -> not (Dune.Pp.Name.equal pp_name pp)
-         | Flag { name = _; param = _; applies_to } ->
-           (match applies_to with
-            | `driver -> true
-            | `pp pp_name -> not (Dune.Pp.Name.equal pp_name pp)))
-  | Not (Base (`flag { name; param; applies_to = a_condition })) as condition ->
-    (match param with
-     | `none | `some | `equals _ ->
-       Dunolinter.Linter.enforce_blang
-         (module Dune.Pps.Predicate)
-         t
-         ~condition
-         ~eval
-         ~enforce
-     | `any ->
-       t.args
-       <- List.filter t.args ~f:(function
-            | Pp { pp_name = _ } -> true
-            | Flag { name = name'; param = _; applies_to } ->
-              if
-                String.equal name name'
-                &&
-                match a_condition, applies_to with
-                | `any, _ | `driver, `driver -> true
-                | `driver, `pp _ | `pp _, `driver -> false
-                | `pp pp1, `pp pp2 -> Dune.Pp.Name.equal pp1 pp2
-              then false
-              else true))
-  | Not (Base (`pp_with_flag _)) as condition ->
-    Dunolinter.Linter.enforce_blang
-      (module Dune.Pps.Predicate)
-      t
-      ~condition
-      ~eval
-      ~enforce
-  | (And _ | If _ | True | False | Not _ | Or _) as condition ->
-    Dunolinter.Linter.enforce_blang
-      (module Dune.Pps.Predicate)
-      t
-      ~condition
-      ~eval
-      ~enforce
+          | `some -> return Fail
+          | (`equals _ | `any | `none) as param ->
+            let param =
+              match param with
+              | `equals value -> Some value
+              | `any | `none -> None
+            in
+            let applies_to =
+              match applies_to with
+              | `any | `driver -> `driver
+              | `pp _ as pp -> pp
+            in
+            t.args <- Mutable_arg.Flag { name; param; applies_to } :: t.args);
+        Ok)
+    | T (`pp_with_flag { pp; flag; param }) ->
+      (match enforce t (T (`pp pp)) with
+       | (Eval | Fail | Unapplicable) as break -> break
+       | Ok ->
+         enforce
+           t
+           (T
+              (`flag
+                  { Dunolint.Dune.Pps.Predicate.Flag.name = flag
+                  ; param
+                  ; applies_to = `pp pp
+                  })))
+    | Not (`pp pp) ->
+      t.args
+      <- List.filter t.args ~f:(function
+           | Pp { pp_name } -> not (Dune.Pp.Name.equal pp_name pp)
+           | Flag { name = _; param = _; applies_to } ->
+             (match applies_to with
+              | `driver -> true
+              | `pp pp_name -> not (Dune.Pp.Name.equal pp_name pp)));
+      Ok
+    | Not (`flag { name; param; applies_to = a_condition }) ->
+      (match param with
+       | `none | `some | `equals _ -> Eval
+       | `any ->
+         t.args
+         <- List.filter t.args ~f:(function
+              | Pp { pp_name = _ } -> true
+              | Flag { name = name'; param = _; applies_to } ->
+                if
+                  String.equal name name'
+                  &&
+                  match a_condition, applies_to with
+                  | `any, _ | `driver, `driver -> true
+                  | `driver, `pp _ | `pp _, `driver -> false
+                  | `pp pp1, `pp pp2 -> Dune.Pp.Name.equal pp1 pp2
+                then false
+                else true);
+         Ok)
+    | Not (`pp_with_flag _) -> Eval
+  in
+  Dunolinter.Linter.enforce (module Dune.Pps.Predicate) ~eval ~enforce
 ;;

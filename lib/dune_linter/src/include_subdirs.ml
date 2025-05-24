@@ -49,16 +49,16 @@ let eval t ~predicate =
   | `equals mode -> Dune.Include_subdirs.Mode.equal t.mode mode |> Dunolint.Trilang.const
 ;;
 
-let rec enforce t ~condition =
-  match (condition : predicate Blang.t) with
-  | Base (`equals mode) -> t.mode <- mode
-  | (And _ | If _ | True | False | Not _ | Or _) as condition ->
-    Dunolinter.Linter.enforce_blang
-      (module Dune.Include_subdirs.Predicate)
-      t
-      ~condition
-      ~eval
-      ~enforce
+let enforce =
+  Dunolinter.Linter.enforce
+    (module Dune.Include_subdirs.Predicate)
+    ~eval
+    ~enforce:(fun t predicate ->
+      match predicate with
+      | Not (`equals _) -> Eval
+      | T (`equals mode) ->
+        t.mode <- mode;
+        Ok)
 ;;
 
 module Top = struct
@@ -87,19 +87,25 @@ module Linter = struct
       Dunolint.Trilang.Undefined
   ;;
 
-  let rec enforce t ~condition =
-    match (condition : predicate Blang.t) with
-    | (True | False | And _ | If _ | Not _ | Or _) as condition ->
-      Dunolinter.Linter.enforce_blang (module Dune.Predicate) t ~condition ~eval ~enforce
-    | Base dune ->
-      (match dune with
-       | `include_subdirs condition -> Top.enforce t ~condition
-       | `executable _
-       | `stanza _
-       | `library _
-       | `instrumentation _
-       | `lint _
-       | `preprocess _
-       | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name) -> ())
+  let enforce =
+    Dunolinter.Linter.enforce
+      (module Dune.Predicate)
+      ~eval
+      ~enforce:(fun t predicate ->
+        match predicate with
+        | Not _ -> Eval
+        | T dune ->
+          (match dune with
+           | `include_subdirs condition ->
+             Top.enforce t ~condition;
+             Ok
+           | `executable _
+           | `stanza _
+           | `library _
+           | `instrumentation _
+           | `lint _
+           | `preprocess _
+           | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name) ->
+             Unapplicable))
   ;;
 end

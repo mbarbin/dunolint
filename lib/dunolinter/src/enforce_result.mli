@@ -19,42 +19,24 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-module type S = Linter_intf.S
+(** A type to describe the result of an attempt to enforce a predicate during
+    linting. *)
 
 type t =
-  | Unhandled
-  | T :
-      { eval : Dunolint.Predicate.t -> Dunolint.Trilang.t
-      ; enforce : Dunolint.Predicate.t Blang.t -> unit
-      }
-      -> t
-
-(** {1 Helpers} *)
-
-module Predicate : sig
-  type 'a t =
-    | T of 'a
-    | Not of 'a
-end
-
-(** A helper function that can be useful to implement the [enforce] function
-    required by the [Linter.S] interface. *)
-val enforce
-  :  (module Handler.Predicate with type t = 'predicate)
-  -> eval:('t -> predicate:'predicate -> Dunolint.Trilang.t)
-  -> enforce:('t -> 'predicate Predicate.t -> Enforce_result.t)
-  -> 't
-  -> condition:'predicate Blang.t
-  -> unit
-
-(** Returns the list of elements from the input condition that are directly
-    reachable as elements to be enforced, without going through dynamic
-    conditions or SAT logic. In practice, that is [Base], and elements under
-    [And _] recursively. *)
-val at_positive_enforcing_position : 'a Blang.t -> 'a list
-
-(** A helper that applies some usually helpful heuristic when proposing a new
-    name based on the [`is_prefix] predicate. Assumed to be called when the
-    given prefix is not already a prefix of the input, otherwise the output is
-    unspecified. *)
-val public_name_is_prefix : string -> prefix:string -> string
+  | Ok
+  (** The enforcement of the predicate was successful, or perhaps the required
+      condition was already verified without requiring to perform any
+      change. *)
+  | Fail
+  (** The enforcement of such predicate cannot succeed and requires the user's
+      intervention. *)
+  | Eval
+  (** This is a special value that instructs the call site to check with
+      [eval] whether the required condition holds. If the evaluation returns
+      [True], the end result is the same as for an [Ok] status. If the
+      evaluation returns [False], this will result in a [Fail]. If the
+      evaluation is [Undefined], this results in an [Unapplicable] status. *)
+  | Unapplicable
+  (** The predicate in question does not apply to the stanza currently at
+      hand. For example, it starts with a selector that does not match the
+      stanza being linted. Unapplicable predicates are ignored by dunolint. *)
