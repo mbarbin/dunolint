@@ -167,7 +167,7 @@ let write_fields
 
 let write t = Sexp.List (Atom field_name :: write_fields t)
 
-let rewrite ?(load_existing_libraries = false) t ~sexps_rewriter ~field =
+let rewrite t ~sexps_rewriter ~field ~load_existing_libraries =
   let fields = Dunolinter.Sexp_handler.get_args ~field_name ~sexps_rewriter ~field in
   let () =
     if load_existing_libraries
@@ -429,5 +429,5 @@ module Private = struct
 end
 
 let rewrite t ~sexps_rewriter ~field =
-  rewrite ~load_existing_libraries:false t ~sexps_rewriter ~field
+  rewrite t ~sexps_rewriter ~field ~load_existing_libraries:false
 ;;
