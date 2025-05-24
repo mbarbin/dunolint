@@ -29,29 +29,53 @@ type t =
       }
       -> t
 
-let enforce_blang
+module Predicate = struct
+  type 'a t =
+    | T of 'a
+    | Not of 'a
+
+  let to_blang = function
+    | T a -> Blang.return a
+    | Not a -> Blang.not_ (Blang.return a)
+  ;;
+end
+
+let enforce
       (type predicate)
-      (module Predicate : Handler.Predicate with type t = predicate)
-      t
-      ~condition
+      (module Handler_predicate : Handler.Predicate with type t = predicate)
       ~eval
-      ~enforce
+      ~(enforce : 't -> predicate Predicate.t -> Enforce_result.t)
   =
-  match (condition : _ Blang.t) with
-  | Base _ -> enforce t ~condition
-  | And (a, b) ->
-    enforce t ~condition:a;
-    enforce t ~condition:b
-  | If (if_, then_, else_) ->
-    (match Dunolint.Trilang.eval if_ ~f:(fun predicate -> eval t ~predicate) with
-     | True -> enforce t ~condition:then_
-     | False -> enforce t ~condition:else_
-     | Undefined -> ())
-  | True -> ()
-  | (False | Not _ | Or _) as condition ->
-    (match Dunolint.Trilang.eval condition ~f:(fun predicate -> eval t ~predicate) with
-     | True | Undefined -> ()
-     | False -> Handler.enforce_failure (module Predicate) ~loc:Loc.none ~condition)
+  let check t ~condition =
+    match Dunolint.Trilang.eval condition ~f:(fun predicate -> eval t ~predicate) with
+    | True | Undefined -> ()
+    | False -> Handler.enforce_failure (module Handler_predicate) ~loc:Loc.none ~condition
+  in
+  let enforce t predicate =
+    match enforce t predicate with
+    | Ok | Unapplicable -> ()
+    | Eval -> check t ~condition:(Predicate.to_blang predicate)
+    | Fail ->
+      Handler.enforce_failure
+        (module Handler_predicate)
+        ~loc:Loc.none
+        ~condition:(Predicate.to_blang predicate)
+  in
+  let rec aux t ~condition =
+    match (condition : predicate Blang.t) with
+    | Base predicate -> enforce t (T predicate)
+    | Not (Base predicate) -> enforce t (Not predicate)
+    | And (a, b) ->
+      aux t ~condition:a;
+      aux t ~condition:b
+    | If (if_, then_, else_) ->
+      (match Dunolint.Trilang.eval if_ ~f:(fun predicate -> eval t ~predicate) with
+       | True -> aux t ~condition:then_
+       | False -> aux t ~condition:else_
+       | Undefined -> ())
+    | (True | False | Not _ | Or _) as condition -> check t ~condition
+  in
+  aux
 ;;
 
 let at_positive_enforcing_position (condition : 'a Blang.t) =

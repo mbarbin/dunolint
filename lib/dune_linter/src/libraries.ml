@@ -324,18 +324,13 @@ let eval _t ~predicate =
   | x -> Nothing.unreachable_code x
 ;;
 
-let rec enforce t ~condition =
-  match (condition : predicate Blang.t) with
-  | Base x -> Nothing.unreachable_code x [@coverage off]
-  | (And _ | If _ | Not _ | Or _) as condition ->
-    Dunolinter.Linter.enforce_blang
-      (module Nothing)
-      t
-      ~condition
-      ~eval
-      ~enforce [@coverage off]
-  | (True | False) as condition ->
-    Dunolinter.Linter.enforce_blang (module Nothing) t ~condition ~eval ~enforce
+let enforce =
+  Dunolinter.Linter.enforce
+    (module Nothing)
+    ~eval
+    ~enforce:(fun _ predicate ->
+      match[@coverage off] predicate with
+      | T x | Not x -> Nothing.unreachable_code x)
 ;;
 
 module Private = struct

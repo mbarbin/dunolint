@@ -52,34 +52,40 @@ let eval t ~predicate =
   |> Dunolint.Trilang.const
 ;;
 
-let rec enforce t ~condition =
-  match (condition : predicate Blang.t) with
-  | Base (`equals name) -> t.name <- name
-  | Base (`is_prefix prefix) ->
-    let value = Dune_project.Name.to_string t.name in
-    if not (String.is_prefix value ~prefix)
-    then t.name <- Dune_project.Name.v (prefix ^ value)
-  | Not (Base (`is_prefix prefix)) ->
-    let value = Dune_project.Name.to_string t.name in
-    (match String.chop_prefix value ~prefix with
-     | None -> ()
-     | Some value -> t.name <- Dune_project.Name.v value)
-  | Base (`is_suffix suffix) ->
-    let value = Dune_project.Name.to_string t.name in
-    if not (String.is_suffix value ~suffix)
-    then t.name <- Dune_project.Name.v (value ^ suffix)
-  | Not (Base (`is_suffix suffix)) ->
-    let value = Dune_project.Name.to_string t.name in
-    (match String.chop_suffix value ~suffix with
-     | None -> ()
-     | Some value -> t.name <- Dune_project.Name.v value)
-  | (And _ | If _ | True | False | Not _ | Or _) as condition ->
-    Dunolinter.Linter.enforce_blang
-      (module Dune_project.Name.Predicate)
-      t
-      ~condition
-      ~eval
-      ~enforce
+let enforce =
+  Dunolinter.Linter.enforce
+    (module Dune_project.Name.Predicate)
+    ~eval
+    ~enforce:(fun t predicate ->
+      match predicate with
+      | Not (`equals _) -> Eval
+      | T (`equals name) ->
+        t.name <- name;
+        Ok
+      | T (`is_prefix prefix) ->
+        let value = Dune_project.Name.to_string t.name in
+        if not (String.is_prefix value ~prefix)
+        then t.name <- Dune_project.Name.v (prefix ^ value);
+        Ok
+      | Not (`is_prefix prefix) ->
+        let value = Dune_project.Name.to_string t.name in
+        (match String.chop_prefix value ~prefix with
+         | None -> Ok
+         | Some value ->
+           t.name <- Dune_project.Name.v value;
+           Ok)
+      | T (`is_suffix suffix) ->
+        let value = Dune_project.Name.to_string t.name in
+        if not (String.is_suffix value ~suffix)
+        then t.name <- Dune_project.Name.v (value ^ suffix);
+        Ok
+      | Not (`is_suffix suffix) ->
+        let value = Dune_project.Name.to_string t.name in
+        (match String.chop_suffix value ~suffix with
+         | None -> Ok
+         | Some value ->
+           t.name <- Dune_project.Name.v value;
+           Ok))
 ;;
 
 module Top = struct
@@ -100,18 +106,18 @@ module Linter = struct
     | `generate_opam_files _ | `implicit_transitive_deps _ -> Dunolint.Trilang.Undefined
   ;;
 
-  let rec enforce (t : t) ~condition =
-    match (condition : Dune_project.Predicate.t Blang.t) with
-    | (True | False | And _ | If _ | Not _ | Or _) as condition ->
-      Dunolinter.Linter.enforce_blang
-        (module Dune_project.Predicate)
-        t
-        ~condition
-        ~eval
-        ~enforce
-    | Base dune_project ->
-      (match dune_project with
-       | `name condition -> Top.enforce t ~condition
-       | `generate_opam_files _ | `implicit_transitive_deps _ -> ())
+  let enforce =
+    Dunolinter.Linter.enforce
+      (module Dune_project.Predicate)
+      ~eval
+      ~enforce:(fun t predicate ->
+        match predicate with
+        | Not _ -> Eval
+        | T dune_project ->
+          (match dune_project with
+           | `name condition ->
+             Top.enforce t ~condition;
+             Ok
+           | `generate_opam_files _ | `implicit_transitive_deps _ -> Unapplicable))
   ;;
 end

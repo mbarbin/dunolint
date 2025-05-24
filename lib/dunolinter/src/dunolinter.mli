@@ -19,6 +19,7 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
+module Enforce_result = Enforce_result
 module Handler = Handler
 module Linter = Linter
 module Linters = Linters
@@ -66,7 +67,7 @@ val sexps_rewriter : _ Stanza.t -> Sexps_rewriter.t
     skip_subtree part of a dunolint config. *)
 val eval_path
   :  path:Relative_path.t
-  -> predicate:Dunolint.Predicate.t
+  -> condition:Dunolint.Path.Predicate.t Blang.t
   -> Dunolint.Trilang.t
 
 module Private : sig

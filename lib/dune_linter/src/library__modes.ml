@@ -54,18 +54,22 @@ let eval t ~predicate =
   |> Dunolint.Trilang.const
 ;;
 
-let rec enforce t ~condition =
-  match (condition : predicate Blang.t) with
-  | Base (`equals modes) -> t.modes <- modes
-  | Base (`has_mode mode) -> t.modes <- Set.add t.modes mode
-  | Not (Base (`has_mode mode)) -> t.modes <- Set.remove t.modes mode
-  | (And _ | If _ | True | False | Not _ | Or _) as condition ->
-    Dunolinter.Linter.enforce_blang
-      (module Dune.Library.Modes.Predicate)
-      t
-      ~condition
-      ~eval
-      ~enforce
+let enforce =
+  Dunolinter.Linter.enforce
+    (module Dune.Library.Modes.Predicate)
+    ~eval
+    ~enforce:(fun t predicate ->
+      match predicate with
+      | Not (`equals _) -> Eval
+      | T (`equals modes) ->
+        t.modes <- modes;
+        Ok
+      | T (`has_mode mode) ->
+        t.modes <- Set.add t.modes mode;
+        Ok
+      | Not (`has_mode mode) ->
+        t.modes <- Set.remove t.modes mode;
+        Ok)
 ;;
 
 let initialize ~condition =

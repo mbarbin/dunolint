@@ -102,10 +102,8 @@ let visit_directory ~dunolint_engine ~config ~parent_dir ~files =
     match Dunolint.Config.skip_subtree config with
     | None -> `return
     | Some condition ->
-      Dunolint.Rule.eval condition ~f:(fun predicate ->
-        Dunolinter.eval_path
-          ~path:parent_dir
-          ~predicate:(predicate :> Dunolint.Predicate.t))
+      Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
+        Dunolinter.eval_path ~path:parent_dir ~condition)
   with
   | `enforce nothing -> Nothing.unreachable_code nothing [@coverage off]
   | `skip_subtree -> Dunolint_engine.Visitor_decision.Skip_subtree

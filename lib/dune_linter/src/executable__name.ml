@@ -50,32 +50,36 @@ let eval t ~predicate =
   |> Dunolint.Trilang.const
 ;;
 
-let rec enforce t ~condition =
-  match (condition : Dune.Executable.Name.Predicate.t Blang.t) with
-  | Base (`equals name) -> t.name <- name
-  | Base (`is_prefix prefix) ->
-    let value = Dune.Executable.Name.to_string t.name in
-    if not (String.is_prefix value ~prefix)
-    then t.name <- Dune.Executable.Name.v (prefix ^ value)
-  | Not (Base (`is_prefix prefix)) ->
-    let value = Dune.Executable.Name.to_string t.name in
-    (match String.chop_prefix value ~prefix with
-     | None -> ()
-     | Some value -> t.name <- Dune.Executable.Name.v value)
-  | Base (`is_suffix suffix) ->
-    let value = Dune.Executable.Name.to_string t.name in
-    if not (String.is_suffix value ~suffix)
-    then t.name <- Dune.Executable.Name.v (value ^ suffix)
-  | Not (Base (`is_suffix suffix)) ->
-    let value = Dune.Executable.Name.to_string t.name in
-    (match String.chop_suffix value ~suffix with
-     | None -> ()
-     | Some value -> t.name <- Dune.Executable.Name.v value)
-  | (And _ | If _ | True | False | Not _ | Or _) as condition ->
-    Dunolinter.Linter.enforce_blang
-      (module Dune.Executable.Name.Predicate)
-      t
-      ~condition
-      ~eval
-      ~enforce
+let enforce =
+  Dunolinter.Linter.enforce
+    (module Dune.Executable.Name.Predicate)
+    ~eval
+    ~enforce:(fun t predicate ->
+      match predicate with
+      | T (`equals name) ->
+        t.name <- name;
+        Ok
+      | Not (`equals _) -> Eval
+      | T (`is_prefix prefix) ->
+        let value = Dune.Executable.Name.to_string t.name in
+        if not (String.is_prefix value ~prefix)
+        then t.name <- Dune.Executable.Name.v (prefix ^ value);
+        Ok
+      | Not (`is_prefix prefix) ->
+        let value = Dune.Executable.Name.to_string t.name in
+        (match String.chop_prefix value ~prefix with
+         | None -> ()
+         | Some value -> t.name <- Dune.Executable.Name.v value);
+        Ok
+      | T (`is_suffix suffix) ->
+        let value = Dune.Executable.Name.to_string t.name in
+        if not (String.is_suffix value ~suffix)
+        then t.name <- Dune.Executable.Name.v (value ^ suffix);
+        Ok
+      | Not (`is_suffix suffix) ->
+        let value = Dune.Executable.Name.to_string t.name in
+        (match String.chop_suffix value ~suffix with
+         | None -> ()
+         | Some value -> t.name <- Dune.Executable.Name.v value);
+        Ok)
 ;;

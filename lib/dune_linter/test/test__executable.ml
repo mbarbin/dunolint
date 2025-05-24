@@ -42,6 +42,27 @@ let%expect_test "read/write" =
   [%expect {| (executable) |}];
   test {| (executable (ignored field) and-more) |};
   [%expect {| (executable) |}];
+  test
+    {|
+(executable
+ (name main)
+ (public_name my-cli)
+ (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a)
+ (instrumentation
+  (backend bisect_ppx))
+ (lint (pps ppx_linter -lint-flag))
+ (preprocess no_preprocessing))
+|};
+  [%expect
+    {|
+    (executable
+      (name        main)
+      (public_name my-cli)
+      (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a)
+      (instrumentation (backend bisect_ppx))
+      (lint (pps ppx_linter -lint-flag))
+      (preprocess no_preprocessing))
+    |}];
   test {| (executable (name (invalid field))) |};
   [%expect
     {|
@@ -65,6 +86,98 @@ let%expect_test "sexp_of" =
      (lint               ())
      (preprocess         ())
      (marked_for_removal ()))
+    |}];
+  ()
+;;
+
+let rewrite ?(f = ignore) str =
+  let (sexps_rewriter, field), t = parse str in
+  f t;
+  Dune_linter.Executable.rewrite t ~sexps_rewriter ~field;
+  print_endline (Sexps_rewriter.contents sexps_rewriter)
+;;
+
+let%expect_test "rewrite" =
+  rewrite {| (executable (name main)) |};
+  [%expect {| (executable (name main)) |}];
+  rewrite {| (executable (ignored field) and-more) |};
+  [%expect {| (executable (ignored field) and-more) |}];
+  rewrite
+    {|
+(executable
+ (name main)
+ (public_name my-cli)
+ (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a)
+ (instrumentation
+  (backend bisect_ppx))
+ (lint (pps ppx_linter -lint-flag))
+ (preprocess no_preprocessing)
+ (unknown_field blah))
+|};
+  [%expect
+    {|
+    (executable
+     (name main)
+     (public_name my-cli)
+     (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a)
+     (instrumentation
+      (backend bisect_ppx))
+     (lint (pps ppx_linter -lint-flag))
+     (preprocess no_preprocessing)
+     (unknown_field blah))
+    |}];
+  rewrite
+    {|
+(executable
+ (name main)
+ (public_name my-cli)
+ (instrumentation
+  (backend bisect_ppx))
+ (lint (pps ppx_linter -lint-flag))
+ (preprocess no_preprocessing))
+|}
+    ~f:(fun t ->
+      let open Dunolint.Config.Std in
+      Dune_linter.Executable.enforce
+        t
+        ~condition:
+          (and_ [ not_ (has_field `instrumentation); not_ (has_field `preprocess) ]));
+  [%expect
+    {|
+    (executable
+     (name main)
+     (public_name my-cli)
+
+     (lint (pps ppx_linter -lint-flag))
+     )
+    |}];
+  ()
+;;
+
+let%expect_test "create_then_rewrite" =
+  (* This covers some unusual cases. The common code path does not involve
+     rewriting values that are created via [create]. *)
+  let test t str =
+    let sexps_rewriter, field = Common.read str in
+    Dune_linter.Executable.rewrite t ~sexps_rewriter ~field;
+    print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
+  in
+  let t = Dune_linter.Executable.create () in
+  test t {| (executable (name main)) |};
+  [%expect {| (executable (name main)) |}];
+  let t =
+    Dune_linter.Executable.create
+      ~public_name:(Dune.Executable.Public_name.v "my-cli")
+      ~libraries:[ Dune.Library.Name.v "foo"; Dune.Library.Name.v "bar" ]
+      ()
+  in
+  test t {| (executable (name main)) |};
+  [%expect
+    {|
+    (executable
+      (name        main)
+      (public_name my-cli)
+      (libraries bar foo))
     |}];
   ()
 ;;
@@ -98,10 +211,19 @@ let%expect_test "eval" =
        t
        ~predicate:(`name (equals (Dune.Executable.Name.v "not-main"))));
   [%expect {||}];
+  Test_helpers.is_false
+    (Dune_linter.Executable.eval t ~predicate:(`has_field `instrumentation));
+  [%expect {||}];
   Test_helpers.is_undefined
     (Dune_linter.Executable.eval
        t
        ~predicate:(`public_name (equals (Dune.Executable.Public_name.v "my-cli"))));
+  [%expect {||}];
+  let _, t = parse {| (executable (public_name my-cli)) |} in
+  Test_helpers.is_undefined
+    (Dune_linter.Executable.eval
+       t
+       ~predicate:(`name (equals (Dune.Executable.Name.v "not-main"))));
   [%expect {||}];
   let _, t = parse {| (executable (name main) (public_name my-cli)) |} in
   Test_helpers.is_true
@@ -119,13 +241,25 @@ let%expect_test "eval" =
        t
        ~predicate:(`lint (pps (pp (Dune.Pp.Name.v "ppx_linter")))));
   [%expect {||}];
+  Test_helpers.is_undefined
+    (Dune_linter.Executable.eval
+       t
+       ~predicate:
+         (`instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"))));
+  [%expect {||}];
+  Test_helpers.is_undefined
+    (Dune_linter.Executable.eval t ~predicate:(`preprocess no_preprocessing));
+  [%expect {||}];
   let _, t =
     parse
       {|
 (executable
  (name main)
  (public_name my-cli)
- (lint (pps ppx_linter -lint-flag)))
+ (instrumentation
+  (backend bisect_ppx))
+ (lint (pps ppx_linter -lint-flag))
+ (preprocess no_preprocessing))
 |}
   in
   Test_helpers.is_true
@@ -137,6 +271,18 @@ let%expect_test "eval" =
     (Dune_linter.Executable.eval
        t
        ~predicate:(`lint (pps (pp (Dune.Pp.Name.v "ppx_absent")))));
+  [%expect {||}];
+  Test_helpers.is_true
+    (Dune_linter.Executable.eval t ~predicate:(`preprocess no_preprocessing));
+  [%expect {||}];
+  Test_helpers.is_true
+    (Dune_linter.Executable.eval
+       t
+       ~predicate:
+         (`instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"))));
+  [%expect {||}];
+  List.iter [ `instrumentation; `lint; `name; `preprocess; `public_name ] ~f:(fun field ->
+    Test_helpers.is_true (Dune_linter.Executable.eval t ~predicate:(`has_field field)));
   [%expect {||}];
   ()
 ;;
@@ -186,19 +332,10 @@ let%expect_test "enforce" =
       (public_name my-cli))
     |}];
   let t = parse {| (executable (name main)) |} in
-  (* When the required invariant is negated, and there is no public_name, this
-     currently fails. This is questionable, perhaps the behavior is not yet very
-     consistent in dunolint, and in other places dunolint simply does nothing
-     when encountering undefined invariants. This may be revisited at some
-     point, TBD, kept as characterization tests for now. *)
-  require_does_raise [%here] (fun () ->
-    enforce t [ public_name (not_ (equals (Dune.Executable.Public_name.v "my-cli"))) ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (public_name (not (equals my-cli)))))
-    |}];
+  (* When the required invariant is negated, and there is no public_name,
+     dunolint simply does nothing and considers it an undefined invariants. *)
+  enforce t [ public_name (not_ (equals (Dune.Executable.Public_name.v "my-cli"))) ];
+  [%expect {| (executable (name main)) |}];
   ()
 ;;
 
