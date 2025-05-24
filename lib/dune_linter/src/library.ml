@@ -424,7 +424,7 @@ let enforce =
                 | `equals public_name -> Some public_name
                 | `is_prefix _ | `is_suffix _ -> None)
             with
-            | None -> Fail
+            | None -> Eval
             | Some public_name ->
               let public_name = Public_name.create ~public_name in
               t.public_name <- Some public_name;

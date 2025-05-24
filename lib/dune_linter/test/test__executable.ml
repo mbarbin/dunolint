@@ -186,19 +186,10 @@ let%expect_test "enforce" =
       (public_name my-cli))
     |}];
   let t = parse {| (executable (name main)) |} in
-  (* When the required invariant is negated, and there is no public_name, this
-     currently fails. This is questionable, perhaps the behavior is not yet very
-     consistent in dunolint, and in other places dunolint simply does nothing
-     when encountering undefined invariants. This may be revisited at some
-     point, TBD, kept as characterization tests for now. *)
-  require_does_raise [%here] (fun () ->
-    enforce t [ public_name (not_ (equals (Dune.Executable.Public_name.v "my-cli"))) ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (public_name (not (equals my-cli)))))
-    |}];
+  (* When the required invariant is negated, and there is no public_name,
+     dunolint simply does nothing and considers it an undefined invariants. *)
+  enforce t [ public_name (not_ (equals (Dune.Executable.Public_name.v "my-cli"))) ];
+  [%expect {| (executable (name main)) |}];
   ()
 ;;
 

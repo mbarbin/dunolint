@@ -55,7 +55,9 @@ let enforce =
     ~eval
     ~enforce:(fun t predicate ->
       match predicate with
-      | Not (`equals value) -> if Bool.equal t.value value then Fail else Ok
+      | Not (`equals value) ->
+        t.value <- not value;
+        Ok
       | T (`equals value) ->
         t.value <- value;
         Ok)

@@ -136,12 +136,9 @@ let%expect_test "enforce" =
   (* Enforcing the negation of the equality with another value has no effect. *)
   enforce t [ not_ (equals true) ];
   [%expect {| (implicit_transitive_deps false) |}];
-  (* Enforcing the negation of a current equality triggers an error.
-     Dunolint is not going to automatically invent a new setting, this
-     requires the user's intervention. *)
-  require_does_raise [%here] (fun () -> enforce t [ not_ (equals false) ]);
-  [%expect
-    {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (equals false)))) |}];
+  (* Enforcing the negation the equality equates enforcing its negated value. *)
+  enforce t [ not_ (equals false) ];
+  [%expect {| (implicit_transitive_deps true) |}];
   (* Blang. *)
   let t = parse {| (implicit_transitive_deps true) |} in
   enforce t [ true_ ];
@@ -230,10 +227,8 @@ let%expect_test "Linter.enforce" =
       (loc       _)
       (condition false))
     |}];
-  require_does_raise [%here] (fun () ->
-    enforce t [ implicit_transitive_deps (not_ (equals true)) ]);
-  [%expect
-    {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (equals true)))) |}];
+  enforce t [ implicit_transitive_deps (not_ (equals true)) ];
+  [%expect {| (implicit_transitive_deps false) |}];
   enforce
     t
     [ and_
