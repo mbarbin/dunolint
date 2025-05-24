@@ -64,13 +64,7 @@ module Linter = struct
     =
     let eval (t : m) ~predicate =
       match (predicate : Dunolint.Predicate.t) with
-      | `path condition ->
-        Dunolint.Trilang.eval condition ~f:(fun predicate ->
-          match predicate with
-          | `equals value -> Relative_path.equal path value |> Dunolint.Trilang.const
-          | `glob glob ->
-            Dunolint.Glob.test glob (Relative_path.to_string path)
-            |> Dunolint.Trilang.const)
+      | `path condition -> Dunolinter.eval_path ~path ~condition
       | `dune _ -> Dunolint.Trilang.Undefined
       | `dune_project condition ->
         Dunolint.Trilang.eval condition ~f:(fun predicate -> M.eval t ~predicate)

@@ -58,8 +58,8 @@ let skip_subtree ~config ~path =
   | None -> `return
   | Some condition ->
     (match
-       Dunolint.Rule.eval condition ~f:(fun predicate ->
-         Dunolinter.eval_path ~path ~predicate:(predicate :> Dunolint.Predicate.t))
+       Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
+         Dunolinter.eval_path ~path ~condition)
      with
      | `enforce nothing -> Nothing.unreachable_code nothing [@coverage off]
      | (`return | `skip_subtree) as result -> result)

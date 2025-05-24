@@ -43,14 +43,11 @@ let original_sexp (t : _ Stanza.t) = t.original_sexp
 let sexps_rewriter (t : _ Stanza.t) = t.sexps_rewriter
 let linter (t : _ Stanza.t) = t.linter
 
-let eval_path ~path ~predicate =
-  match (predicate : Dunolint.Predicate.t) with
-  | `dune _ | `dune_project _ -> Dunolint.Trilang.Undefined
-  | `path condition ->
-    Blang.eval condition (function
-      | `equals value -> Relative_path.equal path value
-      | `glob glob -> Dunolint.Glob.test glob (Relative_path.to_string path))
-    |> Dunolint.Trilang.const
+let eval_path ~path ~condition =
+  Blang.eval condition (function
+    | `equals value -> Relative_path.equal path value
+    | `glob glob -> Dunolint.Glob.test glob (Relative_path.to_string path))
+  |> Dunolint.Trilang.const
 ;;
 
 module Private = struct
