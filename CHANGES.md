@@ -2,10 +2,11 @@
 
 ### Added
 
-- Add testst (#67, #68, @mbarbin).
+- Add tests (#67, #68, @mbarbin).
 
 ### Changed
 
+- Refactor enforce functions to ease further testing (#72, @mbarbin).
 - Support building dunolint-lib with OCaml 4.14 (#65, @mbarbin).
 - Updated git-pager and err dependencies (#63, #64, @mbarbin).
 
@@ -13,6 +14,8 @@
 
 ### Fixed
 
+- Fix disabling of color when `--color=never` is supplied (#70, @mbarbin).
+- Fix doc location for installation guide (#69, @mbarbin).
 - Fix git pager clean termination when displayed diff exceeds 1 page (#61, @mbarbin).
 
 ### Removed
