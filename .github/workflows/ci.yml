@@ -35,6 +35,10 @@ jobs:
       #     janestreet-bleeding: https://github.com/janestreet/opam-repository.git
       #     janestreet-bleeding-external: https://github.com/janestreet/opam-repository.git#external-packages
 
+      # Setting `(implicit_transitive_deps VALUE)` conditionally based on the compiler version.
+      - name: Edit dune-project
+        run: opam exec -- ocaml .github/workflows/edit_dune_project_dot_ml "${{ matrix.ocaml-compiler }}"
+
       - name: Install dependencies
         run: opam install . --deps-only --with-doc --with-test --with-dev-setup
 
@@ -58,6 +62,11 @@ jobs:
 
       - name: Lint dunolint
         run: ./dunolint.sh
+
+      # Before checking for uncommitted changes we need to restore changes
+      # potentially made to the dune-project file.
+      - name: Restore dune-project
+        run: git restore dune-project
 
       - name: Check for uncommitted changes
         run: git diff --exit-code
