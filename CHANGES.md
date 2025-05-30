@@ -6,6 +6,7 @@
 
 ### Changed
 
+- Use `Git_pager` from opam package `pageantty` instead of vendoring it (#73, @mbarbin).
 - Refactor enforce functions to ease further testing (#72, @mbarbin).
 - Support building dunolint-lib with OCaml 4.14 (#65, @mbarbin).
 - Updated git-pager and err dependencies (#63, #64, @mbarbin).

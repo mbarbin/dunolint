@@ -26,13 +26,13 @@
   dunolint.dune_linter
   dunolint.dune_project_linter
   dunolint.dunolinter
-  dunolint.vendor_git_pager
   dunolint.vendor_prompt
   file-rewriter
   fpath
   fpath-base
   loc
   logs
+  pageantty.git-pager
   patdiff
   patdiff.expect_test_patdiff
   pp
