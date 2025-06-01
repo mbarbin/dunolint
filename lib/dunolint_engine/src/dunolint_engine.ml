@@ -19,7 +19,6 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Git_pager = Dunolint_vendor_git_pager.Git_pager
 module Prompt = Dunolint_vendor_prompt.Prompt
 module Unix = UnixLabels
 
