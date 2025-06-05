@@ -38,7 +38,7 @@
   (base
    (>= v0.16))
   (fpath-sexp0
-   (>= 0.3.0))
+   (>= 0.3.1))
   (ppx_compare
    (>= v0.16))
   (ppx_enumerate
@@ -59,9 +59,7 @@
   (ocaml
    (>= 5.3))
   (base
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (cmdlang
    (>= 0.0.9))
   (dunolint-lib
@@ -73,9 +71,9 @@
   (fpath
    (>= 0.7.3))
   (fpath-base
-   (>= 0.3.0))
+   (>= 0.3.1))
   (fpath-sexp0
-   (>= 0.3.0))
+   (>= 0.3.1))
   (loc
    (>= 0.2.2))
   (logs
@@ -83,57 +81,35 @@
   (pageantty
    (>= 0.0.2))
   (parsexp
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (patdiff
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (pp
    (>= 2.0.0))
   (pplumbing
-   (>= 0.0.13))
+   (>= 0.0.14))
   (ppx_compare
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_enumerate
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_hash
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_here
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_let
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_sexp_conv
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_sexp_value
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppxlib
    (>= 0.35.0))
   (sexplib0
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (sexps-rewriter
    (>= 0.0.3))
   (stdio
-   (and
-    (>= v0.17)
-    (< v0.18)))))
+   (>= v0.17))))
 
 (package
  (name dunolint-tests)
@@ -142,9 +118,7 @@
   (ocaml
    (>= 5.3))
   (base
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (cmdlang
    (>= 0.0.9))
   (cmdlang-stdlib-runner
@@ -154,15 +128,13 @@
   (dunolint-lib
    (= :version))
   (expect_test_helpers_core
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (file-rewriter
    (>= 0.0.3))
   (fpath-base
-   (>= 0.3.0))
+   (>= 0.3.1))
   (fpath-sexp0
-   (>= 0.3.0))
+   (>= 0.3.1))
   (loc
    (>= 0.2.2))
   (logs
@@ -170,61 +142,37 @@
   (pageantty
    (>= 0.0.2))
   (parsexp
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (patdiff
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (pp
    (>= 2.0.0))
   (pplumbing
-   (>= 0.0.13))
+   (>= 0.0.14))
   (ppx_compare
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_enumerate
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_expect
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_hash
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_here
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_let
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_sexp_conv
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_sexp_value
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppxlib
    (>= 0.35.0))
   (sexplib0
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (sexps-rewriter
    (>= 0.0.3))
   (stdio
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (sherlodoc
    (and
     :with-doc
@@ -243,9 +191,7 @@
     :with-dev-setup
     (= 0.27.0)))
   (base
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (bisect_ppx
    (and
     :with-dev-setup
@@ -261,9 +207,7 @@
   (dunolint-tests
    (= :version))
   (expect_test_helpers_core
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (file-rewriter
    (>= 0.0.3))
   (fmt
@@ -271,9 +215,9 @@
   (fpath
    (>= 0.7.3))
   (fpath-base
-   (>= 0.3.0))
+   (>= 0.3.1))
   (fpath-sexp0
-   (>= 0.3.0))
+   (>= 0.3.1))
   (loc
    (>= 0.2.2))
   (logs
@@ -283,66 +227,41 @@
   (pageantty
    (>= 0.0.2))
   (parsexp
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (patdiff
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (pp
    (>= 2.0.0))
   (pplumbing
-   (>= 0.0.13))
+   (>= 0.0.14))
   (ppx_compare
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_enumerate
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_expect
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_hash
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_here
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_js_style
    (and
     :with-dev-setup
-    (>= v0.17)
-    (< v0.18)))
+    (>= v0.17)))
   (ppx_let
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_sexp_conv
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppx_sexp_value
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (ppxlib
    (>= 0.35.0))
   (sexplib0
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (sexps-rewriter
    (>= 0.0.3))
   (stdio
-   (and
-    (>= v0.17)
-    (< v0.18)))
+   (>= v0.17))
   (odoc
    (and
     :with-doc
