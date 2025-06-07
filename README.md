@@ -3,6 +3,7 @@
 [![CI Status](https://github.com/mbarbin/dunolint/workflows/ci/badge.svg)](https://github.com/mbarbin/dunolint/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/mbarbin/dunolint/badge.svg?branch=main)](https://coveralls.io/github/mbarbin/dunolint?branch=main)
 [![Deploy Doc Status](https://github.com/mbarbin/dunolint/workflows/deploy-doc/badge.svg)](https://github.com/mbarbin/dunolint/actions/workflows/deploy-doc.yml)
+[![OCaml-CI Build Status](https://img.shields.io/endpoint?url=https://ocaml.ci.dev/badge/mbarbin/dunolint/main&logo=ocaml)](https://ocaml.ci.dev/github/mbarbin/dunolint)
 
 ## Introduction
 
