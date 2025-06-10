@@ -6,7 +6,8 @@ The `libraries` dependencies listed in `library` stanzas are sorted alphabetical
 $ cat > dune0 <<EOF\
 > (library\
 >  (name my_lib)\
->  (libraries foo bar baz))
+>  (libraries foo bar baz))\
+> EOF
 ```
 
 is linted as follows:
