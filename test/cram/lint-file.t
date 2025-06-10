@@ -255,9 +255,10 @@ contents is saved in the input file and not at the overridden path.
    (name mylib)
    (libraries a b c))
 
-  $ ls -l path/to/dune
-  ls: cannot access 'path/to/dune': No such file or directory
-  [2]
+This should not have created a file with the given filename.
+
+  $ test -e path/to/dune
+  [1]
 
 The command is idempotent.
 
