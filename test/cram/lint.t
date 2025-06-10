@@ -37,14 +37,14 @@ its own. See below how the name of the project is not linted:
 
 If the config is supplied, but it is invalid, dunolint will complain.
 
-  $ echo '(blah)' > .dunolint
+  $ printf '(blah)\n' > .dunolint
 
   $ dunolint lint --yes --config .dunolint 2> /dev/null
   [125]
 
 If there are no rules, the linting will succeed but does nothing in this case.
 
-  $ echo '((rules ()))' > .dunolint
+  $ printf '((rules ()))\n' > .dunolint
 
   $ dunolint lint --yes --config .dunolint
 

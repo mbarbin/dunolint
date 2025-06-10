@@ -63,7 +63,7 @@ We disable the pager for the test.
 
 We can quit at any time during the interactive loop.
 
-  $ echo 'q' | dunolint lint --config=.dunolint --interactive
+  $ printf 'q\n' | dunolint lint --config=.dunolint --interactive
   Would edit file "dune-project":
   -1,1 +1,1
   -|(name main)
@@ -73,7 +73,7 @@ We can quit at any time during the interactive loop.
 
 We can choose to refuse some diff, and accept others.
 
-  $ echo 'n\ny\n' | dunolint lint --config=.dunolint --interactive
+  $ printf 'n\ny\n' | dunolint lint --config=.dunolint --interactive
   Would edit file "dune-project":
   -1,1 +1,1
   -|(name main)
