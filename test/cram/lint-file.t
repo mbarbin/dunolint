@@ -3,7 +3,7 @@ We test it here while calling it from the shell.
 
 By default the command reads from `stdin`.
 
-  $ echo '(lang dune 3.17)' | dunolint tools lint-file
+  $ printf '(lang dune 3.17)\n' | dunolint tools lint-file
   Error: Cannot infer the file kind from the filename "stdin".
   Hint: You may override the filename with the flag [--filename].
   [123]
@@ -11,17 +11,17 @@ By default the command reads from `stdin`.
 However, when using the command that way, the linted file kind won't be
 inferred. The filename must end with a basename that indicates a supported mode.
 
-  $ echo '(lang dune 3.17)' | dunolint tools lint-file --filename=dune-project
+  $ printf '(lang dune 3.17)\n' | dunolint tools lint-file --filename=dune-project
   (lang dune 3.17)
 
 By default, the contents is auto-formatted.
 
-  $ echo '(lang\n dune\n 3.17)' | dunolint tools lint-file --filename=dune-project
+  $ printf '(lang\n dune\n 3.17)\n' | dunolint tools lint-file --filename=dune-project
   (lang dune 3.17)
 
 The formatting may however be disabled.
 
-  $ echo '(lang\n dune\n 3.17)' \
+  $ printf '(lang\n dune\n 3.17)\n' \
   > | dunolint tools lint-file --filename=dune-project \
   >   --format-file=false
   (lang
@@ -100,7 +100,7 @@ When the command fails to parse the file, it complains and exits with a non-zero
 code. This should be handled by the logic responsible for the editor
 integration.
 
-  $ echo "(invalid sexp" | dunolint tools lint-file --filename=dune
+  $ printf "(invalid sexp\n" | dunolint tools lint-file --filename=dune
   File "dune", line 2, characters 0-0:
   Error: unclosed parentheses at end of input
   [123]
@@ -109,7 +109,7 @@ Next we are going to test the command with config.
 
 The command may be passed a config file.
 
-  $ echo '((rules ()))' > .dunolint
+  $ printf '((rules ()))\n' > .dunolint
 
   $ dunolint tools lint dune --config=.dunolint
   (library
