@@ -2,6 +2,7 @@
 
 ### Added
 
+- Enable CRs workflows (experimental) (#76, @mbarbin).
 - Add tests (#67, #68, @mbarbin).
 
 ### Changed
@@ -15,6 +16,7 @@
 
 ### Fixed
 
+- Fix some cram test failures shown by ocaml-ci (#75, @mbarbin).
 - Fix disabling of color when `--color=never` is supplied (#70, @mbarbin).
 - Fix doc location for installation guide (#69, @mbarbin).
 - Fix git pager clean termination when displayed diff exceeds 1 page (#61, @mbarbin).
