@@ -65,34 +65,22 @@ let skip_subtree ~config ~path =
      | (`return | `skip_subtree) as result -> result)
 ;;
 
-exception Skip_subtree
-
-let lint_stanza ~rules ~stanza =
-  let loc =
-    Sexps_rewriter.loc
-      (Dunolinter.sexps_rewriter stanza)
-      (Dunolinter.original_sexp stanza)
-  in
-  Dunolinter.Handler.emit_error_and_resume () ~loc ~f:(fun () ->
-    match Dunolinter.linter stanza with
-    | Unhandled -> ()
-    | T { eval; enforce } ->
-      List.iter rules ~f:(fun rule ->
-        match Dunolint.Rule.eval rule ~f:eval with
-        | `return -> ()
-        | `enforce condition -> enforce condition
-        | `skip_subtree -> raise Skip_subtree))
-;;
-
-let lint_file (module Linter : Dunolinter.S) ~format_file ~rules ~path ~original_contents =
-  match Linter.create ~path ~original_contents with
+let lint_file
+      (module File_linter : Dunolinter.S)
+      ~format_file
+      ~rules
+      ~path
+      ~original_contents
+  =
+  match File_linter.create ~path ~original_contents with
   | Error { loc; message } -> Err.raise ~loc [ Pp.textf "%s" message ]
   | Ok linter ->
     let () =
-      try Linter.visit linter ~f:(fun stanza -> lint_stanza ~rules ~stanza) with
-      | Skip_subtree -> ()
+      With_return.with_return (fun return ->
+        File_linter.visit linter ~f:(fun stanza ->
+          Linter.lint_stanza ~rules ~stanza ~return))
     in
-    let new_contents = Linter.contents linter in
+    let new_contents = File_linter.contents linter in
     if format_file then Dunolint_engine.format_dune_file ~new_contents else new_contents
 ;;
 
@@ -199,7 +187,7 @@ When the contents of the file is read from stdin, or if the file given does not 
      and enforce =
        Arg.named_multi
          [ "enforce" ]
-         (Common.sexpable_param (module Dunolint.Condition))
+         (Common_helpers.sexpable_param (module Dunolint.Condition))
          ~docv:"COND"
          ~doc:"Add condition to enforce."
        >>| List.map ~f:(fun condition -> `enforce condition)
@@ -212,7 +200,10 @@ When the contents of the file is read from stdin, or if the file given does not 
          let contents = In_channel.read_all config in
          Parsexp.Conv_single.parse_string_exn contents Dunolint.Config.t_of_sexp
        | None ->
-         Dunolint.Config.create ~skip_subtree:(Common.skip_subtree ~globs:[]) ~rules:[] ()
+         Dunolint.Config.create
+           ~skip_subtree:(Common_helpers.skip_subtree ~globs:[])
+           ~rules:[]
+           ()
      in
      let config =
        Dunolint.Config.create

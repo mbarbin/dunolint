@@ -19,9 +19,23 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-val sexpable_param : (module Sexpable.S with type t = 'a) -> 'a Command.Param.t
+val maybe_autoformat_file : previous_contents:string -> new_contents:string -> string
 
-(** Restrict the scope of a command to a subdirectory only. "Below this path". *)
-val below : doc:string -> Relative_path.t option Command.Arg.t
+val lint_stanza
+  :  rules:(Dunolint.Predicate.t, Dunolint.Predicate.t Blang.t) Dunolint.Rule.t list
+  -> stanza:'a Dunolinter.Stanza.t
+  -> return:unit With_return.return
+  -> unit
 
-val skip_subtree : globs:string list -> Dunolint.Config.Skip_subtree.t
+module Visitor_decision : sig
+  type t =
+    | Continue
+    | Skip_subtree
+end
+
+val visit_directory
+  :  dunolint_engine:Dunolint_engine.t
+  -> config:Dunolint.Config.t
+  -> parent_dir:Relative_path.t
+  -> files:string list
+  -> Dunolint_engine.Visitor_decision.t

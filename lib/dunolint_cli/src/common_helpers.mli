@@ -19,4 +19,11 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-val main : unit Command.t
+(** For use in the rest of the files in this directory. *)
+
+val sexpable_param : (module Sexpable.S with type t = 'a) -> 'a Command.Param.t
+
+(** Restrict the scope of a command to a subdirectory only. "Below this path". *)
+val below : doc:string -> Relative_path.t option Command.Arg.t
+
+val skip_subtree : globs:string list -> Dunolint.Config.Skip_subtree.t
