@@ -19,4 +19,23 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-val main : unit Command.t
+val maybe_autoformat_file : previous_contents:string -> new_contents:string -> string
+
+val lint_stanza
+  :  rules:(Dunolint.Predicate.t, Dunolint.Predicate.t Blang.t) Dunolint.Rule.t list
+  -> stanza:'a Dunolinter.Stanza.t
+  -> return:unit With_return.return
+  -> unit
+
+module Visitor_decision : sig
+  type t =
+    | Continue
+    | Skip_subtree
+end
+
+val visit_directory
+  :  dunolint_engine:Dunolint_engine.t
+  -> config:Dunolint.Config.t
+  -> parent_dir:Relative_path.t
+  -> files:string list
+  -> Dunolint_engine.Visitor_decision.t
