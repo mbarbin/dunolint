@@ -134,11 +134,11 @@ let main =
      and () = Log_cli.set_config ()
      and config =
        Arg.named_opt [ "config" ] Param.file ~doc:"Path to dunolint config file"
-     and below = Common.below ~doc:"Lint only below this path"
+     and below = Common_helpers.below ~doc:"Lint only below this path"
      and enforce =
        Arg.named_multi
          [ "enforce" ]
-         (Common.sexpable_param (module Dunolint.Condition))
+         (Common_helpers.sexpable_param (module Dunolint.Condition))
          ~docv:"COND"
          ~doc:"Add condition to enforce"
        >>| List.map ~f:(fun condition -> `enforce condition)
@@ -149,7 +149,10 @@ let main =
          let contents = In_channel.read_all config in
          Parsexp.Conv_single.parse_string_exn contents Dunolint.Config.t_of_sexp
        | None ->
-         Dunolint.Config.create ~skip_subtree:(Common.skip_subtree ~globs:[]) ~rules:[] ()
+         Dunolint.Config.create
+           ~skip_subtree:(Common_helpers.skip_subtree ~globs:[])
+           ~rules:[]
+           ()
      in
      let config =
        Dunolint.Config.create

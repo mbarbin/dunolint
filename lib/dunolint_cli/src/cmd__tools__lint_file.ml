@@ -199,7 +199,7 @@ When the contents of the file is read from stdin, or if the file given does not 
      and enforce =
        Arg.named_multi
          [ "enforce" ]
-         (Common.sexpable_param (module Dunolint.Condition))
+         (Common_helpers.sexpable_param (module Dunolint.Condition))
          ~docv:"COND"
          ~doc:"Add condition to enforce."
        >>| List.map ~f:(fun condition -> `enforce condition)
@@ -212,7 +212,10 @@ When the contents of the file is read from stdin, or if the file given does not 
          let contents = In_channel.read_all config in
          Parsexp.Conv_single.parse_string_exn contents Dunolint.Config.t_of_sexp
        | None ->
-         Dunolint.Config.create ~skip_subtree:(Common.skip_subtree ~globs:[]) ~rules:[] ()
+         Dunolint.Config.create
+           ~skip_subtree:(Common_helpers.skip_subtree ~globs:[])
+           ~rules:[]
+           ()
      in
      let config =
        Dunolint.Config.create
