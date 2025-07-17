@@ -34,7 +34,9 @@
  (synopsis "A library to create dunolint configs")
  (depends
   (ocaml
-   (>= 4.14))
+   (and
+    (>= 4.14)
+    (< 5.4~)))
   (base
    (>= v0.16))
   (fpath-sexp0

@@ -9,7 +9,7 @@ doc: "https://mbarbin.github.io/dunolint/"
 bug-reports: "https://github.com/mbarbin/dunolint/issues"
 depends: [
   "dune" {>= "3.17"}
-  "ocaml" {>= "4.14"}
+  "ocaml" {>= "4.14" & < "5.4~"}
   "base" {>= "v0.16"}
   "fpath-sexp0" {>= "0.3.1"}
   "ppx_compare" {>= "v0.16"}
