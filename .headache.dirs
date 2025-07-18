@@ -1,0 +1,22 @@
+# List of directories for headache.sh
+# Add new directories below. Lines starting with '#' are ignored.
+bin
+lib/dune_linter/src
+lib/dune_linter/test
+lib/dune_project_linter/src
+lib/dune_project_linter/test
+lib/dunolint/src
+lib/dunolint/src/dune0
+lib/dunolint/src/dune_project0
+lib/dunolint/test
+lib/dunolint_cli/src
+lib/dunolint_cli/test
+lib/dunolint_engine/src
+lib/dunolint_engine/test
+lib/dunolinter/src
+lib/dunolinter/test
+lib/test_helpers/src
+lib/test_helpers/test
+dunolint-config/bin
+dunolint-config/src
+test/cram/bin

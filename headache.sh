@@ -1,39 +1,27 @@
 #!/bin/bash -e
 
-dirs=(
-    # Add new directories below:
-    "bin"
-    "lib/dune_linter/src"
-    "lib/dune_linter/test"
-    "lib/dune_project_linter/src"
-    "lib/dune_project_linter/test"
-    "lib/dunolint/src"
-    "lib/dunolint/src/dune0"
-    "lib/dunolint/src/dune_project0"
-    "lib/dunolint/test"
-    "lib/dunolint_cli/src"
-    "lib/dunolint_cli/test"
-    "lib/dunolint_engine/src"
-    "lib/dunolint_engine/test"
-    "lib/dunolinter/src"
-    "lib/dunolinter/test"
-    "lib/test_helpers/src"
-    "lib/test_helpers/test"
-    "dunolint-config/bin"
-    "dunolint-config/src"
-    "test/cram/bin"
-)
+DIRS_FILE="$(dirname "$0")/.headache.dirs"
 
-for dir in "${dirs[@]}"; do
+if [ ! -f "$DIRS_FILE" ]; then
+    echo "Directory list file '$DIRS_FILE' not found!" >&2
+    exit 1
+fi
+
+while IFS= read -r dir; do
+    # Ignore empty lines and lines starting with '#'
+    [ -z "$dir" ] && continue
+    case "$dir" in
+        \#*) continue ;;
+    esac
     echo "Apply headache to directory ${dir}"
 
     # Apply headache to .ml files
-    headache -c .headache.config -h COPYING.HEADER ${dir}/*.ml
+    headache -c .headache.config -h COPYING.HEADER "${dir}"/*.ml
 
     # Check if .mli files exist in the directory, if so apply headache
-    if ls ${dir}/*.mli 1> /dev/null 2>&1; then
-        headache -c .headache.config -h COPYING.HEADER ${dir}/*.mli
+    if ls "${dir}"/*.mli 1> /dev/null 2>&1; then
+        headache -c .headache.config -h COPYING.HEADER "${dir}"/*.mli
     fi
-done
+done < "$DIRS_FILE"
 
 dune fmt
