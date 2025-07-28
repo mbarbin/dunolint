@@ -21,7 +21,7 @@
 
 let eval_args args =
   let command =
-    Cmdlang.Command.make Dunolint_engine.Config.arg ~summary:"eval-stdlib-runner"
+    Cmdlang.Command.make Dunolint_engine.Config.arg ~summary:"Test eval-stdlib-runner."
   in
   match Cmdlang_stdlib_runner.eval command ~argv:(Array.of_list ("dunolint" :: args)) with
   | Ok t -> print_s [%sexp (t : Dunolint_engine.Config.t)]

@@ -142,15 +142,15 @@ let main =
   Command.make
     ~summary:"Lint a single file."
     ~readme:(fun () ->
-      {|
-This command is meant to ease the integration with editors in workflows that enable linting on save.
-
-This will read the contents of a build file either from $(b,disk) or from $(b,stdin) and print its linted result on $(b,stdout).
-
-By default, the contents will be read from $(b,stdin). You may supply the path to a file instead.
-
-When the contents of the file is read from stdin, or if the file given does not permit to recognize the linted file kind solely from its path, the name of the file may be overridden.
-|})
+      "This command is meant to ease the integration with editors in workflows that \
+       enable linting on save.\n\n\
+       This will read the contents of a build file either from $(b,disk) or from \
+       $(b,stdin) and print its linted result on $(b,stdout).\n\n\
+       By default, the contents will be read from $(b,stdin). You may supply the path to \
+       a file instead.\n\n\
+       When the contents of the file is read from stdin, or if the file given does not \
+       permit to recognize the linted file kind solely from its path, the name of the \
+       file may be overridden.")
     (let%map_open.Command () = Log_cli.set_config ()
      and file =
        Arg.pos_opt

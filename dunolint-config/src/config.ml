@@ -139,7 +139,7 @@ let config () =
 
 let main =
   Command.make
-    ~summary:"Dunolint's Dunolint Config"
+    ~summary:"Dunolint's Dunolint Config."
     (let open Command.Std in
      let+ () = Arg.return () in
      let config = config () in

@@ -21,22 +21,24 @@
 
 let main =
   Command.group
-    ~summary:"dunolint"
+    ~summary:"A linter for build files in OCaml dune projects."
     ~readme:(fun () ->
-      {|
-A cli tool to lint and help manage build files in dune projects (OCaml).
-
-The goal of $(b,dunolint) is to check customizable invariants in your repo and help with ergonomic issues, such as applying systematic changes across many files. It supports things like enabling instrumentation, configuring recurring lint or preprocess flags, sorting libraries alphabetically, and more. You can use it at your convenience during development, and enforce consistency by integrating it into your CI pipeline.
-
-Main commands include:
-
-- $(b,lint): apply linting configuration to an entire project at once, perhaps interactively.
-
-- $(b,tools): a collection of more specific commands, for example to facilitate the integration with other tools.
-
-For more information, use the $(b,--help) flag on a subcommand.
-|})
+      "The goal of $(b,dunolint) is to check customizable invariants in your repo and \
+       help with ergonomic issues, such as applying systematic changes across many \
+       files. It supports things like enabling instrumentation, configuring recurring \
+       lint or preprocess flags, sorting libraries alphabetically, and more. You can use \
+       it at your convenience during development, and enforce consistency by integrating \
+       it into your CI pipeline.\n\n\
+       Main commands include:\n\n\
+       - $(b,lint): apply linting configuration to an entire project at once, perhaps \
+       interactively.\n\n\
+       - $(b,tools): a collection of more specific commands, for example to facilitate \
+       the integration with other tools.\n\n\
+       For more information, use the $(b,--help) flag on a subcommand.")
     [ "lint", Cmd__lint.main
-    ; "tools", Command.group ~summary:"tools" [ "lint-file", Cmd__tools__lint_file.main ]
+    ; ( "tools"
+      , Command.group
+          ~summary:"Tools commands (miscellaneous)."
+          [ "lint-file", Cmd__tools__lint_file.main ] )
     ]
 ;;

@@ -176,5 +176,5 @@ let ask_yn ~prompt ~default =
 module Arg = struct
   open Command.Std
 
-  let yes = Arg.flag [ "yes" ] ~doc:"do not prompt for confirmation"
+  let yes = Arg.flag [ "yes" ] ~doc:"Do not prompt for confirmation."
 end
