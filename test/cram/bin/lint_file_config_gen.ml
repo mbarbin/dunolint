@@ -52,7 +52,7 @@ let config () =
 
 let main =
   Command.make
-    ~summary:"Generate a dunolint config for the lint-file.t test"
+    ~summary:"Generate a dunolint config for the lint-file.t test."
     (let open Command.Std in
      let+ () = Arg.return () in
      let config = config () in

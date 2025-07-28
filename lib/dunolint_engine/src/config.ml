@@ -50,21 +50,21 @@ let arg =
     running_mode
       [ "dry-run" ]
       ~running_mode:Dry_run
-      ~doc:"Print what linting actions would be done, but do not actually perform them"
+      ~doc:"Print what linting actions would be done, but do not actually perform them."
   and+ interactive =
     running_mode
       [ "interactive"; "i" ]
       ~running_mode:Interactive
       ~doc:
         "Ask confirmation before applying each diff. This is the default when stdout is \
-         a tty"
+         a tty."
   and+ yes =
     running_mode
       [ "yes" ]
       ~running_mode:Force_yes
       ~doc:
         "Disable interactivity when stdout is a tty. Do not ask for confirmation and \
-         apply all diffs. This is the default when stdout is *not* a tty"
+         apply all diffs. This is the default when stdout is $(b,not) a tty."
   and+ check =
     running_mode
       [ "check" ]
@@ -72,7 +72,7 @@ let arg =
       ~doc:
         "Print what linting actions would be done, but do not actually perform them. \
          Exit with a non-zero exit code in case some linting changes are required. This \
-         execution mode is meant for scripts and CI pipelines"
+         execution mode is meant for scripts and CI pipelines."
   in
   let running_mode : Running_mode.t =
     match List.filter_opt [ dry_run; interactive; yes; check ] with
