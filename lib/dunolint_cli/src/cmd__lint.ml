@@ -22,12 +22,13 @@
 let main =
   Command.make
     ~summary:"Lint project."
-    (let%map_open.Command dunolint_engine_config = Dunolint_engine.Config.arg
-     and () = Log_cli.set_config ()
-     and config =
+    (let open Command.Std in
+     let+ dunolint_engine_config = Dunolint_engine.Config.arg
+     and+ () = Log_cli.set_config ()
+     and+ config =
        Arg.named_opt [ "config" ] Param.file ~doc:"Path to dunolint config file."
-     and below = Common_helpers.below ~doc:"Lint only below this path."
-     and enforce =
+     and+ below = Common_helpers.below ~doc:"Lint only below this path."
+     and+ enforce =
        Arg.named_multi
          [ "enforce" ]
          (Common_helpers.sexpable_param (module Dunolint.Condition))

@@ -151,14 +151,15 @@ let main =
        When the contents of the file is read from stdin, or if the file given does not \
        permit to recognize the linted file kind solely from its path, the name of the \
        file may be overridden.")
-    (let%map_open.Command () = Log_cli.set_config ()
-     and file =
+    (let open Command.Std in
+     let+ () = Log_cli.set_config ()
+     and+ file =
        Arg.pos_opt
          ~pos:0
          (Param.validated_string (module Fpath))
          ~docv:"FILE"
          ~doc:"Path to file to lint (by default reads from stdin)."
-     and filename =
+     and+ filename =
        Arg.named_opt
          [ "filename" ]
          (Param.validated_string (module Fpath))
@@ -168,7 +169,7 @@ let main =
             derive the linted file kind from its basename, but that path is not used to \
             load contents from disk. This may be used to override an actual file name or \
             to name the input when it comes from $(b,stdin)."
-     and in_place =
+     and+ in_place =
        Arg.flag
          [ in_place_switch ]
          ~doc:
@@ -176,15 +177,15 @@ let main =
             result in the file directly, instead of printing it to $(b,stdout). \
             Supplying this flag results in failure when the input is read from \
             $(b,stdin)."
-     and config =
+     and+ config =
        Arg.named_opt [ "config" ] Param.file ~doc:"Path to dunolint config file."
-     and format_file =
+     and+ format_file =
        Arg.named_with_default
          [ "format-file" ]
          Param.bool
          ~default:true
          ~doc:"Format file with after linting, using [dune format-dune-file]."
-     and enforce =
+     and+ enforce =
        Arg.named_multi
          [ "enforce" ]
          (Common_helpers.sexpable_param (module Dunolint.Condition))
