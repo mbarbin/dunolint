@@ -128,6 +128,32 @@ struct
   ;;
 end
 
+module Make_sexpable_ordered_set
+    (M : sig
+       val field_name : string
+     end)
+    (S : Sexpable.S) =
+struct
+  type t = S.t Ordered_set.t
+
+  let field_name = M.field_name
+  let read_element ~sexps_rewriter:_ sexp = S.t_of_sexp sexp
+
+  let read ~sexps_rewriter ~field =
+    let args = get_args ~field_name:M.field_name ~sexps_rewriter ~field in
+    Ordered_set.read ~read_element ~sexps_rewriter args
+  ;;
+
+  let write (t : t) =
+    let values = Ordered_set.write ~write_a:S.sexp_of_t t in
+    Sexp.List (Atom M.field_name :: values)
+  ;;
+
+  let rewrite (t : t) ~sexps_rewriter ~field =
+    replace_field ~sexps_rewriter ~field ~new_field:(write t)
+  ;;
+end
+
 let insert_new_fields ~sexps_rewriter ~indicative_field_ordering ~fields ~new_fields =
   let new_fields =
     List.map new_fields ~f:(fun (field : Sexp.t) ->
@@ -178,7 +204,7 @@ let insert_new_fields ~sexps_rewriter ~indicative_field_ordering ~fields ~new_fi
           Err.raise
             ~loc:(Loc.of_file ~path:(Sexps_rewriter.path sexps_rewriter))
             [ Pp.textf "Existing stanza in dune file expected to have at least one field."
-            ]
+            ] [@coverage off]
       in
       let pred_loc = Sexps_rewriter.loc sexps_rewriter pred_field in
       let indentation =

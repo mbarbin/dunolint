@@ -69,6 +69,16 @@ module Make_sexpable_list
      end)
     (M : Sexpable.S) : S with type t = M.t list
 
+(** A util to create a handler for an ordered set where individual elements have
+    the same sexpable type. The handler will expect a list of arguments, will
+    support and parse the ordered set constructors of dune, and parse the
+    elements according to the sexp serializer provided. *)
+module Make_sexpable_ordered_set
+    (_ : sig
+       val field_name : string
+     end)
+    (M : Sexpable.S) : S with type t = M.t Ordered_set.t
+
 (** {1 Utils} *)
 
 (** A convenient wrapper for [read] that finds the field to read from

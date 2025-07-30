@@ -19,51 +19,62 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Enforce_result = Enforce_result
-module Handler = Handler
-module Linter = Linter
-module Linters = Linters
-module Ordered_set = Ordered_set
-module Sexp_handler = Sexp_handler
-module Stanza_linter = Stanza_linter
+module Int_list =
+  Dunolinter.Sexp_handler.Make_sexpable_list
+    (struct
+      let field_name = "ints"
+    end)
+    (Int)
 
-module Stanza = struct
-  type 'a t =
-    { stanza : 'a
-    ; path : Relative_path.t
-    ; original_sexp : Sexp.t
-    ; sexps_rewriter : Sexps_rewriter.t
-    ; linter : Linter.t
-    }
-end
-
-module type S = Dunolinter_intf.S with type 'a stanza := 'a Stanza.t
-
-let match_stanza (t : _ Stanza.t) = t.stanza
-let path (t : _ Stanza.t) = t.path
-let original_sexp (t : _ Stanza.t) = t.original_sexp
-let sexps_rewriter (t : _ Stanza.t) = t.sexps_rewriter
-let linter (t : _ Stanza.t) = t.linter
-
-let eval_path ~path ~condition =
-  Blang.eval condition (function
-    | `equals value -> Relative_path.equal path value
-    | `glob glob -> Dunolint.Glob.test glob (Relative_path.to_string path))
-  |> Dunolint.Trilang.const
+let%expect_test "rewrite" =
+  let test original_contents ~f =
+    let sexps_rewriter, field =
+      Test_helpers.read_sexp_field ~path:(Fpath.v "dune") original_contents
+    in
+    let t = Int_list.read ~sexps_rewriter ~field in
+    Int_list.rewrite (f t) ~sexps_rewriter ~field;
+    print_endline (Sexps_rewriter.contents sexps_rewriter)
+  in
+  test {|(ints 1 2 3)|} ~f:(fun t -> 0 :: t);
+  [%expect {| (ints 0 1 2 3) |}];
+  ()
 ;;
 
-module Private = struct
-  module Stanza = struct
-    module For_create = struct
-      type nonrec 'a t = 'a Stanza.t =
-        { stanza : 'a
-        ; path : Relative_path.t
-        ; original_sexp : Sexp.t
-        ; sexps_rewriter : Sexps_rewriter.t
-        ; linter : Linter.t
-        }
-    end
-
-    let create t = t
-  end
-end
+let%expect_test "insert" =
+  let insert original_contents ~indicative_field_ordering ~new_fields =
+    let sexps_rewriter =
+      match Sexps_rewriter.create ~path:(Fpath.v "file") ~original_contents with
+      | Ok r -> r
+      | Error { loc; message } -> Err.raise ~loc [ Pp.text message ] [@coverage off]
+    in
+    let fields = Sexps_rewriter.original_sexps sexps_rewriter in
+    Dunolinter.Sexp_handler.insert_new_fields
+      ~sexps_rewriter
+      ~indicative_field_ordering
+      ~fields
+      ~new_fields;
+    print_endline (Sexps_rewriter.contents sexps_rewriter)
+  in
+  insert {| () |} ~indicative_field_ordering:[] ~new_fields:[];
+  [%expect {| () |}];
+  insert
+    {| (a a) (b b) (c c) |}
+    ~indicative_field_ordering:[ "a"; "d"; "b" ]
+    ~new_fields:[ Sexp.List [ Atom "d"; Atom "d" ]; Sexp.List [ Atom "e"; Atom "e" ] ];
+  [%expect
+    {|
+    (a a)
+    (d d) (b b)
+          (e e) (c c)
+    |}];
+  insert
+    {| (a a) ((c) c) (b b) |}
+    ~indicative_field_ordering:[ "a"; "d"; "b" ]
+    ~new_fields:[ Sexp.List [ Atom "d"; Atom "d" ] ];
+  [%expect
+    {|
+    (a a)
+    (d d) ((c) c) (b b)
+    |}];
+  ()
+;;
