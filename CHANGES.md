@@ -1,4 +1,4 @@
-## 0.0.2025XXXX (unreleased)
+## 0.0.20250730 (2025-07-30)
 
 ### Added
 
@@ -16,8 +16,6 @@
 - Support building dunolint-lib with OCaml 4.14 (#65, @mbarbin).
 - Updated git-pager and err dependencies (#63, #64, @mbarbin).
 
-### Deprecated
-
 ### Fixed
 
 - Fix unexpected rewrites on duped flags in libs (#82, @mbarbin).
@@ -27,6 +25,8 @@
 - Fix git pager clean termination when displayed diff exceeds 1 page (#61, @mbarbin).
 
 ### Removed
+
+- Replace library `equals MODES` by `has_modes` construct (#81, @mbarbin).
 
 ## 0.0.20250403 (2025-04-03)
 
