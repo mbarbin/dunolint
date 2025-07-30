@@ -19,12 +19,16 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-type t = { mutable modes : Dune.Library.Modes.t } [@@deriving sexp_of]
+module Ordered_set = struct
+  type t = Dune.Compilation_mode.t Dunolinter.Ordered_set.t [@@deriving sexp_of]
+end
+
+type t = { mutable modes : Ordered_set.t } [@@deriving sexp_of]
 
 let field_name = "modes"
 
 module Handler =
-  Dunolinter.Sexp_handler.Make_sexpable_list
+  Dunolinter.Sexp_handler.Make_sexpable_ordered_set
     (struct
       let field_name = field_name
     end)
@@ -36,22 +40,57 @@ let set_modes t ~modes = t.modes <- modes
 
 let read ~sexps_rewriter ~field =
   let modes = Handler.read ~sexps_rewriter ~field in
-  create ~modes:(Dune.Library.Modes.of_list modes)
+  { modes = Dunolinter.Ordered_set.canonical_sort (module Dune.Compilation_mode) modes }
 ;;
 
-let write t = Handler.write (Set.to_list t.modes)
-
-let rewrite t ~sexps_rewriter ~field =
-  Handler.rewrite (Set.to_list t.modes) ~sexps_rewriter ~field
-;;
+let write t = Handler.write t.modes
+let rewrite t ~sexps_rewriter ~field = Handler.rewrite t.modes ~sexps_rewriter ~field
 
 type predicate = Dune.Library.Modes.Predicate.t
 
+let has_mode t ~mode =
+  match
+    Dunolinter.Ordered_set.mem
+      (module Dune.Compilation_mode)
+      t.modes
+      mode
+      ~evaluator:Dunolinter.Ordered_set.Evaluator.static
+  with
+  | Known true -> true
+  | Known false | Unknown -> false
+;;
+
 let eval t ~predicate =
-  (match (predicate : predicate) with
-   | `equals modes -> Set.equal t.modes modes
-   | `has_mode mode -> Set.mem t.modes mode)
-  |> Dunolint.Trilang.const
+  match (predicate : predicate) with
+  | `has_modes modes ->
+    Dunolint.Trilang.const (List.for_all modes ~f:(fun mode -> has_mode t ~mode))
+  | `has_mode mode -> Dunolint.Trilang.const (has_mode t ~mode)
+;;
+
+let insert_mode t ~mode =
+  match
+    Dunolinter.Ordered_set.mem
+      (module Dune.Compilation_mode)
+      t.modes
+      mode
+      ~evaluator:Dunolinter.Ordered_set.Evaluator.static
+  with
+  | Known true -> ()
+  | Known false | Unknown ->
+    t.modes <- Dunolinter.Ordered_set.insert (module Dune.Compilation_mode) t.modes mode
+;;
+
+let remove_mode t ~mode =
+  match
+    Dunolinter.Ordered_set.mem
+      (module Dune.Compilation_mode)
+      t.modes
+      mode
+      ~evaluator:Dunolinter.Ordered_set.Evaluator.static
+  with
+  | Known false -> ()
+  | Known true | Unknown ->
+    t.modes <- Dunolinter.Ordered_set.remove (module Dune.Compilation_mode) t.modes mode
 ;;
 
 let enforce =
@@ -60,27 +99,30 @@ let enforce =
     ~eval
     ~enforce:(fun t predicate ->
       match predicate with
-      | Not (`equals _) -> Eval
-      | T (`equals modes) ->
-        t.modes <- modes;
-        Ok
       | T (`has_mode mode) ->
-        t.modes <- Set.add t.modes mode;
+        insert_mode t ~mode;
+        Ok
+      | T (`has_modes modes) ->
+        List.iter modes ~f:(fun mode -> insert_mode t ~mode);
         Ok
       | Not (`has_mode mode) ->
-        t.modes <- Set.remove t.modes mode;
+        remove_mode t ~mode;
+        Ok
+      | Not (`has_modes modes) ->
+        List.iter modes ~f:(fun mode -> remove_mode t ~mode);
         Ok)
 ;;
 
 let initialize ~condition =
   let modes =
     let set =
-      List.map (Dunolinter.Linter.at_positive_enforcing_position condition) ~f:(function
-        | `equals modes -> modes
-        | `has_mode mode -> Set.singleton (module Dune.Compilation_mode) mode)
-      |> Set.union_list (module Dune.Compilation_mode)
+      Dunolinter.Linter.at_positive_enforcing_position condition
+      |> List.concat_map ~f:(function
+        | `has_modes modes -> modes
+        | `has_mode mode -> [ mode ])
+      |> Set.of_list (module Dune.Compilation_mode)
     in
     if Set.is_empty set then Set.singleton (module Dune.Compilation_mode) `best else set
   in
-  { modes }
+  { modes = Dunolinter.Ordered_set.of_set modes }
 ;;

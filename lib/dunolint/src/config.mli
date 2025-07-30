@@ -77,6 +77,7 @@ module Std : sig
   val glob : string -> [> `glob of Glob.t ] Blang.t
   val has_field : 'a -> [> `has_field of 'a ] Blang.t
   val has_mode : 'a -> [> `has_mode of 'a ] Blang.t
+  val has_modes : 'a -> [> `has_modes of 'a ] Blang.t
   val implicit_transitive_deps : 'a -> [> `implicit_transitive_deps of 'a ] Blang.t
   val include_subdirs : 'a -> [> `include_subdirs of 'a ] Blang.t
   val instrumentation : 'a -> [> `instrumentation of 'a ] Blang.t

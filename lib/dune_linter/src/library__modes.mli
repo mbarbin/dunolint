@@ -19,9 +19,13 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
+module Ordered_set : sig
+  type t = Dune.Compilation_mode.t Dunolinter.Ordered_set.t [@@deriving sexp_of]
+end
+
 type t
 
-val create : modes:Dune.Library.Modes.t -> t
+val create : modes:Ordered_set.t -> t
 
 (** When the field appears in the condition blang, we create a first value to
     initialize when the field is not originally present. *)
@@ -34,8 +38,8 @@ include
 
 (** {1 Getters} *)
 
-val modes : t -> Dune.Library.Modes.t
+val modes : t -> Ordered_set.t
 
 (** {1 Setters} *)
 
-val set_modes : t -> modes:Dune.Library.Modes.t -> unit
+val set_modes : t -> modes:Ordered_set.t -> unit
