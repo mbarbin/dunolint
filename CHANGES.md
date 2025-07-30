@@ -1,3 +1,13 @@
+## 0.0.2025XXXX (unreleased)
+
+### Added
+
+- Made all names in dunolint lib export `Comparable.S` (#84, @mbarbin).
+
+### Changed
+
+- Move comment handling logic into helper module (#84, @mbarbin).
+
 ## 0.0.20250730 (2025-07-30)
 
 ### Added
