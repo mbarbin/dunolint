@@ -45,6 +45,42 @@ let%expect_test "read/write" =
     <backtrace disabled in tests>
     [125]
     |}];
+  test {| (library (ignored field)) |};
+  [%expect {| (library) |}];
+  test {| (library (ignored field) and-more) |};
+  [%expect {| (library) |}];
+  test {| (library (name my_test) (inline_tests)) |};
+  [%expect {| (library (name my_test) (inline_tests)) |}];
+  test
+    {|
+(library
+ (name dune_linter)
+ (public_name dunolint.dune_linter)
+ (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a -open Base)
+ (libraries base dunolint-lib dunolinter etc)
+ (instrumentation
+  (backend bisect_ppx))
+ (lint
+  (pps ppx_js_style -allow-let-operators -check-doc-comments))
+ (preprocess
+  (pps
+   -unused-code-warnings=force
+   ppx_compare
+   ppx_enumerate
+   and_more)))
+|};
+  [%expect
+    {|
+    (library
+      (name        dune_linter)
+      (public_name dunolint.dune_linter)
+      (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a -open Base)
+      (libraries base dunolint-lib dunolinter etc)
+      (instrumentation (backend bisect_ppx))
+      (lint (pps ppx_js_style -allow-let-operators -check-doc-comments))
+      (preprocess (
+        pps -unused-code-warnings=force ppx_compare ppx_enumerate and_more)))
+    |}];
   ()
 ;;
 
@@ -65,6 +101,130 @@ let%expect_test "sexp_of" =
      (preprocess                  ())
      (marked_for_removal          ()))
     |}];
+  ()
+;;
+
+let rewrite ?(f = ignore) str =
+  let (sexps_rewriter, field), t = parse str in
+  f t;
+  Dune_linter.Library.rewrite t ~sexps_rewriter ~field;
+  print_endline (Sexps_rewriter.contents sexps_rewriter)
+;;
+
+let%expect_test "rewrite" =
+  rewrite {| (library (name main)) |};
+  [%expect {| (library (name main)) |}];
+  let spec =
+    {|
+(library
+ (name dune_linter)
+ (public_name dunolint.dune_linter)
+ (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a -open Base)
+ (libraries base dunolint-lib dunolinter etc)
+ (instrumentation
+  (backend bisect_ppx))
+ (lint
+  (pps ppx_js_style -allow-let-operators -check-doc-comments))
+ (unknown_field blah)
+ (preprocess
+  (pps
+   -unused-code-warnings=force
+   ppx_compare
+   ppx_enumerate
+   and_more)))
+|}
+  in
+  rewrite spec;
+  [%expect
+    {|
+    (library
+     (name dune_linter)
+     (public_name dunolint.dune_linter)
+     (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a -open Base)
+     (libraries base dunolint-lib dunolinter etc)
+     (instrumentation
+      (backend bisect_ppx))
+     (lint
+      (pps ppx_js_style -allow-let-operators -check-doc-comments))
+     (unknown_field blah)
+     (preprocess
+      (pps
+       -unused-code-warnings=force
+       ppx_compare
+       ppx_enumerate
+       and_more)))
+    |}];
+  rewrite spec ~f:(fun t ->
+    let open Dunolint.Config.Std in
+    Dune_linter.Library.enforce
+      t
+      ~condition:
+        (and_ [ not_ (has_field `instrumentation); not_ (has_field `preprocess) ]));
+  [%expect
+    {|
+    (library
+     (name dune_linter)
+     (public_name dunolint.dune_linter)
+     (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a -open Base)
+     (libraries base dunolint-lib dunolinter etc)
+
+     (lint
+      (pps ppx_js_style -allow-let-operators -check-doc-comments))
+     (unknown_field blah)
+     )
+    |}];
+  rewrite {| (library) |};
+  [%expect {| (library) |}];
+  ()
+;;
+
+let%expect_test "create_then_rewrite" =
+  (* This covers some unusual cases. The common code path does not involve
+     rewriting values that are created via [create]. *)
+  let test t str =
+    let sexps_rewriter, field = Common.read str in
+    Dune_linter.Library.rewrite t ~sexps_rewriter ~field;
+    print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
+  in
+  let t = Dune_linter.Library.create () in
+  test t {| (library (name main)) |};
+  [%expect {| (library (name main)) |}];
+  let t =
+    Dune_linter.Library.create
+      ~public_name:(Dune.Library.Public_name.v "my-lib")
+      ~inline_tests:false
+      ~libraries:[ Dune.Library.Name.v "foo"; Dune.Library.Name.v "my-dep" ]
+      ~modes:(Dune.Library.Modes.of_list [ `byte; `native ])
+      ~libraries_to_open_via_flags:[ "my-dep"; "other" ]
+      ()
+  in
+  test t {| (library (name main)) |};
+  [%expect
+    {|
+    (library
+      (name        main)
+      (public_name my-lib)
+      (modes     byte  native)
+      (flags     -open My_dep)
+      (libraries foo   my-dep))
+    |}];
+  (* Inline tests is optional, when not specified the current value is
+     ignored. *)
+  let t = Dune_linter.Library.create () in
+  test t {| (library (name main)) |};
+  [%expect {| (library (name main)) |}];
+  test t {| (library (name main) (inline_tests)) |};
+  [%expect {| (library (name main) (inline_tests)) |}];
+  let t = Dune_linter.Library.create ~inline_tests:true () in
+  test t {| (library (name main)) |};
+  [%expect {| (library (name main) (inline_tests)) |}];
+  test t {| (library (name main) (inline_tests)) |};
+  [%expect {| (library (name main) (inline_tests)) |}];
+  let t = Dune_linter.Library.create ~inline_tests:false () in
+  test t {| (library (name main)) |};
+  [%expect {| (library (name main)) |}];
+  test t {| (library (name main) (inline_tests)) |};
+  [%expect {| (library (name main)) |}];
   ()
 ;;
 
@@ -140,15 +300,16 @@ let%expect_test "eval" =
   ()
 ;;
 
+let enforce ((sexps_rewriter, field), t) conditions =
+  Sexps_rewriter.reset sexps_rewriter;
+  Dunolinter.Handler.raise ~f:(fun () ->
+    List.iter conditions ~f:(fun condition -> Dune_linter.Library.enforce t ~condition);
+    Dune_linter.Library.rewrite t ~sexps_rewriter ~field;
+    print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
+;;
+
 let%expect_test "enforce" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
-  let enforce ((sexps_rewriter, field), t) conditions =
-    Sexps_rewriter.reset sexps_rewriter;
-    Dunolinter.Handler.raise ~f:(fun () ->
-      List.iter conditions ~f:(fun condition -> Dune_linter.Library.enforce t ~condition);
-      Dune_linter.Library.rewrite t ~sexps_rewriter ~field;
-      print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
-  in
   let open! Blang.O in
   let t = parse {| (library) |} in
   enforce t [];
@@ -197,6 +358,66 @@ let%expect_test "enforce" =
     (library
       (name  mylib)
       (modes native))
+    |}];
+  (* Otherwise the mode is edited in place. *)
+  let t = parse {| (library (name mylib) (modes byte)) |} in
+  enforce t [ modes (has_mode `native) ];
+  [%expect {| (library (name mylib) (modes byte native)) |}];
+  (* Currently adding a field is only possible if some are already present. *)
+  let t = parse {| (library) |} in
+  require_does_raise [%here] (fun () ->
+    enforce t [ name (equals (Dune.Library.Name.v "mylib")) ]);
+  [%expect {| "Existing stanza in dune file expected to have at least one field." |}];
+  ()
+;;
+
+let%expect_test "load_existing_libraries" =
+  (* This is covering a use-case which hopefully will be deprecated in the
+     future. Some external tool is using dunolint in such a way that existing
+     fields are linted against values obtained with [create], which ends up
+     erasing fields. *)
+  let test t str ~load_existing_libraries =
+    let sexps_rewriter, field = Common.read str in
+    Dune_linter.Library.Private.rewrite t ~load_existing_libraries ~sexps_rewriter ~field;
+    print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
+  in
+  let t =
+    Dune_linter.Library.create
+      ~name:(Dune.Library.Name.v "main")
+      ~public_name:(Dune.Library.Public_name.v "my-cli")
+      ~libraries:[ Dune.Library.Name.v "foo"; Dune.Library.Name.v "bar" ]
+      ()
+  in
+  let spec =
+    {|
+(library
+ (name other-name)
+ (libraries baz))
+|}
+  in
+  (* Here is the issue with this use-case. If we do not take special care to
+     load existing libraries, they are removed, because they are not declared in
+     [t]. See below, this is shown by the presence/absence of the [baz] library.
+
+     The main use case that we aim to support eventually is linting via
+     invariants, and usually, an invariant specify for a library to be present
+     or absent, but another library that is not directly involved with said
+     invariant is untouched when the invariant is enforced (not removed). *)
+  test t spec ~load_existing_libraries:false;
+  [%expect
+    {|
+    (library
+      (name        main)
+      (public_name my-cli)
+      (libraries bar foo))
+    |}];
+  test t spec ~load_existing_libraries:true;
+  [%expect
+    {|
+    (library
+      (name        main)
+      (public_name my-cli)
+      (libraries bar baz foo))
     |}];
   ()
 ;;

@@ -73,12 +73,11 @@ module Linter = struct
   type predicate = Dune.Predicate.t
 
   let eval (t : t) ~predicate =
-    match (predicate : predicate) with
+    (* Coverage is disabled due to many patOr, pending better bisect_ppx integration. *)
+    match[@coverage off] (predicate : predicate) with
     | `stanza stanza ->
       Blang.eval stanza (fun stanza ->
-        match stanza with
-        | `include_subdirs -> true
-        | `library | `executable | `executables -> false)
+        Dune.Stanza.Predicate.equal stanza `include_subdirs)
       |> Dunolint.Trilang.const
     | `include_subdirs condition ->
       Dunolint.Trilang.eval condition ~f:(fun predicate -> Top.eval t ~predicate)
@@ -95,7 +94,9 @@ module Linter = struct
         match predicate with
         | Not _ -> Eval
         | T dune ->
-          (match dune with
+          (* Coverage is disabled due to many patOr, pending better bisect_ppx
+             integration. *)
+          (match[@coverage off] dune with
            | `include_subdirs condition ->
              Top.enforce t ~condition;
              Ok

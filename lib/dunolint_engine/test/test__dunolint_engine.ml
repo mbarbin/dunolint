@@ -299,3 +299,21 @@ let%expect_test "file errors" =
   [%expect {||}];
   ()
 ;;
+
+let%expect_test "file-system errors" =
+  let t =
+    Dunolint_engine.create ~config:(Dunolint_engine.Config.create ~running_mode:Force_yes)
+  in
+  Dunolint_engine.lint_file t ~path:(Relative_path.v "foo/file") ~create_file:(fun () ->
+    "Hello File");
+  (* Let's say [foo] gets created as a regulard file in the interval. *)
+  Out_channel.write_all "foo" ~data:"Foo";
+  Err.For_test.protect (fun () -> Dunolint_engine.materialize t);
+  [%expect
+    {|
+    Error: Parent path "foo/" is expected to be a directory.
+    Actual file kind is [Regular file].
+    [123]
+    |}];
+  ()
+;;
