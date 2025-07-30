@@ -137,6 +137,7 @@ let insert_new_fields ~sexps_rewriter ~indicative_field_ordering ~fields ~new_fi
         | _ ->
           Err.raise
             [ Pp.text "Unexpected field shape"; Pp.text (Sexp.to_string_hum field) ]
+          [@coverage off]
       in
       ref false, name, field)
   in

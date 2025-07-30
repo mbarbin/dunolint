@@ -398,7 +398,8 @@ module Linter = struct
   type predicate = Dune.Predicate.t
 
   let eval (t : t) ~predicate =
-    match (predicate : Dune.Predicate.t) with
+    (* Coverage is disabled due to many patOr, pending better bisect_ppx integration. *)
+    match[@coverage off] (predicate : Dune.Predicate.t) with
     | `stanza stanza ->
       Blang.eval stanza (fun stanza ->
         match stanza with
@@ -417,7 +418,9 @@ module Linter = struct
       (module Dune.Predicate)
       ~eval
       ~enforce:(fun t predicate ->
-        match predicate with
+        (* Coverage is disabled due to many patOr, pending better bisect_ppx
+           integration. *)
+        match[@coverage off] predicate with
         | Not _ -> Eval
         | T (`include_subdirs _ | `library _ | `stanza _) -> Unapplicable
         | T (`executable condition) ->
