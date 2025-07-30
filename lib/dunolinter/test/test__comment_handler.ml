@@ -19,52 +19,24 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Comment_handler = Comment_handler
-module Enforce_result = Enforce_result
-module Handler = Handler
-module Linter = Linter
-module Linters = Linters
-module Ordered_set = Ordered_set
-module Sexp_handler = Sexp_handler
-module Stanza_linter = Stanza_linter
+module Comment_handler = Dunolinter.Comment_handler
 
-module Stanza = struct
-  type 'a t =
-    { stanza : 'a
-    ; path : Relative_path.t
-    ; original_sexp : Sexp.t
-    ; sexps_rewriter : Sexps_rewriter.t
-    ; linter : Linter.t
-    }
-end
-
-module type S = Dunolinter_intf.S with type 'a stanza := 'a Stanza.t
-
-let match_stanza (t : _ Stanza.t) = t.stanza
-let path (t : _ Stanza.t) = t.path
-let original_sexp (t : _ Stanza.t) = t.original_sexp
-let sexps_rewriter (t : _ Stanza.t) = t.sexps_rewriter
-let linter (t : _ Stanza.t) = t.linter
-
-let eval_path ~path ~condition =
-  Blang.eval condition (function
-    | `equals value -> Relative_path.equal path value
-    | `glob glob -> Dunolint.Glob.test glob (Relative_path.to_string path))
-  |> Dunolint.Trilang.const
+let%expect_test "extended_range" =
+  let test original_contents ~range =
+    let { Loc.Range.start; stop } =
+      Comment_handler.extended_range ~original_contents ~range
+    in
+    print_s [%sexp (String.sub original_contents ~pos:start ~len:(stop - start) : string)]
+  in
+  test "foo" ~range:{ start = 0; stop = 3 };
+  [%expect {| foo |}];
+  test "foo     " ~range:{ start = 0; stop = 3 };
+  [%expect {| "foo     " |}];
+  test "foo     ; Hello comment" ~range:{ start = 0; stop = 3 };
+  [%expect {| "foo     ; Hello comment" |}];
+  test "foo     \t; Hello comment" ~range:{ start = 0; stop = 3 };
+  [%expect {| "foo     \t; Hello comment" |}];
+  test "foo     ; Hello comment\n; And new line" ~range:{ start = 0; stop = 3 };
+  [%expect {| "foo     ; Hello comment" |}];
+  ()
 ;;
-
-module Private = struct
-  module Stanza = struct
-    module For_create = struct
-      type nonrec 'a t = 'a Stanza.t =
-        { stanza : 'a
-        ; path : Relative_path.t
-        ; original_sexp : Sexp.t
-        ; sexps_rewriter : Sexps_rewriter.t
-        ; linter : Linter.t
-        }
-    end
-
-    let create t = t
-  end
-end

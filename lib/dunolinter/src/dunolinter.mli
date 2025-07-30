@@ -19,6 +19,14 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
+(** A common library used by other linters and rewriters in the project.
+
+    The goal of this library is to capture common utils useful for the module
+    that handle the linting of supported files such as [dune] and [dune-project]
+    files. This module is a shared dependencies regrouping common functionality
+    that can be generalized and/or parametrized. *)
+
+module Comment_handler = Comment_handler
 module Enforce_result = Enforce_result
 module Handler = Handler
 module Linter = Linter

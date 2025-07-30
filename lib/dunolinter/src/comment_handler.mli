@@ -19,49 +19,22 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-(** The ["libraries"] field indicates the dependencies for the stanza. It is
-    used in stanza such as [library], [executable], etc. *)
+(** A utility module to help with the management of comments in sexps files. *)
 
-type t
+(** [extended_range] computes the range for a library entry, that includes the
+    original range for the entry, but where the [stop] offset of the range may be
+    shifted to the right, until the end of the line, if this captures a comment
+    placed on the same line as the value.
 
-val create : libraries:Dune.Library.Name.t list -> t
+    For example:
 
-(** At the moment there is no predicate nor enforceable conditions on
-    libraries. They are automatically sorted. We may change this in the
-    future, perhaps make the sorting optional, etc. TBD. *)
-include Dunolinter.Stanza_linter.S with type t := t and type predicate := Nothing.t
+    {v
+     (libraries
+        foo
+        bar ;; a comment for bar on the same line
+        baz)
+    v}
 
-(** {1 Getters} *)
-
-module Entry : sig
-  (** An entry in the [libraries] field. These are usually atoms referring to
-      library names, but occasionally these can be more complex constructs. *)
-  type t [@@deriving sexp_of]
-
-  val library : Dune.Library.Name.t -> t
-  val re_export : Dune.Library.Name.t -> t
-  val library_name : t -> Dune.Library.Name.t option
-end
-
-val is_empty : t -> bool
-val entries : t -> Entry.t list
-val mem : t -> library:Dune.Library.Name.t -> bool
-
-(** {1 Setters} *)
-
-val dedup_and_sort : t -> unit
-val add_libraries : t -> libraries:Dune.Library.Name.t list -> unit
-val add_entries : t -> entries:Entry.t list -> unit
-
-(** {1 Private}
-
-    This module is exported for tests only. Its signature may change
-    in breaking ways at any time without prior notice, and outside of
-    the guidelines set by semver. *)
-module Private : sig
-  module Entry : sig
-    type t = Entry.t
-
-    val unhandled : original_index:int -> sexp:Sexp.t -> t
-  end
-end
+    [extended_range foo] will be [foo]'s original range unchanged. And
+    [extended_range bar] will include bar and its comment too. *)
+val extended_range : original_contents:string -> range:Loc.Range.t -> Loc.Range.t
