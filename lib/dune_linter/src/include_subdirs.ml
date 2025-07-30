@@ -77,9 +77,7 @@ module Linter = struct
     match[@coverage off] (predicate : predicate) with
     | `stanza stanza ->
       Blang.eval stanza (fun stanza ->
-        match stanza with
-        | `include_subdirs -> true
-        | `library | `executable | `executables -> false)
+        Dune.Stanza.Predicate.equal stanza `include_subdirs)
       |> Dunolint.Trilang.const
     | `include_subdirs condition ->
       Dunolint.Trilang.eval condition ~f:(fun predicate -> Top.eval t ~predicate)

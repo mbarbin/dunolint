@@ -538,10 +538,7 @@ module Linter = struct
     (* Coverage is disabled due to many patOr, pending better bisect_ppx integration. *)
     match[@coverage off] (predicate : predicate) with
     | `stanza stanza ->
-      Blang.eval stanza (fun stanza ->
-        match stanza with
-        | `library -> true
-        | `include_subdirs | `executable | `executables -> false)
+      Blang.eval stanza (fun stanza -> Dune.Stanza.Predicate.equal stanza `library)
       |> Dunolint.Trilang.const
     | `include_subdirs _ | `executable _ -> Dunolint.Trilang.Undefined
     | `library condition ->
