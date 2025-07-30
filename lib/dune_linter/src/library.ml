@@ -86,50 +86,42 @@ module Library_open_via_flags = struct
 end
 
 let open_via_flags t ~libraries_to_open_via_flags =
-  let to_add =
+  let flags = Flags.flags t.flags in
+  let existing_open_via_flags =
+    let hset = Hash_set.create (module String) in
+    let rec iter_list flags =
+      let rec aux sexps =
+        match sexps with
+        | [] -> ()
+        | Sexp.Atom "-open" :: Atom module_name :: rest ->
+          Hash_set.add hset module_name;
+          aux rest
+        | hd :: tl ->
+          iter_one hd;
+          aux tl
+      in
+      aux flags
+    and iter_one = function
+      | Sexp.Atom _ -> ()
+      | Sexp.List sexps -> iter_list sexps
+    in
+    iter_list flags;
+    hset
+  in
+  let to_open_via_flags =
     List.filter_map libraries_to_open_via_flags ~f:(fun library ->
       if Libraries.mem t.libraries ~library:(Dune.Library.Name.v library)
       then Some (Library_open_via_flags.module_name library)
       else None)
   in
-  let flags = Flags.flags t.flags in
-  let found = ref false in
-  let flags =
-    let rec map_list flags =
-      if not (List.mem flags (Sexp.Atom "-open") ~equal:Sexp.equal)
-      then flags
-      else (
-        let added_modules = Hash_set.create (module String) in
-        let rec aux sexps =
-          match sexps with
-          | [] -> []
-          | Sexp.List sexps :: tl -> Sexp.List (List.map sexps ~f:map_flag) :: aux tl
-          | Sexp.Atom "-open" :: Atom module_name :: rest ->
-            if not !found
-            then (
-              found := true;
-              aux
-                (List.concat_map to_add ~f:(fun module_name ->
-                   Sexp.[ Atom "-open"; Atom module_name ])
-                 @ sexps))
-            else if Hash_set.mem added_modules module_name
-            then aux rest
-            else (
-              Hash_set.add added_modules module_name;
-              Sexp.Atom "-open" :: Atom module_name :: aux rest)
-          | flag :: rest -> flag :: aux rest
-        in
-        aux flags)
-    and map_flag = function
-      | Sexp.Atom _ as atom -> atom
-      | Sexp.List flags -> Sexp.List (map_list flags)
-    in
-    map_list flags
+  let to_add =
+    List.filter to_open_via_flags ~f:(fun module_name ->
+      not (Hash_set.mem existing_open_via_flags module_name))
   in
   let flags =
-    if !found
-    then flags
-    else
+    match to_add with
+    | [] -> flags
+    | _ :: _ ->
       flags
       @ List.concat_map to_add ~f:(fun module_name ->
         Sexp.[ Atom "-open"; Atom module_name ])
