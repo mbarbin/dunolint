@@ -19,19 +19,7 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-type t
+type t = string
 
 include Container_key.S with type t := t
 include Comparable.S with type t := t
-include Validated_string.S with type t := t
-
-module Predicate : sig
-  type name := t
-
-  type t =
-    [ `equals of name
-    | `is_prefix of string
-    | `is_suffix of string
-    ]
-  [@@deriving compare, equal, sexp]
-end

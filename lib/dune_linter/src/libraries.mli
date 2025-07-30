@@ -38,8 +38,13 @@ module Entry : sig
       library names, but occasionally these can be more complex constructs. *)
   type t [@@deriving sexp_of]
 
+  (** {1 Builders} *)
+
   val library : Dune.Library.Name.t -> t
   val re_export : Dune.Library.Name.t -> t
+
+  (** {1 Getters} *)
+
   val library_name : t -> Dune.Library.Name.t option
 end
 
@@ -59,11 +64,6 @@ val add_entries : t -> entries:Entry.t list -> unit
     in breaking ways at any time without prior notice, and outside of
     the guidelines set by semver. *)
 module Private : sig
-  val extended_range_internal
-    :  original_contents:string
-    -> range:Loc.Range.t
-    -> Loc.Range.t
-
   module Entry : sig
     type t = Entry.t
 

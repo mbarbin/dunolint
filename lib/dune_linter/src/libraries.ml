@@ -140,85 +140,11 @@ let add_libraries t ~libraries =
   add_entries t ~entries:(List.map libraries ~f:Entry.library)
 ;;
 
-(* [extended_range] computes the range for a library entry, that includes the
-   original range for the entry, but where the [stop] offset of the range may be
-   shifted to the right, until the end of the line, if this captures a comment
-   placed on the same line as the value.
-
-   For example:
-
-   {v
-     (libraries
-        foo
-        bar ;; a comment for bar on the same line
-        baz)
-   v}
-
-   [extend_range foo] will be [foo]'s original range unchanged. And
-   [extend_range bar] will include bar and its comment too. *)
-let extended_range_internal ~original_contents ~(range : Loc.Range.t) =
-  let len = String.length original_contents in
-  let start = range.start in
-  let stop =
-    let rec loop i =
-      if i >= len
-      then i
-      else (
-        match original_contents.[i] with
-        | ' ' | '\t' -> loop (i + 1)
-        | ';' ->
-          (* This is the case in which we'd like to capture the remaining of the
-             line. *)
-          let rec eol i =
-            if i >= len
-            then i
-            else (
-              match original_contents.[i] with
-              | '\n' -> i
-              | _ -> eol (i + 1))
-          in
-          eol i
-        | _ ->
-          (* Keeping the original bound when only looped through spaces and
-             tabs. *)
-          range.stop)
-    in
-    loop range.stop
-  in
-  { Loc.Range.start; stop }
-;;
-
 let get_source ~original_contents ~range =
-  let { Loc.Range.start; stop } = extended_range_internal ~original_contents ~range in
+  let { Loc.Range.start; stop } =
+    Dunolinter.Comment_handler.extended_range ~original_contents ~range
+  in
   String.sub original_contents ~pos:start ~len:(stop - start)
-;;
-
-(* Tell whether two consecutive arguments are to be treated as belonging to
-   different sections.
-
-   The way dunolint does this, is to look whether two consecutive entries are
-   separated by more than 1 line. In particular this covers the case where
-   entries are separated by a comment in its own line, in which case dunolint
-   will consider that the dependencies are in different sections.
-
-   {v
-     (libraries
-       aa
-       bb
-       ;; this a comment
-       cc
-       zz)
-   v}
-
-   [are_in_different_section] must be called with two consecutive arguments,
-   otherwise the returned value does not have any particular meaning. *)
-let are_in_different_sections
-      ~(previous : Parsexp.Positions.range)
-      ~(current : Parsexp.Positions.range)
-  =
-  let previous_line = previous.end_pos.line in
-  let current_line = current.start_pos.line in
-  previous_line + 1 < current_line
 ;;
 
 let read ~sexps_rewriter ~field =
@@ -239,7 +165,7 @@ let read ~sexps_rewriter ~field =
       in
       position, entry)
     |> List.group ~break:(fun (previous, _) (current, _) ->
-      are_in_different_sections ~previous ~current)
+      Dunolinter.Comment_handler.are_in_different_sections ~previous ~current)
     |> List.map ~f:(fun entries -> { Section.entries = List.map entries ~f:snd })
   in
   { sections }
@@ -266,7 +192,7 @@ let extended_range ~sexps_rewriter ~arg =
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
   let original_contents = File_rewriter.original_contents file_rewriter in
   let range = Sexps_rewriter.range sexps_rewriter arg in
-  extended_range_internal ~original_contents ~range
+  Dunolinter.Comment_handler.extended_range ~original_contents ~range
 ;;
 
 let rewrite t ~sexps_rewriter ~field =
@@ -276,7 +202,7 @@ let rewrite t ~sexps_rewriter ~field =
       let position = Sexps_rewriter.position sexps_rewriter arg in
       position, arg)
     |> List.group ~break:(fun (previous, _) (current, _) ->
-      are_in_different_sections ~previous ~current)
+      Dunolinter.Comment_handler.are_in_different_sections ~previous ~current)
     |> List.map ~f:(List.map ~f:snd)
   in
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
@@ -341,6 +267,4 @@ let enforce =
 
 module Private = struct
   module Entry = Entry
-
-  let extended_range_internal = extended_range_internal
 end

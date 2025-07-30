@@ -19,14 +19,43 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-include String_container_key
-
-let invariant t =
-  (not (String.is_empty t))
-  && String.for_all t ~f:(fun c -> Char.is_alphanum c || Char.equal c '_')
+let extended_range ~original_contents ~(range : Loc.Range.t) =
+  let len = String.length original_contents in
+  let start = range.start in
+  let stop =
+    let rec loop i =
+      if i >= len
+      then i
+      else (
+        match original_contents.[i] with
+        | ' ' | '\t' -> loop (i + 1)
+        | ';' ->
+          (* This is the case in which we'd like to capture the remaining of the
+             line. *)
+          let rec eol i =
+            if i >= len
+            then i
+            else (
+              match original_contents.[i] with
+              | '\n' -> i
+              | _ -> eol (i + 1))
+          in
+          eol i
+        | _ ->
+          (* Keeping the original bound when only looped through spaces and
+             tabs. *)
+          range.stop)
+    in
+    loop range.stop
+  in
+  { Loc.Range.start; stop }
 ;;
 
-include Validated_string.Make (struct
-    let module_name = "Package_name"
-    let invariant = invariant
-  end)
+let are_in_different_sections
+      ~(previous : Parsexp.Positions.range)
+      ~(current : Parsexp.Positions.range)
+  =
+  let previous_line = previous.end_pos.line in
+  let current_line = current.start_pos.line in
+  previous_line + 1 < current_line
+;;

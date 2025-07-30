@@ -18,20 +18,3 @@
 (*_  and the LGPL-3.0 Linking Exception along with this library. If not, see      *)
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
-
-type t
-
-include Container_key.S with type t := t
-include Comparable.S with type t := t
-include Validated_string.S with type t := t
-
-module Predicate : sig
-  type name := t
-
-  type t =
-    [ `equals of name
-    | `is_prefix of string
-    | `is_suffix of string
-    ]
-  [@@deriving compare, equal, sexp]
-end

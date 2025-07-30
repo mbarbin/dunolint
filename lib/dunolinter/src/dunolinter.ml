@@ -19,6 +19,7 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+module Comment_handler = Comment_handler
 module Enforce_result = Enforce_result
 module Handler = Handler
 module Linter = Linter

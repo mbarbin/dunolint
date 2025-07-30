@@ -19,14 +19,24 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-include String_container_key
+module Comment_handler = Dunolinter.Comment_handler
 
-let invariant t =
-  (not (String.is_empty t))
-  && String.for_all t ~f:(fun c -> Char.is_alphanum c || Char.equal c '_')
+let%expect_test "extended_range" =
+  let test original_contents ~range =
+    let { Loc.Range.start; stop } =
+      Comment_handler.extended_range ~original_contents ~range
+    in
+    print_s [%sexp (String.sub original_contents ~pos:start ~len:(stop - start) : string)]
+  in
+  test "foo" ~range:{ start = 0; stop = 3 };
+  [%expect {| foo |}];
+  test "foo     " ~range:{ start = 0; stop = 3 };
+  [%expect {| "foo     " |}];
+  test "foo     ; Hello comment" ~range:{ start = 0; stop = 3 };
+  [%expect {| "foo     ; Hello comment" |}];
+  test "foo     \t; Hello comment" ~range:{ start = 0; stop = 3 };
+  [%expect {| "foo     \t; Hello comment" |}];
+  test "foo     ; Hello comment\n; And new line" ~range:{ start = 0; stop = 3 };
+  [%expect {| "foo     ; Hello comment" |}];
+  ()
 ;;
-
-include Validated_string.Make (struct
-    let module_name = "Package_name"
-    let invariant = invariant
-  end)

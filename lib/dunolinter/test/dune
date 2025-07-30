@@ -23,6 +23,8 @@
   expect_test_helpers_core.expect_test_helpers_base
   file-rewriter
   fpath-sexp0
+  loc
+  parsexp
   pp
   pplumbing.err
   sexps-rewriter

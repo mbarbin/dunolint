@@ -19,14 +19,6 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-include String_container_key
-
-let invariant t =
-  (not (String.is_empty t))
-  && String.for_all t ~f:(fun c -> Char.is_alphanum c || Char.equal c '_')
-;;
-
-include Validated_string.Make (struct
-    let module_name = "Package_name"
-    let invariant = invariant
-  end)
+module T = Container_key.String_impl
+include T
+include Comparable.Make (T)
