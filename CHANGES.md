@@ -2,11 +2,15 @@
 
 ### Added
 
-- Enable CRs workflows (experimental) (#76, @mbarbin).
+- Improve canonical order of libraries to open via flags (#83, @mbarbin).
+- Add support for ordered-set and use it in library.modes (#81, @mbarbin).
+- Enable CRs workflows (experimental) (#76, #78, @mbarbin).
 - Add tests (#67, #68, @mbarbin).
 
 ### Changed
 
+- Improved testing coverage (#80, @mbarbin).
+- Small refactors, tweaks & code improvement (#77, #79, @mbarbin).
 - Use `Git_pager` from opam package `pageantty` instead of vendoring it (#73, @mbarbin).
 - Refactor enforce functions to ease further testing (#72, @mbarbin).
 - Support building dunolint-lib with OCaml 4.14 (#65, @mbarbin).
@@ -16,6 +20,7 @@
 
 ### Fixed
 
+- Fix unexpected rewrites on duped flags in libs (#82, @mbarbin).
 - Fix some cram test failures shown by ocaml-ci (#75, @mbarbin).
 - Fix disabling of color when `--color=never` is supplied (#70, @mbarbin).
 - Fix doc location for installation guide (#69, @mbarbin).
