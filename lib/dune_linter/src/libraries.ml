@@ -140,33 +140,19 @@ let add_libraries t ~libraries =
   add_entries t ~entries:(List.map libraries ~f:Entry.library)
 ;;
 
-let get_source ~original_contents ~range =
-  let { Loc.Range.start; stop } =
-    Dunolinter.Comment_handler.extended_range ~original_contents ~range
-  in
-  String.sub original_contents ~pos:start ~len:(stop - start)
-;;
-
 let read ~sexps_rewriter ~field =
-  let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
-  let original_contents = File_rewriter.original_contents file_rewriter in
-  let args = Dunolinter.Sexp_handler.get_args ~field_name ~sexps_rewriter ~field in
   let sections =
-    List.mapi args ~f:(fun original_index arg ->
-      let position = Sexps_rewriter.position sexps_rewriter arg in
-      let range = Sexps_rewriter.Position.range position in
-      let source = get_source ~original_contents ~range in
-      let entry =
+    Dunolinter.Sections_handler.read_sections
+      ~field_name
+      ~sexps_rewriter
+      ~field
+      ~f:(fun ~original_index ~loc:_ ~source ~arg ->
         match arg with
         | Atom name -> Entry.Library { name = Dune.Library.Name.v name; source }
         | List [ Atom "re_export"; Atom name ] ->
           Entry.Re_export { name = Dune.Library.Name.v name; source }
-        | List _ as sexp -> Entry.Unhandled { original_index; sexp; source }
-      in
-      position, entry)
-    |> List.group ~break:(fun (previous, _) (current, _) ->
-      Dunolinter.Comment_handler.are_in_different_sections ~previous ~current)
-    |> List.map ~f:(fun entries -> { Section.entries = List.map entries ~f:snd })
+        | List _ as sexp -> Entry.Unhandled { original_index; sexp; source })
+    |> List.map ~f:(fun entries -> { Section.entries })
   in
   { sections }
 ;;
@@ -188,65 +174,18 @@ let write (t : t) =
          | Unhandled { original_index = _; sexp; source = _ } -> sexp)))
 ;;
 
-let extended_range ~sexps_rewriter ~arg =
-  let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
-  let original_contents = File_rewriter.original_contents file_rewriter in
-  let range = Sexps_rewriter.range sexps_rewriter arg in
-  Dunolinter.Comment_handler.extended_range ~original_contents ~range
-;;
-
 let rewrite t ~sexps_rewriter ~field =
-  let args =
-    Dunolinter.Sexp_handler.get_args ~field_name ~sexps_rewriter ~field
-    |> List.map ~f:(fun arg ->
-      let position = Sexps_rewriter.position sexps_rewriter arg in
-      position, arg)
-    |> List.group ~break:(fun (previous, _) (current, _) ->
-      Dunolinter.Comment_handler.are_in_different_sections ~previous ~current)
-    |> List.map ~f:(List.map ~f:snd)
-  in
-  let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
-  let insert_position =
-    let last_token =
-      match (field : Sexp.t) with
-      | List token_list -> List.last_exn token_list
-      | Atom _ -> assert false
-    in
-    (extended_range ~sexps_rewriter ~arg:last_token).stop
-  in
   let write_arg = function
     | Entry.Library { name = _; source } -> source
     | Entry.Re_export { name = _; source } -> source
     | Entry.Unhandled { original_index = _; sexp = _; source } -> source
   in
-  let rec iter_fields args new_args =
-    match args, new_args with
-    | arg :: args, new_arg :: new_args ->
-      File_rewriter.replace
-        file_rewriter
-        ~range:(extended_range ~sexps_rewriter ~arg)
-        ~text:(write_arg new_arg);
-      iter_fields args new_args
-    | [], [] -> ()
-    | [], _ :: _ ->
-      List.iter new_args ~f:(fun new_arg ->
-        let value = write_arg new_arg in
-        File_rewriter.insert file_rewriter ~offset:insert_position ~text:("\n" ^ value))
-    | _ :: _, [] ->
-      List.iter args ~f:(fun arg ->
-        File_rewriter.remove file_rewriter ~range:(extended_range ~sexps_rewriter ~arg))
-  in
-  let rec iter_sections args new_args =
-    match args, new_args with
-    | [], [] -> ()
-    | args :: tl, new_args :: new_tl ->
-      iter_fields args new_args.Section.entries;
-      iter_sections tl new_tl
-    | [], new_args ->
-      List.iter new_args ~f:(fun new_args -> iter_fields [] new_args.Section.entries)
-    | args, [] -> List.iter args ~f:(fun args -> iter_fields args [])
-  in
-  iter_sections args t.sections
+  Dunolinter.Sections_handler.rewrite_sections
+    ~field_name
+    ~sexps_rewriter
+    ~field
+    ~write_arg
+    ~sections:(List.map t.sections ~f:(fun { entries } -> entries))
 ;;
 
 type predicate = Nothing.t
