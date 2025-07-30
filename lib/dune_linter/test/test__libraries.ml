@@ -175,8 +175,8 @@ let%expect_test "rewrite" =
     ~f:(fun t ->
       print_s [%sexp (Dune_linter.Libraries.is_empty t : bool)];
       [%expect {| false |}];
-      print_s
-        [%sexp (Dune_linter.Libraries.entries t : Dune_linter.Libraries.Entry.t list)];
+      let entries = Dune_linter.Libraries.entries t in
+      print_s [%sexp (entries : Dune_linter.Libraries.Entry.t list)];
       [%expect
         {|
         ((Library
@@ -190,6 +190,12 @@ let%expect_test "rewrite" =
            (sexp (invalid sexp))
            (source "(invalid sexp)")))
         |}];
+      let library_names =
+        List.filter_map entries ~f:Dune_linter.Libraries.Entry.library_name
+        |> Set.of_list (module Dune.Library.Name)
+      in
+      print_s [%sexp { library_names : Set.M(Dune.Library.Name).t }];
+      [%expect {| ((library_names (bar baz foo sna))) |}];
       let mem name = Dune_linter.Libraries.mem t ~library:(Dune.Library.Name.v name) in
       require [%here] (mem "foo");
       [%expect {||}];
@@ -517,6 +523,39 @@ let%expect_test "enforce" =
     (Dunolinter.Handler.Enforce_failure
       (loc       _)
       (condition false))
+    |}];
+  ()
+;;
+
+let%expect_test "entries" =
+  (* Entries created via the API have a library name. *)
+  let my_lib = Dune.Library.Name.v "my_lib" in
+  let library_name entry =
+    match Dune_linter.Libraries.Entry.library_name entry with
+    | None -> assert false
+    | Some library_name ->
+      require_equal [%here] (module Dune.Library.Name) library_name my_lib;
+      print_s
+        [%sexp
+          { entry : Dune_linter.Libraries.Entry.t; library_name : Dune.Library.Name.t }]
+  in
+  library_name (Dune_linter.Libraries.Entry.library my_lib);
+  [%expect
+    {|
+    ((entry (
+       Library
+       (name   my_lib)
+       (source my_lib)))
+     (library_name my_lib))
+    |}];
+  library_name (Dune_linter.Libraries.Entry.re_export my_lib);
+  [%expect
+    {|
+    ((entry (
+       Re_export
+       (name   my_lib)
+       (source "(re_export my_lib)")))
+     (library_name my_lib))
     |}];
   ()
 ;;

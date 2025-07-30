@@ -38,8 +38,13 @@ module Entry : sig
       library names, but occasionally these can be more complex constructs. *)
   type t [@@deriving sexp_of]
 
+  (** {1 Builders} *)
+
   val library : Dune.Library.Name.t -> t
   val re_export : Dune.Library.Name.t -> t
+
+  (** {1 Getters} *)
+
   val library_name : t -> Dune.Library.Name.t option
 end
 
