@@ -6,6 +6,7 @@
 
 ### Changed
 
+- Move sections handling logic into helper module (#85, @mbarbin).
 - Move comment handling logic into helper module (#84, @mbarbin).
 
 ## 0.0.20250730 (2025-07-30)

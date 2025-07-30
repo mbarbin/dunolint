@@ -25,6 +25,7 @@ module Handler = Handler
 module Linter = Linter
 module Linters = Linters
 module Ordered_set = Ordered_set
+module Sections_handler = Sections_handler
 module Sexp_handler = Sexp_handler
 module Stanza_linter = Stanza_linter
 

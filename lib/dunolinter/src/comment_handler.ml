@@ -51,11 +51,14 @@ let extended_range ~original_contents ~(range : Loc.Range.t) =
   { Loc.Range.start; stop }
 ;;
 
-let are_in_different_sections
-      ~(previous : Parsexp.Positions.range)
-      ~(current : Parsexp.Positions.range)
-  =
-  let previous_line = previous.end_pos.line in
-  let current_line = current.start_pos.line in
-  previous_line + 1 < current_line
+let sexp_extended_range ~sexps_rewriter ~arg =
+  let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
+  let original_contents = File_rewriter.original_contents file_rewriter in
+  let range = Sexps_rewriter.range sexps_rewriter arg in
+  extended_range ~original_contents ~range
+;;
+
+let get_extended_source ~original_contents ~range =
+  let { Loc.Range.start; stop } = extended_range ~original_contents ~range in
+  String.sub original_contents ~pos:start ~len:(stop - start)
 ;;
