@@ -85,6 +85,69 @@ module Library_open_via_flags = struct
   ;;
 end
 
+module Item = struct
+  type t =
+    | Open_via_flags of { module_name : string }
+    | Open_via_flags_sorted of
+        { module_name : string
+        ; index : int
+        }
+    | Other of Sexp.t
+
+  let to_flags = function
+    | Open_via_flags { module_name } | Open_via_flags_sorted { module_name; index = _ } ->
+      [ Sexp.Atom "-open"; Atom module_name ]
+    | Other sexp -> [ sexp ]
+  ;;
+
+  let kind = function
+    | Open_via_flags _ -> 0
+    | Open_via_flags_sorted _ -> 1
+    | Other _ -> 2
+  ;;
+
+  let index_exn = function
+    | Open_via_flags_sorted { module_name = _; index } -> index
+    | Other _ | Open_via_flags _ -> invalid_arg "No index on item" [@coverage off]
+  ;;
+end
+
+let open_via_flags_groups sexps =
+  let rec aux acc = function
+    | [] -> acc
+    | Sexp.Atom "-open" :: Atom module_name :: rest ->
+      aux (Item.Open_via_flags { module_name } :: acc) rest
+    | hd :: tl -> aux (Item.Other hd :: acc) tl
+  in
+  List.rev (aux [] sexps)
+;;
+
+let order_open_via_flags_sections sexps ~to_open_via_flags =
+  let order_spec =
+    List.mapi to_open_via_flags ~f:(fun i module_name -> module_name, i)
+    |> Map.of_alist_exn (module String)
+  in
+  sexps
+  |> open_via_flags_groups
+  |> List.map ~f:(fun t ->
+    match (t : Item.t) with
+    | Open_via_flags_sorted _ -> assert false
+    | Other _ -> t
+    | Open_via_flags { module_name } ->
+      (match Map.find order_spec module_name with
+       | None -> t
+       | Some index -> Item.Open_via_flags_sorted { module_name; index }))
+  |> List.group ~break:(fun t1 t2 -> Item.kind t1 <> Item.kind t2)
+  |> List.map ~f:(fun group ->
+    match group with
+    | [] -> assert false
+    | (Item.Open_via_flags _ | Other _) :: _ -> group
+    | Open_via_flags_sorted _ :: _ ->
+      List.sort group ~compare:(Comparable.lift Int.compare ~f:Item.index_exn))
+  |> List.concat
+  |> List.concat_map ~f:Item.to_flags
+;;
+
 let open_via_flags t ~libraries_to_open_via_flags =
   let flags = Flags.flags t.flags in
   let existing_open_via_flags =
@@ -125,6 +188,13 @@ let open_via_flags t ~libraries_to_open_via_flags =
       flags
       @ List.concat_map to_add ~f:(fun module_name ->
         Sexp.[ Atom "-open"; Atom module_name ])
+  in
+  let flags =
+    (* When the specified list is not empty, we try and enforce the ordering in
+       which it is defined. *)
+    if List.is_empty to_open_via_flags
+    then flags
+    else order_open_via_flags_sections flags ~to_open_via_flags
   in
   Flags.set_flags t.flags ~flags
 ;;

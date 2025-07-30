@@ -61,6 +61,12 @@ module Entry = struct
         Dune.Library.Name.compare n1 n2
     ;;
   end
+
+  let library_name = function
+    | Unhandled { original_index = _; sexp = _; source = _ } -> None
+    | Re_export { name; source = _ } -> Some name
+    | Library { name; source = _ } -> Some name
+  ;;
 end
 
 module Section = struct

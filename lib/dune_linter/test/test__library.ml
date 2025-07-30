@@ -228,6 +228,110 @@ let%expect_test "create_then_rewrite" =
   ()
 ;;
 
+let%expect_test "libraries_to_open_via_flags" =
+  (* This part extends the testing dedicated to that feature. *)
+  let test ~libraries_to_open_via_flags str =
+    let sexps_rewriter, field = Common.read str in
+    let fields =
+      Dunolinter.Sexp_handler.get_args
+        ~field_name:Dune_linter.Library.field_name
+        ~sexps_rewriter
+        ~field
+    in
+    let existing_flags =
+      Dunolinter.Sexp_handler.find (module Dune_linter.Flags) ~sexps_rewriter ~fields
+      |> Option.value_map ~default:[] ~f:Dune_linter.Flags.flags
+    in
+    let existing_libraries =
+      Dunolinter.Sexp_handler.find (module Dune_linter.Libraries) ~sexps_rewriter ~fields
+      |> Option.value_map ~default:[] ~f:Dune_linter.Libraries.entries
+      |> List.filter_map ~f:Dune_linter.Libraries.Entry.library_name
+    in
+    let t =
+      Dune_linter.Library.create
+        ~flags:existing_flags
+        ~libraries:existing_libraries
+        ~libraries_to_open_via_flags
+        ()
+    in
+    Dune_linter.Library.rewrite t ~sexps_rewriter ~field;
+    print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
+  in
+  test ~libraries_to_open_via_flags:[ "a" ] {| (library (name main)) |};
+  [%expect {| (library (name main)) |}];
+  test
+    ~libraries_to_open_via_flags:[ "a" ]
+    {|
+      (library
+       (name main)
+       (libraries a))
+    |};
+  [%expect {| (library (name main) (flags -open A) (libraries a)) |}];
+  test
+    ~libraries_to_open_via_flags:[ "a" ]
+    {|
+      (library
+       (name main)
+       (flags -open A)
+       (libraries a))
+    |};
+  [%expect {| (library (name main) (flags -open A) (libraries a)) |}];
+  test
+    ~libraries_to_open_via_flags:[ "b"; "a"; "c" ]
+    {|
+      (library
+       (name main)
+       (libraries a b c))
+    |};
+  [%expect {| (library (name main) (flags -open B -open A -open C) (libraries a b c)) |}];
+  test
+    ~libraries_to_open_via_flags:[ "b"; "a"; "c" ]
+    {|
+      (library
+       (name main)
+       (flags -hey -open B -open A -open C)
+       (libraries a b c))
+    |};
+  [%expect
+    {| (library (name main) (flags -hey -open B -open A -open C) (libraries a b c)) |}];
+  test
+    ~libraries_to_open_via_flags:[ "b"; "a"; "c" ]
+    {|
+      (library
+       (name main)
+       (flags -hey -open A)
+       (libraries a b c))
+    |};
+  [%expect
+    {| (library (name main) (flags -hey -open B -open A -open C) (libraries a b c)) |}];
+  test
+    ~libraries_to_open_via_flags:[ "b"; "a"; "c" ]
+    {|
+      (library
+       (name main)
+       (flags -hey -open A -open B -open C)
+       (libraries a b c))
+    |};
+  [%expect
+    {| (library (name main) (flags -hey -open B -open A -open C) (libraries a b c)) |}];
+  test
+    ~libraries_to_open_via_flags:[ "b"; "a"; "c" ]
+    {|
+      (library
+       (name main)
+       (flags -hey -open A -open Other -open C -open B)
+       (libraries a b c))
+    |};
+  [%expect
+    {|
+    (library
+      (name main)
+      (flags -hey -open A -open Other -open B -open C)
+      (libraries a b c))
+    |}];
+  ()
+;;
+
 module Predicate = struct
   (* Aliased here so we remember to add new tests when this type is modified. *)
   type t = Dune.Library.Predicate.t as 'a
