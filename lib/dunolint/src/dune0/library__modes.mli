@@ -27,18 +27,24 @@
       (modes byte)
       (modes byte native)
       (modes best)
+      (modes :standard melange)
     v} *)
 
-type t = Set.M(Compilation_mode).t [@@deriving compare, equal, sexp]
-
-val of_list : Compilation_mode.t list -> t
-
 module Predicate : sig
-  type modes := t
+  (** A very crucial design points here is that the predicates are syntactic.
+      They do not talk about the evaluation of the ordered set, but refer to
+      what is written in the dune file, literally.
+
+      So, for example even if the evaluation of the [:standard] mode includes
+      [byte], evaluating: [`has_mode `byte] on the input [(:standard)] returns
+      [false].
+
+      The reason is that dunolint focuses on linting what the user writes in the
+      dune files, as opposed to how dune interprets it. *)
 
   type t =
-    [ `equals of modes
-    | `has_mode of Compilation_mode.t
+    [ `has_mode of Compilation_mode.t
+    | `has_modes of Compilation_mode.t list
     ]
   [@@deriving compare, equal, sexp]
 end

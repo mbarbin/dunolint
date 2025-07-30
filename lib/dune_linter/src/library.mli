@@ -29,7 +29,7 @@ val create
   :  ?name:Dune.Library.Name.t
   -> ?public_name:Dune.Library.Public_name.t
   -> ?inline_tests:bool
-  -> ?modes:Dune.Library.Modes.t
+  -> ?modes:Modes.Ordered_set.t
   -> ?flags:Sexp.t list
   -> ?libraries:Dune.Library.Name.t list
   -> ?libraries_to_open_via_flags:string list

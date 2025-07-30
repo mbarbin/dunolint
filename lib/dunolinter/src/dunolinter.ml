@@ -23,6 +23,7 @@ module Enforce_result = Enforce_result
 module Handler = Handler
 module Linter = Linter
 module Linters = Linters
+module Ordered_set = Ordered_set
 module Sexp_handler = Sexp_handler
 module Stanza_linter = Stanza_linter
 

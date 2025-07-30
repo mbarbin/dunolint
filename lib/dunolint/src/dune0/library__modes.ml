@@ -19,16 +19,10 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-type t = Set.M(Compilation_mode).t [@@deriving compare, equal, sexp]
-
-let of_list ts = Set.of_list (module Compilation_mode) ts
-
 module Predicate = struct
-  type modes = t [@@deriving compare, equal, sexp]
-
   type t =
-    [ `equals of modes
-    | `has_mode of Compilation_mode.t
+    [ `has_mode of Compilation_mode.t
+    | `has_modes of Compilation_mode.t list
     ]
   [@@deriving compare, equal, sexp]
 end

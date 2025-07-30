@@ -73,6 +73,7 @@ module Std = struct
   let glob p = Blang.base (`glob (Glob.v p))
   let has_field p = Blang.base (`has_field p)
   let has_mode p = Blang.base (`has_mode p)
+  let has_modes p = Blang.base (`has_modes p)
   let implicit_transitive_deps p = Blang.base (`implicit_transitive_deps p)
   let include_subdirs p = Blang.base (`include_subdirs p)
   let instrumentation p = Blang.base (`instrumentation p)

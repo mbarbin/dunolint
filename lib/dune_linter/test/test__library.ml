@@ -194,7 +194,7 @@ let%expect_test "create_then_rewrite" =
       ~public_name:(Dune.Library.Public_name.v "my-lib")
       ~inline_tests:false
       ~libraries:[ Dune.Library.Name.v "foo"; Dune.Library.Name.v "my-dep" ]
-      ~modes:(Dune.Library.Modes.of_list [ `byte; `native ])
+      ~modes:(Dunolinter.Ordered_set.of_list [ `byte; `native ])
       ~libraries_to_open_via_flags:[ "my-dep"; "other" ]
       ()
   in
@@ -274,9 +274,7 @@ let%expect_test "eval" =
        ~predicate:(`public_name (equals (Dune.Library.Public_name.v "mylib"))));
   [%expect {||}];
   Test_helpers.is_undefined
-    (Dune_linter.Library.eval
-       t
-       ~predicate:(`modes (equals (Dune.Library.Modes.of_list [ `best ]))));
+    (Dune_linter.Library.eval t ~predicate:(`modes (has_mode `best)));
   [%expect {||}];
   let _, t =
     parse
@@ -288,14 +286,9 @@ let%expect_test "eval" =
 |}
   in
   Test_helpers.is_true
-    (Dune_linter.Library.eval
-       t
-       ~predicate:(`modes (equals (Dune.Library.Modes.of_list [ `byte; `native ]))));
+    (Dune_linter.Library.eval t ~predicate:(`modes (has_modes [ `byte; `native ])));
   [%expect {||}];
-  Test_helpers.is_false
-    (Dune_linter.Library.eval
-       t
-       ~predicate:(`modes (equals (Dune.Library.Modes.of_list [ `best ]))));
+  Test_helpers.is_false (Dune_linter.Library.eval t ~predicate:(`modes (has_mode `best)));
   [%expect {||}];
   ()
 ;;

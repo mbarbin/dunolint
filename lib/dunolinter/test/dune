@@ -23,8 +23,10 @@
   expect_test_helpers_core.expect_test_helpers_base
   file-rewriter
   fpath-sexp0
+  pp
   pplumbing.err
-  sexps-rewriter)
+  sexps-rewriter
+  test_helpers)
  (instrumentation
   (backend bisect_ppx))
  (lint
