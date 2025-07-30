@@ -38,3 +38,27 @@
     [extended_range foo] will be [foo]'s original range unchanged. And
     [extended_range bar] will include bar and its comment too. *)
 val extended_range : original_contents:string -> range:Loc.Range.t -> Loc.Range.t
+
+(** Tell whether two consecutive arguments are to be treated as belonging to
+    different sections.
+
+    The way dunolint does this, is to look whether two consecutive entries are
+    separated by more than 1 line. In particular this covers the case where
+    entries are separated by a comment in its own line, in which case dunolint
+    will consider that the dependencies are in different sections.
+
+    {v
+     (libraries
+       aa
+       bb
+       ;; this a comment
+       cc
+       zz)
+    v}
+
+    [are_in_different_section] must be called with two consecutive arguments,
+    otherwise the returned value does not have any particular meaning. *)
+val are_in_different_sections
+  :  previous:Parsexp.Positions.range
+  -> current:Parsexp.Positions.range
+  -> bool

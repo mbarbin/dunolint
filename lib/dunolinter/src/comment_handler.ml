@@ -50,3 +50,12 @@ let extended_range ~original_contents ~(range : Loc.Range.t) =
   in
   { Loc.Range.start; stop }
 ;;
+
+let are_in_different_sections
+      ~(previous : Parsexp.Positions.range)
+      ~(current : Parsexp.Positions.range)
+  =
+  let previous_line = previous.end_pos.line in
+  let current_line = current.start_pos.line in
+  previous_line + 1 < current_line
+;;

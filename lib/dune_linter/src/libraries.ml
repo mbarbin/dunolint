@@ -140,34 +140,6 @@ let add_libraries t ~libraries =
   add_entries t ~entries:(List.map libraries ~f:Entry.library)
 ;;
 
-(* Tell whether two consecutive arguments are to be treated as belonging to
-   different sections.
-
-   The way dunolint does this, is to look whether two consecutive entries are
-   separated by more than 1 line. In particular this covers the case where
-   entries are separated by a comment in its own line, in which case dunolint
-   will consider that the dependencies are in different sections.
-
-   {v
-     (libraries
-       aa
-       bb
-       ;; this a comment
-       cc
-       zz)
-   v}
-
-   [are_in_different_section] must be called with two consecutive arguments,
-   otherwise the returned value does not have any particular meaning. *)
-let are_in_different_sections
-      ~(previous : Parsexp.Positions.range)
-      ~(current : Parsexp.Positions.range)
-  =
-  let previous_line = previous.end_pos.line in
-  let current_line = current.start_pos.line in
-  previous_line + 1 < current_line
-;;
-
 let get_source ~original_contents ~range =
   let { Loc.Range.start; stop } =
     Dunolinter.Comment_handler.extended_range ~original_contents ~range
@@ -193,7 +165,7 @@ let read ~sexps_rewriter ~field =
       in
       position, entry)
     |> List.group ~break:(fun (previous, _) (current, _) ->
-      are_in_different_sections ~previous ~current)
+      Dunolinter.Comment_handler.are_in_different_sections ~previous ~current)
     |> List.map ~f:(fun entries -> { Section.entries = List.map entries ~f:snd })
   in
   { sections }
@@ -230,7 +202,7 @@ let rewrite t ~sexps_rewriter ~field =
       let position = Sexps_rewriter.position sexps_rewriter arg in
       position, arg)
     |> List.group ~break:(fun (previous, _) (current, _) ->
-      are_in_different_sections ~previous ~current)
+      Dunolinter.Comment_handler.are_in_different_sections ~previous ~current)
     |> List.map ~f:(List.map ~f:snd)
   in
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
