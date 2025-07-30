@@ -287,16 +287,16 @@ let%expect_test "eval" =
   ()
 ;;
 
+let enforce ((sexps_rewriter, field), t) conditions =
+  Sexps_rewriter.reset sexps_rewriter;
+  Dunolinter.Handler.raise ~f:(fun () ->
+    List.iter conditions ~f:(fun condition -> Dune_linter.Executable.enforce t ~condition);
+    Dune_linter.Executable.rewrite t ~sexps_rewriter ~field;
+    print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
+;;
+
 let%expect_test "enforce" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
-  let enforce ((sexps_rewriter, field), t) conditions =
-    Sexps_rewriter.reset sexps_rewriter;
-    Dunolinter.Handler.raise ~f:(fun () ->
-      List.iter conditions ~f:(fun condition ->
-        Dune_linter.Executable.enforce t ~condition);
-      Dune_linter.Executable.rewrite t ~sexps_rewriter ~field;
-      print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
-  in
   let open! Blang.O in
   let t = parse {| (executable) |} in
   enforce t [];
@@ -391,5 +391,116 @@ let%expect_test "load_existing_libraries" =
       (public_name my-cli)
       (libraries bar baz foo))
     |}];
+  ()
+;;
+
+let%expect_test "add_name_via_enforce" =
+  (* This test covers helpers dedicated to finding initial values for field when
+     an absent field is subject to invariants. Typically the function
+     [Dunolinter.at_positive_enforcing_position] and its downstream usages. *)
+  let init = {| (executable (public_name my-cli)) |} in
+  let main = Dune.Executable.Name.v "main" in
+  let test conds =
+    let t = parse init in
+    enforce t conds
+  in
+  (* That's the easy case: you can simply pick the name from the invariant
+     directly. *)
+  test [ name (equals main) ];
+  [%expect
+    {|
+    (executable
+      (public_name my-cli)
+      (name        main))
+    |}];
+  (* The invariant will be undefined if the field isn't there. *)
+  test [ name (is_prefix "hey") ];
+  [%expect {| (executable (public_name my-cli)) |}];
+  (* When the invariant contains an initial value, it is used to initialize the field. *)
+  test [ name (and_ [ equals main; is_prefix "ma" ]) ];
+  [%expect
+    {|
+    (executable
+      (public_name my-cli)
+      (name        main))
+    |}];
+  (* Currently the application of invariant is not idempotent. See how, at the
+     end of the application of this chain of [and_] the invariant no longer
+     holds. We'll probably revisit at some later point, keeping as
+     characterization tests for now. *)
+  test [ name (and_ [ equals main; is_prefix "hey" ]) ];
+  [%expect
+    {|
+    (executable
+      (public_name my-cli)
+      (name        heymain))
+    |}];
+  (* When going through other blang constructs, currently we do not pick initial
+     values. *)
+  test [ name (or_ [ equals main; is_prefix "hey" ]) ];
+  [%expect {| (executable (public_name my-cli)) |}];
+  test [ name (if_ (is_prefix "hey") (is_suffix "ho") (equals main)) ];
+  [%expect {| (executable (public_name my-cli)) |}];
+  test [ name (not_ (equals main)) ];
+  [%expect {| (executable (public_name my-cli)) |}];
+  test [ name false_ ];
+  [%expect {| (executable (public_name my-cli)) |}];
+  ()
+;;
+
+let%expect_test "enforce_failures" =
+  (* This covers cases yielding enforce failures. *)
+  let init = {| (executable (public_name my-cli)) |} in
+  let test conds =
+    let t = parse init in
+    enforce t conds
+  in
+  (* Certain fields don't have heurisitics in place for initializing a value if
+     it isn't there. *)
+  require_does_raise [%here] (fun () -> test [ has_field `name ]);
+  [%expect
+    {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (has_field name))) |}];
+  ()
+;;
+
+let%expect_test "undefined conditions" =
+  let init = {| (executable (public_name my-cli)) |} in
+  let test conds =
+    let t = parse init in
+    enforce t conds
+  in
+  let main = Dune.Executable.Name.v "main" in
+  let _, t = parse init in
+  Test_helpers.is_undefined
+    (Dune_linter.Executable.eval t ~predicate:(`name (is_prefix "hey")));
+  [%expect {||}];
+  (* When a condition is undefined, the entire if-then-else is ignored. *)
+  test [ if_ (name (is_prefix "hey")) (name (equals main)) (name (is_suffix "ho")) ];
+  [%expect {| (executable (public_name my-cli)) |}];
+  (* Beware of static code simplifications performed by Blang though! In the
+     following example, the [if_] is rewritten as a [And _] sequence, with the
+     first item being unapplicable, and thus ignored, and the second one being
+     evaluated. Arguably this is quite surprising, and maybe the semantic of
+     [And] shall be revisited. Left as characterization test for future work. *)
+  test [ if_ (name (is_prefix "hey")) (name (equals main)) false_ ];
+  [%expect
+    {|
+    (executable
+      (public_name my-cli)
+      (name        main))
+    |}];
+  ()
+;;
+
+let%expect_test "non base negations" =
+  let init = {| (executable (public_name my-cli)) |} in
+  let test conds =
+    let t = parse init in
+    enforce t conds
+  in
+  test [ not_ (name (or_ [ is_prefix "hey"; is_suffix "ho" ])) ];
+  [%expect {| (executable (public_name my-cli)) |}];
+  test [ not_ (or_ [ name (is_prefix "hey"); name (is_suffix "ho") ]) ];
+  [%expect {| (executable (public_name my-cli)) |}];
   ()
 ;;

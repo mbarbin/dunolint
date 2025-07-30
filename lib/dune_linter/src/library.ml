@@ -540,9 +540,9 @@ module Linter = struct
     | `stanza stanza ->
       Blang.eval stanza (fun stanza -> Dune.Stanza.Predicate.equal stanza `library)
       |> Dunolint.Trilang.const
-    | `include_subdirs _ | `executable _ -> Dunolint.Trilang.Undefined
     | `library condition ->
       Dunolint.Trilang.eval condition ~f:(fun predicate -> Top.eval t ~predicate)
+    | `include_subdirs _ | `executable _ -> Dunolint.Trilang.Undefined
     | ( `instrumentation _ | `lint _ | `preprocess _
       | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name) ) as
       predicate -> Top.eval t ~predicate

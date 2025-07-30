@@ -113,15 +113,16 @@ let%expect_test "eval" =
   ()
 ;;
 
+let enforce ((sexps_rewriter, field), t) conditions =
+  Sexps_rewriter.reset sexps_rewriter;
+  Dunolinter.Handler.raise ~f:(fun () ->
+    List.iter conditions ~f:(fun condition ->
+      Dune_linter.Include_subdirs.enforce t ~condition);
+    Dune_linter.Include_subdirs.rewrite t ~sexps_rewriter ~field;
+    print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
+;;
+
 let%expect_test "enforce" =
-  let enforce ((sexps_rewriter, field), t) conditions =
-    Sexps_rewriter.reset sexps_rewriter;
-    Dunolinter.Handler.raise ~f:(fun () ->
-      List.iter conditions ~f:(fun condition ->
-        Dune_linter.Include_subdirs.enforce t ~condition);
-      Dune_linter.Include_subdirs.rewrite t ~sexps_rewriter ~field;
-      print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
-  in
   let open Blang.O in
   let t = parse {| (include_subdirs unqualified) |} in
   enforce t [];
@@ -203,5 +204,42 @@ let%expect_test "Linter.eval" =
   Test_helpers.is_undefined
     (Dune_linter.Include_subdirs.Linter.eval t ~predicate:(`library true_));
   [%expect {||}];
+  ()
+;;
+
+let enforce ((sexps_rewriter, field), t) condition =
+  Sexps_rewriter.reset sexps_rewriter;
+  Dunolinter.Handler.raise ~f:(fun () ->
+    Dune_linter.Include_subdirs.Linter.enforce t ~condition;
+    Dune_linter.Include_subdirs.rewrite t ~sexps_rewriter ~field;
+    print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
+;;
+
+let%expect_test "Linter.enforce" =
+  let t = parse {| (include_subdirs unqualified) |} in
+  enforce t (include_subdirs (equals `unqualified));
+  [%expect {| (include_subdirs unqualified) |}];
+  enforce t (include_subdirs (equals `qualified));
+  [%expect {| (include_subdirs qualified) |}];
+  require_does_raise [%here] (fun () ->
+    enforce t (include_subdirs (not_ (equals `qualified))));
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure
+      (loc _)
+      (condition (not (equals qualified))))
+    |}];
+  require_does_raise [%here] (fun () ->
+    enforce t (not_ (include_subdirs (equals `qualified))));
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure
+      (loc _)
+      (condition (not (include_subdirs (equals qualified)))))
+    |}];
+  enforce t (not_ (library true_));
+  [%expect {| (include_subdirs qualified) |}];
+  enforce t (library true_);
+  [%expect {| (include_subdirs qualified) |}];
   ()
 ;;

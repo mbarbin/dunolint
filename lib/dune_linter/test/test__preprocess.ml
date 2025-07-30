@@ -42,13 +42,82 @@ let%expect_test "read/write" =
   [%expect {| (preprocess (pps ppx_sexp_conv)) |}];
   test {| (preprocess (pps ppx_sexp_conv -unused-code-warnings=force)) |};
   [%expect {| (preprocess (pps ppx_sexp_conv -unused-code-warnings=force)) |}];
+  test {| (preprocess other) |};
+  [%expect {| (preprocess other) |}];
+  test {| (preprocess (something else)) |};
+  [%expect {| (preprocess (something else)) |}];
+  test {| (preprocess something else) |};
+  [%expect
+    {|
+    File "dune", line 1, characters 1-28:
+    Error: Unexpected [preprocess] field value.
+    [123]
+    |}];
   ()
 ;;
 
 let%expect_test "sexp_of" =
+  let _, t = parse {| (preprocess no_preprocessing) |} in
+  print_s [%sexp (t : Dune_linter.Preprocess.t)];
+  [%expect {| ((state No_preprocessing)) |}];
   let _, t = parse {| (preprocess (pps ppx_sexp_conv)) |} in
   print_s [%sexp (t : Dune_linter.Preprocess.t)];
   [%expect {| ((state (Pps ((args ((Pp (pp_name ppx_sexp_conv)))))))) |}];
+  let _, t = parse {| (preprocess (something else)) |} in
+  print_s [%sexp (t : Dune_linter.Preprocess.t)];
+  [%expect {| ((state (Unhandled (something else)))) |}];
+  ()
+;;
+
+let rewrite ?(f = ignore) str =
+  let (sexps_rewriter, field), t = parse str in
+  f t;
+  Dune_linter.Preprocess.rewrite t ~sexps_rewriter ~field;
+  print_endline (Sexps_rewriter.contents sexps_rewriter)
+;;
+
+let%expect_test "rewrite" =
+  rewrite {| (preprocess no_preprocessing) |};
+  [%expect {| (preprocess no_preprocessing) |}];
+  rewrite {| (preprocess (pps ppx_sexp_conv)) |};
+  [%expect {| (preprocess (pps ppx_sexp_conv)) |}];
+  rewrite {| (preprocess (something else)) |};
+  [%expect {| (preprocess (something else)) |}];
+  rewrite {| (preprocess (pps ppx_sexp_conv)) |} ~f:(fun t ->
+    let open Dunolint.Config.Std in
+    Dune_linter.Preprocess.enforce t ~condition:no_preprocessing);
+  [%expect {| (preprocess no_preprocessing) |}];
+  ()
+;;
+
+let%expect_test "create_then_rewrite" =
+  (* This covers some unusual cases. The common code path does not involve
+     rewriting values that are created via [create]. *)
+  let test t str =
+    let sexps_rewriter, field = Common.read str in
+    Dune_linter.Preprocess.rewrite t ~sexps_rewriter ~field;
+    print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
+  in
+  let t = Dune_linter.Preprocess.create () in
+  test t {| (preprocess no_preprocessing) |};
+  [%expect {| (preprocess no_preprocessing) |}];
+  test t {| (preprocess (pps ppx_sexp_conv)) |};
+  [%expect {| (preprocess no_preprocessing) |}];
+  let t =
+    Dune_linter.Preprocess.create
+      ~pps:
+        (Dune_linter.Pps.create
+           ~args:
+             [ Pp (Dune.Pp.Name.v "ppx_compare")
+             ; Flag { name = "-foo"; param = None }
+             ; Flag { name = "--bar"; param = Some "1" }
+             ])
+      ()
+  in
+  test t {| (preprocess no_preprocessing) |};
+  [%expect {| (preprocess (pps ppx_compare --bar=1 -foo)) |}];
+  test t {| (preprocess (pps ppx_sexp_conv)) |};
+  [%expect {| (preprocess (pps ppx_compare --bar=1 -foo)) |}];
   ()
 ;;
 
