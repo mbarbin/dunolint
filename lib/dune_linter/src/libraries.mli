@@ -40,6 +40,7 @@ module Entry : sig
 
   val library : Dune.Library.Name.t -> t
   val re_export : Dune.Library.Name.t -> t
+  val library_name : t -> Dune.Library.Name.t option
 end
 
 val is_empty : t -> bool
