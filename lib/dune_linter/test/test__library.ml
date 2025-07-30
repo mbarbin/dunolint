@@ -303,7 +303,7 @@ let%expect_test "libraries_to_open_via_flags" =
        (libraries a b c))
     |};
   [%expect
-    {| (library (name main) (flags -hey -open A -open B -open C) (libraries a b c)) |}];
+    {| (library (name main) (flags -hey -open B -open A -open C) (libraries a b c)) |}];
   test
     ~libraries_to_open_via_flags:[ "b"; "a"; "c" ]
     {|
@@ -313,7 +313,22 @@ let%expect_test "libraries_to_open_via_flags" =
        (libraries a b c))
     |};
   [%expect
-    {| (library (name main) (flags -hey -open A -open B -open C) (libraries a b c)) |}];
+    {| (library (name main) (flags -hey -open B -open A -open C) (libraries a b c)) |}];
+  test
+    ~libraries_to_open_via_flags:[ "b"; "a"; "c" ]
+    {|
+      (library
+       (name main)
+       (flags -hey -open A -open Other -open C -open B)
+       (libraries a b c))
+    |};
+  [%expect
+    {|
+    (library
+      (name main)
+      (flags -hey -open A -open Other -open B -open C)
+      (libraries a b c))
+    |}];
   ()
 ;;
 
