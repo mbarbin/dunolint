@@ -19,7 +19,7 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-include Container_key.String_impl
+include String_container_key
 
 let invariant t =
   (not (String.is_empty t))
