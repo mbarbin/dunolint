@@ -44,25 +44,35 @@ type t =
 
 let create ~config = { config; edited_files = Hashtbl.create (module Relative_path) }
 
+let file_exists ~path =
+  match (Unix.stat (Relative_path.to_string path)).st_kind with
+  | exception Unix.Unix_error (ENOENT, _, _) -> false
+  | S_REG -> true
+  | file_kind ->
+    let () =
+      (* This construct is the same as featuring all values in the match case
+         but we cannot disable individual coverage in or patterns with
+         bisect_ppx atm. Left for future work. *)
+      match[@coverage off] file_kind with
+      | S_REG -> assert false
+      | S_DIR | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK -> ()
+    in
+    Err.raise
+      Pp.O.
+        [ Pp.text "Linted file "
+          ++ Pp_tty.path (module Relative_path) path
+          ++ Pp.text " is expected to be a regular file."
+        ; Pp.text "Actual file kind is "
+          ++ Pp_tty.id (module File_kind) file_kind
+          ++ Pp.text "."
+        ]
+;;
+
 let lint_file ?autoformat_file ?create_file ?rewrite_file t ~path =
   Log.info ~src (fun () ->
     Pp.O.[ Pp.text "Linting file " ++ Pp_tty.path (module Relative_path) path ]);
   let edited_file = Hashtbl.find t.edited_files path in
-  let file_exists =
-    match (Unix.stat (Relative_path.to_string path)).st_kind with
-    | exception Unix.Unix_error (ENOENT, _, _) -> false
-    | S_REG -> true
-    | (S_DIR | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK) as file_kind ->
-      Err.raise
-        Pp.O.
-          [ Pp.text "Linted file "
-            ++ Pp_tty.path (module Relative_path) path
-            ++ Pp.text " is expected to be a regular file."
-          ; Pp.text "Actual file kind is "
-            ++ Pp_tty.id (module File_kind) file_kind
-            ++ Pp.text "."
-          ]
-  in
+  let file_exists = file_exists ~path in
   match
     if file_exists || Option.is_some edited_file
     then (
@@ -127,7 +137,11 @@ let format_dune_file_internal ~new_contents =
   let err_output = In_channel.input_all err_ch in
   match Unix.close_process_full process with
   | WEXITED 0 -> Ok output
-  | (WEXITED _ | WSIGNALED _ | WSTOPPED _) as process_status ->
+  | process_status ->
+    let () =
+      match[@coverage off] process_status with
+      | WEXITED _ | WSIGNALED _ | WSTOPPED _ -> ()
+    in
     Error
       [ Pp.text "Failed to format dune file:"
       ; Pp.text
@@ -192,16 +206,25 @@ let lint_dune_project_file ?with_linter t ~(path : Relative_path.t) ~f =
         ~new_contents)
 ;;
 
-let rec mkdirs path =
+let is_directory ~path =
+  let path = Relative_path.rem_empty_seg path in
   match (Unix.stat (Relative_path.to_string path)).st_kind with
-  | exception Unix.Unix_error (ENOENT, _, _) ->
-    (match Relative_path.parent path with
-     | None -> () [@coverage off]
-     | Some path -> mkdirs path);
-    Unix.mkdir (Relative_path.to_string path) ~perm:0o755
-  | S_DIR -> ()
-  | (S_REG | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK) as file_kind ->
-    Err.error
+  | exception Unix.Unix_error (ENOENT, _, _) -> `Absent
+  | S_DIR -> `Yes
+  | file_kind ->
+    let () =
+      match[@coverage off] file_kind with
+      | S_DIR -> assert false
+      | S_REG | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK -> ()
+    in
+    `No file_kind
+;;
+
+let is_directory_exn ~path =
+  match is_directory ~path with
+  | (`Absent | `Yes) as result -> result
+  | `No file_kind ->
+    Err.raise
       Pp.O.
         [ Pp.text "Parent path "
           ++ Pp_tty.path (module Relative_path) path
@@ -210,6 +233,16 @@ let rec mkdirs path =
           ++ Pp_tty.id (module File_kind) file_kind
           ++ Pp.text "."
         ]
+;;
+
+let rec mkdirs path =
+  match is_directory_exn ~path with
+  | `Yes -> ()
+  | `Absent ->
+    (match Relative_path.parent path with
+     | None -> () [@coverage off]
+     | Some path -> mkdirs path);
+    Unix.mkdir (Relative_path.to_string path) ~perm:0o755
 ;;
 
 let materialize t =
@@ -227,20 +260,9 @@ let materialize t =
         match Relative_path.parent path with
         | None -> None [@coverage off]
         | Some parent_dir as some ->
-          (match (Unix.stat (Relative_path.to_string parent_dir)).st_kind with
-           | exception Unix.Unix_error (ENOENT, _, _) -> some
-           | S_DIR -> None
-           | (S_REG | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK) as file_kind ->
-             Err.error
-               Pp.O.
-                 [ Pp.text "Parent path "
-                   ++ Pp_tty.path (module Relative_path) parent_dir
-                   ++ Pp.text " is expected to be a directory."
-                 ; Pp.text "Actual file kind is "
-                   ++ Pp_tty.id (module File_kind) file_kind
-                   ++ Pp.text "."
-                 ];
-             None)
+          (match is_directory_exn ~path:parent_dir with
+           | `Absent -> some
+           | `Yes -> None)
       in
       let with_flow ~should_enable_color flow =
         Option.iter should_mkdir ~f:(fun parent_dir ->
@@ -362,7 +384,13 @@ let visit ?below (_ : t) ~f =
           with
           | S_DIR -> `Fst entry
           | S_REG -> `Snd entry
-          | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK -> `Trd ()
+          | s_kind ->
+            let () =
+              match[@coverage off] s_kind with
+              | S_DIR | S_REG -> assert false
+              | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK -> ()
+            in
+            `Trd ()
           | exception Unix.Unix_error (EACCES, _, _) ->
             Err.warning
               Pp.O.
