@@ -35,8 +35,8 @@ module Predicate = struct
     | Not of 'a
 
   let to_blang = function
-    | T a -> Blang.return a
-    | Not a -> Blang.not_ (Blang.return a)
+    | T a -> Blang.base a
+    | Not a -> Blang.not_ (Blang.base a)
   ;;
 end
 

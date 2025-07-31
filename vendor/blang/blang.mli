@@ -110,12 +110,6 @@ type +'a t = private
   | Base of 'a
 [@@deriving compare, equal, sexp]
 
-(** [Raw] provides the automatically derived [sexp_of_t], useful in debugging
-    the actual structure of the blang. *)
-module Raw : sig
-  type nonrec 'a t = 'a t [@@deriving sexp_of]
-end
-
 (** {2 Smart constructors that simplify away constants whenever possible} *)
 
 module type Constructors = sig
@@ -153,125 +147,6 @@ module O : sig
   val not : 'a t -> 'a t
 end
 
-(** [constant_value t = Some b] iff [t = constant b] *)
-val constant_value : 'a t -> bool option
-
-(** The following two functions are useful when one wants to pretend that ['a t]
-    has constructors [And] and [Or] of type ['a t list -> 'a t]. The pattern of
-    use is
-
-    {[
-      match t with
-      | And (_, _) as t -> let ts = gather_conjuncts t in ...
-      | Or (_, _) as t -> let ts = gather_disjuncts t in ...
-      | ...
-    ]}
-
-    or, in case you also want to handle [True] (resp. [False]) as a special case
-    of conjunction (disjunction)
-
-    {[
-      match t with
-      | True | And (_, _) as t -> let ts = gather_conjuncts t in ...
-      | False | Or (_, _) as t -> let ts = gather_disjuncts t in ...
-      | ...
-    ]} *)
-
-(** [gather_conjuncts t] gathers up all toplevel conjuncts in [t]. For example,
-    - [gather_conjuncts (and_ ts) = ts]
-    - [gather_conjuncts (And (t1, t2)) = gather_conjuncts t1 @ gather_conjuncts t2]
-    - [gather_conjuncts True = [] ]
-    - [gather_conjuncts t = [t]] when [t] matches neither [And (_, _)] nor
-      [True] *)
-val gather_conjuncts : 'a t -> 'a t list
-
-(** [gather_disjuncts t] gathers up all toplevel disjuncts in [t]. For example,
-    - [gather_disjuncts (or_ ts) = ts]
-    - [gather_disjuncts (Or (t1, t2)) = gather_disjuncts t1 @ gather_disjuncts t2]
-    - [gather_disjuncts False = [] ]
-    - [gather_disjuncts t = [t]] when [t] matches neither [Or (_, _)] nor
-      [False] *)
-val gather_disjuncts : 'a t -> 'a t list
-
-include Container.S1 with type 'a t := 'a t
-
-(** [Blang.t] sports a substitution monad:
-    - [return v] is [Base v] (think of [v] as a variable)
-    - [bind t f] replaces every [Base v] in [t] with [f v] (think of [v] as a
-      variable and [f] as specifying the term to substitute for each variable)
-
-    Note: [bind t f] does short-circuiting, so [f] may not be called on every
-    variable in [t]. *)
-include Monad.S with type 'a t := 'a t
-
-(** [values t] forms the list containing every [v] for which [Base v] is a
-    subexpression of [t] *)
-val values : 'a t -> 'a list
-
 (** [eval t f] evaluates the proposition [t] relative to an environment [f] that
     assigns truth values to base propositions. *)
 val eval : 'a t -> ('a -> bool) -> bool
-
-(** [eval_set ~universe set_of_base expression] returns the subset of elements
-    [e] in [universe] that satisfy
-    [eval expression (fun base -> Set.mem (set_of_base base) e)].
-
-    [eval_set] assumes, but does not verify, that [set_of_base] always returns a
-    subset of [universe]. If this doesn't hold, then [eval_set]'s result may
-    contain elements not in [universe].
-
-    [And set1 set2] represents the elements that are both in [set1] and [set2],
-    thus in the intersection of the two sets. Symmetrically, [Or set1 set2]
-    represents the union of [set1] and [set2]. *)
-val eval_set
-  :  universe:('elt, 'comparator) Set.t Lazy.t
-  -> ('a -> ('elt, 'comparator) Set.t)
-  -> 'a t
-  -> ('elt, 'comparator) Set.t
-
-(** [specialize t f] partially evaluates [t] according to a perhaps-incomplete
-    assignment [f] of the values of base propositions. The following laws (at
-    least partially) characterize its behavior.
-
-    - [specialize t (fun _ -> `Unknown) = t]
-
-    - [specialize t (fun x -> `Known (f x)) = constant (eval t f)]
-
-    - [List.for_all (values (specialize t g)) ~f:(fun x -> g x = `Unknown)]
-
-    - {[
-        if
-          List.for_all (values t) ~f:(fun x ->
-            match g x with
-            | `Known b -> b = f x
-            | `Unknown -> true)
-        then eval t f = eval (specialize t g) f
-      ]} *)
-val specialize : 'a t -> ('a -> [ `Known of bool | `Unknown ]) -> 'a t
-
-module type Monadic = sig
-  module M : Monad.S
-
-  val map : 'a t -> f:('a -> 'b M.t) -> 'b t M.t
-  val bind : 'a t -> f:('a -> 'b t M.t) -> 'b t M.t
-  val eval : 'a t -> f:('a -> bool M.t) -> bool M.t
-end
-
-(** Generalizes some of the blang operations above to work in a monad. *)
-module For_monad (M : Monad.S) : Monadic with module M := M
-
-val invariant : 'a t -> unit
-
-module Stable : sig
-  module V1 : sig
-    type nonrec 'a t = 'a t = private
-      | True
-      | False
-      | And of 'a t * 'a t
-      | Or of 'a t * 'a t
-      | Not of 'a t
-      | If of 'a t * 'a t * 'a t
-      | Base of 'a
-    [@@deriving compare, equal, sexp]
-  end
-end

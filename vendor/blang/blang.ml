@@ -48,7 +48,6 @@ module T : sig
     | Base of 'a
   [@@deriving compare, equal]
 
-  val invariant : 'a t -> unit
   val true_ : 'a t
   val false_ : 'a t
   val not_ : 'a t -> 'a t
@@ -66,20 +65,6 @@ end = struct
     | If of 'a t * 'a t * 'a t
     | Base of 'a
   [@@deriving compare, equal]
-
-  let invariant =
-    let subterms = function
-      | True | False | Base _ -> []
-      | Not t1 -> [ t1 ]
-      | And (t1, t2) | Or (t1, t2) -> [ t1; t2 ]
-      | If (t1, t2, t3) -> [ t1; t2; t3 ]
-    in
-    let rec contains_no_constants = function
-      | True | False -> assert false
-      | t -> List.iter ~f:contains_no_constants (subterms t)
-    in
-    fun t -> List.iter ~f:contains_no_constants (subterms t)
-  ;;
 
   let true_ = True
   let false_ = False
@@ -124,18 +109,6 @@ end = struct
        | False, _ -> andalso (not_ a) c
        | _ -> If (a, b, c))
   ;;
-end
-
-module Raw = struct
-  type 'a t = 'a T.t = private
-    | True
-    | False
-    | And of 'a t * 'a t
-    | Or of 'a t * 'a t
-    | Not of 'a t
-    | If of 'a t * 'a t * 'a t
-    | Base of 'a
-  [@@deriving sexp_of]
 end
 
 include T
@@ -302,106 +275,6 @@ module O = struct
   let ( ==> ) a b = (not a) || b
 end
 
-let constant_value = function
-  | True -> Some true
-  | False -> Some false
-  | _ -> None
-;;
-
-(* [values t] lists the base predicates in [t] from left to right *)
-let values t =
-  let rec loop acc = function
-    | Base v :: ts -> loop (v :: acc) ts
-    | True :: ts -> loop acc ts
-    | False :: ts -> loop acc ts
-    | Not t1 :: ts -> loop acc (t1 :: ts)
-    | And (t1, t2) :: ts -> loop acc (t1 :: t2 :: ts)
-    | Or (t1, t2) :: ts -> loop acc (t1 :: t2 :: ts)
-    | If (t1, t2, t3) :: ts -> loop acc (t1 :: t2 :: t3 :: ts)
-    | [] -> List.rev acc
-  in
-  loop [] [ t ]
-;;
-
-module C = Container.Make (struct
-    type 'a t = 'a T.t
-
-    let fold t ~init ~f =
-      let rec loop acc t pending =
-        match t with
-        | Base a -> next (f acc a) pending
-        | True | False -> next acc pending
-        | Not t -> loop acc t pending
-        | And (t1, t2) | Or (t1, t2) -> loop acc t1 (t2 :: pending)
-        | If (t1, t2, t3) -> loop acc t1 (t2 :: t3 :: pending)
-      and next acc = function
-        | [] -> acc
-        | t :: ts -> loop acc t ts
-      in
-      (loop init t [] [@nontail])
-    ;;
-
-    (* Don't allocate *)
-    let rec iter t ~f =
-      match t with
-      | Base a -> f a
-      | True | False -> ()
-      | Not t -> iter t ~f
-      | And (t1, t2) | Or (t1, t2) ->
-        iter t1 ~f;
-        iter t2 ~f
-      | If (t1, t2, t3) ->
-        iter t1 ~f;
-        iter t2 ~f;
-        iter t3 ~f
-    ;;
-
-    let iter = `Custom iter
-    let length = `Define_using_fold
-  end)
-
-let count = C.count
-let sum = C.sum
-let exists = C.exists
-let find = C.find
-let find_map = C.find_map
-let fold = C.fold
-let for_all = C.for_all
-let is_empty = C.is_empty
-let iter = C.iter
-let length = C.length
-let mem = C.mem
-let to_array = C.to_array
-let to_list = C.to_list
-let min_elt = C.min_elt
-let max_elt = C.max_elt
-let fold_result = C.fold_result
-let fold_until = C.fold_until
-
-let rec bind t ~f:k =
-  match t with
-  | Base v -> k v
-  | True -> true_
-  | False -> false_
-  | Not t1 -> not_ (bind t1 ~f:k)
-  (* Unfortunately we need to duplicate some of the short-circuiting from
-     [andalso] and friends here. In principle we could do something involving
-     [Lazy.t] but the overhead probably wouldn't be worth it. *)
-  | And (t1, t2) ->
-    (match bind t1 ~f:k with
-     | False -> false_
-     | other -> andalso other (bind t2 ~f:k))
-  | Or (t1, t2) ->
-    (match bind t1 ~f:k with
-     | True -> true_
-     | other -> orelse other (bind t2 ~f:k))
-  | If (t1, t2, t3) ->
-    (match bind t1 ~f:k with
-     | True -> bind t2 ~f:k
-     | False -> bind t3 ~f:k
-     | other -> if_ other (bind t2 ~f:k) (bind t3 ~f:k))
-;;
-
 (* semantics *)
 
 let rec eval t base_eval =
@@ -414,84 +287,3 @@ let rec eval t base_eval =
   | If (t1, t2, t3) -> if eval t1 base_eval then eval t2 base_eval else eval t3 base_eval
   | Base x -> base_eval x
 ;;
-
-let specialize t f =
-  bind t ~f:(fun v ->
-    match f v with
-    | `Known c -> constant c
-    | `Unknown -> base v)
-  [@nontail]
-;;
-
-let eval_set ~universe:all set_of_base t =
-  let rec aux (b : _ t) =
-    match b with
-    | True -> force all
-    | False -> Set.Using_comparator.empty ~comparator:(Set.comparator (force all))
-    | And (a, b) -> Set.inter (aux a) (aux b)
-    | Or (a, b) -> Set.union (aux a) (aux b)
-    | Not a -> Set.diff (force all) (aux a)
-    | Base a -> set_of_base a
-    | If (cond, a, b) ->
-      let cond = aux cond in
-      Set.union (Set.inter cond (aux a)) (Set.inter (Set.diff (force all) cond) (aux b))
-  in
-  (aux t [@nontail])
-;;
-
-include Monad.Make (struct
-    type 'a t = 'a T.t
-
-    let return = base
-    let bind = bind
-    let map = `Define_using_bind
-  end)
-
-module type Monadic = sig
-  module M : Monad.S
-
-  val map : 'a t -> f:('a -> 'b M.t) -> 'b t M.t
-  val bind : 'a t -> f:('a -> 'b t M.t) -> 'b t M.t
-  val eval : 'a t -> f:('a -> bool M.t) -> bool M.t
-end
-
-module For_monad (M : Monad.S) : Monadic with module M := M = struct
-  open M.Monad_infix
-
-  let rec bind t ~f =
-    match t with
-    | Base x -> f x
-    | True -> M.return true_
-    | False -> M.return false_
-    | And (a, b) ->
-      bind a ~f
-      >>= (function
-       | False -> M.return false_
-       | True -> bind b ~f
-       | a -> bind b ~f >>| fun b -> andalso a b)
-    | Or (a, b) ->
-      bind a ~f
-      >>= (function
-       | True -> M.return true_
-       | False -> bind b ~f
-       | a -> bind b ~f >>| fun b -> orelse a b)
-    | Not a -> bind a ~f >>| not_
-    | If (a, b, c) ->
-      bind a ~f
-      >>= (function
-       | True -> bind b ~f
-       | False -> bind c ~f
-       | a -> bind b ~f >>= fun b -> bind c ~f >>| fun c -> if_ a b c)
-  ;;
-
-  let map t ~f = bind t ~f:(fun x -> f x >>| base)
-
-  let eval t ~f =
-    bind t ~f:(fun x ->
-      f x
-      >>| function
-      | true -> true_
-      | false -> false_)
-    >>| fun t -> eval t Nothing.unreachable_code
-  ;;
-end
