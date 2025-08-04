@@ -49,8 +49,11 @@ let%expect_test "read/write" =
 ;;
 
 let%expect_test "sexp_of" =
-  let _, t = parse {| (pps --driver ppx_deriving --flag --opt=param) |} in
-  print_s [%sexp (t : Dune_linter.Pps.t)];
+  let test str =
+    let _, t = parse str in
+    print_s [%sexp (t : Dune_linter.Pps.t)]
+  in
+  test {| (pps --driver ppx_deriving --flag --opt=param) |};
   [%expect
     {|
     ((
@@ -64,16 +67,70 @@ let%expect_test "sexp_of" =
           ((arg (Flag (name --opt) (param (param)) (applies_to (pp ppx_deriving))))
            (eol_comment ()))))))))
     |}];
+  (* Entries separated by more than one line are treated as belonging to
+     different sections. In particular this can be achieved with a style where
+     sections are separated by comments (same as libraries). *)
+  test
+    {|
+(pps
+  --driver ;; that's a flag for the driver
+ ;; The rest are individual ppx.
+ ppx_one
+ ;; This one has more flags and parameters.
+ ppx_deriving --flag --opt=param) |};
+  [%expect
+    {|
+    ((
+      sections (
+        ((
+          entries ((
+            (arg (Flag (name --driver) (param ()) (applies_to driver)))
+            (eol_comment (";; that's a flag for the driver"))))))
+        ((entries (((arg (Pp (pp_name ppx_one))) (eol_comment ())))))
+        ((
+          entries (
+            ((arg (Pp (pp_name ppx_deriving))) (eol_comment ()))
+            ((arg (Flag (name --flag) (param ()) (applies_to (pp ppx_deriving))))
+             (eol_comment ()))
+            ((arg (
+               Flag (name --opt) (param (param)) (applies_to (pp ppx_deriving))))
+             (eol_comment ()))))))))
+    |}];
+  (* Note a flag may be attached to the latest argument of a previous section. *)
+  test
+    {|
+  (pps a
+   -b
+   -a
+   ;; Another flag. Considered to be attached to a.
+   -c)|};
+  [%expect
+    {|
+    ((
+      sections (
+        ((
+          entries (
+            ((arg (Pp (pp_name a))) (eol_comment ()))
+            ((arg (Flag (name -b) (param ()) (applies_to (pp a))))
+             (eol_comment ()))
+            ((arg (Flag (name -a) (param ()) (applies_to (pp a))))
+             (eol_comment ())))))
+        ((
+          entries ((
+            (arg (Flag (name -c) (param ()) (applies_to (pp a))))
+            (eol_comment ()))))))))
+    |}];
+  test "(pps)";
+  [%expect {| ((sections ())) |}];
   ()
 ;;
 
 let%expect_test "parse" =
-  let t =
-    Dune_linter.Pps.parse
-      ~loc:Loc.none
-      [ "--driver"; "ppx_deriving"; "--flag"; "--opt=param" ]
+  let test list =
+    let t = Dune_linter.Pps.parse ~loc:Loc.none list in
+    print_s [%sexp (t : Dune_linter.Pps.t)]
   in
-  print_s [%sexp (t : Dune_linter.Pps.t)];
+  test [ "--driver"; "ppx_deriving"; "--flag"; "--opt=param" ];
   [%expect
     {|
     ((
@@ -87,8 +144,10 @@ let%expect_test "parse" =
           ((arg (Flag (name --opt) (param (param)) (applies_to (pp ppx_deriving))))
            (eol_comment ()))))))))
     |}];
-  require_does_raise [%here] (fun () -> Dune_linter.Pps.parse ~loc:Loc.none [ "" ]);
+  require_does_raise [%here] (fun () -> test [ "" ]);
   [%expect {| "Invalid empty pp." |}];
+  test [];
+  [%expect {| ((sections ())) |}];
   ()
 ;;
 
@@ -117,6 +176,30 @@ let%expect_test "rewrite" =
   (* Here we monitor how pps and flags get reordered. *)
   rewrite {| (pps -b -a b --b --a --d a d c)|};
   [%expect {| (pps -a -b a b --a --b --d c d) |}];
+  (* And how the sorting is affected in the presence of sections. *)
+  rewrite
+    {|
+  (pps
+   -b ;; driver
+   -a ;; driver too
+   ;; The a & b ppx
+   b --b --a --d a
+   ;; The c and d ppx
+   d
+   c ;; inline comments
+   )|};
+  [%expect
+    {|
+    (pps
+     -a ;; driver too
+     -b ;; driver
+     ;; The a & b ppx
+     a b --a --b --d
+     ;; The c and d ppx
+     c ;; inline comments
+     d
+     )
+    |}];
   ()
 ;;
 
@@ -493,5 +576,117 @@ let%expect_test "enforce" =
   let t = parse {| (pps ppx_other) |} in
   enforce t [ invariant ];
   [%expect {| (pps ppx_deriving ppx_other) |}];
+  (* Add from an empty pps. *)
+  let t = parse {| (pps) |} in
+  enforce t [ pp (Dune.Pp.Name.v "ppx_other") ];
+  [%expect {| (pps ppx_other) |}];
+  let t = parse {| (pps ppx_a) |} in
+  enforce
+    t
+    [ flag
+        { name = "--flag-for-jane"
+        ; param = `equals "new"
+        ; applies_to = `pp (Dune.Pp.Name.v "ppx_jane")
+        }
+    ];
+  [%expect {| (pps ppx_a --flag-for-jane=new) |}];
+  let t = parse {| (pps ppx_z) |} in
+  enforce
+    t
+    [ flag
+        { name = "--flag-for-jane"
+        ; param = `equals "new"
+        ; applies_to = `pp (Dune.Pp.Name.v "ppx_jane")
+        }
+    ];
+  [%expect {| (pps --flag-for-jane=new ppx_z) |}];
+  let t = parse {| (pps) |} in
+  enforce
+    t
+    [ flag
+        { name = "--flag-for-jane"
+        ; param = `equals "new"
+        ; applies_to = `pp (Dune.Pp.Name.v "ppx_jane")
+        }
+    ; pp (Dune.Pp.Name.v "ppx_jane")
+    ];
+  [%expect {| (pps ppx_jane --flag-for-jane=new) |}];
+  let t = parse {| (pps --driver) |} in
+  require_does_raise [%here] (fun () ->
+    enforce t [ flag { name = "--driver"; param = `some; applies_to = `driver } ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure
+      (loc _)
+      (condition (
+        flag (
+          (name       --driver)
+          (param      some)
+          (applies_to driver)))))
+    |}];
+  let t = parse {| (pps --driver=screw) |} in
+  enforce t [ flag { name = "--driver"; param = `some; applies_to = `any } ];
+  [%expect {| (pps --driver=screw) |}];
+  let t = parse {| (pps hey --driver=screw) |} in
+  enforce t [ flag { name = "--driver"; param = `some; applies_to = `driver } ];
+  [%expect {| (pps --driver=screw hey) |}];
+  let t = parse {| (pps) |} in
+  require_does_raise [%here] (fun () ->
+    enforce t [ flag { name = "--driver"; param = `some; applies_to = `driver } ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure
+      (loc _)
+      (condition (
+        flag (
+          (name       --driver)
+          (param      some)
+          (applies_to driver)))))
+    |}];
+  let t = parse {| (pps) |} in
+  enforce t [ flag { name = "--driver"; param = `any; applies_to = `any } ];
+  [%expect {| (pps --driver) |}];
+  let t = parse {| (pps) |} in
+  enforce t [ flag { name = "--driver"; param = `none; applies_to = `driver } ];
+  [%expect {| (pps --driver) |}];
+  let t = parse {| (pps) |} in
+  enforce
+    t
+    [ not_
+        (pp_with_flag
+           { pp = Dune.Pp.Name.v "ppx_alice"
+           ; flag = "--with-flag"
+           ; param = `equals "param"
+           })
+    ];
+  [%expect {| (pps) |}];
+  let t = parse {| (pps) |} in
+  enforce t [ not_ (flag { name = "--driver"; param = `none; applies_to = `driver }) ];
+  [%expect {| (pps) |}];
+  let t = parse {| (pps --driver) |} in
+  enforce t [ not_ (flag { name = "--driver"; param = `some; applies_to = `driver }) ];
+  [%expect {| (pps --driver) |}];
+  let t = parse {| (pps --driver=screw) |} in
+  enforce
+    t
+    [ not_ (flag { name = "--driver"; param = `equals "student"; applies_to = `driver }) ];
+  [%expect {| (pps --driver=screw) |}];
+  let t = parse {| (pps --driver=screw) |} in
+  enforce t [ not_ (flag { name = "--driver"; param = `any; applies_to = `driver }) ];
+  [%expect {| (pps) |}];
+  let t = parse {| (pps --driver=screw) |} in
+  enforce t [ not_ (flag { name = "--driver"; param = `any; applies_to = `any }) ];
+  [%expect {| (pps) |}];
+  let t = parse {| (pps --driver=screw) |} in
+  enforce
+    t
+    [ not_
+        (flag
+           { name = "--driver"; param = `any; applies_to = `pp (Dune.Pp.Name.v "ppx_o") })
+    ];
+  [%expect {| (pps --driver=screw) |}];
+  let t = parse {| (pps ppx_o --driver=screw) |} in
+  enforce t [ not_ (flag { name = "--driver"; param = `any; applies_to = `driver }) ];
+  [%expect {| (pps ppx_o --driver=screw) |}];
   ()
 ;;
