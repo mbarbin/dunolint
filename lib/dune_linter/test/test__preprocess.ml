@@ -62,7 +62,14 @@ let%expect_test "sexp_of" =
   [%expect {| ((state No_preprocessing)) |}];
   let _, t = parse {| (preprocess (pps ppx_sexp_conv)) |} in
   print_s [%sexp (t : Dune_linter.Preprocess.t)];
-  [%expect {| ((state (Pps ((args ((Pp (pp_name ppx_sexp_conv)))))))) |}];
+  [%expect
+    {|
+    ((
+      state (
+        Pps ((
+          sections (((
+            entries (((arg (Pp (pp_name ppx_sexp_conv))) (eol_comment ())))))))))))
+    |}];
   let _, t = parse {| (preprocess (something else)) |} in
   print_s [%sexp (t : Dune_linter.Preprocess.t)];
   [%expect {| ((state (Unhandled (something else)))) |}];

@@ -56,12 +56,7 @@ module Mutable_arg = struct
     | Pp { pp_name = pp1 }, Flag { name = _; param = _; applies_to = `pp pp2 } ->
       (match Dune.Pp.Name.compare pp1 pp2 |> Ordering.of_int with
        | Less | Equal -> -1
-       | Greater ->
-         (* Due to the value coming from the parsing, a flag may not have been
-            assigned to a pp that is located to its right, so we are not
-            exercising this in tests. *)
-         (1
-         [@coverage off]))
+       | Greater -> 1)
     | ( Flag { name = n1; param = _; applies_to = a1 }
       , Flag { name = n2; param = _; applies_to = a2 } ) ->
       (match a1, a2 with
@@ -84,8 +79,12 @@ module Mutable_arg = struct
     | Flag { name; param } -> Flag { name; param; applies_to }
   ;;
 
+  let check_empty_str_exn str ~loc =
+    if String.is_empty str then Err.raise ~loc [ Pp.text "Invalid empty pp." ]
+  ;;
+
   let parse str ~applies_to ~loc =
-    if String.is_empty str then Err.raise ~loc [ Pp.text "Invalid empty pp." ];
+    check_empty_str_exn str ~loc;
     if not (Char.equal str.[0] '-')
     then Pp { pp_name = Dune.Pp.Name.v str }
     else (
@@ -94,100 +93,132 @@ module Mutable_arg = struct
       | Some (name, param) -> Flag { name; param = Some param; applies_to })
   ;;
 
+  let parse_sexp sexp ~applies_to ~loc =
+    match (sexp : Sexp.t) with
+    | Atom name -> parse ~applies_to ~loc name
+    | List _ ->
+      Err.raise
+        ~loc
+        Pp.O.
+          [ Pp.text "Unexpected [Sexp.List]. "
+            ++ Pp_tty.kwd (module String) "Pps"
+            ++ Pp.text " expected to be atoms."
+          ]
+  ;;
+
   let to_string t =
     match t with
     | Pp { pp_name } -> Dune.Pp.Name.to_string pp_name
     | Flag { name; param = None; applies_to = _ } -> name
     | Flag { name; param = Some param; applies_to = _ } -> name ^ "=" ^ param
   ;;
+end
 
-  let write t = Sexp.Atom (to_string t)
+module Entry = struct
+  type t =
+    { arg : Mutable_arg.t
+    ; eol_comment : string option
+    }
+  [@@deriving sexp_of]
+
+  let arg t = t.arg
 
   let init_fold args ~f =
-    let (_ : Applies_to.t), args =
+    let (_ : Mutable_arg.Applies_to.t), entries =
       List.fold_map args ~init:`driver ~f:(fun applies_to arg ->
-        let arg = f arg ~applies_to in
+        let entry = f arg ~applies_to in
         let applies_to =
-          match arg with
+          match entry.arg with
           | Pp { pp_name } -> `pp pp_name
           | Flag _ -> applies_to
         in
-        applies_to, arg)
+        applies_to, entry)
     in
-    args
+    entries
+  ;;
+
+  let write { arg; eol_comment } =
+    let arg = Mutable_arg.to_string arg in
+    match eol_comment with
+    | None -> arg
+    | Some comment -> arg ^ " " ^ comment
   ;;
 end
 
-type t = { mutable args : Mutable_arg.t list } [@@deriving sexp_of]
+module Section = struct
+  type t = { mutable entries : Entry.t list } [@@deriving sexp_of]
+
+  let sorted_entries t =
+    List.sort
+      t.entries
+      ~compare:(Comparable.lift Mutable_arg.order_by_name_and_application ~f:Entry.arg)
+  ;;
+end
+
+type t = { mutable sections : Section.t list } [@@deriving sexp_of]
 
 let create ~args =
-  let args = Mutable_arg.init_fold args ~f:Mutable_arg.of_arg in
-  { args }
+  match
+    Entry.init_fold args ~f:(fun arg ~applies_to ->
+      let arg = Mutable_arg.of_arg arg ~applies_to in
+      { Entry.arg; eol_comment = None })
+  with
+  | [] -> { sections = [] }
+  | _ :: _ as entries -> { sections = [ { entries } ] }
 ;;
 
 let parse ~loc atoms =
-  let args =
-    Mutable_arg.init_fold atoms ~f:(fun atom ~applies_to ->
-      Mutable_arg.parse ~applies_to ~loc atom)
-  in
-  { args }
+  match
+    Entry.init_fold atoms ~f:(fun atom ~applies_to ->
+      let arg = Mutable_arg.parse ~applies_to ~loc atom in
+      { Entry.arg; eol_comment = None })
+  with
+  | [] -> { sections = [] }
+  | _ :: _ as entries -> { sections = [ { entries } ] }
 ;;
 
 let field_name = "pps"
 
 let read ~sexps_rewriter ~field =
-  let args = Dunolinter.Sexp_handler.get_args ~field_name ~sexps_rewriter ~field in
-  let args =
-    Mutable_arg.init_fold args ~f:(fun arg ~applies_to ->
-      let loc = Sexps_rewriter.loc sexps_rewriter arg in
-      match arg with
-      | Atom name -> Mutable_arg.parse ~applies_to ~loc name
-      | List _ ->
-        Err.raise
-          ~loc
-          Pp.O.
-            [ Pp.text "Unexpected [Sexp.List]. "
-              ++ Pp_tty.kwd (module String) "Pps"
-              ++ Pp.text " expected to be atoms."
-            ])
+  let sections =
+    Dunolinter.Sections_handler.read_sections_fold
+      ~field_name
+      ~sexps_rewriter
+      ~field
+      ~init:`driver
+      ~f:(fun applies_to ~original_index:_ ~loc ~source ~arg ->
+        let arg = Mutable_arg.parse_sexp ~applies_to ~loc arg in
+        let applies_to =
+          match arg with
+          | Pp { pp_name } -> `pp pp_name
+          | Flag _ -> applies_to
+        in
+        let eol_comment =
+          match String.lsplit2 source ~on:';' with
+          | None -> None
+          | Some (_, comment) -> Some (";" ^ comment)
+        in
+        applies_to, { Entry.arg; eol_comment })
+    |> List.map ~f:(fun entries -> { Section.entries })
   in
-  { args }
+  { sections }
 ;;
 
 let write (t : t) =
-  let args = List.sort t.args ~compare:Mutable_arg.order_by_name_and_application in
-  Sexp.List (Atom field_name :: List.map args ~f:Mutable_arg.write)
+  Sexp.List
+    (Atom field_name
+     :: List.concat_map t.sections ~f:(fun section ->
+       List.map (Section.sorted_entries section) ~f:(fun entry ->
+         Sexp.Atom (Entry.write entry))))
 ;;
 
 let rewrite t ~sexps_rewriter ~field =
-  let args = Dunolinter.Sexp_handler.get_args ~field_name ~sexps_rewriter ~field in
-  let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
-  let last_offset =
-    match List.last args with
-    | None -> Loc.stop_offset (Sexps_rewriter.loc sexps_rewriter field)
-    | Some arg -> (Sexps_rewriter.range sexps_rewriter arg).stop
-  in
-  let new_args = List.sort t.args ~compare:Mutable_arg.order_by_name_and_application in
-  let rec iter_fields args new_args =
-    match args, new_args with
-    | arg :: args, new_arg :: new_args ->
-      File_rewriter.replace
-        file_rewriter
-        ~range:(Sexps_rewriter.range sexps_rewriter arg)
-        ~text:(Mutable_arg.to_string new_arg);
-      iter_fields args new_args
-    | [], [] -> ()
-    | [], _ :: _ ->
-      List.iter new_args ~f:(fun new_arg ->
-        let value = Mutable_arg.to_string new_arg in
-        File_rewriter.insert file_rewriter ~offset:last_offset ~text:(" " ^ value))
-    | _ :: _, [] ->
-      List.iter args ~f:(fun arg ->
-        File_rewriter.remove
-          file_rewriter
-          ~range:(Sexps_rewriter.range sexps_rewriter arg))
-  in
-  iter_fields args new_args
+  Dunolinter.Sections_handler.rewrite_sections
+    ~field_name
+    ~sexps_rewriter
+    ~field
+    ~write_arg:Entry.write
+    ~sections:(List.map t.sections ~f:Section.sorted_entries)
 ;;
 
 type predicate = Dune.Pps.Predicate.t
@@ -203,15 +234,20 @@ let eval_param ~param ~p_condition =
      | Some param -> String.equal param param')
 ;;
 
+let exists_arg t ~f =
+  List.exists t.sections ~f:(fun { entries } ->
+    List.exists entries ~f:(fun entry -> f entry.arg))
+;;
+
 let eval t ~predicate =
   match (predicate : predicate) with
   | `pp pp_name ->
-    List.exists t.args ~f:(function
+    exists_arg t ~f:(function
       | Mutable_arg.Pp { pp_name = pp_name' } -> Dune.Pp.Name.equal pp_name pp_name'
       | Flag { name = _; param = _; applies_to = _ } -> false)
     |> Dunolint.Trilang.const
   | `flag { name; param = p_condition; applies_to = a_condition } ->
-    List.exists t.args ~f:(function
+    exists_arg t ~f:(function
       | Mutable_arg.Pp { pp_name = _ } -> false
       | Flag { name = name'; param; applies_to } ->
         String.equal name name'
@@ -223,7 +259,7 @@ let eval t ~predicate =
           | `pp pp1, `pp pp2 -> Dune.Pp.Name.equal pp1 pp2))
     |> Dunolint.Trilang.const
   | `pp_with_flag { pp; flag; param = p_condition } ->
-    List.exists t.args ~f:(function
+    exists_arg t ~f:(function
       | Mutable_arg.Pp { pp_name = _ } -> false
       | Flag { name; param; applies_to } ->
         String.equal flag name
@@ -235,98 +271,121 @@ let eval t ~predicate =
     |> Dunolint.Trilang.const
 ;;
 
+let append_args t ~entries =
+  let section =
+    match List.last t.sections with
+    | Some section -> section
+    | None ->
+      let section = { Section.entries = [] } in
+      t.sections <- [ section ];
+      section
+  in
+  section.entries <- section.entries @ entries
+;;
+
+let filter_args t ~f =
+  List.iter t.sections ~f:(fun section ->
+    section.entries <- List.filter section.entries ~f:(fun entry -> f entry.arg))
+;;
+
+let enforce_pp t ~pp_name =
+  let handled =
+    exists_arg t ~f:(function
+      | Mutable_arg.Pp { pp_name = pp_name' } -> Dune.Pp.Name.equal pp_name pp_name'
+      | Flag { name = _; param = _; applies_to = _ } -> false)
+  in
+  if not handled
+  then append_args t ~entries:[ { Entry.arg = Pp { pp_name }; eol_comment = None } ]
+;;
+
+let enforce_flag t ~flag:{ Dunolint.Dune.Pps.Predicate.Flag.name; param; applies_to } =
+  With_return.with_return (fun { return : Dunolinter.Enforce_result.t -> unit } ->
+    let handled =
+      exists_arg t ~f:(function
+        | Mutable_arg.Pp { pp_name = _ } -> false
+        | Flag ({ name = name'; param = _; applies_to = _ } as flag) ->
+          if String.equal name name'
+          then (
+            let () =
+              match param with
+              | `any -> ()
+              | `equals param -> flag.param <- Some param
+              | `none -> flag.param <- None
+              | `some ->
+                (match flag.param with
+                 | Some _ -> ()
+                 | None ->
+                   (* The out-edge of [return] can't be covered. *)
+                   return Fail [@coverage off])
+            in
+            let () =
+              match applies_to with
+              | `any -> ()
+              | (`pp _ | `driver) as applies_to -> flag.applies_to <- applies_to
+            in
+            true)
+          else false)
+    in
+    if not handled
+    then (
+      match param with
+      | `some ->
+        (* The out-edge of [return] can't be covered. *)
+        return Fail [@coverage off]
+      | (`equals _ | `any | `none) as param ->
+        let param =
+          match param with
+          | `equals value -> Some value
+          | `any | `none -> None
+        in
+        let applies_to =
+          match applies_to with
+          | `any | `driver -> `driver
+          | `pp _ as pp -> pp
+        in
+        append_args
+          t
+          ~entries:
+            [ { Entry.arg = Flag { name; param; applies_to }; eol_comment = None } ]);
+    Ok)
+;;
+
 let enforce =
-  let rec enforce t predicate : Dunolinter.Enforce_result.t =
+  let enforce t predicate : Dunolinter.Enforce_result.t =
     match (predicate : Dune.Pps.Predicate.t Dunolinter.Linter.Predicate.t) with
     | T (`pp pp_name) ->
-      let handled =
-        List.exists t.args ~f:(function
-          | Mutable_arg.Pp { pp_name = pp_name' } -> Dune.Pp.Name.equal pp_name pp_name'
-          | Flag { name = _; param = _; applies_to = _ } -> false)
-      in
-      if not handled then t.args <- Mutable_arg.Pp { pp_name } :: t.args;
+      enforce_pp t ~pp_name;
       Ok
-    | T (`flag { name; param; applies_to }) ->
-      With_return.with_return (fun { return : Dunolinter.Enforce_result.t -> unit } ->
-        let handled =
-          List.exists t.args ~f:(function
-            | Mutable_arg.Pp { pp_name = _ } -> false
-            | Flag ({ name = name'; param = _; applies_to = _ } as flag) ->
-              if String.equal name name'
-              then (
-                let () =
-                  match param with
-                  | `any -> ()
-                  | `equals param -> flag.param <- Some param
-                  | `none -> flag.param <- None
-                  | `some ->
-                    (match flag.param with
-                     | Some _ -> ()
-                     | None -> return Fail)
-                in
-                let () =
-                  match applies_to with
-                  | `any -> ()
-                  | (`pp _ | `driver) as applies_to -> flag.applies_to <- applies_to
-                in
-                true)
-              else false)
-        in
-        if not handled
-        then (
-          match param with
-          | `some -> return Fail
-          | (`equals _ | `any | `none) as param ->
-            let param =
-              match param with
-              | `equals value -> Some value
-              | `any | `none -> None
-            in
-            let applies_to =
-              match applies_to with
-              | `any | `driver -> `driver
-              | `pp _ as pp -> pp
-            in
-            t.args <- Mutable_arg.Flag { name; param; applies_to } :: t.args);
-        Ok)
+    | T (`flag flag) -> enforce_flag t ~flag
     | T (`pp_with_flag { pp; flag; param }) ->
-      (match enforce t (T (`pp pp)) with
-       | (Eval | Fail | Unapplicable) as break -> break
-       | Ok ->
-         enforce
-           t
-           (T
-              (`flag
-                  { Dunolint.Dune.Pps.Predicate.Flag.name = flag
-                  ; param
-                  ; applies_to = `pp pp
-                  })))
+      enforce_pp t ~pp_name:pp;
+      enforce_flag
+        t
+        ~flag:{ Dunolint.Dune.Pps.Predicate.Flag.name = flag; param; applies_to = `pp pp }
     | Not (`pp pp) ->
-      t.args
-      <- List.filter t.args ~f:(function
-           | Pp { pp_name } -> not (Dune.Pp.Name.equal pp_name pp)
-           | Flag { name = _; param = _; applies_to } ->
-             (match applies_to with
-              | `driver -> true
-              | `pp pp_name -> not (Dune.Pp.Name.equal pp_name pp)));
+      filter_args t ~f:(function
+        | Pp { pp_name } -> not (Dune.Pp.Name.equal pp_name pp)
+        | Flag { name = _; param = _; applies_to } ->
+          (match applies_to with
+           | `driver -> true
+           | `pp pp_name -> not (Dune.Pp.Name.equal pp_name pp)));
       Ok
     | Not (`flag { name; param; applies_to = a_condition }) ->
       (match param with
        | `none | `some | `equals _ -> Eval
        | `any ->
-         t.args
-         <- List.filter t.args ~f:(function
-              | Pp { pp_name = _ } -> true
-              | Flag { name = name'; param = _; applies_to } ->
-                if
-                  String.equal name name'
-                  &&
-                  match a_condition, applies_to with
-                  | `any, _ | `driver, `driver -> true
-                  | `driver, `pp _ | `pp _, `driver -> false
-                  | `pp pp1, `pp pp2 -> Dune.Pp.Name.equal pp1 pp2
-                then false
-                else true);
+         filter_args t ~f:(function
+           | Pp { pp_name = _ } -> true
+           | Flag { name = name'; param = _; applies_to } ->
+             if
+               String.equal name name'
+               &&
+               match a_condition, applies_to with
+               | `any, _ | `driver, `driver -> true
+               | `driver, `pp _ | `pp _, `driver -> false
+               | `pp pp1, `pp pp2 -> Dune.Pp.Name.equal pp1 pp2
+             then false
+             else true);
          Ok)
     | Not (`pp_with_flag _) -> Eval
   in

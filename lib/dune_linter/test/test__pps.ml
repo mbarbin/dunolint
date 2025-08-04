@@ -54,11 +54,15 @@ let%expect_test "sexp_of" =
   [%expect
     {|
     ((
-      args (
-        (Flag (name --driver) (param ()) (applies_to driver))
-        (Pp (pp_name ppx_deriving))
-        (Flag (name --flag) (param ()) (applies_to (pp ppx_deriving)))
-        (Flag (name --opt) (param (param)) (applies_to (pp ppx_deriving))))))
+      sections (((
+        entries (
+          ((arg (Flag (name --driver) (param ()) (applies_to driver)))
+           (eol_comment ()))
+          ((arg (Pp (pp_name ppx_deriving))) (eol_comment ()))
+          ((arg (Flag (name --flag) (param ()) (applies_to (pp ppx_deriving))))
+           (eol_comment ()))
+          ((arg (Flag (name --opt) (param (param)) (applies_to (pp ppx_deriving))))
+           (eol_comment ()))))))))
     |}];
   ()
 ;;
@@ -73,11 +77,15 @@ let%expect_test "parse" =
   [%expect
     {|
     ((
-      args (
-        (Flag (name --driver) (param ()) (applies_to driver))
-        (Pp (pp_name ppx_deriving))
-        (Flag (name --flag) (param ()) (applies_to (pp ppx_deriving)))
-        (Flag (name --opt) (param (param)) (applies_to (pp ppx_deriving))))))
+      sections (((
+        entries (
+          ((arg (Flag (name --driver) (param ()) (applies_to driver)))
+           (eol_comment ()))
+          ((arg (Pp (pp_name ppx_deriving))) (eol_comment ()))
+          ((arg (Flag (name --flag) (param ()) (applies_to (pp ppx_deriving))))
+           (eol_comment ()))
+          ((arg (Flag (name --opt) (param (param)) (applies_to (pp ppx_deriving))))
+           (eol_comment ()))))))))
     |}];
   require_does_raise [%here] (fun () -> Dune_linter.Pps.parse ~loc:Loc.none [ "" ]);
   [%expect {| "Invalid empty pp." |}];
