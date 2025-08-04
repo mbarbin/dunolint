@@ -1,4 +1,4 @@
-## 0.0.2025XXXX (unreleased)
+## 0.0.20250804 (2025-08-04)
 
 ### Added
 
@@ -8,6 +8,10 @@
 
 - Move sections handling logic into helper module (#85, @mbarbin).
 - Move comment handling logic into helper module (#84, @mbarbin).
+
+### Fixed
+
+- Entries `pps` are now sorted by sections when separated by comments (#86, @mbarbin, reported and suggested by @raphael-proust).
 
 ## 0.0.20250730 (2025-07-30)
 
