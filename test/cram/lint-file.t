@@ -131,7 +131,7 @@ an OCaml file.
      (cond (((path (glob _build/*)) skip_subtree))))))
 
   $ cat > dune-project <<EOF
-  > (dune lang 3.17)
+  > (lang dune 3.17)
   > 
   > (name my_project_name)
   > EOF
@@ -140,7 +140,7 @@ Currently the behavior of the lint-file command is to not load config files on
 its own. See below how the name of the project is not linted:
 
   $ dunolint tools lint-file dune-project
-  (dune lang 3.17)
+  (lang dune 3.17)
   
   (name my_project_name)
 
@@ -148,7 +148,7 @@ However, you may supply a config to use. The test config enforces the project
 name so its effect is visible in this test (it is changed to "foo"):
 
   $ dunolint tools lint-file dune-project --config=.dunolint
-  (dune lang 3.17)
+  (lang dune 3.17)
   
   (name foo)
 
@@ -171,7 +171,7 @@ of the config.
 
   $ dunolint tools lint-file dune-project --config=.dunolint \
   >   --filename=vendor/dune-project
-  (dune lang 3.17)
+  (lang dune 3.17)
   
   (name my_project_name)
 
@@ -200,7 +200,7 @@ It is also possible to pass invariants directly to the command from the command
 line.
 
   $ dunolint tools lint-file dune-project --enforce='(dune_project (name (equals bar)))'
-  (dune lang 3.17)
+  (lang dune 3.17)
   
   (name bar)
 

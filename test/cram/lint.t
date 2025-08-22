@@ -3,7 +3,7 @@ In this test we do some linting based on a config.
 Let's create some files.
 
   $ cat > dune-project <<EOF
-  > (dune lang 3.17)
+  > (lang dune 3.17)
   > 
   > (name my_project_name)
   > EOF
@@ -17,7 +17,7 @@ Let's create some files.
   $ mkdir -p _build
 
   $ cat > _build/dune-project <<EOF
-  > (dune lang 3.17)
+  > (lang dune 3.17)
   > 
   > (name ignored_because_in_build)
   > EOF
@@ -25,7 +25,7 @@ Let's create some files.
   $ mkdir -p vendor
 
   $ cat > vendor/dune-project <<EOF
-  > (dune lang 3.17)
+  > (lang dune 3.17)
   > 
   > (name my_vendor_project_name)
   > EOF
@@ -67,7 +67,7 @@ Let's lint with this config.
   $ dunolint lint --yes --config .dunolint
   Editing file "dune-project":
   -1,3 +1,3
-    (dune lang 3.17)
+    (lang dune 3.17)
     
   -|(name my_project_name)
   +|(name foo)
