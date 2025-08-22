@@ -26,6 +26,7 @@ Let's do some linting!
   $ dunolint lint --check --verbosity=debug
   dunolint: [DEBUG] Visiting directory "./"
   dunolint: [INFO] Linting file "dune-project"
+  dunolint: [DEBUG] Visiting directory ".cram.check.t/"
   dunolint: [DEBUG] Visiting directory "_build/"
   dunolint: [INFO] Skipping children of directory "_build/"
   dunolint: [DEBUG] Visiting directory "lib/"

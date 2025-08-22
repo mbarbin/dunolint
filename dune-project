@@ -34,9 +34,7 @@
  (synopsis "A library to create dunolint configs")
  (depends
   (ocaml
-   (and
-    (>= 4.14)
-    (< 5.4~)))
+   (>= 4.14))
   (base
    (>= v0.16))
   (fpath-sexp0
@@ -118,7 +116,11 @@
  (synopsis "Tests for dunolint")
  (depends
   (ocaml
-   (>= 5.3))
+   (and
+    (>= 5.3)
+    (< 5.4~)))
+  (dune
+   (>= 3.20))
   (base
    (>= v0.17))
   (cmdlang
@@ -187,7 +189,11 @@
  (allow_empty) ; The package is attached to stanza in doc/ however dune doesn't see it.
  (depends
   (ocaml
-   (>= 5.3))
+   (and
+    (>= 5.3)
+    (< 5.4~)))
+  (dune
+   (>= 3.20))
   (ocamlformat
    (and
     :with-dev-setup
