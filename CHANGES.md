@@ -1,3 +1,9 @@
+## 0.0.2025XXXX (unreleased)
+
+### Changed
+
+- Improved testing coverage (#90, @mbarbin).
+
 ## 0.0.20250804 (2025-08-04)
 
 ### Added
