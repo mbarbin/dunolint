@@ -269,7 +269,7 @@ let materialize t =
           Out_channel.fprintf
             flow
             "%s `mkdir -p %s`\n"
-            (match running_mode with
+            (match[@coverage off] running_mode with
              | Dry_run -> "dry-run: Would run"
              | Check -> "check: Would run"
              | Interactive -> "Would run"
@@ -392,20 +392,21 @@ let visit ?below (_ : t) ~f =
             in
             `Trd ()
           | exception Unix.Unix_error (EACCES, _, _) ->
-            Err.warning
-              Pp.O.
-                [ Pp.text "Permission denied - skipping "
-                  ++ Pp_tty.path (module Relative_path) parent_dir
-                  ++ Pp.text "."
-                ];
-            `Trd ())
+            (Err.warning
+               Pp.O.
+                 [ Pp.text "Permission denied - skipping "
+                   ++ Pp_tty.path (module Relative_path) parent_dir
+                   ++ Pp.text "."
+                 ];
+             `Trd ())
+            [@coverage off])
       in
       Log.debug ~src (fun () ->
         Pp.O.
           [ Pp.text "Visiting directory " ++ Pp_tty.path (module Relative_path) parent_dir
           ]);
       (match (f ~parent_dir ~subdirectories ~files : Visitor_decision.t) with
-       | Break -> ()
+       | Break -> () [@coverage off]
        | Continue ->
          visit
            (List.map subdirectories ~f:(fun subdirectory ->
