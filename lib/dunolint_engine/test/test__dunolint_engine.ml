@@ -158,19 +158,29 @@ let%expect_test "create-files" =
      files will stay untouched. *)
   Dunolint_engine.lint_file t ~path:(Relative_path.v "lib/a/dune");
   (* Another option to apply lints is to go through the [Dunolinter] API. *)
-  Dunolint_engine.lint_dune_file t ~path:(Relative_path.v "lib/a/dune") ~f:(fun stanza ->
-    match Dunolinter.linter stanza with
-    | Unhandled ->
-      (* The file was created above, and only contains stanzas supported by
-         dunolint. Thus we are not exercising this [Unhandled] case during this
-         test. In general, you want to ignore unsupported stanzas - they will
-         not be linted and kept untouched. *)
-      () [@coverage off]
-    | T { eval = _; enforce } ->
-      enforce
-        (dune
-           (library (public_name (equals (Dune.Library.Public_name.v "a-public-name")))));
-      [%expect {||}];
+  Dunolint_engine.lint_dune_file
+    t
+    ~path:(Relative_path.v "lib/a/dune")
+    ~f:(fun stanza ->
+      match Dunolinter.linter stanza with
+      | Unhandled ->
+        (* The file was created above, and only contains stanzas supported by
+           dunolint. Thus we are not exercising this [Unhandled] case during this
+           test. In general, you want to ignore unsupported stanzas - they will
+           not be linted and kept untouched. *)
+        () [@coverage off]
+      | T { eval = _; enforce } ->
+        enforce
+          (dune
+             (library (public_name (equals (Dune.Library.Public_name.v "a-public-name")))));
+        [%expect {||}];
+        ())
+    ~with_linter:(fun linter ->
+      (* It is also possible to access the linter value that holds the stanzas
+         and using it directly. Here we'll illustrate this use case with an
+         example involving simple getters. *)
+      print_s [%sexp (Dune_linter.path linter : Relative_path.t)];
+      [%expect {| lib/a/dune |}];
       ());
   Err.For_test.protect (fun () -> Dunolint_engine.materialize t);
   [%expect

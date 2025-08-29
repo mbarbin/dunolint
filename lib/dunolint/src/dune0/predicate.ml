@@ -19,6 +19,8 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+[@@@coverage off]
+
 type t =
   [ `executable of Executable.Predicate.t Blang.t
   | `has_field of [ `instrumentation | `lint | `name | `preprocess | `public_name ]

@@ -23,6 +23,8 @@ module Name = Executable__name
 module Public_name = Executable__public_name
 
 module Predicate = struct
+  [@@@coverage off]
+
   type t =
     [ `has_field of [ `instrumentation | `lint | `name | `preprocess | `public_name ]
     | `instrumentation of Instrumentation.Predicate.t Blang.t

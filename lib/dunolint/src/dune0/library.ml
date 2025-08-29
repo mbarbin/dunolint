@@ -24,6 +24,8 @@ module Name = Library__name
 module Public_name = Library__public_name
 
 module Predicate = struct
+  [@@@coverage off]
+
   type t =
     [ `has_field of
         [ `instrumentation | `lint | `modes | `name | `preprocess | `public_name ]

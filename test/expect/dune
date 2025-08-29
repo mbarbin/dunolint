@@ -1,6 +1,7 @@
 (library
- (name test_helpers)
- (public_name dunolint-tests.test_helpers)
+ (name dunolint_expect_tests)
+ (public_name dunolint-tests.expect-tests)
+ (inline_tests)
  (flags
   :standard
   -w
@@ -12,24 +13,21 @@
   -open
   Fpath_base
   -open
-  Stdio
+  Expect_test_helpers_base
   -open
-  Expect_test_helpers_base)
+  Stdio)
  (libraries
   base
-  dune_linter
-  dune_project_linter
-  dunolint
+  dunolint-lib
   dunolint_cli
   dunolint_engine
-  dunolinter
   expect_test_helpers_core.expect_test_helpers_base
+  fpath
   fpath-base
-  loc
-  pp
   pplumbing.err
-  sexps-rewriter
-  stdio)
+  stdio
+  test_helpers
+  unix)
  (instrumentation
   (backend bisect_ppx))
  (lint
@@ -39,6 +37,7 @@
    -unused-code-warnings=force
    ppx_compare
    ppx_enumerate
+   ppx_expect
    ppx_hash
    ppx_here
    ppx_let

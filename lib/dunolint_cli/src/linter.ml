@@ -62,7 +62,7 @@ let lint_stanza ~rules ~stanza ~(return : _ With_return.return) =
         match Dunolint.Rule.eval rule ~f:eval with
         | `return -> ()
         | `enforce condition -> enforce condition
-        | `skip_subtree -> return.return ()))
+        | `skip_subtree -> return.return `skip_subtree))
 ;;
 
 module Lint_file (Linter : Dunolinter.S) = struct
@@ -80,9 +80,15 @@ module Lint_file (Linter : Dunolinter.S) = struct
           Err.error ~loc [ Pp.textf "%s" message ];
           previous_contents
         | Ok linter ->
-          let () =
+          let result =
             With_return.with_return (fun return ->
-              Linter.visit linter ~f:(fun stanza -> lint_stanza ~rules ~stanza ~return))
+              Linter.visit linter ~f:(fun stanza -> lint_stanza ~rules ~stanza ~return);
+              `continue)
+          in
+          let () =
+            match result with
+            | `continue -> ()
+            | `skip_subtree -> visitor_decision := Visitor_decision.Skip_subtree
           in
           Linter.contents linter)
       ~autoformat_file:(fun ~new_contents ->

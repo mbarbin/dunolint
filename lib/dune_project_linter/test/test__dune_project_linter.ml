@@ -30,6 +30,9 @@ let original_contents =
 (implicit_transitive_deps true)
 
 (generate_opam_files)
+
+;; Atoms are ignored by dunolint (probably doesn't exists in dune).
+atom
 |}
 ;;
 
@@ -53,14 +56,13 @@ let%expect_test "lint" =
   print_s [%sexp (Dune_project_linter.path t : Relative_path.t)];
   [%expect {| path/to/dune-project |}];
   (* We can use the low-level sexps-rewriter API if we wish. *)
-  Sexps_rewriter.visit
-    (Dune_project_linter.sexps_rewriter t)
-    ~f:(fun sexp ~range ~file_rewriter ->
-      match sexp with
-      | Atom "3.17" ->
-        File_rewriter.replace file_rewriter ~range ~text:"3.19";
-        Break
-      | _ -> Continue);
+  let sexps_rewriter = Dune_project_linter.sexps_rewriter t in
+  Sexps_rewriter.visit sexps_rewriter ~f:(fun sexp ~range ~file_rewriter ->
+    match sexp with
+    | Atom "3.17" ->
+      File_rewriter.replace file_rewriter ~range ~text:"3.19";
+      Break
+    | _ -> Continue);
   print_diff t;
   [%expect
     {|
@@ -88,7 +90,7 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -1,8 +1,8
+    -1,9 +1,9
 
     -|(lang dune 3.17)
     +|(lang dune 3.19)
@@ -109,7 +111,8 @@ let%expect_test "lint" =
          let open Dunolint.Config.Std in
          eval (`dune_project (generate_opam_files Blang.true_))
        with
-       | False | Undefined -> ()
+       | False -> assert false
+       | Undefined -> ()
        | True ->
          let original_sexp = Dunolinter.original_sexp stanza in
          print_s original_sexp;
@@ -121,7 +124,7 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -1,8 +1,8
+    -1,11 +1,11
 
     -|(lang dune 3.17)
     +|(lang dune 3.19)
@@ -132,6 +135,47 @@ let%expect_test "lint" =
     +|(implicit_transitive_deps false)
 
     -|(generate_opam_files)
+
+      ;; Atoms are ignored by dunolint (probably doesn't exists in dune).
+      atom
+    |}];
+  (* You can also use the enforcement construct from the OCaml API. *)
+  Sexps_rewriter.reset sexps_rewriter;
+  Dune_project_linter.visit t ~f:(fun stanza ->
+    match Dunolinter.linter stanza with
+    | Unhandled -> () [@coverage off]
+    | T { eval = _; enforce = apply } ->
+      let () =
+        let open Dunolint.Config.Std in
+        apply (dune_project (name (equals (Dune_project.Name.v "foo"))));
+        (* Enforcing unapplicable invariants has no effect. *)
+        apply (dune (library (name (equals (Dune.Library.Name.v "bar")))));
+        apply (path (equals (Relative_path.v "path/")));
+        apply (not_ (dune (library (name (equals (Dune.Library.Name.v "bar"))))))
+      in
+      (* Enforcing invariant that cannot be auto-corrected triggers an error. *)
+      (match Dunolinter.match_stanza stanza with
+       | Dune_project_linter.Name _ ->
+         let open Dunolint.Config.Std in
+         require_does_raise [%here] (fun () ->
+           Dunolinter.Handler.raise ~f:(fun () ->
+             apply (dune_project (name (not_ (equals (Dune_project.Name.v "foo")))))));
+         [%expect
+           {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (equals foo)))) |}];
+         ()
+       | _ -> ());
+      ());
+  print_diff t;
+  [%expect
+    {|
+    -1,7 +1,7
+
+      (lang dune 3.17)
+
+    -|(name dunolint)
+    +|(name foo)
+
+      (implicit_transitive_deps true)
     |}];
   ()
 ;;

@@ -37,6 +37,8 @@
    (>= 4.14))
   (base
    (>= v0.16))
+  (fpath
+   (>= 0.7.3))
   (fpath-sexp0
    (>= 0.3.1))
   (ppx_compare
@@ -135,6 +137,8 @@
    (>= v0.17))
   (file-rewriter
    (>= 0.0.3))
+  (fpath
+   (>= 0.7.3))
   (fpath-base
    (>= 0.3.1))
   (fpath-sexp0

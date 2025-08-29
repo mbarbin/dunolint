@@ -28,7 +28,10 @@ let sexpable_param (type a) (module M : Sexpable.S with type t = a) =
       | exn -> Error (`Msg (Exn.to_string exn))
     ;;
 
-    let to_string t = Sexp.to_string_mach (M.sexp_of_t t)
+    let to_string t =
+      (* This would be used to print default value, currently not exercised. *)
+      Sexp.to_string_mach (M.sexp_of_t t) [@coverage off]
+    ;;
   end
   in
   Command.Param.validated_string (module Validate)

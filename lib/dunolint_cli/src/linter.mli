@@ -24,7 +24,7 @@ val maybe_autoformat_file : previous_contents:string -> new_contents:string -> s
 val lint_stanza
   :  rules:(Dunolint.Predicate.t, Dunolint.Predicate.t Blang.t) Dunolint.Rule.t list
   -> stanza:'a Dunolinter.Stanza.t
-  -> return:unit With_return.return
+  -> return:[> `skip_subtree ] With_return.return
   -> unit
 
 module Visitor_decision : sig
