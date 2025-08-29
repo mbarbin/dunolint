@@ -42,3 +42,7 @@ let main =
           [ "lint-file", Cmd__tools__lint_file.main ] )
     ]
 ;;
+
+module Private = struct
+  module Linter = Linter
+end

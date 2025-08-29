@@ -20,3 +20,7 @@
 (*_********************************************************************************)
 
 val main : unit Command.t
+
+module Private : sig
+  module Linter = Linter
+end
