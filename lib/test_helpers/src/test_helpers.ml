@@ -51,3 +51,18 @@ let parse
 let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
 let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
 let is_undefined b = require_equal [%here] (module Dunolint.Trilang) b Undefined
+
+let run_linter ~config =
+  let dunolint_engine =
+    Dunolint_engine.create ~config:(Dunolint_engine.Config.create ~running_mode:Dry_run)
+  in
+  let () =
+    Dunolint_engine.visit dunolint_engine ~f:(fun ~parent_dir ~subdirectories:_ ~files ->
+      Dunolint_cli.Private.Linter.visit_directory
+        ~dunolint_engine
+        ~config
+        ~parent_dir
+        ~files)
+  in
+  Dunolint_engine.materialize dunolint_engine
+;;

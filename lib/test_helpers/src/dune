@@ -20,6 +20,8 @@
   dune_linter
   dune_project_linter
   dunolint
+  dunolint_cli
+  dunolint_engine
   dunolinter
   expect_test_helpers_core.expect_test_helpers_base
   fpath-base
