@@ -32,6 +32,16 @@ open! Dunolint.Config.Std
    file that is linted, thus would have a basename of [dune-project] or [dune].
    It is the complete relative path from the root of the repository. *)
 
+let%expect_test "relative_path.extend" =
+  let file = Relative_path.v "dune-project" in
+  let p = Relative_path.extend Relative_path.empty (Fsegment.v "dune-project") in
+  print_endline (Relative_path.to_string p);
+  [%expect {| dune-project |}];
+  require_equal [%here] (module Relative_path) p file;
+  [%expect {||}];
+  ()
+;;
+
 let%expect_test "path.equals" =
   let config =
     Dunolint.Config.create
