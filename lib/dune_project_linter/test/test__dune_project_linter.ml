@@ -30,6 +30,9 @@ let original_contents =
 (implicit_transitive_deps true)
 
 (generate_opam_files)
+
+;; Atoms are ignored by dunolint (probabby doesn't exists in dune).
+atom
 |}
 ;;
 
@@ -88,7 +91,7 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -1,8 +1,8
+    -1,9 +1,9
 
     -|(lang dune 3.17)
     +|(lang dune 3.19)
@@ -109,7 +112,8 @@ let%expect_test "lint" =
          let open Dunolint.Config.Std in
          eval (`dune_project (generate_opam_files Blang.true_))
        with
-       | False | Undefined -> ()
+       | False -> assert false
+       | Undefined -> ()
        | True ->
          let original_sexp = Dunolinter.original_sexp stanza in
          print_s original_sexp;
@@ -121,7 +125,7 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -1,8 +1,8
+    -1,11 +1,11
 
     -|(lang dune 3.17)
     +|(lang dune 3.19)
@@ -132,6 +136,9 @@ let%expect_test "lint" =
     +|(implicit_transitive_deps false)
 
     -|(generate_opam_files)
+
+      ;; Atoms are ignored by dunolint (probabby doesn't exists in dune).
+      atom
     |}];
   ()
 ;;
