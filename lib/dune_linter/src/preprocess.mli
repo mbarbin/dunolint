@@ -30,3 +30,19 @@ include
   Dunolinter.Stanza_linter.S
   with type t := t
    and type predicate := Dune.Preprocess.Predicate.t
+
+(** {1 Getters} *)
+
+module State : sig
+  type t =
+    | No_preprocessing
+    | Pps of Pps.t
+    | Unhandled of Sexp.t
+  [@@deriving sexp_of]
+end
+
+val state : t -> State.t
+
+(** {1 Setters} *)
+
+val set_state : t -> state:State.t -> unit

@@ -29,6 +29,9 @@ end
 
 type t = { mutable state : State.t } [@@deriving sexp_of]
 
+let state t = t.state
+let set_state t ~state = t.state <- state
+
 let create ?pps () =
   { state =
       (match pps with

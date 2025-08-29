@@ -90,10 +90,32 @@ let%expect_test "rewrite" =
   [%expect {| (preprocess (pps ppx_sexp_conv)) |}];
   rewrite {| (preprocess (something else)) |};
   [%expect {| (preprocess (something else)) |}];
+  require_does_raise [%here] (fun () -> rewrite {| (preprocess something else) |});
+  [%expect {| "Unexpected [preprocess] field value." |}];
   rewrite {| (preprocess (pps ppx_sexp_conv)) |} ~f:(fun t ->
     let open Dunolint.Config.Std in
     Dune_linter.Preprocess.enforce t ~condition:no_preprocessing);
   [%expect {| (preprocess no_preprocessing) |}];
+  (* Exercising some getters and setters. *)
+  rewrite {| (preprocess no_preprocessing) |} ~f:(fun t ->
+    print_s [%sexp (Dune_linter.Preprocess.state t : Dune_linter.Preprocess.State.t)];
+    [%expect {| No_preprocessing |}];
+    Dune_linter.Preprocess.set_state t ~state:(Unhandled (Atom "foo")));
+  [%expect {| (preprocess no_preprocessing) |}];
+  rewrite {| (preprocess (pps ppx_sexp_conv)) |} ~f:(fun t ->
+    Dune_linter.Preprocess.set_state t ~state:(Unhandled (Atom "foo")));
+  [%expect {| (preprocess (pps ppx_sexp_conv)) |}];
+  ()
+;;
+
+let%expect_test "unhandled_rewrite" =
+  let sexps_rewriter, field =
+    Test_helpers.read_sexp_field ~path:(Fpath.v "a/dune") "(preprocess something else)"
+  in
+  let t = Dune_linter.Preprocess.create () in
+  require_does_raise [%here] (fun () ->
+    Dune_linter.Preprocess.rewrite t ~sexps_rewriter ~field);
+  [%expect {| "Unexpected [preprocess] field value." |}];
   ()
 ;;
 
@@ -110,6 +132,8 @@ let%expect_test "create_then_rewrite" =
   [%expect {| (preprocess no_preprocessing) |}];
   test t {| (preprocess (pps ppx_sexp_conv)) |};
   [%expect {| (preprocess no_preprocessing) |}];
+  test t {| (preprocess (something else)) |};
+  [%expect {| (preprocess no_preprocessing) |}];
   let t =
     Dune_linter.Preprocess.create
       ~pps:
@@ -124,6 +148,8 @@ let%expect_test "create_then_rewrite" =
   test t {| (preprocess no_preprocessing) |};
   [%expect {| (preprocess (pps ppx_compare --bar=1 -foo)) |}];
   test t {| (preprocess (pps ppx_sexp_conv)) |};
+  [%expect {| (preprocess (pps ppx_compare --bar=1 -foo)) |}];
+  test t {| (preprocess (something else)) |};
   [%expect {| (preprocess (pps ppx_compare --bar=1 -foo)) |}];
   ()
 ;;
@@ -143,15 +169,21 @@ let%expect_test "eval" =
     (Dune_linter.Preprocess.eval
        t
        ~predicate:(`pps (pp (Dune.Pp.Name.v "ppx_sexp_conv"))));
-  [%expect {| |}];
+  [%expect {||}];
   Test_helpers.is_false
     (Dune_linter.Preprocess.eval t ~predicate:(`pps (pp (Dune.Pp.Name.v "ppx_other"))));
-  [%expect {| |}];
+  [%expect {||}];
   Test_helpers.is_false (Dune_linter.Preprocess.eval t ~predicate:`no_preprocessing);
-  [%expect {| |}];
+  [%expect {||}];
   let _, t = parse {| (preprocess no_preprocessing) |} in
   Test_helpers.is_true (Dune_linter.Preprocess.eval t ~predicate:`no_preprocessing);
-  [%expect {| |}];
+  [%expect {||}];
+  let _, t = parse {| (preprocess (something else)) |} in
+  Test_helpers.is_false (Dune_linter.Preprocess.eval t ~predicate:`no_preprocessing);
+  [%expect {||}];
+  Test_helpers.is_false
+    (Dune_linter.Preprocess.eval t ~predicate:(`pps (pp (Dune.Pp.Name.v "ppx_other"))));
+  [%expect {||}];
   ()
 ;;
 
@@ -171,6 +203,15 @@ let%expect_test "enforce" =
   (* Enforcing the presence of a present pp has no effect. *)
   enforce t [ pps (pp (Dune.Pp.Name.v "ppx_sexp_conv")) ];
   [%expect {| (preprocess (pps ppx_sexp_conv)) |}];
+  (* Enforcing its negation triggers an error. *)
+  require_does_raise [%here] (fun () ->
+    enforce t [ not_ (pps (pp (Dune.Pp.Name.v "ppx_sexp_conv"))) ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure
+      (loc _)
+      (condition (not (pps (pp ppx_sexp_conv)))))
+    |}];
   (* Enforcing the presence of a new pp adds it. *)
   enforce t [ pps (pp (Dune.Pp.Name.v "ppx_other")) ];
   [%expect {| (preprocess (pps ppx_other ppx_sexp_conv)) |}];
@@ -193,6 +234,14 @@ let%expect_test "enforce" =
       (loc _)
       (condition (not no_preprocessing)))
     |}];
+  (* Enforcing the presence of a present pp adds a pps section with it. *)
+  let t = parse {| (preprocess no_preprocessing) |} in
+  enforce t [ pps (pp (Dune.Pp.Name.v "ppx_sexp_conv")) ];
+  [%expect {| (preprocess (pps ppx_sexp_conv)) |}];
+  (* This is also the case if the state is current unknown. *)
+  let t = parse {| (preprocess (something else)) |} in
+  enforce t [ pps (pp (Dune.Pp.Name.v "ppx_sexp_conv")) ];
+  [%expect {| (preprocess (pps ppx_sexp_conv)) |}];
   (* Blang. *)
   let t = parse {| (preprocess (pps ppx_sexp_conv)) |} in
   enforce t [ true_ ];
