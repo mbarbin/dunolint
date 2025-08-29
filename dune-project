@@ -111,7 +111,15 @@
   (sexps-rewriter
    (>= 0.0.3))
   (stdio
-   (>= v0.17))))
+   (>= v0.17))
+  (volgo
+   (>= 0.0.21))
+  (volgo-base
+   (>= 0.0.21))
+  (volgo-git-unix
+   (>= 0.0.21))
+  (volgo-hg-unix
+   (>= 0.0.21))))
 
 (package
  (name dunolint-tests)
@@ -181,6 +189,16 @@
    (>= 0.0.3))
   (stdio
    (>= v0.17))
+  (volgo
+   (>= 0.0.21))
+  (volgo-base
+   (>= 0.0.21))
+  (volgo-git-unix
+   (>= 0.0.21))
+  (volgo-hg-unix
+   (>= 0.0.21))
+  (volgo-vcs
+   (>= 0.0.21))
   (sherlodoc
    (and
     :with-doc
@@ -268,6 +286,16 @@
    (>= 0.0.3))
   (stdio
    (>= v0.17))
+  (volgo
+   (>= 0.0.21))
+  (volgo-base
+   (>= 0.0.21))
+  (volgo-git-unix
+   (>= 0.0.21))
+  (volgo-hg-unix
+   (>= 0.0.21))
+  (volgo-vcs
+   (>= 0.0.21))
   (odoc
    (and
     :with-doc
