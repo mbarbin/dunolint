@@ -43,11 +43,3 @@
    ppx_let
    ppx_sexp_conv
    ppx_sexp_value)))
-
-(mdx
- (package dunolint-tests)
- (deps
-  (package dunolint)
-  (package dunolint-lib)
-  (glob_files *.md))
- (preludes prelude.txt))
