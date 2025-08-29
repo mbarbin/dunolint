@@ -126,6 +126,13 @@ let%expect_test "rewrite" =
      present on disk at the end of the rewritten position. That is a leftover
      from another system, and should be revisited. *)
   [%expect {| (flags foo (Some bar) Foo) |}];
+  (* Exercising flags insertion. *)
+  rewrite {| (flags -open Bar) |} ~f:(fun t ->
+    Dune_linter.Flags.set_flags
+      t
+      ~flags:[ Atom ":standard"; Atom "-open"; Atom "Foo"; Atom "-open"; Atom "Bar" ];
+    ());
+  [%expect {| (flags :standard -open Foo -open Bar) |}];
   ()
 ;;
 
