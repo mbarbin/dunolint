@@ -38,6 +38,9 @@ let original_contents =
   (libraries a b c))
 
 (unhandled 41)
+
+;; Atoms are ignored by dunolint (probably doesn't exists in dune).
+atom
 |}
 ;;
 
@@ -73,12 +76,15 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -13,4 +13,4
+    -13,7 +13,7
         (name foo)
         (libraries a b c))
 
     -|(unhandled 41)
     +|(unhandled 42)
+
+      ;; Atoms are ignored by dunolint (probably doesn't exists in dune).
+      atom
     |}];
   (* There's a typed API to access the supported stanza. *)
   Sexps_rewriter.reset sexps_rewriter;
@@ -134,6 +140,34 @@ let%expect_test "lint" =
         (libraries a b c))
 
       (executable
+    |}];
+  (* You can also use the enforcement construct from the OCaml API. *)
+  Sexps_rewriter.reset sexps_rewriter;
+  Dune_linter.visit t ~f:(fun stanza ->
+    match Dunolinter.linter stanza with
+    | Unhandled -> () [@coverage off]
+    | T { eval = _; enforce = apply } ->
+      let () =
+        let open Dunolint.Config.Std in
+        apply (dune (executable (name (equals (Dune.Executable.Name.v "my-exec")))));
+        (* Enforcing unapplicable invariants has no effect. *)
+        apply (dune_project (name (equals (Dune_project.Name.v "bar"))));
+        apply (path (equals (Relative_path.v "path/")));
+        apply (not_ (dune_project (name (equals (Dune_project.Name.v "bar")))))
+      in
+      ());
+  print_diff t;
+  [%expect
+    {|
+    -10,7 +10,7
+        (libraries a b c))
+
+      (executable
+    -|  (name foo)
+    +|  (name my-exec)
+        (libraries a b c))
+
+      (unhandled 41)
     |}];
   ()
 ;;
