@@ -26,7 +26,8 @@
   fpath-base
   pplumbing.err
   stdio
-  test_helpers)
+  test_helpers
+  unix)
  (instrumentation
   (backend bisect_ppx))
  (lint
