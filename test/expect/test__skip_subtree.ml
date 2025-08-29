@@ -21,7 +21,18 @@
 
 open! Dunolint.Config.Std
 
-let%expect_test "config" =
+(* This test covers the evaluation of the [path.equals] predicate. We cover two
+   different execution context for it:
+
+   1. From within the [skip_subtree] config section. In this case, the paths
+   that are applied to the [path] selector are the directory paths of the
+   directory that are being visited. Thus, the path ends with a '/' character.
+
+   2. From within the rules. In this case, the path evaluated is the path of the
+   file that is linted, thus would have a basename of [dune-project] or [dune].
+   It is the complete relative path from the root of the repository. *)
+
+let%expect_test "path.equals" =
   let config =
     Dunolint.Config.create
       ~skip_subtree:(cond [ path (equals (Relative_path.v "foo/")), skip_subtree ])
