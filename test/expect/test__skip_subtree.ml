@@ -38,7 +38,7 @@ let%expect_test "path.equals" =
       ~skip_subtree:(cond [ path (equals (Relative_path.v "foo/")), skip_subtree ])
       ~rules:
         [ cond
-            [ path (equals (Relative_path.v "dune-project")), skip_subtree
+            [ path (equals (Relative_path.v "dune-project")), return
             ; true_, enforce (dune_project (name (equals (Dune_project.Name.v "bar"))))
             ]
         ]

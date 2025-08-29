@@ -75,10 +75,11 @@ let lint_file
   match File_linter.create ~path ~original_contents with
   | Error { loc; message } -> Err.raise ~loc [ Pp.textf "%s" message ]
   | Ok linter ->
-    let () =
+    let (_ : [ `continue | `skip_subtree ]) =
       With_return.with_return (fun return ->
         File_linter.visit linter ~f:(fun stanza ->
-          Linter.lint_stanza ~rules ~stanza ~return))
+          Linter.lint_stanza ~rules ~stanza ~return);
+        `continue)
     in
     let new_contents = File_linter.contents linter in
     if format_file then Dunolint_engine.format_dune_file ~new_contents else new_contents
