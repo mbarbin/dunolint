@@ -21,7 +21,9 @@
 
 let field_name = "implicit_transitive_deps"
 
-type t = { mutable value : bool } [@@deriving sexp_of]
+module Value = Dune_project.Implicit_transitive_deps.Value
+
+type t = { mutable value : Value.t } [@@deriving sexp_of]
 
 let create ~implicit_transitive_deps:value = { value }
 let value t = t.value
@@ -32,7 +34,7 @@ module Handler =
     (struct
       let field_name = field_name
     end)
-    (Bool)
+    (Value)
 
 let read ~sexps_rewriter ~field =
   let value = Handler.read ~sexps_rewriter ~field in
@@ -46,7 +48,7 @@ type predicate = Dune_project.Implicit_transitive_deps.Predicate.t
 
 let eval t ~predicate =
   match (predicate : predicate) with
-  | `equals expected -> Bool.equal expected t.value |> Dunolint.Trilang.const
+  | `equals expected -> Value.equal expected t.value |> Dunolint.Trilang.const
 ;;
 
 let enforce =
@@ -56,8 +58,18 @@ let enforce =
     ~enforce:(fun t predicate ->
       match predicate with
       | Not (`equals value) ->
-        t.value <- not value;
-        Ok
+        (* If current value already satisfies the negation, no change needed. *)
+        if not (Value.equal t.value value)
+        then Ok (* Already satisfies "not equals value". *)
+        else (
+          (* Current value equals the negated value, so change it. *)
+          match value with
+          | `True ->
+            t.value <- `False;
+            Ok
+          | `False | `False_if_hidden_includes_supported ->
+            t.value <- `True;
+            Ok)
       | T (`equals value) ->
         t.value <- value;
         Ok)

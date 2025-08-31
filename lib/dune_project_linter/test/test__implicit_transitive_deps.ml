@@ -36,6 +36,8 @@ let%expect_test "read/write" =
   [%expect {| (implicit_transitive_deps true) |}];
   test {| (implicit_transitive_deps false) |};
   [%expect {| (implicit_transitive_deps false) |}];
+  test {| (implicit_transitive_deps false-if-hidden-includes-supported) |};
+  [%expect {| (implicit_transitive_deps false-if-hidden-includes-supported) |}];
   test {| (invalid field) |};
   [%expect
     {|
@@ -65,12 +67,20 @@ let%expect_test "rewrite" =
   [%expect {| (implicit_transitive_deps true) |}];
   rewrite {| (implicit_transitive_deps false) |};
   [%expect {| (implicit_transitive_deps false) |}];
+  rewrite {| (implicit_transitive_deps false-if-hidden-includes-supported) |};
+  [%expect {| (implicit_transitive_deps false-if-hidden-includes-supported) |}];
   (* Exercising some getters and setters. *)
   rewrite {| (implicit_transitive_deps true) |} ~f:(fun t ->
-    print_s [%sexp (Dune_project_linter.Implicit_transitive_deps.value t : bool)];
+    print_s
+      [%sexp
+        (Dune_project_linter.Implicit_transitive_deps.value t
+         : Dune_project_linter.Implicit_transitive_deps.Value.t)];
     [%expect {| true |}];
-    Dune_project_linter.Implicit_transitive_deps.set_value t ~value:false;
-    print_s [%sexp (Dune_project_linter.Implicit_transitive_deps.value t : bool)];
+    Dune_project_linter.Implicit_transitive_deps.set_value t ~value:`False;
+    print_s
+      [%sexp
+        (Dune_project_linter.Implicit_transitive_deps.value t
+         : Dune_project_linter.Implicit_transitive_deps.Value.t)];
     [%expect {| false |}];
     ());
   [%expect {| (implicit_transitive_deps false) |}];
@@ -86,7 +96,7 @@ let%expect_test "create_then_rewrite" =
     print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
   in
   let t =
-    Dune_project_linter.Implicit_transitive_deps.create ~implicit_transitive_deps:true
+    Dune_project_linter.Implicit_transitive_deps.create ~implicit_transitive_deps:`True
   in
   test t {| (implicit_transitive_deps false) |};
   [%expect {| (implicit_transitive_deps true) |}];
@@ -96,7 +106,7 @@ let%expect_test "create_then_rewrite" =
 module Predicate = struct
   (* Aliased here so we remember to add new tests when this type is modified. *)
   type t = Dune_project.Implicit_transitive_deps.Predicate.t as 'a
-    constraint 'a = [ `equals of bool ]
+    constraint 'a = [ `equals of Dune_project.Implicit_transitive_deps.Value.t ]
 end
 
 open Dunolint.Config.Std
@@ -105,10 +115,28 @@ let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
   let _, t = parse {| (implicit_transitive_deps true) |} in
   Test_helpers.is_true
-    (Dune_project_linter.Implicit_transitive_deps.eval t ~predicate:(`equals true));
+    (Dune_project_linter.Implicit_transitive_deps.eval t ~predicate:(`equals `True));
   [%expect {| |}];
   Test_helpers.is_false
-    (Dune_project_linter.Implicit_transitive_deps.eval t ~predicate:(`equals false));
+    (Dune_project_linter.Implicit_transitive_deps.eval t ~predicate:(`equals `False));
+  [%expect {| |}];
+  Test_helpers.is_false
+    (Dune_project_linter.Implicit_transitive_deps.eval
+       t
+       ~predicate:(`equals `False_if_hidden_includes_supported));
+  [%expect {| |}];
+  (* Test with false-if-hidden-includes-supported value *)
+  let _, t = parse {| (implicit_transitive_deps false-if-hidden-includes-supported) |} in
+  Test_helpers.is_false
+    (Dune_project_linter.Implicit_transitive_deps.eval t ~predicate:(`equals `True));
+  [%expect {| |}];
+  Test_helpers.is_false
+    (Dune_project_linter.Implicit_transitive_deps.eval t ~predicate:(`equals `False));
+  [%expect {| |}];
+  Test_helpers.is_true
+    (Dune_project_linter.Implicit_transitive_deps.eval
+       t
+       ~predicate:(`equals `False_if_hidden_includes_supported));
   [%expect {| |}];
   ()
 ;;
@@ -127,17 +155,31 @@ let%expect_test "enforce" =
   enforce t [];
   [%expect {| (implicit_transitive_deps true) |}];
   (* Enforcing the equality with the current value has no effect. *)
-  enforce t [ equals true ];
+  enforce t [ equals `True ];
   [%expect {| (implicit_transitive_deps true) |}];
   (* Enforcing the equality with a new value changes it. *)
-  enforce t [ equals false ];
+  enforce t [ equals `False ];
   [%expect {| (implicit_transitive_deps false) |}];
+  (* Enforcing the new false-if-hidden-includes-supported value. *)
+  enforce t [ equals `False_if_hidden_includes_supported ];
+  [%expect {| (implicit_transitive_deps false-if-hidden-includes-supported) |}];
   let t = parse {| (implicit_transitive_deps false) |} in
-  (* Enforcing the negation of the equality with another value has no effect. *)
-  enforce t [ not_ (equals true) ];
+  (* When current value already satisfies negation, no change. *)
+  enforce t [ not_ (equals `True) ];
   [%expect {| (implicit_transitive_deps false) |}];
-  (* Enforcing the negation the equality equates enforcing its negated value. *)
-  enforce t [ not_ (equals false) ];
+  let t = parse {| (implicit_transitive_deps true) |} in
+  enforce t [ not_ (equals `False) ];
+  [%expect {| (implicit_transitive_deps true) |}];
+  (* Negation of current value. *)
+  let t = parse {| (implicit_transitive_deps false) |} in
+  enforce t [ not_ (equals `False) ];
+  [%expect {| (implicit_transitive_deps true) |}];
+  let t = parse {| (implicit_transitive_deps false-if-hidden-includes-supported) |} in
+  enforce t [ not_ (equals `True) ];
+  [%expect {| (implicit_transitive_deps false-if-hidden-includes-supported) |}];
+  enforce t [ not_ (equals `False) ];
+  [%expect {| (implicit_transitive_deps false-if-hidden-includes-supported) |}];
+  enforce t [ not_ (equals `False_if_hidden_includes_supported) ];
   [%expect {| (implicit_transitive_deps true) |}];
   (* Blang. *)
   let t = parse {| (implicit_transitive_deps true) |} in
@@ -150,13 +192,14 @@ let%expect_test "enforce" =
       (loc       _)
       (condition false))
     |}];
-  enforce t [ and_ [ not_ (equals false); equals true ] ];
+  enforce t [ and_ [ not_ (equals `False); equals `True ] ];
   [%expect {| (implicit_transitive_deps true) |}];
   (* [or] does not have an enforcement strategy when its invariant is
      not satisfied. *)
-  enforce t [ or_ [ equals true; equals false ] ];
+  enforce t [ or_ [ equals `True; equals `False ] ];
   [%expect {| (implicit_transitive_deps true) |}];
-  require_does_raise [%here] (fun () -> enforce t [ or_ [ equals false; equals false ] ]);
+  require_does_raise [%here] (fun () ->
+    enforce t [ or_ [ equals `False; equals `False ] ]);
   [%expect
     {|
     (Dunolinter.Handler.Enforce_failure
@@ -167,7 +210,7 @@ let%expect_test "enforce" =
         (equals false))))
     |}];
   (* When defined, [if] enforces the clause that applies. *)
-  let invariant = if_ (equals true) (equals false) (equals true) in
+  let invariant = if_ (equals `True) (equals `False) (equals `True) in
   let t = parse {| (implicit_transitive_deps true) |} in
   enforce t [ invariant ];
   [%expect {| (implicit_transitive_deps false) |}];
@@ -182,7 +225,7 @@ let%expect_test "Linter.eval" =
   Test_helpers.is_true
     (Dune_project_linter.Implicit_transitive_deps.Linter.eval
        t
-       ~predicate:(`implicit_transitive_deps (equals true)));
+       ~predicate:(`implicit_transitive_deps (equals `True)));
   [%expect {||}];
   Test_helpers.is_undefined
     (Dune_project_linter.Implicit_transitive_deps.Linter.eval
@@ -191,6 +234,12 @@ let%expect_test "Linter.eval" =
   [%expect {||}];
   Test_helpers.is_undefined
     (Dune_project_linter.Implicit_transitive_deps.Linter.eval t ~predicate:(`name true_));
+  [%expect {||}];
+  let _, t = parse {| (implicit_transitive_deps false-if-hidden-includes-supported) |} in
+  Test_helpers.is_true
+    (Dune_project_linter.Implicit_transitive_deps.Linter.eval
+       t
+       ~predicate:(`implicit_transitive_deps (equals `False_if_hidden_includes_supported)));
   [%expect {||}];
   ()
 ;;
@@ -208,7 +257,7 @@ let%expect_test "Linter.enforce" =
   let t = parse {| (implicit_transitive_deps false) |} in
   enforce t [];
   [%expect {| (implicit_transitive_deps false) |}];
-  enforce t [ implicit_transitive_deps (equals true) ];
+  enforce t [ implicit_transitive_deps (equals `True) ];
   [%expect {| (implicit_transitive_deps true) |}];
   (* Enforcing other toplevel stanza has no effect. *)
   enforce t [ generate_opam_files is_present ];
@@ -227,30 +276,30 @@ let%expect_test "Linter.enforce" =
       (loc       _)
       (condition false))
     |}];
-  enforce t [ implicit_transitive_deps (not_ (equals true)) ];
+  enforce t [ implicit_transitive_deps (not_ (equals `True)) ];
   [%expect {| (implicit_transitive_deps false) |}];
   enforce
     t
     [ and_
-        [ implicit_transitive_deps (equals false)
-        ; implicit_transitive_deps (equals false)
+        [ implicit_transitive_deps (equals `False)
+        ; implicit_transitive_deps (equals `False)
         ]
     ];
   [%expect {| (implicit_transitive_deps false) |}];
   enforce
     t
     [ or_
-        [ implicit_transitive_deps (equals true)
-        ; implicit_transitive_deps (equals false)
+        [ implicit_transitive_deps (equals `True)
+        ; implicit_transitive_deps (equals `False)
         ]
     ];
   [%expect {| (implicit_transitive_deps false) |}];
   enforce
     t
     [ if_
-        (implicit_transitive_deps (equals true))
-        (implicit_transitive_deps (equals false))
-        (implicit_transitive_deps (equals true))
+        (implicit_transitive_deps (equals `True))
+        (implicit_transitive_deps (equals `False))
+        (implicit_transitive_deps (equals `True))
     ];
   [%expect {| (implicit_transitive_deps true) |}];
   ()

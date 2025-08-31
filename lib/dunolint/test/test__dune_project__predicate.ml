@@ -25,8 +25,10 @@ let%expect_test "predicate" =
   let test p = Common.test_predicate (module Dune_project.Predicate) p in
   test (generate_opam_files (Blang.return `is_present));
   [%expect {| (generate_opam_files is_present) |}];
-  test (implicit_transitive_deps (equals true));
+  test (implicit_transitive_deps (equals `True));
   [%expect {| (implicit_transitive_deps (equals true)) |}];
+  test (implicit_transitive_deps (equals `False_if_hidden_includes_supported));
+  [%expect {| (implicit_transitive_deps (equals false-if-hidden-includes-supported)) |}];
   test (name (equals (Dune_project.Name.v "my-project")));
   [%expect {| (name (equals my-project)) |}];
   ()

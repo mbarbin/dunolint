@@ -19,24 +19,14 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-module Value = Dune_project.Implicit_transitive_deps.Value
+(** Values for the implicit_transitive_deps stanza in dune-project files. *)
 
-type t
+type t =
+  [ `True
+  | `False
+  | `False_if_hidden_includes_supported
+  ]
+[@@deriving enumerate]
 
-val create : implicit_transitive_deps:Value.t -> t
-
-include
-  Dunolinter.Stanza_linter.S
-  with type t := t
-   and type predicate = Dune_project.Implicit_transitive_deps.Predicate.t
-
-module Linter :
-  Dunolinter.Linter.S with type t = t and type predicate = Dune_project.Predicate.t
-
-(** {1 Getters} *)
-
-val value : t -> Value.t
-
-(** {1 Setters} *)
-
-val set_value : t -> value:Value.t -> unit
+include Container_key.S with type t := t
+include Comparable.S with type t := t

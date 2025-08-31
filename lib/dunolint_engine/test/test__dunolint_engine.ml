@@ -53,12 +53,15 @@ let%expect_test "lint" =
          ()
        | Dune_project_linter.Implicit_transitive_deps s ->
          (* And use the typed getters and setters of the stanza you care about. *)
-         print_s [%sexp (Dune_project_linter.Implicit_transitive_deps.value s : bool)];
+         print_s
+           [%sexp
+             (Dune_project_linter.Implicit_transitive_deps.value s
+              : Dune_project_linter.Implicit_transitive_deps.Value.t)];
          [%expect {| true |}];
          (* If you use setters, the side effect on the memory value is done
             right away, but actual sexp rewrite is going to be registered and only
             executed during the call to [materialize] (see below). *)
-         Dune_project_linter.Implicit_transitive_deps.set_value s ~value:false;
+         Dune_project_linter.Implicit_transitive_deps.set_value s ~value:`False;
          [%expect {||}];
          ()
        | Dune_project_linter.Name _ ->

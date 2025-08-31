@@ -19,6 +19,8 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+module Value = Implicit_transitive_deps__value
+
 module Predicate = struct
-  type t = [ `equals of bool ] [@@deriving compare, equal, sexp]
+  type t = [ `equals of Value.t ] [@@deriving compare, equal, sexp]
 end
