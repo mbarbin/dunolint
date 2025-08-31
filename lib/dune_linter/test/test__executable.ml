@@ -287,12 +287,28 @@ let%expect_test "eval" =
   ()
 ;;
 
-let enforce ((sexps_rewriter, field), t) conditions =
-  Sexps_rewriter.reset sexps_rewriter;
+let enforce_internal ((sexps_rewriter, field), t) conditions =
   Dunolinter.Handler.raise ~f:(fun () ->
     List.iter conditions ~f:(fun condition -> Dune_linter.Executable.enforce t ~condition);
-    Dune_linter.Executable.rewrite t ~sexps_rewriter ~field;
-    print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
+    Dune_linter.Executable.rewrite t ~sexps_rewriter ~field)
+;;
+
+let enforce (((sexps_rewriter, _), _) as input) conditions =
+  Sexps_rewriter.reset sexps_rewriter;
+  enforce_internal input conditions;
+  print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
+;;
+
+let enforce_diff (((sexps_rewriter, _), _) as input) conditions =
+  Sexps_rewriter.reset sexps_rewriter;
+  let original =
+    Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn
+  in
+  enforce_internal input conditions;
+  let changed =
+    Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn
+  in
+  Expect_test_patdiff.print_patdiff_s original changed
 ;;
 
 let%expect_test "enforce" =
@@ -400,74 +416,107 @@ let%expect_test "add_name_via_enforce" =
      [Dunolinter.at_positive_enforcing_position] and its downstream usages. *)
   let init = {| (executable (public_name my-cli)) |} in
   let main = Dune.Executable.Name.v "main" in
-  let test conds =
+  let test cond =
     let t = parse init in
-    enforce t conds
+    enforce_diff t cond
   in
   (* That's the easy case: you can simply pick the name from the invariant
      directly. *)
   test [ name (equals main) ];
   [%expect
     {|
-    (executable
-      (public_name my-cli)
-      (name        main))
+    -1,1 +1,3
+    -|(executable (public_name my-cli))
+    +|(executable
+    +|  (public_name my-cli)
+    +|  (name        main))
     |}];
   (* The invariant will be undefined if the field isn't there. *)
   test [ name (is_prefix "hey") ];
-  [%expect {| (executable (public_name my-cli)) |}];
+  [%expect {||}];
+  test [ name (is_suffix "hey") ];
+  [%expect {||}];
   (* When the invariant contains an initial value, it is used to initialize the field. *)
   test [ name (and_ [ equals main; is_prefix "ma" ]) ];
   [%expect
     {|
-    (executable
-      (public_name my-cli)
-      (name        main))
+    -1,1 +1,3
+    -|(executable (public_name my-cli))
+    +|(executable
+    +|  (public_name my-cli)
+    +|  (name        main))
     |}];
   (* Currently the application of invariant is not idempotent. See how, at the
      end of the application of this chain of [and_] the invariant no longer
      holds. We'll probably revisit at some later point, keeping as
      characterization tests for now. *)
-  test [ name (and_ [ equals main; is_prefix "hey" ]) ];
+  test [ name (and_ [ equals main; is_prefix "hey_" ]) ];
   [%expect
     {|
-    (executable
-      (public_name my-cli)
-      (name        heymain))
+    -1,1 +1,3
+    -|(executable (public_name my-cli))
+    +|(executable
+    +|  (public_name my-cli)
+    +|  (name        hey_main))
     |}];
   (* When going through other blang constructs, currently we do not pick initial
      values. *)
   test [ name (or_ [ equals main; is_prefix "hey" ]) ];
-  [%expect {| (executable (public_name my-cli)) |}];
+  [%expect {||}];
   test [ name (if_ (is_prefix "hey") (is_suffix "ho") (equals main)) ];
-  [%expect {| (executable (public_name my-cli)) |}];
+  [%expect {||}];
   test [ name (not_ (equals main)) ];
-  [%expect {| (executable (public_name my-cli)) |}];
+  [%expect {||}];
   test [ name false_ ];
-  [%expect {| (executable (public_name my-cli)) |}];
+  [%expect {||}];
   ()
 ;;
 
 let%expect_test "enforce_failures" =
   (* This covers cases yielding enforce failures. *)
-  let init = {| (executable (public_name my-cli)) |} in
-  let test conds =
+  let init = {| (executable) |} in
+  let test cond =
     let t = parse init in
-    enforce t conds
+    enforce t cond
   in
-  (* Certain fields don't have heurisitics in place for initializing a value if
+  (* Certain fields don't have heuristics in place for initializing a value if
      it isn't there. *)
   require_does_raise [%here] (fun () -> test [ has_field `name ]);
   [%expect
     {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (has_field name))) |}];
+  require_does_raise [%here] (fun () -> test [ has_field `public_name ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure
+      (loc _)
+      (condition (has_field public_name)))
+    |}];
+  let init = {| (executable (name my_exe)) |} in
+  let test cond =
+    let t = parse init in
+    enforce_diff t cond
+  in
+  test [ public_name (equals (Dune.Executable.Public_name.v "public-main")) ];
+  [%expect
+    {|
+    -1,1 +1,3
+    -|(executable (name my_exe))
+    +|(executable
+    +|  (name        my_exe)
+    +|  (public_name public-main))
+    |}];
+  test [ public_name (is_prefix "prefix_") ];
+  [%expect {||}];
+  test [ public_name (is_suffix "_suffix") ];
+  [%expect {||}];
   ()
 ;;
 
 let%expect_test "undefined conditions" =
   let init = {| (executable (public_name my-cli)) |} in
-  let test conds =
+  let test cond =
     let t = parse init in
-    enforce t conds
+    enforce t cond
   in
   let main = Dune.Executable.Name.v "main" in
   let _, t = parse init in
@@ -494,13 +543,244 @@ let%expect_test "undefined conditions" =
 
 let%expect_test "non base negations" =
   let init = {| (executable (public_name my-cli)) |} in
-  let test conds =
+  let test cond =
     let t = parse init in
-    enforce t conds
+    enforce t cond
   in
   test [ not_ (name (or_ [ is_prefix "hey"; is_suffix "ho" ])) ];
   [%expect {| (executable (public_name my-cli)) |}];
   test [ not_ (or_ [ name (is_prefix "hey"); name (is_suffix "ho") ]) ];
   [%expect {| (executable (public_name my-cli)) |}];
+  ()
+;;
+
+let%expect_test "has_field_auto_initialize" =
+  (* Test fields that can be auto-initialized when missing. *)
+  let init = {| (executable (name my-exe)) |} in
+  (* [instrumentation] field can be auto-initialized. *)
+  let t = parse init in
+  enforce t [ has_field `instrumentation ];
+  [%expect {| (executable (name my-exe) (instrumentation (backend bisect_ppx))) |}];
+  (* [lint] field can be auto-initialized. *)
+  let t = parse init in
+  enforce t [ has_field `lint ];
+  [%expect {| (executable (name my-exe) (lint (pps))) |}];
+  (* [preprocess] field can be auto-initialized. *)
+  let t = parse init in
+  enforce t [ has_field `preprocess ];
+  [%expect
+    {|
+    (executable
+      (name       my-exe)
+      (preprocess no_preprocessing))
+    |}];
+  ()
+;;
+
+let%expect_test "field_conditions" =
+  (* Test field-specific condition enforcement .*)
+  let init = {| (executable (name my-exe)) |} in
+  (* [instrumentation] condition auto-creates field. *)
+  let t = parse init in
+  enforce
+    t
+    [ instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")) ];
+  [%expect {| (executable (name my-exe) (instrumentation (backend bisect_ppx))) |}];
+  (* [lint] condition auto-creates field. *)
+  let t = parse init in
+  enforce t [ lint (pps (pp (Dune.Pp.Name.v "ppx_linter"))) ];
+  [%expect {| (executable (name my-exe) (lint (pps ppx_linter))) |}];
+  (* [preprocess] condition auto-creates field. *)
+  let t = parse init in
+  enforce t [ preprocess no_preprocessing ];
+  [%expect
+    {|
+    (executable
+      (name       my-exe)
+      (preprocess no_preprocessing))
+    |}];
+  ()
+;;
+
+let%expect_test "remove_fields" =
+  (* Test removing fields via [not has_field]. *)
+  let init =
+    {|
+(executable
+ (name my-exe)
+ (public_name my-cli)
+ (instrumentation (backend bisect_ppx))
+ (lint (pps ppx_linter))
+ (preprocess no_preprocessing))
+|}
+  in
+  let test cond =
+    let t = parse init in
+    enforce_diff t cond
+  in
+  test [ not_ (has_field `instrumentation) ];
+  [%expect
+    {|
+    -1,6 +1,5
+      (executable
+        (name        my-exe)
+        (public_name my-cli)
+    -|  (instrumentation (backend bisect_ppx))
+        (lint (pps ppx_linter))
+        (preprocess no_preprocessing))
+    |}];
+  test [ not_ (has_field `lint) ];
+  [%expect
+    {|
+    -1,6 +1,5
+      (executable
+        (name        my-exe)
+        (public_name my-cli)
+        (instrumentation (backend bisect_ppx))
+    -|  (lint            (pps     ppx_linter))
+        (preprocess no_preprocessing))
+    |}];
+  test [ not_ (has_field `preprocess) ];
+  [%expect
+    {|
+    -1,6 +1,5
+      (executable
+        (name        my-exe)
+        (public_name my-cli)
+        (instrumentation (backend bisect_ppx))
+    -|  (lint            (pps     ppx_linter))
+    -|  (preprocess no_preprocessing))
+    +|  (lint            (pps     ppx_linter)))
+    |}];
+  test [ not_ (has_field `name) ];
+  [%expect
+    {|
+    -1,6 +1,5
+      (executable
+    -|  (name        my-exe)
+        (public_name my-cli)
+        (instrumentation (backend bisect_ppx))
+        (lint            (pps     ppx_linter))
+        (preprocess no_preprocessing))
+    |}];
+  test [ not_ (has_field `public_name) ];
+  [%expect
+    {|
+    -1,6 +1,5
+      (executable
+        (name my-exe)
+    -|  (public_name my-cli)
+        (instrumentation (backend bisect_ppx))
+        (lint            (pps     ppx_linter))
+        (preprocess no_preprocessing))
+    |}];
+  ()
+;;
+
+let%expect_test "positive_enforcement_with_existing_fields" =
+  (* Test enforcement conditions when fields are already present. *)
+  let init =
+    {|
+(executable
+ (name my-exe)
+ (public_name my-cli)
+ (instrumentation (backend bisect_ppx))
+ (lint (pps ppx_linter))
+ (preprocess no_preprocessing))
+|}
+  in
+  let test cond =
+    let t = parse init in
+    enforce_diff t cond
+  in
+  test [ has_field `name ];
+  [%expect {||}];
+  test [ has_field `public_name ];
+  [%expect {||}];
+  test [ has_field `instrumentation ];
+  [%expect {||}];
+  test [ has_field `lint ];
+  [%expect {||}];
+  test [ has_field `preprocess ];
+  [%expect {||}];
+  ()
+;;
+
+let%expect_test "field_condition_enforcement_with_existing_fields" =
+  (* Test fields condition enforcement when fields are already present. *)
+  let init =
+    {|
+(executable
+ (name my-exe)
+ (public_name my-cli)
+ (instrumentation (backend bisect_ppx))
+ (lint (pps ppx_linter))
+ (preprocess no_preprocessing))
+|}
+  in
+  let test cond =
+    let t = parse init in
+    enforce_diff t cond
+  in
+  test [ public_name (equals (Dune.Executable.Public_name.v "new-name")) ];
+  [%expect
+    {|
+    -1,6 +1,6
+      (executable
+        (name        my-exe)
+    -|  (public_name my-cli)
+    +|  (public_name new-name)
+        (instrumentation (backend bisect_ppx))
+        (lint            (pps     ppx_linter))
+        (preprocess no_preprocessing))
+    |}];
+  test [ public_name (is_prefix "cli-"); public_name (is_suffix "-pub") ];
+  [%expect
+    {|
+    -1,6 +1,6
+      (executable
+        (name        my-exe)
+    -|  (public_name my-cli)
+    +|  (public_name cli-my-cli-pub)
+        (instrumentation (backend bisect_ppx))
+        (lint            (pps     ppx_linter))
+        (preprocess no_preprocessing))
+    |}];
+  test [ instrumentation (backend (Dune.Instrumentation.Backend.Name.v "coverage")) ];
+  [%expect
+    {|
+    -1,6 +1,6
+      (executable
+        (name        my-exe)
+        (public_name my-cli)
+    -|  (instrumentation (backend bisect_ppx))
+    +|  (instrumentation (backend coverage))
+        (lint            (pps     ppx_linter))
+        (preprocess no_preprocessing))
+    |}];
+  test [ lint (pps (pp (Dune.Pp.Name.v "ppx_deriving"))) ];
+  [%expect
+    {|
+    -1,6 +1,6
+      (executable
+        (name        my-exe)
+        (public_name my-cli)
+        (instrumentation (backend bisect_ppx))
+    -|  (lint            (pps     ppx_linter))
+    +|  (lint (pps ppx_deriving ppx_linter))
+        (preprocess no_preprocessing))
+    |}];
+  test [ preprocess (pps (pp (Dune.Pp.Name.v "ppx_compare"))) ];
+  [%expect
+    {|
+    -1,6 +1,6
+      (executable
+        (name        my-exe)
+        (public_name my-cli)
+        (instrumentation (backend bisect_ppx))
+        (lint            (pps     ppx_linter))
+    -|  (preprocess no_preprocessing))
+    +|  (preprocess      (pps     ppx_compare)))
+    |}];
   ()
 ;;

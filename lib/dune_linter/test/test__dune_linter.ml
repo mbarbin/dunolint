@@ -30,7 +30,7 @@ let original_contents =
   (libraries a b c))
 
 (library
-  (name foofoo)
+  (name foo_foo)
   (libraries a b c))
 
 (executable
@@ -121,7 +121,7 @@ let%expect_test "lint" =
       (match
          eval
            Dunolint.Config.Std.(
-             `dune (library (name (equals (Dunolint.Dune.Library.Name.v "foofoo")))))
+             `dune (library (name (equals (Dunolint.Dune.Library.Name.v "foo_foo")))))
        with
        | False | Undefined -> ()
        | True ->
@@ -135,7 +135,7 @@ let%expect_test "lint" =
         (libraries a b c))
 
       (library
-    -|  (name foofoo)
+    -|  (name foo_foo)
     +|  (name bar)
         (libraries a b c))
 
