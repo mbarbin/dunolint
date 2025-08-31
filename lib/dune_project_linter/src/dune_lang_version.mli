@@ -19,8 +19,25 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-module Dune_lang_version = Dune_project0.Dune_lang_version
-module Generate_opam_files = Dune_project0.Generate_opam_files
-module Implicit_transitive_deps = Dune_project0.Implicit_transitive_deps
-module Name = Dune_project0.Name
-module Predicate = Dune_project0.Predicate
+type t
+
+val create : dune_lang_version:Dune_project.Dune_lang_version.t -> t
+
+include
+  Dunolinter.Stanza_linter.S
+  with type t := t
+   and type predicate = Dune_project.Dune_lang_version.Predicate.t
+
+module Linter :
+  Dunolinter.Linter.S with type t = t and type predicate = Dune_project.Predicate.t
+
+(** {1 Getters} *)
+
+val dune_lang_version : t -> Dune_project.Dune_lang_version.t
+
+(** {1 Setters} *)
+
+val set_dune_lang_version
+  :  t
+  -> dune_lang_version:Dune_project.Dune_lang_version.t
+  -> unit

@@ -19,6 +19,7 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+module Dune_lang_version = Dune_lang_version
 module Generate_opam_files = Generate_opam_files
 module Implicit_transitive_deps = Implicit_transitive_deps
 module Name = Name
@@ -45,6 +46,7 @@ module Stanza = struct
 end
 
 type Stanza.t +=
+  | Dune_lang_version of Dune_lang_version.t
   | Generate_opam_files of Generate_opam_files.t
   | Implicit_transitive_deps of Implicit_transitive_deps.t
   | Name of Name.t
@@ -108,7 +110,8 @@ end
 
 let linters =
   Linter.
-    [ T { impl = (module Generate_opam_files); wrap = (fun a -> Generate_opam_files a) }
+    [ T { impl = (module Dune_lang_version); wrap = (fun a -> Dune_lang_version a) }
+    ; T { impl = (module Generate_opam_files); wrap = (fun a -> Generate_opam_files a) }
     ; T
         { impl = (module Implicit_transitive_deps)
         ; wrap = (fun a -> Implicit_transitive_deps a)

@@ -19,73 +19,71 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-let field_name = "name"
+let field_name = "lang"
 
-type t = { mutable name : Dune_project.Name.t } [@@deriving sexp_of]
+type t = { mutable dune_lang_version : Dune_project.Dune_lang_version.t }
+[@@deriving sexp_of]
 
-let create ~name = { name }
-let name t = t.name
-let set_name t ~name = t.name <- name
+let create ~dune_lang_version = { dune_lang_version }
+let dune_lang_version t = t.dune_lang_version
+let set_dune_lang_version t ~dune_lang_version = t.dune_lang_version <- dune_lang_version
 
-module Handler =
-  Dunolinter.Sexp_handler.Make_sexpable
-    (struct
-      let field_name = field_name
-    end)
-    (Dune_project.Name)
-
-let read ~sexps_rewriter ~field =
-  let name = Handler.read ~sexps_rewriter ~field in
-  { name }
+let read ~sexps_rewriter:_ ~field =
+  match field with
+  | Sexp.List [ Sexp.Atom "lang"; Sexp.Atom "dune"; Sexp.Atom version_string ] ->
+    (* Parse version string like "3.17" into tuple (3, 17) *)
+    (match String.split version_string ~on:'.' with
+     | [ major_str; minor_str ] ->
+       (match Int.of_string major_str, Int.of_string minor_str with
+        | major, minor ->
+          { dune_lang_version = Dune_project.Dune_lang_version.create (major, minor) }
+        | exception _ -> failwith ("Invalid version format: " ^ version_string))
+     | _ -> failwith ("Expected VERSION.MINOR format, got: " ^ version_string))
+  | _ -> failwith "Expected (lang dune VERSION) format"
 ;;
 
-let write t = Handler.write t.name
-let rewrite t ~sexps_rewriter ~field = Handler.rewrite t.name ~sexps_rewriter ~field
+let write t =
+  let version_string = Dune_project.Dune_lang_version.to_string t.dune_lang_version in
+  Sexp.List [ Sexp.Atom "lang"; Sexp.Atom "dune"; Sexp.Atom version_string ]
+;;
 
-type predicate = Dune_project.Name.Predicate.t
+let rewrite t ~sexps_rewriter ~field =
+  let new_field = write t in
+  Dunolinter.Sexp_handler.replace_field ~sexps_rewriter ~field ~new_field
+;;
+
+type predicate = Dune_project.Dune_lang_version.Predicate.t
 
 let eval t ~predicate =
   (match (predicate : predicate) with
-   | `equals name -> Dune_project.Name.equal name t.name
-   | `is_prefix prefix -> String.is_prefix (Dune_project.Name.to_string t.name) ~prefix
-   | `is_suffix suffix -> String.is_suffix (Dune_project.Name.to_string t.name) ~suffix)
+   | `equals version -> Dune_project.Dune_lang_version.equal version t.dune_lang_version
+   | `greater_than_or_equal_to version ->
+     Dune_project.Dune_lang_version.compare t.dune_lang_version version >= 0
+   | `less_than_or_equal_to version ->
+     Dune_project.Dune_lang_version.compare t.dune_lang_version version <= 0)
   |> Dunolint.Trilang.const
 ;;
 
 let enforce =
   Dunolinter.Linter.enforce
-    (module Dune_project.Name.Predicate)
+    (module Dune_project.Dune_lang_version.Predicate)
     ~eval
     ~enforce:(fun t predicate ->
       match predicate with
       | Not (`equals _) -> Eval
-      | T (`equals name) ->
-        t.name <- name;
+      | Not (`greater_than_or_equal_to _) -> Eval
+      | Not (`less_than_or_equal_to _) -> Eval
+      | T (`equals version) ->
+        t.dune_lang_version <- version;
         Ok
-      | T (`is_prefix prefix) ->
-        let value = Dune_project.Name.to_string t.name in
-        if not (String.is_prefix value ~prefix)
-        then t.name <- Dune_project.Name.v (prefix ^ value);
+      | T (`greater_than_or_equal_to version) ->
+        if Dune_project.Dune_lang_version.compare t.dune_lang_version version < 0
+        then t.dune_lang_version <- version;
         Ok
-      | Not (`is_prefix prefix) ->
-        let value = Dune_project.Name.to_string t.name in
-        (match String.chop_prefix value ~prefix with
-         | None -> Ok
-         | Some value ->
-           t.name <- Dune_project.Name.v value;
-           Ok)
-      | T (`is_suffix suffix) ->
-        let value = Dune_project.Name.to_string t.name in
-        if not (String.is_suffix value ~suffix)
-        then t.name <- Dune_project.Name.v (value ^ suffix);
-        Ok
-      | Not (`is_suffix suffix) ->
-        let value = Dune_project.Name.to_string t.name in
-        (match String.chop_suffix value ~suffix with
-         | None -> Ok
-         | Some value ->
-           t.name <- Dune_project.Name.v value;
-           Ok))
+      | T (`less_than_or_equal_to version) ->
+        if Dune_project.Dune_lang_version.compare t.dune_lang_version version > 0
+        then t.dune_lang_version <- version;
+        Ok)
 ;;
 
 module Top = struct
@@ -101,14 +99,16 @@ module Linter = struct
 
   let eval (t : t) ~predicate =
     match (predicate : Dune_project.Predicate.t) with
-    | `name condition ->
+    | `dune_lang_version condition ->
       Dunolint.Trilang.eval condition ~f:(fun predicate -> Top.eval t ~predicate)
     | predicate ->
       let () =
+        (* This construct is the same as featuring all values in the match case
+           but we cannot disable individual coverage in or patterns with
+           bisect_ppx atm. Left for future work. *)
         match[@coverage off] predicate with
-        | `name _ -> assert false
-        | `dune_lang_version _ | `generate_opam_files _ | `implicit_transitive_deps _ ->
-          ()
+        | `dune_lang_version _ -> assert false
+        | `name _ | `generate_opam_files _ | `implicit_transitive_deps _ -> ()
       in
       Dunolint.Trilang.Undefined
   ;;
@@ -122,16 +122,14 @@ module Linter = struct
         | Not _ -> Eval
         | T condition ->
           (match condition with
-           | `name condition ->
+           | `dune_lang_version condition ->
              Top.enforce t ~condition;
              Ok
            | condition ->
              let () =
                match[@coverage off] condition with
-               | `name _ -> assert false
-               | `dune_lang_version _
-               | `generate_opam_files _
-               | `implicit_transitive_deps _ -> ()
+               | `dune_lang_version _ -> assert false
+               | `name _ | `generate_opam_files _ | `implicit_transitive_deps _ -> ()
              in
              Unapplicable))
   ;;

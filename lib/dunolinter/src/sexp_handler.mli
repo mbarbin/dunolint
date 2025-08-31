@@ -81,6 +81,14 @@ module Make_sexpable_ordered_set
 
 (** {1 Utils} *)
 
+(** Replace a field in a sexps_rewriter if the new field is different from the
+    old one. *)
+val replace_field
+  :  sexps_rewriter:Sexps_rewriter.t
+  -> field:Sexp.t
+  -> new_field:Sexp.t
+  -> unit
+
 (** A convenient wrapper for [read] that finds the field to read from
     a list of fields embedded within a containing list of fields. The
     first field with the expected name is chosen and then we call

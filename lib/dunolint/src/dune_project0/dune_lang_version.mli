@@ -19,8 +19,32 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-module Dune_lang_version = Dune_project0.Dune_lang_version
-module Generate_opam_files = Dune_project0.Generate_opam_files
-module Implicit_transitive_deps = Dune_project0.Implicit_transitive_deps
-module Name = Dune_project0.Name
-module Predicate = Dune_project0.Predicate
+(** The format of the syntax used in a project to express dune stanzas.
+
+    This is specified in the [dune-project] file, as the first stanza. For
+    example:
+
+    {v
+      (lang dune 3.20)
+    v} *)
+
+(** Representing the two integers that are separated by the dot. For example,
+    the representation of ["3.20"] is [(3, 20)]. *)
+type t [@@deriving compare, equal, sexp]
+
+val create : int * int -> t
+
+(** Returns the string that can be used as atom in the dune-project
+    configuration file. *)
+val to_string : t -> string
+
+module Predicate : sig
+  type version := t
+
+  type t =
+    [ `equals of version
+    | `greater_than_or_equal_to of version
+    | `less_than_or_equal_to of version
+    ]
+  [@@deriving compare, equal, sexp]
+end
