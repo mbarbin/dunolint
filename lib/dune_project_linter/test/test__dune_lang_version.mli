@@ -18,9 +18,3 @@
 (*_  and the LGPL-3.0 Linking Exception along with this library. If not, see      *)
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
-
-module Dune_lang_version = Dune_project0.Dune_lang_version
-module Generate_opam_files = Dune_project0.Generate_opam_files
-module Implicit_transitive_deps = Dune_project0.Implicit_transitive_deps
-module Name = Dune_project0.Name
-module Predicate = Dune_project0.Predicate

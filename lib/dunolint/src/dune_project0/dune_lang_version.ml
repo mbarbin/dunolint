@@ -19,8 +19,24 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Dune_lang_version = Dune_project0.Dune_lang_version
-module Generate_opam_files = Dune_project0.Generate_opam_files
-module Implicit_transitive_deps = Dune_project0.Implicit_transitive_deps
-module Name = Dune_project0.Name
-module Predicate = Dune_project0.Predicate
+module T0 = struct
+  [@@@coverage off]
+
+  type t = int * int [@@deriving equal, compare, sexp]
+end
+
+include T0
+
+let create t = t
+let to_string (a, b) = Printf.sprintf "%d.%d" a b
+
+module Predicate = struct
+  [@@@coverage off]
+
+  type nonrec t =
+    [ `equals of t
+    | `greater_than_or_equal_to of t
+    | `less_than_or_equal_to of t
+    ]
+  [@@deriving compare, equal, sexp]
+end

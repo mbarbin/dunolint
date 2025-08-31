@@ -22,13 +22,13 @@
 module type S = Sexp_handler_intf.S
 
 let replace_field ~sexps_rewriter ~field ~new_field =
-  let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
   if not ([%equal: Sexp.t] field new_field)
-  then
+  then (
+    let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
     File_rewriter.replace
       file_rewriter
       ~range:(Sexps_rewriter.range sexps_rewriter field)
-      ~text:(Sexp.to_string_hum new_field)
+      ~text:(Sexp.to_string_hum new_field))
 ;;
 
 let find (type a) (module M : S with type t = a) ~sexps_rewriter ~fields =

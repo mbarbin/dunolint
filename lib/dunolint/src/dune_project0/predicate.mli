@@ -20,7 +20,8 @@
 (*_********************************************************************************)
 
 type t =
-  [ `generate_opam_files of Generate_opam_files.Predicate.t Blang.t
+  [ `dune_lang_version of Dune_lang_version.Predicate.t Blang.t
+  | `generate_opam_files of Generate_opam_files.Predicate.t Blang.t
   | `implicit_transitive_deps of Implicit_transitive_deps.Predicate.t Blang.t
   | `name of Name.Predicate.t Blang.t
   ]

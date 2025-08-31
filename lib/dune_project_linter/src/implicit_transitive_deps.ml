@@ -87,10 +87,16 @@ module Linter = struct
   type predicate = Dune_project.Predicate.t
 
   let eval (t : t) ~predicate =
-    match (predicate : predicate) with
+    match (predicate : Dune_project.Predicate.t) with
     | `implicit_transitive_deps condition ->
       Dunolint.Trilang.eval condition ~f:(fun predicate -> Top.eval t ~predicate)
-    | `generate_opam_files _ | `name _ -> Dunolint.Trilang.Undefined
+    | predicate ->
+      let () =
+        match[@coverage off] predicate with
+        | `implicit_transitive_deps _ -> assert false
+        | `name _ | `dune_lang_version _ | `generate_opam_files _ -> ()
+      in
+      Dunolint.Trilang.Undefined
   ;;
 
   let enforce =
@@ -100,11 +106,17 @@ module Linter = struct
       ~enforce:(fun t predicate ->
         match predicate with
         | Not _ -> Eval
-        | T dune_project ->
-          (match dune_project with
+        | T condition ->
+          (match condition with
            | `implicit_transitive_deps condition ->
              Top.enforce t ~condition;
              Ok
-           | `generate_opam_files _ | `name _ -> Unapplicable))
+           | condition ->
+             let () =
+               match[@coverage off] condition with
+               | `implicit_transitive_deps _ -> assert false
+               | `name _ | `dune_lang_version _ | `generate_opam_files _ -> ()
+             in
+             Unapplicable))
   ;;
 end

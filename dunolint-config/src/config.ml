@@ -29,6 +29,14 @@ let add_rule cs = rules := (cs : dune_rule) :: !rules
 
 let () =
   add_rule
+    (enforce
+       (dune_project
+          (dune_lang_version
+             (greater_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 17))))))
+;;
+
+let () =
+  add_rule
     (cond
        [ ( path (glob "dunolint-config/**/*")
          , enforce (dune (library (public_name (is_prefix "dunolint-tests.")))) )
