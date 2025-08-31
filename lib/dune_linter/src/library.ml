@@ -611,21 +611,20 @@ module Linter = struct
       (module Dune.Predicate)
       ~eval
       ~enforce:(fun t predicate ->
-        match predicate with
+        (* Coverage is disabled due to many patOr, pending better bisect_ppx
+           integration. *)
+        match[@coverage off] predicate with
         | Not _ -> Eval
-        | T dune ->
-          (* Coverage is disabled due to many patOr, pending better bisect_ppx
-             integration. *)
-          (match[@coverage off] dune with
-           | `include_subdirs _ | `executable _ | `stanza _ -> Unapplicable
-           | `library condition ->
-             Top.enforce t ~condition;
-             Ok
-           | ( `instrumentation _ | `lint _ | `preprocess _
+        | T (`include_subdirs _ | `executable _ | `stanza _) -> Unapplicable
+        | T (`library condition) ->
+          Top.enforce t ~condition;
+          Ok
+        | T
+            (( `instrumentation _ | `lint _ | `preprocess _
              | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name)
-               ) as predicate ->
-             Top.enforce t ~condition:(Blang.base predicate);
-             Ok))
+               ) as predicate) ->
+          Top.enforce t ~condition:(Blang.base predicate);
+          Ok)
   ;;
 end
 
