@@ -546,7 +546,7 @@ let enforce =
         Lint.enforce lint ~condition;
         Ok
       | T (`has_field `modes) ->
-        (match t.name with
+        (match t.modes with
          | Some _ -> Ok
          | None ->
            t.modes <- Some (Modes.initialize ~condition:Blang.true_);
