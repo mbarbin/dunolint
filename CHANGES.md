@@ -1,8 +1,13 @@
 ## 0.0.2025XXXX (unreleased)
 
+### Added
+
+- Supports implicit trans deps `false-if-hidden-includes-supported` value (#92, @mbarbin).
+
 ### Changed
 
-- Improved testing coverage (#90, @mbarbin).
+- Changes `(implicit_transitive_deps _)` config value from bool to variant (#92, @mbarbin).
+- Improved testing coverage (#90, #91, @mbarbin).
 
 ### Fixed
 

@@ -19,22 +19,49 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-open Dunolint.Config.Std
+module T = struct
+  type t =
+    [ `True
+    | `False
+    | `False_if_hidden_includes_supported
+    ]
+  [@@deriving enumerate]
 
-let%expect_test "predicate" =
-  let test p = Common.test_predicate (module Dunolint.Predicate) p in
-  test (path (equals (Relative_path.v "path/to/file")));
-  [%expect {| (path (equals path/to/file)) |}];
-  test (dune (executable (name (equals (Dune.Executable.Name.v "main")))));
-  [%expect {| (dune (executable (name (equals main)))) |}];
-  test (dune_project (implicit_transitive_deps (equals `True)));
-  [%expect {| (dune_project (implicit_transitive_deps (equals true))) |}];
-  test
-    (dune_project (implicit_transitive_deps (equals `False_if_hidden_includes_supported)));
-  [%expect
-    {|
-    (dune_project (
-      implicit_transitive_deps (equals false-if-hidden-includes-supported)))
-    |}];
-  ()
-;;
+  let of_string = function
+    | "true" -> Some `True
+    | "false" -> Some `False
+    | "false-if-hidden-includes-supported" -> Some `False_if_hidden_includes_supported
+    | _ -> None
+  ;;
+
+  let to_string = function
+    | `True -> "true"
+    | `False -> "false"
+    | `False_if_hidden_includes_supported -> "false-if-hidden-includes-supported"
+  ;;
+
+  let sexp_of_t t = Sexp.Atom (to_string t)
+
+  let t_of_sexp = function
+    | Sexp.Atom s ->
+      (match of_string s with
+       | Some v -> v
+       | None -> failwith ("Invalid implicit_transitive_deps value: " ^ s))
+    | _ -> failwith "Expected atom for implicit_transitive_deps value"
+  ;;
+
+  let compare a b =
+    let to_int = function
+      | `True -> 0
+      | `False -> 1
+      | `False_if_hidden_includes_supported -> 2
+    in
+    Int.compare (to_int a) (to_int b)
+  ;;
+end
+
+include T
+include Comparable.Make (T)
+
+let hash : t -> int = Stdlib.Hashtbl.hash
+let seeded_hash : int -> t -> int = Stdlib.Hashtbl.seeded_hash

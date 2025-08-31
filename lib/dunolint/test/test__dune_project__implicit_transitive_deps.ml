@@ -21,11 +21,45 @@
 
 open Dunolint.Config.Std
 
+let%expect_test "all" =
+  List.iter Dune_project.Implicit_transitive_deps.Value.all ~f:(fun value ->
+    print_s [%sexp (value : Dune_project.Implicit_transitive_deps.Value.t)]);
+  [%expect
+    {|
+    true
+    false
+    false-if-hidden-includes-supported
+    |}];
+  ()
+;;
+
+let%expect_test "of_sexp" =
+  let test sexp =
+    let t = [%of_sexp: Dune_project.Implicit_transitive_deps.Value.t] sexp in
+    let s = [%sexp (t : Dune_project.Implicit_transitive_deps.Value.t)] in
+    require_equal [%here] (module Sexp) sexp s
+  in
+  test (Atom "true");
+  test (Atom "false");
+  test (Atom "false-if-hidden-includes-supported");
+  [%expect {||}];
+  require_does_raise [%here] (fun () -> test (Atom "something else"));
+  [%expect {| (Failure "Invalid implicit_transitive_deps value: something else") |}];
+  require_does_raise [%here] (fun () ->
+    test (List [ Atom "not"; Atom "an"; Atom "atom" ]));
+  [%expect {| (Failure "Expected atom for implicit_transitive_deps value") |}];
+  ()
+;;
+
 let%expect_test "predicate" =
   let test p =
     Common.test_predicate (module Dune_project.Implicit_transitive_deps.Predicate) p
   in
-  test (equals true);
+  test (equals `True);
   [%expect {| (equals true) |}];
+  test (equals `False);
+  [%expect {| (equals false) |}];
+  test (equals `False_if_hidden_includes_supported);
+  [%expect {| (equals false-if-hidden-includes-supported) |}];
   ()
 ;;
