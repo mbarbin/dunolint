@@ -73,6 +73,7 @@ let%expect_test "lint" =
 
       (name dunolint)
     |}];
+  Sexps_rewriter.reset (Dune_project_linter.sexps_rewriter t);
   (* There's a typed API to access the supported stanza. *)
   Dune_project_linter.visit t ~f:(fun stanza ->
     match Dunolinter.match_stanza stanza with
@@ -89,6 +90,18 @@ let%expect_test "lint" =
       Dune_project_linter.Implicit_transitive_deps.set_value s ~value:`False;
       [%expect {||}];
       ()
+    | Dune_project_linter.Dune_lang_version s ->
+      (* Test the dune_lang_version stanza API and bump to [3.20]. *)
+      print_s
+        [%sexp
+          (Dune_project_linter.Dune_lang_version.dune_lang_version s
+           : Dune_project.Dune_lang_version.t)];
+      [%expect {| (3 17) |}];
+      Dune_project_linter.Dune_lang_version.set_dune_lang_version
+        s
+        ~dune_lang_version:(Dune_project.Dune_lang_version.create (3, 20));
+      [%expect {||}];
+      ()
     | _ -> ());
   print_diff t;
   [%expect
@@ -96,7 +109,7 @@ let%expect_test "lint" =
     -1,9 +1,9
 
     -|(lang dune 3.17)
-    +|(lang dune 3.19)
+    +|(lang dune 3.20)
 
       (name dunolint)
 
@@ -130,7 +143,7 @@ let%expect_test "lint" =
     -1,11 +1,11
 
     -|(lang dune 3.17)
-    +|(lang dune 3.19)
+    +|(lang dune 3.20)
 
       (name dunolint)
 
