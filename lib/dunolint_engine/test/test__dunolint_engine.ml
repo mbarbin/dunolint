@@ -316,7 +316,7 @@ let%expect_test "file-system errors" =
   in
   Dunolint_engine.lint_file t ~path:(Relative_path.v "foo/file") ~create_file:(fun () ->
     "Hello File");
-  (* Let's say [foo] gets created as a regulard file in the interval. *)
+  (* Let's say [foo] gets created as a regular file in the interval. *)
   Out_channel.write_all "foo" ~data:"Foo";
   Err.For_test.protect (fun () -> Dunolint_engine.materialize t);
   [%expect
