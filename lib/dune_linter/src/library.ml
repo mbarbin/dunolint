@@ -438,14 +438,37 @@ let enforce =
     ~eval
     ~enforce:(fun t predicate ->
       match predicate with
+      | Not condition ->
+        (match condition with
+         | `has_field has_field ->
+           Hash_set.add t.marked_for_removal has_field;
+           (match has_field with
+            | `name -> t.name <- None
+            | `public_name -> t.public_name <- None
+            | `instrumentation -> t.instrumentation <- None
+            | `lint -> t.lint <- None
+            | `modes -> t.modes <- None
+            | `preprocess -> t.preprocess <- None);
+           Ok
+         | condition ->
+           let () =
+             (* This construct is the same as featuring all values in the match
+                case but we cannot disable individual coverage in or patterns
+                with bisect_ppx atm. Left for future work. *)
+             match[@coverage off] condition with
+             | `has_field _ -> assert false
+             | `modes _
+             | `instrumentation _
+             | `public_name _
+             | `preprocess _
+             | `name _
+             | `lint _ -> ()
+           in
+           Eval)
       | T (`has_field `name) ->
         (match t.name with
          | Some _ -> Ok
          | None -> Fail)
-      | Not (`has_field (`name as to_mark)) ->
-        Hash_set.add t.marked_for_removal to_mark;
-        t.name <- None;
-        Ok
       | T (`name condition) ->
         (match t.name with
          | Some name ->
@@ -469,10 +492,6 @@ let enforce =
         (match t.public_name with
          | Some _ -> Ok
          | None -> Fail)
-      | Not (`has_field (`public_name as to_mark)) ->
-        Hash_set.add t.marked_for_removal to_mark;
-        t.public_name <- None;
-        Ok
       | T (`public_name condition) ->
         (match t.public_name with
          | Some public_name ->
@@ -498,10 +517,6 @@ let enforce =
          | None ->
            t.instrumentation <- Some (Instrumentation.initialize ~condition:Blang.true_);
            Ok)
-      | Not (`has_field (`instrumentation as to_mark)) ->
-        Hash_set.add t.marked_for_removal to_mark;
-        t.instrumentation <- None;
-        Ok
       | T (`instrumentation condition) ->
         let instrumentation =
           match t.instrumentation with
@@ -519,10 +534,6 @@ let enforce =
          | None ->
            t.lint <- Some (Lint.create ());
            Ok)
-      | Not (`has_field (`lint as to_mark)) ->
-        Hash_set.add t.marked_for_removal to_mark;
-        t.lint <- None;
-        Ok
       | T (`lint condition) ->
         let lint =
           match t.lint with
@@ -540,10 +551,6 @@ let enforce =
          | None ->
            t.modes <- Some (Modes.initialize ~condition:Blang.true_);
            Ok)
-      | Not (`has_field (`modes as to_mark)) ->
-        Hash_set.add t.marked_for_removal to_mark;
-        t.modes <- None;
-        Ok
       | T (`modes condition) ->
         let modes =
           match t.modes with
@@ -561,10 +568,6 @@ let enforce =
          | None ->
            t.preprocess <- Some (Preprocess.create ());
            Ok)
-      | Not (`has_field (`preprocess as to_mark)) ->
-        Hash_set.add t.marked_for_removal to_mark;
-        t.preprocess <- None;
-        Ok
       | T (`preprocess condition) ->
         let preprocess =
           match t.preprocess with
@@ -575,14 +578,7 @@ let enforce =
             preprocess
         in
         Preprocess.enforce preprocess ~condition;
-        Ok
-      | Not
-          ( `modes _
-          | `instrumentation _
-          | `public_name _
-          | `preprocess _
-          | `name _
-          | `lint _ ) -> Eval)
+        Ok)
 ;;
 
 module Top = struct
