@@ -2,10 +2,13 @@
 
 ### Added
 
+- Added dependency to `volgo-vcs` in preparation for future features (#89, @mbarbin).
+- Supports linting the dune lang version in dune-project files (#93, @mbarbin).
 - Supports implicit trans deps `false-if-hidden-includes-supported` value (#92, @mbarbin).
 
 ### Changed
 
+- Upgrade docusaurus dependencies to current latest (#94, @mbarbin).
 - Changes `(implicit_transitive_deps _)` config value from bool to variant (#92, @mbarbin).
 - Improved testing coverage (#90, #91, @mbarbin).
 
