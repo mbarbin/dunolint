@@ -63,10 +63,14 @@ let to_versioned_sexp (t : t) : Sexp.t =
 
 let t_of_sexp (sexp : Sexp.t) =
   match sexp with
-  | List [ List [ Atom "version"; Atom version ]; config ] ->
+  | List [ List [ Atom "version"; (Atom version as version_sexp) ]; config ] ->
     (match version with
      | "0" -> `v0 (V0.t_of_sexp config)
-     | _ -> failwith (Printf.sprintf "Unsupported dunolint config version %S." version))
+     | _ ->
+       raise
+         (Sexp.Of_sexp_error
+            ( Failure (Printf.sprintf "Unsupported dunolint config version [%s]." version)
+            , version_sexp )))
   | _ -> `v0 (V0.t_of_sexp sexp)
 ;;
 

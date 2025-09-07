@@ -160,10 +160,10 @@ Supplying an absent file or an invalid one results in errors:
   Try 'dunolint tools lint-file --help' or 'dunolint --help' for more information.
   [124]
 
-  $ dunolint tools lint-file dune-project --config=dune-project 2>&1 | head -n 3
-  Internal Error:
-  (parse_error.ml.Parse_error
-    ((position ((line 3) (col 0) (offset 18)))
+  $ dunolint tools lint-file dune-project --config=dune-project
+  File "dune-project", line 3, characters 0-0:
+  Error: s-expression followed by data
+  [123]
 
 The path that is used by the config is the filename supplied when it is
 overridden. In particular note how here we are executing the `return` statement

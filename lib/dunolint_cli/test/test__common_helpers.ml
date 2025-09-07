@@ -19,43 +19,34 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-let main =
-  Command.make
-    ~summary:"Lint project."
-    (let open Command.Std in
-     let+ dunolint_engine_config = Dunolint_engine.Config.arg
-     and+ () = Log_cli.set_config ()
-     and+ config =
-       Arg.named_opt [ "config" ] Param.file ~doc:"Path to dunolint config file."
-     and+ below = Common_helpers.below ~doc:"Lint only below this path."
-     and+ enforce =
-       Arg.named_multi
-         [ "enforce" ]
-         (Common_helpers.sexpable_param (module Dunolint.Condition))
-         ~docv:"COND"
-         ~doc:"Add condition to enforce."
-       >>| List.map ~f:(fun condition -> `enforce condition)
-     in
-     let config =
-       match config with
-       | Some filename -> Common_helpers.load_config_exn ~filename
-       | None ->
-         Dunolint.Config.create
-           ~skip_subtree:(Common_helpers.skip_subtree ~globs:[])
-           ~rules:[]
-           ()
-     in
-     let config =
-       Dunolint.Config.create
-         ?skip_subtree:(Dunolint.Config.skip_subtree config)
-         ~rules:(Dunolint.Config.rules config @ enforce)
-         ()
-     in
-     Dunolint_engine.run ~config:dunolint_engine_config
-     @@ fun dunolint_engine ->
-     Dunolint_engine.visit
-       dunolint_engine
-       ?below
-       ~f:(fun ~parent_dir ~subdirectories:_ ~files ->
-         Linter.visit_directory ~dunolint_engine ~config ~parent_dir ~files))
+module Common_helpers = Dunolint_cli.Private.Common_helpers
+
+let%expect_test "clean_up_error_message" =
+  let test input =
+    let output = Common_helpers.clean_up_error_message input in
+    print_endline (output : string)
+  in
+  (* Test the main transformation pattern. *)
+  test "lib/dunolint/src/config_v0.ml.T.t_of_sexp: record conversion: only pairs expected";
+  [%expect {| config_v0.T: record conversion: only pairs expected |}];
+  (* Test with different paths. *)
+  test "src/config.ml.Config.t_of_sexp: invalid format";
+  [%expect {| config.Config: invalid format |}];
+  (* Test with complex nested paths. *)
+  test "lib/foo/bar/baz/module_name.ml.Module.function_name: some error";
+  [%expect {| module_name.Module: some error |}];
+  (* Test strings that don't match the pattern - should remain unchanged. *)
+  test "simple error message";
+  [%expect {| simple error message |}];
+  test "Error: something went wrong";
+  [%expect {| Error: something went wrong |}];
+  (* Test edge cases. *)
+  test "";
+  [%expect {||}];
+  test "file.ml.Module.func: error";
+  [%expect {| file.Module: error |}];
+  (* Test with various extensions - only .ml should match. *)
+  test "lib/test.mli.Module.func: error";
+  [%expect {| lib/test.mli.Module.func: error |}];
+  ()
 ;;

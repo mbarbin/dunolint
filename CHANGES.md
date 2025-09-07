@@ -1,3 +1,9 @@
+## 0.0.2025XXXX (unreleased)
+
+### Fixed
+
+- Config loading errors are no longer internal errors and now reported with locations when able (#97, @mbarbin).
+
 ## 0.0.20250907 (2025-09-07)
 
 ### Added
