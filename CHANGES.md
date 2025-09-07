@@ -1,4 +1,4 @@
-## 0.0.2025XXXX (unreleased)
+## 0.0.20250907 (2025-09-07)
 
 ### Added
 
@@ -8,6 +8,7 @@
 
 ### Changed
 
+- Prepare transition to versioned API and config format (#96, @mbarbin).
 - Upgrade docusaurus dependencies to current latest (#94, @mbarbin).
 - Changes `(implicit_transitive_deps _)` config value from bool to variant (#92, @mbarbin).
 - Improved testing coverage (#90, #91, @mbarbin).

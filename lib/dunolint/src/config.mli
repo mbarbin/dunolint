@@ -21,88 +21,42 @@
 
 type t [@@deriving compare, equal, sexp]
 
-(** {1 Getters} *)
+module V0 = Config_v0
 
-(** {2 Skip subtree}
+(** {1 Create} *)
 
-    This part relate to making dunolint ignor parts of your project,
-    namely not visiting entire sub directories of your repo. *)
+val v0 : V0.t -> t
 
-module Skip_subtree : sig
-  module Predicate : sig
-    type t = [ `path of Path.Predicate.t Blang.t ] [@@deriving compare, equal, sexp]
+(** {1 Save to file} *)
+
+(** This is the recommended way to create the contents of the config to save to
+    a file via a dune rule. [generated_by] should be the path to the file that
+    implements the config, and will be mentioned in a header comment at the top
+    with a sentence indicating that the config is generated and should not be
+    edited. *)
+val to_file_contents : t -> generated_by:string -> string
+
+(** {1 Private Utils} *)
+
+module Private : sig
+  val view : t -> [ `v0 of V0.t ]
+
+  module With_versioned_sexp : sig
+    type nonrec t = t [@@deriving compare, equal, sexp]
   end
-
-  module Result : sig
-    type t = Nothing.t [@@deriving compare, equal, sexp]
-  end
-
-  type t = (Predicate.t, Result.t) Rule.t [@@deriving compare, equal, sexp]
 end
+
+(** {1 Compatibility}
+
+    We plan on removing this compatibility layer and enforcing the use of the
+    versioned API in the future. This will be done as a gradual and multi steps
+    transition. At the moment we offer both APIs to start experimenting with the
+    specification of configs using the versioned API. *)
+
+module Skip_subtree = Config_v0.Skip_subtree
+module Rule = Config_v0.Rule
+module Std = Config_v0.Std
 
 val skip_subtree : t -> Skip_subtree.t option
-
-(** {2 Generic rules} *)
-
-module Rule : sig
-  type t = (Predicate.t, Condition.t) Rule.t [@@deriving compare, equal, sexp]
-end
-
 val rules : t -> Rule.t list
-
-(** {1 Creating configs} *)
-
 val create : ?skip_subtree:Skip_subtree.t -> ?rules:Rule.t list -> unit -> t
-
-(** {1 An EDSL to build configs} *)
-
-module Std : sig
-  module Blang = Blang
-  module Dune = Dune
-  module Dune_project = Dune_project
-
-  include module type of struct
-    include Blang.O
-  end
-
-  val backend : 'a -> [> `backend of 'a ] Blang.t
-  val cond : ('condition * 'action) list -> [> `cond of ('condition * 'action) list ]
-  val dune : 'a -> [> `dune of 'a ] Blang.t
-  val dune_lang_version : 'a -> [> `dune_lang_version of 'a ] Blang.t
-  val dune_project : 'a -> [> `dune_project of 'a ] Blang.t
-  val enforce : 'a -> [> `enforce of 'a ]
-  val equals : 'a -> [> `equals of 'a ] Blang.t
-  val executable : 'a -> [> `executable of 'a ] Blang.t
-  val flag : Dune.Pps.Predicate.Flag.t -> [> `flag of Dune.Pps.Predicate.Flag.t ] Blang.t
-  val generate_opam_files : 'a -> [> `generate_opam_files of 'a ] Blang.t
-  val glob : string -> [> `glob of Glob.t ] Blang.t
-  val greater_than_or_equal_to : 'a -> [> `greater_than_or_equal_to of 'a ] Blang.t
-  val has_field : 'a -> [> `has_field of 'a ] Blang.t
-  val has_mode : 'a -> [> `has_mode of 'a ] Blang.t
-  val has_modes : 'a -> [> `has_modes of 'a ] Blang.t
-  val implicit_transitive_deps : 'a -> [> `implicit_transitive_deps of 'a ] Blang.t
-  val include_subdirs : 'a -> [> `include_subdirs of 'a ] Blang.t
-  val instrumentation : 'a -> [> `instrumentation of 'a ] Blang.t
-  val is_prefix : string -> [> `is_prefix of string ] Blang.t
-  val is_present : [> `is_present ] Blang.t
-  val is_suffix : string -> [> `is_suffix of string ] Blang.t
-  val less_than_or_equal_to : 'a -> [> `less_than_or_equal_to of 'a ] Blang.t
-  val library : 'a -> [> `library of 'a ] Blang.t
-  val lint : 'a -> [> `lint of 'a ] Blang.t
-  val modes : 'a -> [> `modes of 'a ] Blang.t
-  val name : 'a -> [> `name of 'a ] Blang.t
-  val no_preprocessing : [> `no_preprocessing ] Blang.t
-  val path : 'a -> [> `path of 'a ] Blang.t
-  val pp : Dune.Pp.Name.t -> [> `pp of Dune.Pp.Name.t ] Blang.t
-  val pps : 'a -> [> `pps of 'a ] Blang.t
-
-  val pp_with_flag
-    :  Dune.Pps.Predicate.Pp_with_flag.t
-    -> [> `pp_with_flag of Dune.Pps.Predicate.Pp_with_flag.t ] Blang.t
-
-  val preprocess : 'a -> [> `preprocess of 'a ] Blang.t
-  val public_name : 'a -> [> `public_name of 'a ] Blang.t
-  val return : [> `return ]
-  val skip_subtree : [> `skip_subtree ]
-  val stanza : 'a -> [> `stanza of 'a ] Blang.t
-end
