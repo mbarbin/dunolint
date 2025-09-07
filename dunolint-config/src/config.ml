@@ -19,7 +19,7 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-open Dunolint.Config.Std
+open Dunolint.Config.V0.Std
 
 let rules = ref []
 
@@ -120,7 +120,7 @@ let () =
 
 let skip_subtrees = ref []
 
-let add_skip_subtree (condition : Dunolint.Config.Skip_subtree.Predicate.t Blang.t) =
+let add_skip_subtree (condition : Dunolint.Config.V0.Skip_subtree.Predicate.t Blang.t) =
   skip_subtrees := condition :: !skip_subtrees
 ;;
 
@@ -142,7 +142,7 @@ let () =
 let config () =
   let skip_subtree = cond [ or_ (List.rev !skip_subtrees), skip_subtree ] in
   let rules = List.rev !rules in
-  Dunolint.Config.create ~skip_subtree ~rules ()
+  Dunolint.Config.v0 (Dunolint.Config.V0.create ~skip_subtree ~rules ())
 ;;
 
 let main =
