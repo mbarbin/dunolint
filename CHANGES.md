@@ -8,6 +8,7 @@
 
 ### Changed
 
+- Prepare transition to versioned API and config format (#96, @mbarbin).
 - Upgrade docusaurus dependencies to current latest (#94, @mbarbin).
 - Changes `(implicit_transitive_deps _)` config value from bool to variant (#92, @mbarbin).
 - Improved testing coverage (#90, #91, @mbarbin).
