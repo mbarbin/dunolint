@@ -28,6 +28,8 @@ module Relative_path = struct
 end
 
 module Predicate = struct
+  [@@@coverage off]
+
   type t =
     [ `equals of Relative_path.t
     | `glob of Glob.t

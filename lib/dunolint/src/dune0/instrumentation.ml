@@ -39,6 +39,8 @@ module Backend = struct
 end
 
 module Predicate = struct
+  [@@@coverage off]
+
   type t = [ `backend of Backend.Name.t ] [@@deriving_inline compare, equal, sexp]
 
   let compare =

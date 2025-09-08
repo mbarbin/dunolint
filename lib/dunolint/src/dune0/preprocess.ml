@@ -20,6 +20,8 @@
 (*********************************************************************************)
 
 module Predicate = struct
+  [@@@coverage off]
+
   type t =
     [ `no_preprocessing
     | `pps of Pps.Predicate.t Blang.t

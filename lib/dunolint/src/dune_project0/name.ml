@@ -34,6 +34,8 @@ include Validated_string.Make (struct
   end)
 
 module Predicate = struct
+  [@@@coverage off]
+
   type name = t [@@deriving_inline compare, equal, sexp]
 
   let compare_name = (compare : name -> name -> int)

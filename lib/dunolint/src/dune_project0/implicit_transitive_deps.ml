@@ -22,6 +22,8 @@
 module Value = Implicit_transitive_deps__value
 
 module Predicate = struct
+  [@@@coverage off]
+
   type t = [ `equals of Value.t ] [@@deriving_inline compare, equal, sexp]
 
   let compare =

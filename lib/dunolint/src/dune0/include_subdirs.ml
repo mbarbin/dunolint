@@ -20,6 +20,8 @@
 (*********************************************************************************)
 
 module Mode = struct
+  [@@@coverage off]
+
   type t =
     [ `no
     | `unqualified
@@ -100,6 +102,8 @@ module Mode = struct
 end
 
 module Predicate = struct
+  [@@@coverage off]
+
   type t = [ `equals of Mode.t ] [@@deriving_inline compare, equal, sexp]
 
   let compare =

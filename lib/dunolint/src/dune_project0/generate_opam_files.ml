@@ -20,6 +20,8 @@
 (*********************************************************************************)
 
 module Predicate = struct
+  [@@@coverage off]
+
   type t = [ `is_present ] [@@deriving_inline compare, equal, sexp]
 
   let compare =

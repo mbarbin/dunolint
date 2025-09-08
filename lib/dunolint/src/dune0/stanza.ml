@@ -20,6 +20,8 @@
 (*********************************************************************************)
 
 module Predicate = struct
+  [@@@coverage off]
+
   type t =
     [ `include_subdirs
     | `library

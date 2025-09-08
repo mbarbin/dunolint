@@ -19,24 +19,30 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-type t = Predicate.t Blang.t [@@deriving_inline compare, equal, sexp]
+module T = struct
+  [@@@coverage off]
 
-let compare =
-  (fun a__001_ -> fun b__002_ -> Blang.compare Predicate.compare a__001_ b__002_
-   : t -> t -> int)
-;;
+  type t = Predicate.t Blang.t [@@deriving_inline compare, equal, sexp]
 
-let equal =
-  (fun a__005_ -> fun b__006_ -> Blang.equal Predicate.equal a__005_ b__006_
-   : t -> t -> bool)
-;;
+  let compare =
+    (fun a__001_ -> fun b__002_ -> Blang.compare Predicate.compare a__001_ b__002_
+     : t -> t -> int)
+  ;;
 
-let t_of_sexp =
-  (fun x__010_ -> Blang.t_of_sexp Predicate.t_of_sexp x__010_ : Sexplib0.Sexp.t -> t)
-;;
+  let equal =
+    (fun a__005_ -> fun b__006_ -> Blang.equal Predicate.equal a__005_ b__006_
+     : t -> t -> bool)
+  ;;
 
-let sexp_of_t =
-  (fun x__011_ -> Blang.sexp_of_t Predicate.sexp_of_t x__011_ : t -> Sexplib0.Sexp.t)
-;;
+  let t_of_sexp =
+    (fun x__010_ -> Blang.t_of_sexp Predicate.t_of_sexp x__010_ : Sexplib0.Sexp.t -> t)
+  ;;
 
-[@@@deriving.end]
+  let sexp_of_t =
+    (fun x__011_ -> Blang.sexp_of_t Predicate.sexp_of_t x__011_ : t -> Sexplib0.Sexp.t)
+  ;;
+
+  [@@@deriving.end]
+end
+
+include T

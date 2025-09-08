@@ -34,6 +34,8 @@ module Element = struct
     [@@@deriving.end]
   end
 
+  [@@@coverage off]
+
   type t =
     { prefix : Prefix.t
     ; name : string

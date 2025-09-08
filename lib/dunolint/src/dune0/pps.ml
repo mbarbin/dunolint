@@ -22,6 +22,8 @@
 open! Import
 
 module Predicate = struct
+  [@@@coverage off]
+
   module Param = struct
     type t =
       [ `any
@@ -127,8 +129,6 @@ module Predicate = struct
   end
 
   module Flag = struct
-    [@@@coverage off]
-
     module Applies_to = struct
       type t =
         [ `any
@@ -331,8 +331,6 @@ module Predicate = struct
   end
 
   module Pp_with_flag = struct
-    [@@@coverage off]
-
     type t =
       { pp : Pp.Name.t
       ; flag : string

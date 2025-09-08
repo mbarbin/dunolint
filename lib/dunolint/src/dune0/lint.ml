@@ -20,6 +20,8 @@
 (*********************************************************************************)
 
 module Predicate = struct
+  [@@@coverage off]
+
   type t = [ `pps of Pps.Predicate.t Blang.t ] [@@deriving_inline compare, equal, sexp]
 
   let compare =

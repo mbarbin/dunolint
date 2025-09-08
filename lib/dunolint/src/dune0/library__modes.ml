@@ -22,6 +22,8 @@
 open! Import
 
 module Predicate = struct
+  [@@@coverage off]
+
   type t =
     [ `has_mode of Compilation_mode.t
     | `has_modes of Compilation_mode.t list
