@@ -19,30 +19,32 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-open Dunolint.Config.Std
+module Int = struct
+  include Int
 
-let%expect_test "of_string" =
-  let test str =
-    print_s
-      [%sexp
-        (Dune.Package.Name.of_string str
-         : (Dune.Package.Name.t, [ `Msg of string ]) Result.t)]
-  in
-  test "";
-  [%expect {| (Error (Msg "\"\": invalid Package_name")) |}];
-  test "pkg";
-  [%expect {| (Ok pkg) |}];
-  test "pkg-dash";
-  [%expect {| (Error (Msg "\"pkg-dash\": invalid Package_name")) |}];
-  test "pkg_underscore";
-  [%expect {| (Ok pkg_underscore) |}];
-  test "pkg_UPPERCASE";
-  [%expect {| (Ok pkg_UPPERCASE) |}];
-  test "pkg.dot";
-  [%expect {| (Error (Msg "\"pkg.dot\": invalid Package_name")) |}];
-  test "pkg#sharp";
-  [%expect {| (Error (Msg "\"pkg#sharp\": invalid Package_name")) |}];
-  test "pkg@at";
-  [%expect {| (Error (Msg "\"pkg@at\": invalid Package_name")) |}];
-  ()
-;;
+  let hash : int -> int = Hashtbl.hash
+  let seeded_hash : int -> int -> int = Hashtbl.seeded_hash
+end
+
+module ListLabels = struct
+  include ListLabels
+
+  let is_empty = function
+    | [] -> true
+    | _ :: _ -> false
+  ;;
+end
+
+module String = struct
+  include String
+
+  let hash : string -> int = Hashtbl.hash
+  let seeded_hash : int -> string -> int = Hashtbl.seeded_hash
+end
+
+module StringLabels = struct
+  include StringLabels
+
+  let hash : string -> int = Hashtbl.hash
+  let seeded_hash : int -> string -> int = Hashtbl.seeded_hash
+end

@@ -35,8 +35,6 @@
  (depends
   (ocaml
    (>= 4.14))
-  (base
-   (>= v0.16))
   (fpath
    (>= 0.7.3))
   (fpath-sexp0

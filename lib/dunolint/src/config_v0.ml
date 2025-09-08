@@ -19,6 +19,8 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open! Import
+
 module Skip_subtree = struct
   [@@@coverage off]
 
@@ -27,7 +29,7 @@ module Skip_subtree = struct
   end
 
   module Result = struct
-    type t = Nothing.t [@@deriving compare, equal, sexp]
+    type t = | [@@deriving compare, equal, sexp]
   end
 
   type t = (Predicate.t, Result.t) Rule.t [@@deriving compare, equal, sexp]

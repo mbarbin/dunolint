@@ -18,31 +18,3 @@
 (*  and the LGPL-3.0 Linking Exception along with this library. If not, see      *)
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
-
-open Dunolint.Config.Std
-
-let%expect_test "of_string" =
-  let test str =
-    print_s
-      [%sexp
-        (Dune.Package.Name.of_string str
-         : (Dune.Package.Name.t, [ `Msg of string ]) Result.t)]
-  in
-  test "";
-  [%expect {| (Error (Msg "\"\": invalid Package_name")) |}];
-  test "pkg";
-  [%expect {| (Ok pkg) |}];
-  test "pkg-dash";
-  [%expect {| (Error (Msg "\"pkg-dash\": invalid Package_name")) |}];
-  test "pkg_underscore";
-  [%expect {| (Ok pkg_underscore) |}];
-  test "pkg_UPPERCASE";
-  [%expect {| (Ok pkg_UPPERCASE) |}];
-  test "pkg.dot";
-  [%expect {| (Error (Msg "\"pkg.dot\": invalid Package_name")) |}];
-  test "pkg#sharp";
-  [%expect {| (Error (Msg "\"pkg#sharp\": invalid Package_name")) |}];
-  test "pkg@at";
-  [%expect {| (Error (Msg "\"pkg@at\": invalid Package_name")) |}];
-  ()
-;;

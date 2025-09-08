@@ -19,30 +19,47 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-open Dunolint.Config.Std
+open! Stdlib_compat
 
-let%expect_test "of_string" =
-  let test str =
-    print_s
-      [%sexp
-        (Dune.Package.Name.of_string str
-         : (Dune.Package.Name.t, [ `Msg of string ]) Result.t)]
-  in
-  test "";
-  [%expect {| (Error (Msg "\"\": invalid Package_name")) |}];
-  test "pkg";
-  [%expect {| (Ok pkg) |}];
-  test "pkg-dash";
-  [%expect {| (Error (Msg "\"pkg-dash\": invalid Package_name")) |}];
-  test "pkg_underscore";
-  [%expect {| (Ok pkg_underscore) |}];
-  test "pkg_UPPERCASE";
-  [%expect {| (Ok pkg_UPPERCASE) |}];
-  test "pkg.dot";
-  [%expect {| (Error (Msg "\"pkg.dot\": invalid Package_name")) |}];
-  test "pkg#sharp";
-  [%expect {| (Error (Msg "\"pkg#sharp\": invalid Package_name")) |}];
-  test "pkg@at";
-  [%expect {| (Error (Msg "\"pkg@at\": invalid Package_name")) |}];
-  ()
-;;
+module Char = struct
+  include Char
+
+  let is_alphanum = function
+    | 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' -> true
+    | _ -> false
+  ;;
+end
+
+module List = struct
+  include ListLabels
+
+  let find t ~f = find_opt t ~f
+  let sort t ~compare = sort t ~cmp:compare
+end
+
+module String = struct
+  include StringLabels
+
+  let t_of_sexp = string_of_sexp
+  let sexp_of_t = sexp_of_string
+  let is_prefix t ~prefix = String.starts_with ~prefix t
+  let is_empty t = String.length t = 0
+  let concat ~sep li = String.concat sep li
+  let split t ~on = split_on_char ~sep:on t
+end
+
+module Option = struct
+  include Option
+
+  let t_of_sexp = option_of_sexp
+  let sexp_of_t = sexp_of_option
+end
+
+let compare_int = Int.compare
+let compare_string = String.compare
+let compare_list compare a b = List.compare ~cmp:compare a b
+let compare_option compare a b = Option.compare compare a b
+let equal_int = Int.equal
+let equal_string = String.equal
+let equal_list eq a b = List.equal ~eq a b
+let equal_option eq a b = Option.equal eq a b

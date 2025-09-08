@@ -72,6 +72,9 @@ let%expect_test "non-empty" =
     |}];
   require_equal [%here] (module Dunolint.Config) t t;
   [%expect {||}];
+  let rules = Dunolint.Config.rules t in
+  let t' = Dunolint.Config.create ~rules () in
+  require_equal [%here] (module Int) 1 (Dunolint.Config.compare t t');
   ()
 ;;
 

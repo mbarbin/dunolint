@@ -19,6 +19,7 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open! Import
 module V0 = Config_v0
 
 type t = [ `v0 of V0.t ] [@@deriving compare, equal]

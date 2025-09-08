@@ -67,7 +67,7 @@ let exists =
   fun ts ~f -> loop 0 ~f ts
 ;;
 
-let disjunction ts = exists ts ~f:Fn.id
+let disjunction ts = exists ts ~f:Fun.id
 
 let for_all =
   (* Returning [Undefined] doesn't shortcut, since [f] may be returning [False]
@@ -83,7 +83,7 @@ let for_all =
   fun ts ~f -> loop 0 ~f ts
 ;;
 
-let conjunction ts = for_all ts ~f:Fn.id
+let conjunction ts = for_all ts ~f:Fun.id
 
 let rec eval (t : 'a Blang.t) ~f:base_eval : t =
   match t with

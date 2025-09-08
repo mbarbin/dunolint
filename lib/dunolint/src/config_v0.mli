@@ -34,7 +34,7 @@ module Skip_subtree : sig
   end
 
   module Result : sig
-    type t = Nothing.t [@@deriving compare, equal, sexp]
+    type t = | [@@deriving compare, equal, sexp]
   end
 
   type t = (Predicate.t, Result.t) Rule.t [@@deriving compare, equal, sexp]
