@@ -106,6 +106,8 @@
    (>= v0.17))
   (ppxlib
    (>= 0.35.0))
+  (re
+   (>= 1.8.0))
   (sexplib0
    (>= v0.17))
   (sexps-rewriter
@@ -183,6 +185,8 @@
    (>= v0.17))
   (ppxlib
    (>= 0.35.0))
+  (re
+   (>= 1.8.0))
   (sexplib0
    (>= v0.17))
   (sexps-rewriter
@@ -280,6 +284,8 @@
    (>= v0.17))
   (ppxlib
    (>= 0.35.0))
+  (re
+   (>= 1.8.0))
   (sexplib0
    (>= v0.17))
   (sexps-rewriter
