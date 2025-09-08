@@ -1,5 +1,9 @@
 ## 0.0.2025XXXX (unreleased)
 
+### Changed
+
+- Always use versioned sexp for config (#98, @mbarbin).
+
 ### Fixed
 
 - Config loading errors are no longer internal errors and now reported with locations when able (#97, @mbarbin).

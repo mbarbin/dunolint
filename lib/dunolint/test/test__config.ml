@@ -46,7 +46,7 @@ let%expect_test "empty" =
   print_s [%sexp (Dunolint.Config.rules t : Dunolint.Config.Rule.t list)];
   [%expect {| () |}];
   print_s [%sexp (t : Dunolint.Config.t)];
-  [%expect {| ((rules ())) |}];
+  [%expect {| ((version 0) ((rules ()))) |}];
   require_equal [%here] (module Dunolint.Config) t t;
   [%expect {||}];
   ()
@@ -66,8 +66,9 @@ let%expect_test "non-empty" =
   print_s [%sexp (t : Dunolint.Config.t)];
   [%expect
     {|
-    ((skip_subtree (cond (((path (glob .git/)) skip_subtree))))
-     (rules ((enforce (dune (has_field instrumentation))))))
+    ((version 0)
+     ((skip_subtree (cond (((path (glob .git/)) skip_subtree))))
+      (rules ((enforce (dune (has_field instrumentation)))))))
     |}];
   require_equal [%here] (module Dunolint.Config) t t;
   [%expect {||}];
@@ -77,7 +78,7 @@ let%expect_test "non-empty" =
 let%expect_test "versioned_sexp" =
   let v0 = Dunolint.Config.V0.create () in
   let t = Dunolint.Config.v0 v0 in
-  Common.test_roundtrip (module Dunolint.Config.Private.With_versioned_sexp) t;
+  Common.test_roundtrip (module Dunolint.Config) t;
   [%expect {| ((version 0) ((rules ()))) |}];
   print_endline (Dunolint.Config.to_file_contents t ~generated_by:"test_config.ml");
   [%expect
@@ -95,7 +96,7 @@ let%expect_test "versioned_sexp" =
       require_equal [%here] (module Dunolint.Config.V0) v0 v0';
       print_s (Dunolint.Config.sexp_of_t t')
   in
-  [%expect {| ((rules ())) |}];
+  [%expect {| ((version 0) ((rules ()))) |}];
   ()
 ;;
 

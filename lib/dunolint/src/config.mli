@@ -40,10 +40,6 @@ val to_file_contents : t -> generated_by:string -> string
 
 module Private : sig
   val view : t -> [ `v0 of V0.t ]
-
-  module With_versioned_sexp : sig
-    type nonrec t = t [@@deriving compare, equal, sexp]
-  end
 end
 
 (** {1 Compatibility}
