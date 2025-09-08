@@ -43,8 +43,8 @@ If the config is supplied, but it is invalid, dunolint will complain.
   File ".dunolint", line 1, characters 1-5:
   1 | (blah)
        ^^^^
-  Error: config_v0.T: record conversion: only pairs expected, their first
-  element must be an atom
+  Error: config_v0: record conversion: only pairs expected, their first element
+  must be an atom
   [123]
 
 Unsupported config versions are reported with a located error message.

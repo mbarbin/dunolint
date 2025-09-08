@@ -86,7 +86,7 @@ let%expect_test "clean_up_error_message" =
   in
   (* Test the main transformation pattern. *)
   test "lib/dunolint/src/config_v0.ml.T.t_of_sexp: record conversion: only pairs expected";
-  [%expect {| config_v0.T: record conversion: only pairs expected |}];
+  [%expect {| config_v0: record conversion: only pairs expected |}];
   (* Test with different paths. *)
   test "src/config.ml.Config.t_of_sexp: invalid format";
   [%expect {| config.Config: invalid format |}];

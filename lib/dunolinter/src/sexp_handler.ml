@@ -230,9 +230,13 @@ let clean_up_error_message str =
   | None -> str
   | Some match_info ->
     let basename = Re.Group.get match_info 1 in
-    let module_name = Re.Group.get match_info 2 in
+    let module_name =
+      match Re.Group.get match_info 2 with
+      | "T" -> ""
+      | m -> "." ^ m
+    in
     let rest = Re.Group.get match_info 3 in
-    Printf.sprintf "%s.%s:%s" basename module_name rest
+    Printf.sprintf "%s%s:%s" basename module_name rest
 ;;
 
 let loc_of_parsexp_range ~filename (range : Parsexp.Positions.range) =
