@@ -42,12 +42,21 @@ module T = struct
 
   let sexp_of_t t = Sexp.Atom (to_string t)
 
-  let t_of_sexp = function
+  let t_of_sexp sexp =
+    match (sexp : Sexp.t) with
     | Sexp.Atom s ->
       (match of_string s with
        | Some v -> v
-       | None -> failwith ("Invalid implicit_transitive_deps value: " ^ s))
-    | _ -> failwith "Expected atom for implicit_transitive_deps value"
+       | None ->
+         raise
+           (Sexp.Of_sexp_error
+              ( Failure
+                  (Printf.sprintf "Unsupported implicit_transitive_deps value [%s]." s)
+              , sexp )))
+    | _ ->
+      raise
+        (Sexp.Of_sexp_error
+           (Failure "Expected atom for implicit_transitive_deps value.", sexp))
   ;;
 
   let compare a b =

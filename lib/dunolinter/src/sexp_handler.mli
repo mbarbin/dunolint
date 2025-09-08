@@ -120,3 +120,21 @@ val insert_new_fields
   -> fields:Sexp.t list
   -> new_fields:Sexp.t list
   -> unit
+
+(** Wrap [M.read] with an exception handler that improves the error message and
+    add location when able. *)
+val read
+  :  (module S with type t = 'a)
+  -> sexps_rewriter:Sexps_rewriter.t
+  -> field:Sexp.t
+  -> ('a, Err.t) Result.t
+
+(** Transforms sexp error messages to make the files relocalizable by extracting
+    basename and module name from OCaml module paths.
+
+    For example, transforms "lib/dunolint/src/config_v0.ml.T.t_of_sexp: error message"
+    into "config_v0.T: error message". *)
+val clean_up_error_message : string -> string
+
+(** Shared utils to map a Parsexp range to a Loc.t. *)
+val loc_of_parsexp_range : filename:string -> Parsexp.Positions.range -> Loc.t

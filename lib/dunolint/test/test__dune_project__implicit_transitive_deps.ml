@@ -44,10 +44,20 @@ let%expect_test "of_sexp" =
   test (Atom "false-if-hidden-includes-supported");
   [%expect {||}];
   require_does_raise [%here] (fun () -> test (Atom "something else"));
-  [%expect {| (Failure "Invalid implicit_transitive_deps value: something else") |}];
+  [%expect
+    {|
+    (Of_sexp_error
+     "Unsupported implicit_transitive_deps value [something else]."
+     (invalid_sexp "something else"))
+    |}];
   require_does_raise [%here] (fun () ->
     test (List [ Atom "not"; Atom "an"; Atom "atom" ]));
-  [%expect {| (Failure "Expected atom for implicit_transitive_deps value") |}];
+  [%expect
+    {|
+    (Of_sexp_error
+     "Expected atom for implicit_transitive_deps value."
+     (invalid_sexp (not an atom)))
+    |}];
   ()
 ;;
 

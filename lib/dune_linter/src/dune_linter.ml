@@ -131,16 +131,20 @@ let visit t ~f =
       | _ -> None
     with
     | Some (T { impl = (module M); wrap }) ->
-      let inner_stanza = M.read ~sexps_rewriter ~field:original_sexp in
-      f
-        (Linter.of_stanza
-           (module M.Linter)
-           ~inner_stanza
-           ~stanza:(wrap inner_stanza)
-           ~path
-           ~original_sexp
-           ~sexps_rewriter);
-      M.rewrite inner_stanza ~sexps_rewriter ~field:original_sexp
+      (match
+         Dunolinter.Sexp_handler.read (module M) ~sexps_rewriter ~field:original_sexp
+       with
+       | Error err -> Err.emit err ~level:Error
+       | Ok inner_stanza ->
+         f
+           (Linter.of_stanza
+              (module M.Linter)
+              ~inner_stanza
+              ~stanza:(wrap inner_stanza)
+              ~path
+              ~original_sexp
+              ~sexps_rewriter);
+         M.rewrite inner_stanza ~sexps_rewriter ~field:original_sexp)
     | None ->
       f
         (Dunolinter.Private.Stanza.create

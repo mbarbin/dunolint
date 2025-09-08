@@ -219,3 +219,42 @@ let insert_new_fields ~sexps_rewriter ~indicative_field_ordering ~fields ~new_fi
         ~offset:(Loc.stop_offset pred_loc)
         ~text:("\n" ^ indentation ^ Sexp.to_string_hum new_field)))
 ;;
+
+let error_message_cleanup_pattern =
+  lazy (Re.Perl.compile_pat {|^(?:[^/]*[/])*([^/]*)\.ml\.([^.]*)\.[^:]*:(.*)$|})
+;;
+
+let clean_up_error_message str =
+  let pattern = Lazy.force error_message_cleanup_pattern in
+  match Re.exec_opt pattern str with
+  | None -> str
+  | Some match_info ->
+    let basename = Re.Group.get match_info 1 in
+    let module_name = Re.Group.get match_info 2 in
+    let rest = Re.Group.get match_info 3 in
+    Printf.sprintf "%s.%s:%s" basename module_name rest
+;;
+
+let loc_of_parsexp_range ~filename (range : Parsexp.Positions.range) =
+  let source_code_position ({ line; col; offset } : Parsexp.Positions.pos) =
+    { Lexing.pos_fname = filename
+    ; pos_lnum = line
+    ; pos_cnum = offset
+    ; pos_bol = offset - col
+    }
+  in
+  Loc.create (source_code_position range.start_pos, source_code_position range.end_pos)
+;;
+
+let read (type a) (module M : S with type t = a) ~sexps_rewriter ~field =
+  match M.read ~sexps_rewriter ~field with
+  | ok -> Ok ok
+  | exception Sexp.Of_sexp_error (exn, sexp) ->
+    let loc = Sexps_rewriter.loc sexps_rewriter sexp in
+    let message =
+      match exn with
+      | Failure msg -> Pp.text (clean_up_error_message msg)
+      | exn -> Err.exn exn [@coverage off]
+    in
+    Error (Err.create ~loc [ message ])
+;;
