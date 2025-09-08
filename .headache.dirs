@@ -9,6 +9,7 @@ lib/dunolint/src
 lib/dunolint/src/dune0
 lib/dunolint/src/dune_project0
 lib/dunolint/test
+lib/dunolint_base/src
 lib/dunolint_cli/src
 lib/dunolint_cli/test
 lib/dunolint_engine/src

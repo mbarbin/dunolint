@@ -55,6 +55,35 @@
    (>= v0.16))))
 
 (package
+ (name dunolint-lib-base)
+ (synopsis "An extension of dunolint-lib for use with Base")
+ (depends
+  (ocaml
+   (>= 4.14))
+  (base
+   (>= v0.16))
+  (dunolint-lib
+   (= :version))
+  (fpath
+   (>= 0.7.3))
+  (fpath-base
+   (>= 0.3.1))
+  (ppx_compare
+   (>= v0.16))
+  (ppx_enumerate
+   (>= v0.16))
+  (ppx_hash
+   (>= v0.16))
+  (ppx_sexp_conv
+   (>= v0.16))
+  (ppxlib
+   (>= 0.35.0))
+  (re
+   (>= 1.8.0))
+  (sexplib0
+   (>= v0.16))))
+
+(package
  (name dunolint)
  (synopsis "A linter for build files in dune projects")
  (depends

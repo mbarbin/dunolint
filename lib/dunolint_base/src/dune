@@ -1,0 +1,33 @@
+(library
+ (name dunolint_base)
+ (public_name dunolint-lib-base)
+ (flags
+  :standard
+  -w
+  +a-4-32-40-41-42-44-45-48-66
+  -warn-error
+  +a-32
+  -open
+  Base
+  -open
+  Fpath_base)
+ (libraries
+  base
+  dunolint-lib.vendor_blang
+  dunolint-lib.vendor_vcs
+  dunolint-lib
+  fpath-base
+  re)
+ (instrumentation
+  (backend bisect_ppx))
+ (lint
+  (pps ppx_js_style -allow-let-operators -check-doc-comments))
+ (preprocess
+  (pps
+   -unused-code-warnings=force
+   ppx_compare
+   ppx_enumerate
+   ppx_hash
+   ppx_sexp_conv)))
+
+(include_subdirs qualified)
