@@ -21,6 +21,8 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
+module List = ListLabels
+
 (* The module [T] serves to enforce the invariant that all Blang.t values are in
    a normal form whereby boolean constants True and False only appear as the
    topmost constructor -- in any other position they are simplified away using
@@ -46,8 +48,9 @@ module T : sig
     | Not of 'a t
     | If of 'a t * 'a t * 'a t
     | Base of 'a
-  [@@deriving compare, equal]
 
+  val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
+  val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
   val true_ : 'a t
   val false_ : 'a t
   val not_ : 'a t -> 'a t
@@ -64,7 +67,86 @@ end = struct
     | Not of 'a t
     | If of 'a t * 'a t * 'a t
     | Base of 'a
-  [@@deriving compare, equal]
+  [@@deriving_inline compare, equal]
+
+  let rec compare : 'a. ('a -> 'a -> int) -> 'a t -> 'a t -> int =
+    fun _cmp__a ->
+    fun a__001_ ->
+    fun b__002_ ->
+    if Stdlib.( == ) a__001_ b__002_
+    then 0
+    else (
+      match a__001_, b__002_ with
+      | True, True -> 0
+      | True, _ -> -1
+      | _, True -> 1
+      | False, False -> 0
+      | False, _ -> -1
+      | _, False -> 1
+      | And (_a__003_, _a__005_), And (_b__004_, _b__006_) ->
+        (match compare _cmp__a _a__003_ _b__004_ with
+         | 0 -> compare _cmp__a _a__005_ _b__006_
+         | n -> n)
+      | And _, _ -> -1
+      | _, And _ -> 1
+      | Or (_a__011_, _a__013_), Or (_b__012_, _b__014_) ->
+        (match compare _cmp__a _a__011_ _b__012_ with
+         | 0 -> compare _cmp__a _a__013_ _b__014_
+         | n -> n)
+      | Or _, _ -> -1
+      | _, Or _ -> 1
+      | Not _a__019_, Not _b__020_ -> compare _cmp__a _a__019_ _b__020_
+      | Not _, _ -> -1
+      | _, Not _ -> 1
+      | If (_a__023_, _a__025_, _a__027_), If (_b__024_, _b__026_, _b__028_) ->
+        (match compare _cmp__a _a__023_ _b__024_ with
+         | 0 ->
+           (match compare _cmp__a _a__025_ _b__026_ with
+            | 0 -> compare _cmp__a _a__027_ _b__028_
+            | n -> n)
+         | n -> n)
+      | If _, _ -> -1
+      | _, If _ -> 1
+      | Base _a__035_, Base _b__036_ -> _cmp__a _a__035_ _b__036_)
+  ;;
+
+  let rec equal : 'a. ('a -> 'a -> bool) -> 'a t -> 'a t -> bool =
+    fun _cmp__a ->
+    fun a__037_ ->
+    fun b__038_ ->
+    if Stdlib.( == ) a__037_ b__038_
+    then true
+    else (
+      match a__037_, b__038_ with
+      | True, True -> true
+      | True, _ -> false
+      | _, True -> false
+      | False, False -> true
+      | False, _ -> false
+      | _, False -> false
+      | And (_a__039_, _a__041_), And (_b__040_, _b__042_) ->
+        Stdlib.( && ) (equal _cmp__a _a__039_ _b__040_) (equal _cmp__a _a__041_ _b__042_)
+      | And _, _ -> false
+      | _, And _ -> false
+      | Or (_a__047_, _a__049_), Or (_b__048_, _b__050_) ->
+        Stdlib.( && ) (equal _cmp__a _a__047_ _b__048_) (equal _cmp__a _a__049_ _b__050_)
+      | Or _, _ -> false
+      | _, Or _ -> false
+      | Not _a__055_, Not _b__056_ -> equal _cmp__a _a__055_ _b__056_
+      | Not _, _ -> false
+      | _, Not _ -> false
+      | If (_a__059_, _a__061_, _a__063_), If (_b__060_, _b__062_, _b__064_) ->
+        Stdlib.( && )
+          (equal _cmp__a _a__059_ _b__060_)
+          (Stdlib.( && )
+             (equal _cmp__a _a__061_ _b__062_)
+             (equal _cmp__a _a__063_ _b__064_))
+      | If _, _ -> false
+      | _, If _ -> false
+      | Base _a__071_, Base _b__072_ -> _cmp__a _a__071_ _b__072_)
+  ;;
+
+  [@@@deriving.end]
 
   let true_ = True
   let false_ = False
@@ -126,7 +208,11 @@ module Stable = struct
       | Not of 'a t
       | If of 'a t * 'a t * 'a t
       | Base of 'a
-    [@@deriving compare, equal, sexp]
+
+    val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
+    val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
+
+    include Sexpable.S1 with type 'a t := 'a t
 
     (* the remainder of this signature consists of functions used in the
        definitions of sexp conversions that are also useful more generally *)
@@ -148,7 +234,10 @@ module Stable = struct
     include (
       T :
         sig
-          type 'a t [@@deriving compare, equal]
+          type 'a t
+
+          val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
+          val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
         end
         with type 'a t := 'a t)
 
@@ -184,10 +273,7 @@ module Stable = struct
        quadratic behavior with [andalso] or [orelse], respectively. *)
     let and_ ts = List.fold_right ts ~init:true_ ~f:andalso
     let or_ ts = List.fold_right ts ~init:false_ ~f:orelse
-
-    let of_sexp_error str sexp =
-      raise_s (Sexp.List [ Atom (str : string); (sexp : Sexp.t) ])
-    ;;
+    let of_sexp_error str sexp = raise (Sexp.Of_sexp_error (Failure str, sexp))
 
     let unary name args sexp =
       match args with
@@ -228,12 +314,12 @@ module Stable = struct
       let rec aux sexp =
         match sexp with
         | Atom kw ->
-          (match String.lowercase kw with
+          (match String.lowercase_ascii kw with
            | "true" -> true_
            | "false" -> false_
            | _ -> base sexp)
         | List (Atom kw :: args) ->
-          (match String.lowercase kw with
+          (match String.lowercase_ascii kw with
            | "and" -> and_ (List.map ~f:aux args)
            | "or" -> or_ (List.map ~f:aux args)
            | "not" -> not_ (aux (unary "not" args sexp))

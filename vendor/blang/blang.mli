@@ -108,7 +108,11 @@ type +'a t = private
   | Not of 'a t
   | If of 'a t * 'a t * 'a t
   | Base of 'a
-[@@deriving compare, equal, sexp]
+
+val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
+val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
+
+include Sexpable.S1 with type 'a t := 'a t
 
 (** {2 Smart constructors that simplify away constants whenever possible} *)
 
