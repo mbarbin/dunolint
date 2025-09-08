@@ -59,7 +59,7 @@ jobs:
       # the development workflow and as part of the main CI job. These are the
       # tests that are checked for every combination of os and ocaml-compiler.
       - name: Install dependencies
-        run: opam install ./dunolint.opam ./dunolint-lib.opam ./dunolint-tests.opam --deps-only --with-test
+        run: opam install ./dunolint.opam ./dunolint-lib.opam ./dunolint-lib-base.opam ./dunolint-tests.opam --deps-only --with-test
 
       - name: Build & Run tests
-        run: opam exec -- dune build @all @runtest -p dunolint,dunolint-lib,dunolint-tests
+        run: opam exec -- dune build @all @runtest -p dunolint,dunolint-lib,dunolint-lib-base,dunolint-tests
