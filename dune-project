@@ -62,8 +62,6 @@
    (>= v0.16))
   (ppx_enumerate
    (>= v0.16))
-  (ppx_hash
-   (>= v0.16))
   (ppx_sexp_conv
    (>= v0.16))
   (ppxlib
