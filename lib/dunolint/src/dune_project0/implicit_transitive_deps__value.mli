@@ -26,6 +26,7 @@ type t =
   | `False
   | `False_if_hidden_includes_supported
   ]
-[@@deriving enumerate]
+
+val all : t list
 
 include Container_key.S with type t := t

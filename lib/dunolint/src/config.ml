@@ -22,7 +22,31 @@
 open! Import
 module V0 = Config_v0
 
-type t = [ `v0 of V0.t ] [@@deriving compare, equal]
+type t = [ `v0 of V0.t ] [@@deriving_inline compare, equal]
+
+let compare =
+  (fun a__001_ ->
+     fun b__002_ ->
+     if Stdlib.( == ) a__001_ b__002_
+     then 0
+     else (
+       match a__001_, b__002_ with
+       | `v0 _left__003_, `v0 _right__004_ -> V0.compare _left__003_ _right__004_)
+   : t -> t -> int)
+;;
+
+let equal =
+  (fun a__005_ ->
+     fun b__006_ ->
+     if Stdlib.( == ) a__005_ b__006_
+     then true
+     else (
+       match a__005_, b__006_ with
+       | `v0 _left__007_, `v0 _right__008_ -> V0.equal _left__007_ _right__008_)
+   : t -> t -> bool)
+;;
+
+[@@@deriving.end]
 
 (* When breaking changes are introduced, we'd mint new versions such as:
 

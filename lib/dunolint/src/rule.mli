@@ -30,7 +30,11 @@ type ('predicate, 'invariant) t =
         not be linted. *)
   | `cond of ('predicate Blang.t * ('predicate, 'invariant) t) list
   ]
-[@@deriving compare, equal, sexp]
+
+val compare : ('p -> 'p -> int) -> ('i -> 'i -> int) -> ('p, 'i) t -> ('p, 'i) t -> int
+val equal : ('p -> 'p -> bool) -> ('i -> 'i -> bool) -> ('p, 'i) t -> ('p, 'i) t -> bool
+
+include Sexpable.S2 with type ('p, 'i) t := ('p, 'i) t
 
 val eval
   :  ('predicate, 'invariant) t

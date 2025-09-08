@@ -24,4 +24,8 @@ type t =
   | `dune of Dune.Predicate.t Blang.t
   | `dune_project of Dune_project.Predicate.t Blang.t
   ]
-[@@deriving compare, equal, sexp]
+
+val equal : t -> t -> bool
+val compare : t -> t -> int
+
+include Sexpable.S with type t := t

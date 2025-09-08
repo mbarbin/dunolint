@@ -27,18 +27,43 @@ module Element = struct
     type t =
       | Ppx
       | Other
-    [@@deriving compare]
+    [@@deriving_inline compare]
+
+    let compare = (Stdlib.compare : t -> t -> int)
+
+    [@@@deriving.end]
   end
 
   type t =
     { prefix : Prefix.t
     ; name : string
     }
-  [@@deriving compare]
+  [@@deriving_inline compare]
+
+  let compare =
+    (fun a__003_ ->
+       fun b__004_ ->
+       if Stdlib.( == ) a__003_ b__004_
+       then 0
+       else (
+         match Prefix.compare a__003_.prefix b__004_.prefix with
+         | 0 -> compare_string a__003_.name b__004_.name
+         | n -> n)
+     : t -> t -> int)
+  ;;
+
+  [@@@deriving.end]
 end
 
 module Elements = struct
-  type t = Element.t list [@@deriving compare]
+  type t = Element.t list [@@deriving_inline compare]
+
+  let compare =
+    (fun a__005_ -> fun b__006_ -> compare_list Element.compare a__005_ b__006_
+     : t -> t -> int)
+  ;;
+
+  [@@@deriving.end]
 
   let of_name pp =
     let ts = String.split pp ~on:'.' in

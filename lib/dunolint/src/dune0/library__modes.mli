@@ -46,5 +46,9 @@ module Predicate : sig
     [ `has_mode of Compilation_mode.t
     | `has_modes of Compilation_mode.t list
     ]
-  [@@deriving compare, equal, sexp]
+
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+
+  include Sexpable.S with type t := t
 end

@@ -25,20 +25,172 @@ module Skip_subtree = struct
   [@@@coverage off]
 
   module Predicate = struct
-    type t = [ `path of Path.Predicate.t Blang.t ] [@@deriving compare, equal, sexp]
+    type t = [ `path of Path.Predicate.t Blang.t ]
+    [@@deriving_inline compare, equal, sexp]
+
+    let compare =
+      (fun a__001_ ->
+         fun b__002_ ->
+         if Stdlib.( == ) a__001_ b__002_
+         then 0
+         else (
+           match a__001_, b__002_ with
+           | `path _left__003_, `path _right__004_ ->
+             Blang.compare Path.Predicate.compare _left__003_ _right__004_)
+       : t -> t -> int)
+    ;;
+
+    let equal =
+      (fun a__007_ ->
+         fun b__008_ ->
+         if Stdlib.( == ) a__007_ b__008_
+         then true
+         else (
+           match a__007_, b__008_ with
+           | `path _left__009_, `path _right__010_ ->
+             Blang.equal Path.Predicate.equal _left__009_ _right__010_)
+       : t -> t -> bool)
+    ;;
+
+    let __t_of_sexp__ =
+      (let error_source__021_ =
+         "lib/dunolint/src/config_v0.ml.Skip_subtree.Predicate.t"
+       in
+       function
+       | Sexplib0.Sexp.Atom atom__014_ as _sexp__016_ ->
+         (match atom__014_ with
+          | "path" ->
+            Sexplib0.Sexp_conv_error.ptag_takes_args error_source__021_ _sexp__016_
+          | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
+       | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__014_ :: sexp_args__017_) as
+         _sexp__016_ ->
+         (match atom__014_ with
+          | "path" as _tag__018_ ->
+            (match sexp_args__017_ with
+             | arg0__019_ :: [] ->
+               let res0__020_ = Blang.t_of_sexp Path.Predicate.t_of_sexp arg0__019_ in
+               `path res0__020_
+             | _ ->
+               Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
+                 error_source__021_
+                 _tag__018_
+                 _sexp__016_)
+          | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
+       | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__015_ ->
+         Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var
+           error_source__021_
+           sexp__015_
+       | Sexplib0.Sexp.List [] as sexp__015_ ->
+         Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var
+           error_source__021_
+           sexp__015_
+       : Sexplib0.Sexp.t -> t)
+    ;;
+
+    let t_of_sexp =
+      (let error_source__023_ =
+         "lib/dunolint/src/config_v0.ml.Skip_subtree.Predicate.t"
+       in
+       fun sexp__022_ ->
+         try __t_of_sexp__ sexp__022_ with
+         | Sexplib0.Sexp_conv_error.No_variant_match ->
+           Sexplib0.Sexp_conv_error.no_matching_variant_found
+             error_source__023_
+             sexp__022_
+       : Sexplib0.Sexp.t -> t)
+    ;;
+
+    let sexp_of_t =
+      (fun (`path v__024_) ->
+         Sexplib0.Sexp.List
+           [ Sexplib0.Sexp.Atom "path"; Blang.sexp_of_t Path.Predicate.sexp_of_t v__024_ ]
+       : t -> Sexplib0.Sexp.t)
+    ;;
+
+    [@@@deriving.end]
   end
 
   module Result = struct
-    type t = | [@@deriving compare, equal, sexp]
+    type t = | [@@deriving_inline compare, equal, sexp]
+
+    let compare = (Stdlib.compare : t -> t -> int)
+    let equal = (Stdlib.( = ) : t -> t -> bool)
+
+    let t_of_sexp =
+      (let error_source__031_ = "lib/dunolint/src/config_v0.ml.Skip_subtree.Result.t" in
+       function
+       | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__030_ ->
+         Sexplib0.Sexp_conv_error.nested_list_invalid_sum error_source__031_ sexp__030_
+       | Sexplib0.Sexp.List [] as sexp__030_ ->
+         Sexplib0.Sexp_conv_error.empty_list_invalid_sum error_source__031_ sexp__030_
+       | sexp__030_ ->
+         Sexplib0.Sexp_conv_error.unexpected_stag error_source__031_ sexp__030_
+       : Sexplib0.Sexp.t -> t)
+    ;;
+
+    let sexp_of_t =
+      (function
+       | _ -> .
+       : t -> Sexplib0.Sexp.t)
+    ;;
+
+    [@@@deriving.end]
   end
 
-  type t = (Predicate.t, Result.t) Rule.t [@@deriving compare, equal, sexp]
+  type t = (Predicate.t, Result.t) Rule.t [@@deriving_inline compare, equal, sexp]
+
+  let compare =
+    (fun a__033_ ->
+       fun b__034_ -> Rule.compare Predicate.compare Result.compare a__033_ b__034_
+     : t -> t -> int)
+  ;;
+
+  let equal =
+    (fun a__039_ -> fun b__040_ -> Rule.equal Predicate.equal Result.equal a__039_ b__040_
+     : t -> t -> bool)
+  ;;
+
+  let t_of_sexp =
+    (fun x__046_ -> Rule.t_of_sexp Predicate.t_of_sexp Result.t_of_sexp x__046_
+     : Sexplib0.Sexp.t -> t)
+  ;;
+
+  let sexp_of_t =
+    (fun x__047_ -> Rule.sexp_of_t Predicate.sexp_of_t Result.sexp_of_t x__047_
+     : t -> Sexplib0.Sexp.t)
+  ;;
+
+  [@@@deriving.end]
 end
 
 module Rule = struct
   [@@@coverage off]
 
-  type t = (Predicate.t, Condition.t) Rule.t [@@deriving compare, equal, sexp]
+  type t = (Predicate.t, Condition.t) Rule.t [@@deriving_inline compare, equal, sexp]
+
+  let compare =
+    (fun a__048_ ->
+       fun b__049_ -> Rule.compare Predicate.compare Condition.compare a__048_ b__049_
+     : t -> t -> int)
+  ;;
+
+  let equal =
+    (fun a__054_ ->
+       fun b__055_ -> Rule.equal Predicate.equal Condition.equal a__054_ b__055_
+     : t -> t -> bool)
+  ;;
+
+  let t_of_sexp =
+    (fun x__061_ -> Rule.t_of_sexp Predicate.t_of_sexp Condition.t_of_sexp x__061_
+     : Sexplib0.Sexp.t -> t)
+  ;;
+
+  let sexp_of_t =
+    (fun x__062_ -> Rule.sexp_of_t Predicate.sexp_of_t Condition.sexp_of_t x__062_
+     : t -> Sexplib0.Sexp.t)
+  ;;
+
+  [@@@deriving.end]
 end
 
 module T = struct
@@ -48,7 +200,85 @@ module T = struct
     { skip_subtree : Skip_subtree.t option [@sexp.option]
     ; rules : Rule.t list
     }
-  [@@deriving compare, equal, sexp]
+  [@@deriving_inline compare, equal, sexp]
+
+  let compare =
+    (fun a__063_ ->
+       fun b__064_ ->
+       if Stdlib.( == ) a__063_ b__064_
+       then 0
+       else (
+         match
+           compare_option Skip_subtree.compare a__063_.skip_subtree b__064_.skip_subtree
+         with
+         | 0 -> compare_list Rule.compare a__063_.rules b__064_.rules
+         | n -> n)
+     : t -> t -> int)
+  ;;
+
+  let equal =
+    (fun a__069_ ->
+       fun b__070_ ->
+       if Stdlib.( == ) a__069_ b__070_
+       then true
+       else
+         Stdlib.( && )
+           (equal_option Skip_subtree.equal a__069_.skip_subtree b__070_.skip_subtree)
+           (equal_list Rule.equal a__069_.rules b__070_.rules)
+     : t -> t -> bool)
+  ;;
+
+  let t_of_sexp =
+    (let error_source__076_ = "lib/dunolint/src/config_v0.ml.T.t" in
+     fun x__077_ ->
+       Sexplib0.Sexp_conv_record.record_of_sexp
+         ~caller:error_source__076_
+         ~fields:
+           (Field
+              { name = "skip_subtree"
+              ; kind = Sexp_option
+              ; conv = Skip_subtree.t_of_sexp
+              ; rest =
+                  Field
+                    { name = "rules"
+                    ; kind = Required
+                    ; conv = list_of_sexp Rule.t_of_sexp
+                    ; rest = Empty
+                    }
+              })
+         ~index_of_field:(function
+           | "skip_subtree" -> 0
+           | "rules" -> 1
+           | _ -> -1)
+         ~allow_extra_fields:false
+         ~create:(fun (skip_subtree, (rules, ())) -> ({ skip_subtree; rules } : t))
+         x__077_
+     : Sexplib0.Sexp.t -> t)
+  ;;
+
+  let sexp_of_t =
+    (fun { skip_subtree = skip_subtree__079_; rules = rules__083_ } ->
+       let bnds__078_ = ([] : _ Stdlib.List.t) in
+       let bnds__078_ =
+         let arg__084_ = sexp_of_list Rule.sexp_of_t rules__083_ in
+         (Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "rules"; arg__084_ ] :: bnds__078_
+          : _ Stdlib.List.t)
+       in
+       let bnds__078_ =
+         match skip_subtree__079_ with
+         | Stdlib.Option.None -> bnds__078_
+         | Stdlib.Option.Some v__080_ ->
+           let arg__082_ = Skip_subtree.sexp_of_t v__080_ in
+           let bnd__081_ =
+             Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "skip_subtree"; arg__082_ ]
+           in
+           (bnd__081_ :: bnds__078_ : _ Stdlib.List.t)
+       in
+       Sexplib0.Sexp.List bnds__078_
+     : t -> Sexplib0.Sexp.t)
+  ;;
+
+  [@@@deriving.end]
 end
 
 include T

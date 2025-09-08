@@ -28,6 +28,7 @@ type t =
   | `best
   | `melange
   ]
-[@@deriving enumerate]
+
+val all : t list
 
 include Container_key.S with type t := t

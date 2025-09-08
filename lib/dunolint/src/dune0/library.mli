@@ -34,5 +34,9 @@ module Predicate : sig
     | `preprocess of Preprocess.Predicate.t Blang.t
     | `public_name of Public_name.Predicate.t Blang.t
     ]
-  [@@deriving compare, equal, sexp]
+
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+
+  include Sexpable.S with type t := t
 end

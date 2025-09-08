@@ -23,7 +23,21 @@ type t =
   | True
   | False
   | Undefined
-[@@deriving equal, compare, enumerate, sexp_of]
+[@@deriving_inline equal, compare, enumerate, sexp_of]
+
+let equal = (Stdlib.( = ) : t -> t -> bool)
+let compare = (Stdlib.compare : t -> t -> int)
+let all = ([ True; False; Undefined ] : t list)
+
+let sexp_of_t =
+  (function
+   | True -> Sexplib0.Sexp.Atom "True"
+   | False -> Sexplib0.Sexp.Atom "False"
+   | Undefined -> Sexplib0.Sexp.Atom "Undefined"
+   : t -> Sexplib0.Sexp.t)
+;;
+
+[@@@deriving.end]
 
 let const = function
   | true -> True

@@ -19,7 +19,12 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-type t [@@deriving compare, equal, sexp]
+type t
+
+val equal : t -> t -> bool
+val compare : t -> t -> int
+
+include Sexpable.S with type t := t
 
 (** {1 Getters} *)
 
@@ -30,14 +35,29 @@ type t [@@deriving compare, equal, sexp]
 
 module Skip_subtree : sig
   module Predicate : sig
-    type t = [ `path of Path.Predicate.t Blang.t ] [@@deriving compare, equal, sexp]
+    type t = [ `path of Path.Predicate.t Blang.t ]
+
+    val equal : t -> t -> bool
+    val compare : t -> t -> int
+
+    include Sexpable.S with type t := t
   end
 
   module Result : sig
-    type t = | [@@deriving compare, equal, sexp]
+    type t = |
+
+    val equal : t -> t -> bool
+    val compare : t -> t -> int
+
+    include Sexpable.S with type t := t
   end
 
-  type t = (Predicate.t, Result.t) Rule.t [@@deriving compare, equal, sexp]
+  type t = (Predicate.t, Result.t) Rule.t
+
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+
+  include Sexpable.S with type t := t
 end
 
 val skip_subtree : t -> Skip_subtree.t option
@@ -45,7 +65,12 @@ val skip_subtree : t -> Skip_subtree.t option
 (** {2 Generic rules} *)
 
 module Rule : sig
-  type t = (Predicate.t, Condition.t) Rule.t [@@deriving compare, equal, sexp]
+  type t = (Predicate.t, Condition.t) Rule.t
+
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+
+  include Sexpable.S with type t := t
 end
 
 val rules : t -> Rule.t list

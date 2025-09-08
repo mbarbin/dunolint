@@ -19,4 +19,9 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-type t = Predicate.t Blang.t [@@deriving compare, equal, sexp]
+type t = Predicate.t Blang.t
+
+val equal : t -> t -> bool
+val compare : t -> t -> int
+
+include Sexpable.S with type t := t

@@ -30,7 +30,12 @@
 
 (** Representing the two integers that are separated by the dot. For example,
     the representation of ["3.20"] is [(3, 20)]. *)
-type t [@@deriving compare, equal, sexp]
+type t
+
+val equal : t -> t -> bool
+val compare : t -> t -> int
+
+include Sexpable.S with type t := t
 
 val create : int * int -> t
 
@@ -46,5 +51,9 @@ module Predicate : sig
     | `greater_than_or_equal_to of version
     | `less_than_or_equal_to of version
     ]
-  [@@deriving compare, equal, sexp]
+
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+
+  include Sexpable.S with type t := t
 end
