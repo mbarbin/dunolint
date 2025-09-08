@@ -27,6 +27,7 @@
   dunolint.dunolinter
   fpath
   fpath-base
+  loc
   parsexp
   pp
   pplumbing.err
