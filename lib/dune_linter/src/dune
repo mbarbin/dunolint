@@ -19,7 +19,7 @@
   Dunolint.Std)
  (libraries
   base
-  dunolint_base
+  dunolint-lib-base
   dunolinter
   file-rewriter
   fpath
