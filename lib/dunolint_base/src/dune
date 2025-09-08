@@ -13,9 +13,9 @@
   Fpath_base)
  (libraries
   base
+  dunolint-lib
   dunolint-lib.vendor_blang
   dunolint-lib.vendor_vcs
-  dunolint-lib
   fpath-base
   re)
  (instrumentation
