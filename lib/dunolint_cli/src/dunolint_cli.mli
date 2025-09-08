@@ -22,5 +22,6 @@
 val main : unit Command.t
 
 module Private : sig
+  module Common_helpers = Common_helpers
   module Linter = Linter
 end

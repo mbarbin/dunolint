@@ -198,9 +198,7 @@ let main =
      let cwd = Unix.getcwd () |> Absolute_path.v in
      let config =
        match config with
-       | Some config ->
-         let contents = In_channel.read_all config in
-         Parsexp.Conv_single.parse_string_exn contents Dunolint.Config.t_of_sexp
+       | Some filename -> Common_helpers.load_config_exn ~filename
        | None ->
          Dunolint.Config.create
            ~skip_subtree:(Common_helpers.skip_subtree ~globs:[])

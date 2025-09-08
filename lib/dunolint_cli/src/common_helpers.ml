@@ -68,3 +68,66 @@ let skip_subtree ~globs =
       , skip_subtree )
     ]
 ;;
+
+let error_message_cleanup_pattern =
+  lazy (Re.Perl.compile_pat {|^(?:[^/]*[/])*([^/]*)\.ml\.([^.]*)\.[^:]*:(.*)$|})
+;;
+
+let clean_up_error_message str =
+  let pattern = Lazy.force error_message_cleanup_pattern in
+  match Re.exec_opt pattern str with
+  | None -> str
+  | Some match_info ->
+    let basename = Re.Group.get match_info 1 in
+    let module_name = Re.Group.get match_info 2 in
+    let rest = Re.Group.get match_info 3 in
+    Printf.sprintf "%s.%s:%s" basename module_name rest
+;;
+
+let loc_of_parsexp_range ~filename (range : Parsexp.Positions.range) =
+  let source_code_position ({ line; col; offset } : Parsexp.Positions.pos) =
+    { Lexing.pos_fname = filename
+    ; pos_lnum = line
+    ; pos_cnum = offset
+    ; pos_bol = offset - col
+    }
+  in
+  Loc.create (source_code_position range.start_pos, source_code_position range.end_pos)
+;;
+
+let load_config_exn ~filename =
+  let contents = In_channel.read_all filename in
+  match Parsexp.Single_and_positions.parse_string contents with
+  | Error parse_error ->
+    let position = Parsexp.Parse_error.position parse_error in
+    let message = Parsexp.Parse_error.message parse_error in
+    let loc =
+      loc_of_parsexp_range ~filename { start_pos = position; end_pos = position }
+    in
+    Err.raise ~loc [ Pp.text message ]
+  | Ok (sexp, positions) ->
+    (match Parsexp.Conv_single.conv (sexp, positions) Dunolint.Config.t_of_sexp with
+     | Ok t -> t
+     | Error of_sexp_error ->
+       let range =
+         match Parsexp.Of_sexp_error.location of_sexp_error with
+         | Some _ as range -> range
+         | None ->
+           (let sub = Parsexp.Of_sexp_error.sub_sexp of_sexp_error in
+            (match Parsexp.Positions.find_sub_sexp_phys positions sexp ~sub with
+             | Some _ as range -> range
+             | None -> None))
+           [@coverage off]
+       in
+       let loc =
+         match range with
+         | Some range -> loc_of_parsexp_range ~filename range
+         | None -> Loc.of_file ~path:(Fpath.v filename) [@coverage off]
+       in
+       let message =
+         match Parsexp.Of_sexp_error.user_exn of_sexp_error with
+         | Failure str -> clean_up_error_message str
+         | exn -> Exn.to_string exn [@coverage off]
+       in
+       Err.raise ~loc [ Pp.text message ])
+;;

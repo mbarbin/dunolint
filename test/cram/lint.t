@@ -39,8 +39,24 @@ If the config is supplied, but it is invalid, dunolint will complain.
 
   $ printf '(blah)\n' > .dunolint
 
-  $ dunolint lint --yes --config .dunolint 2> /dev/null
-  [125]
+  $ dunolint lint --yes --config .dunolint
+  File ".dunolint", line 1, characters 1-5:
+  1 | (blah)
+       ^^^^
+  Error: config_v0.T: record conversion: only pairs expected, their first
+  element must be an atom
+  [123]
+
+Unsupported config versions are reported with a located error message.
+
+  $ printf '((version 101101)(blah))\n' > .dunolint
+
+  $ dunolint lint --yes --config .dunolint
+  File ".dunolint", line 1, characters 10-16:
+  1 | ((version 101101)(blah))
+                ^^^^^^
+  Error: Unsupported dunolint config version [101101].
+  [123]
 
 If there are no rules, the linting will succeed but does nothing in this case.
 

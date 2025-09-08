@@ -103,6 +103,11 @@ let%expect_test "unsupported version" =
   let sexp = Sexp.List [ List [ Atom "version"; Atom "unknown" ]; List [] ] in
   require_does_raise [%here] (fun () ->
     (Dunolint.Config.t_of_sexp sexp : Dunolint.Config.t));
-  [%expect {| (Failure "Unsupported dunolint config version \"unknown\".") |}];
+  [%expect
+    {|
+    (Of_sexp_error
+     "Unsupported dunolint config version [unknown]."
+     (invalid_sexp unknown))
+    |}];
   ()
 ;;

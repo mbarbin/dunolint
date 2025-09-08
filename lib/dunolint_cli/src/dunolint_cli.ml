@@ -44,5 +44,6 @@ let main =
 ;;
 
 module Private = struct
+  module Common_helpers = Common_helpers
   module Linter = Linter
 end
