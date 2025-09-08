@@ -14,10 +14,12 @@
   -open
   Sexplib0
   -open
+  Dunolint_base
+  -open
   Dunolint.Std)
  (libraries
   base
-  dunolint-lib
+  dunolint_base
   dunolinter
   file-rewriter
   fpath

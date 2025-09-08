@@ -15,11 +15,13 @@
   -open
   Expect_test_helpers_base
   -open
+  Dunolint_base
+  -open
   Dunolint.Std)
  (libraries
   base
   dune_linter
-  dunolint
+  dunolint_base
   dunolinter
   expect_test_helpers_core.expect_test_helpers_base
   file-rewriter

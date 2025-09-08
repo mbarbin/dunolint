@@ -22,7 +22,6 @@
 type t
 
 include Container_key.S with type t := t
-include Comparable.S with type t := t
 include Validated_string.S with type t := t
 
 module Predicate : sig

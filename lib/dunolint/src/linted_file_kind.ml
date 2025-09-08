@@ -19,27 +19,29 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module T = struct
-  type t =
-    [ `dune
-    | `dune_project
-    ]
-  [@@deriving compare, enumerate, sexp]
+type t =
+  [ `dune
+  | `dune_project
+  ]
+[@@deriving enumerate, sexp]
 
-  let to_string = function
-    | `dune -> "dune"
-    | `dune_project -> "dune-project"
-  ;;
+let to_string = function
+  | `dune -> "dune"
+  | `dune_project -> "dune-project"
+;;
 
-  let of_string = function
-    | "dune" -> Ok `dune
-    | "dune-project" -> Ok `dune_project
-    | str -> Error (`Msg (Printf.sprintf "Invalid linted file kind: %S" str))
-  ;;
-end
+let of_string = function
+  | "dune" -> Ok `dune
+  | "dune-project" -> Ok `dune_project
+  | str -> Error (`Msg (Printf.sprintf "Invalid linted file kind: %S" str))
+;;
 
-include T
-include Comparable.Make (T)
+let to_comparable_int = function
+  | `dune -> 0
+  | `dune_project -> 1
+;;
 
+let compare a b = Int.compare (to_comparable_int a) (to_comparable_int b)
+let equal a b = Int.equal (to_comparable_int a) (to_comparable_int b)
 let hash : t -> int = Stdlib.Hashtbl.hash
 let seeded_hash : int -> t -> int = Stdlib.Hashtbl.seeded_hash

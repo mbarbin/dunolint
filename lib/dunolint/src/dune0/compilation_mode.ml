@@ -19,27 +19,22 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module T = struct
-  type t =
-    [ `byte
-    | `native
-    | `best
-    | `melange
-    ]
-  [@@deriving enumerate, sexp]
+type t =
+  [ `byte
+  | `native
+  | `best
+  | `melange
+  ]
+[@@deriving enumerate, sexp]
 
-  let to_comparable_int = function
-    | `byte -> 0
-    | `native -> 1
-    | `best -> 2
-    | `melange -> 3
-  ;;
+let to_comparable_int = function
+  | `byte -> 0
+  | `native -> 1
+  | `best -> 2
+  | `melange -> 3
+;;
 
-  let compare a b = Int.compare (to_comparable_int a) (to_comparable_int b)
-end
-
-include T
-include Comparable.Make (T)
-
+let compare a b = Int.compare (to_comparable_int a) (to_comparable_int b)
+let equal a b = Int.equal (to_comparable_int a) (to_comparable_int b)
 let hash : t -> int = Stdlib.Hashtbl.hash
 let seeded_hash : int -> t -> int = Stdlib.Hashtbl.seeded_hash
