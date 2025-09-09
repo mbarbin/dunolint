@@ -28,12 +28,11 @@ module T = struct
     | `best
     | `melange
     ]
-  [@@deriving_inline enumerate, sexp]
 
   let all = ([ `byte; `native; `best; `melange ] : t list)
 
   let __t_of_sexp__ =
-    (let error_source__006_ = "lib/dunolint/src/dune0/compilation_mode.ml.t" in
+    (let error_source__006_ = "compilation_mode.t" in
      function
      | Sexplib0.Sexp.Atom atom__002_ as _sexp__004_ ->
        (match atom__002_ with
@@ -58,7 +57,7 @@ module T = struct
   ;;
 
   let t_of_sexp =
-    (let error_source__008_ = "lib/dunolint/src/dune0/compilation_mode.ml.t" in
+    (let error_source__008_ = "compilation_mode.t" in
      fun sexp__007_ ->
        try __t_of_sexp__ sexp__007_ with
        | Sexplib0.Sexp_conv_error.No_variant_match ->
@@ -74,8 +73,6 @@ module T = struct
      | `melange -> Sexplib0.Sexp.Atom "melange"
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end
 
 include T

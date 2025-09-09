@@ -25,5 +25,5 @@ errors produced in such cases.
   File "lib/foo/dune", line 3, characters 8-15:
   3 |  (modes unknown))
               ^^^^^^^
-  Error: compilation_mode: no matching variant found
+  Error: compilation_mode.t_of_sexp: no matching variant found
   [123]
