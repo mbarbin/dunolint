@@ -24,11 +24,12 @@ open! Import
 module Predicate = struct
   [@@@coverage off]
 
+  let error_source = "library.modes.t"
+
   type t =
     [ `has_mode of Compilation_mode.t
     | `has_modes of Compilation_mode.t list
     ]
-  [@@deriving_inline compare, equal, sexp]
 
   let compare =
     (fun a__001_ ->
@@ -61,14 +62,11 @@ module Predicate = struct
   ;;
 
   let __t_of_sexp__ =
-    (let error_source__025_ = "lib/dunolint/src/dune0/library__modes.ml.Predicate.t" in
-     function
+    (function
      | Sexplib0.Sexp.Atom atom__018_ as _sexp__020_ ->
        (match atom__018_ with
-        | "has_mode" ->
-          Sexplib0.Sexp_conv_error.ptag_takes_args error_source__025_ _sexp__020_
-        | "has_modes" ->
-          Sexplib0.Sexp_conv_error.ptag_takes_args error_source__025_ _sexp__020_
+        | "has_mode" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__020_
+        | "has_modes" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__020_
         | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
      | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__018_ :: sexp_args__021_) as
        _sexp__020_ ->
@@ -80,7 +78,7 @@ module Predicate = struct
              `has_mode res0__028_
            | _ ->
              Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source__025_
+               error_source
                _tag__026_
                _sexp__020_)
         | "has_modes" as _tag__022_ ->
@@ -90,23 +88,22 @@ module Predicate = struct
              `has_modes res0__024_
            | _ ->
              Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source__025_
+               error_source
                _tag__022_
                _sexp__020_)
         | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
      | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__019_ ->
-       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source__025_ sexp__019_
+       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__019_
      | Sexplib0.Sexp.List [] as sexp__019_ ->
-       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source__025_ sexp__019_
+       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__019_
      : Sexplib0.Sexp.t -> t)
   ;;
 
   let t_of_sexp =
-    (let error_source__030_ = "lib/dunolint/src/dune0/library__modes.ml.Predicate.t" in
-     fun sexp__029_ ->
+    (fun sexp__029_ ->
        try __t_of_sexp__ sexp__029_ with
        | Sexplib0.Sexp_conv_error.No_variant_match ->
-         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source__030_ sexp__029_
+         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__029_
      : Sexplib0.Sexp.t -> t)
   ;;
 
@@ -122,6 +119,4 @@ module Predicate = struct
          ]
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end

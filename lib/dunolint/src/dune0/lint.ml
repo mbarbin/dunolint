@@ -22,7 +22,9 @@
 module Predicate = struct
   [@@@coverage off]
 
-  type t = [ `pps of Pps.Predicate.t Blang.t ] [@@deriving_inline compare, equal, sexp]
+  let error_source = "lint.t"
+
+  type t = [ `pps of Pps.Predicate.t Blang.t ]
 
   let compare =
     (fun a__001_ ->
@@ -49,11 +51,10 @@ module Predicate = struct
   ;;
 
   let __t_of_sexp__ =
-    (let error_source__021_ = "lib/dunolint/src/dune0/lint.ml.Predicate.t" in
-     function
+    (function
      | Sexplib0.Sexp.Atom atom__014_ as _sexp__016_ ->
        (match atom__014_ with
-        | "pps" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source__021_ _sexp__016_
+        | "pps" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__016_
         | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
      | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__014_ :: sexp_args__017_) as
        _sexp__016_ ->
@@ -65,23 +66,22 @@ module Predicate = struct
              `pps res0__020_
            | _ ->
              Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source__021_
+               error_source
                _tag__018_
                _sexp__016_)
         | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
      | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__015_ ->
-       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source__021_ sexp__015_
+       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__015_
      | Sexplib0.Sexp.List [] as sexp__015_ ->
-       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source__021_ sexp__015_
+       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__015_
      : Sexplib0.Sexp.t -> t)
   ;;
 
   let t_of_sexp =
-    (let error_source__023_ = "lib/dunolint/src/dune0/lint.ml.Predicate.t" in
-     fun sexp__022_ ->
+    (fun sexp__022_ ->
        try __t_of_sexp__ sexp__022_ with
        | Sexplib0.Sexp_conv_error.No_variant_match ->
-         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source__023_ sexp__022_
+         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__022_
      : Sexplib0.Sexp.t -> t)
   ;;
 
@@ -91,6 +91,4 @@ module Predicate = struct
          [ Sexplib0.Sexp.Atom "pps"; Blang.sexp_of_t Pps.Predicate.sexp_of_t v__024_ ]
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end

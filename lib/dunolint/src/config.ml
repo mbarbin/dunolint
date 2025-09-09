@@ -25,7 +25,7 @@ module V0 = Config_v0
 module T = struct
   [@@@coverage off]
 
-  type t = [ `v0 of V0.t ] [@@deriving_inline compare, equal]
+  type t = [ `v0 of V0.t ]
 
   let compare =
     (fun a__001_ ->
@@ -48,8 +48,6 @@ module T = struct
          | `v0 _left__007_, `v0 _right__008_ -> V0.equal _left__007_ _right__008_)
      : t -> t -> bool)
   ;;
-
-  [@@@deriving.end]
 end
 
 include T

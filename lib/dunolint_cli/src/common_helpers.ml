@@ -102,8 +102,8 @@ let load_config_exn ~filename =
        in
        let message =
          match Parsexp.Of_sexp_error.user_exn of_sexp_error with
-         | Failure str -> Pp.text (Dunolinter.Sexp_handler.clean_up_error_message str)
-         | exn -> Err.exn exn [@coverage off]
+         | Failure str -> Pp.text (if String.is_suffix str ~suffix:"." then str else str ^ ".")
+         | exn ->  Err.exn exn [@coverage off]
        in
        Err.raise ~loc [ message ])
 ;;

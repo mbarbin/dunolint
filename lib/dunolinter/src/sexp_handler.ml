@@ -220,25 +220,6 @@ let insert_new_fields ~sexps_rewriter ~indicative_field_ordering ~fields ~new_fi
         ~text:("\n" ^ indentation ^ Sexp.to_string_hum new_field)))
 ;;
 
-let error_message_cleanup_pattern =
-  lazy (Re.Perl.compile_pat {|^(?:[^/]*[/])*([^/]*)\.ml\.([^.]*)\.[^:]*:(.*)$|})
-;;
-
-let clean_up_error_message str =
-  let pattern = Lazy.force error_message_cleanup_pattern in
-  match Re.exec_opt pattern str with
-  | None -> str
-  | Some match_info ->
-    let basename = Re.Group.get match_info 1 in
-    let module_name =
-      match Re.Group.get match_info 2 with
-      | "T" -> ""
-      | m -> "." ^ m
-    in
-    let rest = Re.Group.get match_info 3 in
-    Printf.sprintf "%s%s:%s" basename module_name rest
-;;
-
 let loc_of_parsexp_range ~filename (range : Parsexp.Positions.range) =
   let source_code_position ({ line; col; offset } : Parsexp.Positions.pos) =
     { Lexing.pos_fname = filename
@@ -257,7 +238,8 @@ let read (type a) (module M : S with type t = a) ~sexps_rewriter ~field =
     let loc = Sexps_rewriter.loc sexps_rewriter sexp in
     let message =
       match exn with
-      | Failure msg -> Pp.text (clean_up_error_message msg)
+      | Failure str ->
+        Pp.text (if String.is_suffix str ~suffix:"." then str else str ^ ".")
       | exn -> Err.exn exn [@coverage off]
     in
     Error (Err.create ~loc [ message ])

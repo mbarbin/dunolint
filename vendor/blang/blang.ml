@@ -67,7 +67,6 @@ end = struct
     | Not of 'a t
     | If of 'a t * 'a t * 'a t
     | Base of 'a
-  [@@deriving_inline compare, equal]
 
   let rec compare : 'a. ('a -> 'a -> int) -> 'a t -> 'a t -> int =
     fun _cmp__a ->
@@ -145,8 +144,6 @@ end = struct
       | _, If _ -> false
       | Base _a__071_, Base _b__072_ -> _cmp__a _a__071_ _b__072_)
   ;;
-
-  [@@@deriving.end]
 
   let true_ = True
   let false_ = False
