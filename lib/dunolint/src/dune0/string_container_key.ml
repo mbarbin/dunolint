@@ -19,6 +19,4 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module T = Container_key.String_impl
-include T
-include Comparable.Make (T)
+include Container_key.String_impl

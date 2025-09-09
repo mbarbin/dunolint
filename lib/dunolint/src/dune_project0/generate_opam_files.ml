@@ -20,5 +20,67 @@
 (*********************************************************************************)
 
 module Predicate = struct
-  type t = [ `is_present ] [@@deriving compare, equal, sexp]
+  [@@@coverage off]
+
+  type t = [ `is_present ] [@@deriving_inline compare, equal, sexp]
+
+  let compare =
+    (fun a__001_ ->
+       fun b__002_ ->
+       if Stdlib.( == ) a__001_ b__002_
+       then 0
+       else (
+         match a__001_, b__002_ with
+         | `is_present, `is_present -> 0)
+     : t -> t -> int)
+  ;;
+
+  let equal =
+    (fun a__003_ ->
+       fun b__004_ ->
+       if Stdlib.( == ) a__003_ b__004_
+       then true
+       else (
+         match a__003_, b__004_ with
+         | `is_present, `is_present -> true)
+     : t -> t -> bool)
+  ;;
+
+  let __t_of_sexp__ =
+    (let error_source__010_ =
+       "lib/dunolint/src/dune_project0/generate_opam_files.ml.Predicate.t"
+     in
+     function
+     | Sexplib0.Sexp.Atom atom__006_ as _sexp__008_ ->
+       (match atom__006_ with
+        | "is_present" -> `is_present
+        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
+     | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__006_ :: _) as _sexp__008_ ->
+       (match atom__006_ with
+        | "is_present" ->
+          Sexplib0.Sexp_conv_error.ptag_no_args error_source__010_ _sexp__008_
+        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
+     | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__007_ ->
+       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source__010_ sexp__007_
+     | Sexplib0.Sexp.List [] as sexp__007_ ->
+       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source__010_ sexp__007_
+     : Sexplib0.Sexp.t -> t)
+  ;;
+
+  let t_of_sexp =
+    (let error_source__012_ =
+       "lib/dunolint/src/dune_project0/generate_opam_files.ml.Predicate.t"
+     in
+     fun sexp__011_ ->
+       try __t_of_sexp__ sexp__011_ with
+       | Sexplib0.Sexp_conv_error.No_variant_match ->
+         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source__012_ sexp__011_
+     : Sexplib0.Sexp.t -> t)
+  ;;
+
+  let sexp_of_t =
+    (fun `is_present -> Sexplib0.Sexp.Atom "is_present" : t -> Sexplib0.Sexp.t)
+  ;;
+
+  [@@@deriving.end]
 end

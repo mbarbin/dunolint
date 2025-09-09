@@ -19,6 +19,8 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open! Import
+
 type t =
   { src : string
   ; re : Re.re
@@ -41,15 +43,6 @@ let of_string src =
 let v = of_string
 let equal t1 t2 = String.equal (to_string t1) (to_string t2)
 let test t a = Re.execp t.re a
-
-include
-  Sexpable.Of_sexpable
-    (String)
-    (struct
-      type nonrec t = t
-
-      let of_sexpable = of_string
-      let to_sexpable = to_string
-    end)
-
+let t_of_sexp sexp = sexp |> String.t_of_sexp |> of_string
+let sexp_of_t t = t |> to_string |> String.sexp_of_t
 let compare t1 t2 = String.compare (to_string t1) (to_string t2)

@@ -27,7 +27,11 @@ module Predicate : sig
       | `some
       | `equals of string
       ]
-    [@@deriving compare, equal, sexp]
+
+    val equal : t -> t -> bool
+    val compare : t -> t -> int
+
+    include Sexpable.S with type t := t
   end
 
   module Flag : sig
@@ -37,7 +41,11 @@ module Predicate : sig
         | `driver
         | `pp of Pp.Name.t
         ]
-      [@@deriving compare, equal, sexp]
+
+      val equal : t -> t -> bool
+      val compare : t -> t -> int
+
+      include Sexpable.S with type t := t
     end
 
     type t =
@@ -45,7 +53,11 @@ module Predicate : sig
       ; param : Param.t
       ; applies_to : Applies_to.t
       }
-    [@@deriving compare, equal, sexp]
+
+    val equal : t -> t -> bool
+    val compare : t -> t -> int
+
+    include Sexpable.S with type t := t
   end
 
   module Pp_with_flag : sig
@@ -54,7 +66,11 @@ module Predicate : sig
       ; flag : string
       ; param : Param.t
       }
-    [@@deriving compare, equal, sexp]
+
+    val equal : t -> t -> bool
+    val compare : t -> t -> int
+
+    include Sexpable.S with type t := t
   end
 
   type t =
@@ -62,5 +78,9 @@ module Predicate : sig
     | `flag of Flag.t
     | `pp_with_flag of Pp_with_flag.t
     ]
-  [@@deriving compare, equal, sexp]
+
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+
+  include Sexpable.S with type t := t
 end

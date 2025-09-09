@@ -109,7 +109,7 @@ let visit_directory ~dunolint_engine ~config ~parent_dir ~files =
       Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
         Dunolinter.eval_path ~path:parent_dir ~condition)
   with
-  | `enforce nothing -> Nothing.unreachable_code nothing [@coverage off]
+  | `enforce _ -> .
   | `skip_subtree -> Dunolint_engine.Visitor_decision.Skip_subtree
   | `return ->
     let rules = Dunolint.Config.rules config in

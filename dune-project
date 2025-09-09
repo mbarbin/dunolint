@@ -35,11 +35,28 @@
  (depends
   (ocaml
    (>= 4.14))
-  (base
-   (>= v0.16))
   (fpath
    (>= 0.7.3))
   (fpath-sexp0
+   (>= 0.3.1))
+  (re
+   (>= 1.8.0))
+  (sexplib0
+   (>= v0.16))))
+
+(package
+ (name dunolint-lib-base)
+ (synopsis "An extension of dunolint-lib for use with Base")
+ (depends
+  (ocaml
+   (>= 4.14))
+  (base
+   (>= v0.16))
+  (dunolint-lib
+   (= :version))
+  (fpath
+   (>= 0.7.3))
+  (fpath-base
    (>= 0.3.1))
   (ppx_compare
    (>= v0.16))
