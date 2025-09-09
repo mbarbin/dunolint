@@ -42,6 +42,7 @@ module Predicate = struct
   let equal_name = (equal : name -> name -> bool)
   let name_of_sexp = (t_of_sexp : Sexplib0.Sexp.t -> name)
   let sexp_of_name = (sexp_of_t : name -> Sexplib0.Sexp.t)
+  let error_source = "executable.public_name.t"
 
   type t =
     [ `equals of name
@@ -84,18 +85,12 @@ module Predicate = struct
   ;;
 
   let __t_of_sexp__ =
-    (let error_source__030_ =
-       "lib/dunolint/src/dune0/executable__public_name.ml.Predicate.t"
-     in
-     function
+    (function
      | Sexplib0.Sexp.Atom atom__023_ as _sexp__025_ ->
        (match atom__023_ with
-        | "equals" ->
-          Sexplib0.Sexp_conv_error.ptag_takes_args error_source__030_ _sexp__025_
-        | "is_prefix" ->
-          Sexplib0.Sexp_conv_error.ptag_takes_args error_source__030_ _sexp__025_
-        | "is_suffix" ->
-          Sexplib0.Sexp_conv_error.ptag_takes_args error_source__030_ _sexp__025_
+        | "equals" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__025_
+        | "is_prefix" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__025_
+        | "is_suffix" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__025_
         | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
      | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__023_ :: sexp_args__026_) as
        _sexp__025_ ->
@@ -107,7 +102,7 @@ module Predicate = struct
              `equals res0__036_
            | _ ->
              Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source__030_
+               error_source
                _tag__034_
                _sexp__025_)
         | "is_prefix" as _tag__031_ ->
@@ -117,7 +112,7 @@ module Predicate = struct
              `is_prefix res0__033_
            | _ ->
              Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source__030_
+               error_source
                _tag__031_
                _sexp__025_)
         | "is_suffix" as _tag__027_ ->
@@ -127,25 +122,22 @@ module Predicate = struct
              `is_suffix res0__029_
            | _ ->
              Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source__030_
+               error_source
                _tag__027_
                _sexp__025_)
         | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
      | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__024_ ->
-       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source__030_ sexp__024_
+       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__024_
      | Sexplib0.Sexp.List [] as sexp__024_ ->
-       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source__030_ sexp__024_
+       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__024_
      : Sexplib0.Sexp.t -> t)
   ;;
 
   let t_of_sexp =
-    (let error_source__038_ =
-       "lib/dunolint/src/dune0/executable__public_name.ml.Predicate.t"
-     in
-     fun sexp__037_ ->
+    (fun sexp__037_ ->
        try __t_of_sexp__ sexp__037_ with
        | Sexplib0.Sexp_conv_error.No_variant_match ->
-         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source__038_ sexp__037_
+         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__037_
      : Sexplib0.Sexp.t -> t)
   ;;
 

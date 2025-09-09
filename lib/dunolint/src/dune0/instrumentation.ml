@@ -41,6 +41,8 @@ end
 module Predicate = struct
   [@@@coverage off]
 
+  let error_source = "instrumentation.t"
+
   type t = [ `backend of Backend.Name.t ]
 
   let compare =
@@ -68,12 +70,10 @@ module Predicate = struct
   ;;
 
   let __t_of_sexp__ =
-    (let error_source__017_ = "lib/dunolint/src/dune0/instrumentation.ml.Predicate.t" in
-     function
+    (function
      | Sexplib0.Sexp.Atom atom__010_ as _sexp__012_ ->
        (match atom__010_ with
-        | "backend" ->
-          Sexplib0.Sexp_conv_error.ptag_takes_args error_source__017_ _sexp__012_
+        | "backend" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__012_
         | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
      | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__010_ :: sexp_args__013_) as
        _sexp__012_ ->
@@ -85,23 +85,22 @@ module Predicate = struct
              `backend res0__016_
            | _ ->
              Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source__017_
+               error_source
                _tag__014_
                _sexp__012_)
         | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
      | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__011_ ->
-       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source__017_ sexp__011_
+       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__011_
      | Sexplib0.Sexp.List [] as sexp__011_ ->
-       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source__017_ sexp__011_
+       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__011_
      : Sexplib0.Sexp.t -> t)
   ;;
 
   let t_of_sexp =
-    (let error_source__019_ = "lib/dunolint/src/dune0/instrumentation.ml.Predicate.t" in
-     fun sexp__018_ ->
+    (fun sexp__018_ ->
        try __t_of_sexp__ sexp__018_ with
        | Sexplib0.Sexp_conv_error.No_variant_match ->
-         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source__019_ sexp__018_
+         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__018_
      : Sexplib0.Sexp.t -> t)
   ;;
 

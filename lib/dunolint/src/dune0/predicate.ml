@@ -21,6 +21,8 @@
 
 [@@@coverage off]
 
+let error_source = "predicate.t"
+
 type t =
   [ `executable of Executable.Predicate.t Blang.t
   | `has_field of [ `instrumentation | `lint | `name | `preprocess | `public_name ]
@@ -105,25 +107,19 @@ let equal =
 ;;
 
 let __t_of_sexp__ =
-  (let error_source__073_ = "lib/dunolint/src/dune0/predicate.ml.t" in
-   function
+  (function
    | Sexplib0.Sexp.Atom atom__066_ as _sexp__068_ ->
      (match atom__066_ with
-      | "executable" ->
-        Sexplib0.Sexp_conv_error.ptag_takes_args error_source__073_ _sexp__068_
-      | "has_field" ->
-        Sexplib0.Sexp_conv_error.ptag_takes_args error_source__073_ _sexp__068_
+      | "executable" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__068_
+      | "has_field" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__068_
       | "include_subdirs" ->
-        Sexplib0.Sexp_conv_error.ptag_takes_args error_source__073_ _sexp__068_
+        Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__068_
       | "instrumentation" ->
-        Sexplib0.Sexp_conv_error.ptag_takes_args error_source__073_ _sexp__068_
-      | "library" ->
-        Sexplib0.Sexp_conv_error.ptag_takes_args error_source__073_ _sexp__068_
-      | "lint" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source__073_ _sexp__068_
-      | "preprocess" ->
-        Sexplib0.Sexp_conv_error.ptag_takes_args error_source__073_ _sexp__068_
-      | "stanza" ->
-        Sexplib0.Sexp_conv_error.ptag_takes_args error_source__073_ _sexp__068_
+        Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__068_
+      | "library" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__068_
+      | "lint" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__068_
+      | "preprocess" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__068_
+      | "stanza" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__068_
       | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
    | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__066_ :: sexp_args__069_) as _sexp__068_
      ->
@@ -135,7 +131,7 @@ let __t_of_sexp__ =
            `executable res0__100_
          | _ ->
            Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source__073_
+             error_source
              _tag__098_
              _sexp__068_)
       | "has_field" as _tag__089_ ->
@@ -156,34 +152,32 @@ let __t_of_sexp__ =
                | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__091_ :: _) as _sexp__093_ ->
                  (match atom__091_ with
                   | "instrumentation" ->
-                    Sexplib0.Sexp_conv_error.ptag_no_args error_source__073_ _sexp__093_
+                    Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__093_
                   | "lint" ->
-                    Sexplib0.Sexp_conv_error.ptag_no_args error_source__073_ _sexp__093_
+                    Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__093_
                   | "name" ->
-                    Sexplib0.Sexp_conv_error.ptag_no_args error_source__073_ _sexp__093_
+                    Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__093_
                   | "preprocess" ->
-                    Sexplib0.Sexp_conv_error.ptag_no_args error_source__073_ _sexp__093_
+                    Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__093_
                   | "public_name" ->
-                    Sexplib0.Sexp_conv_error.ptag_no_args error_source__073_ _sexp__093_
+                    Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__093_
                   | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
                | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__092_ ->
                  Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var
-                   error_source__073_
+                   error_source
                    sexp__092_
                | Sexplib0.Sexp.List [] as sexp__092_ ->
                  Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var
-                   error_source__073_
+                   error_source
                    sexp__092_
              with
              | Sexplib0.Sexp_conv_error.No_variant_match ->
-               Sexplib0.Sexp_conv_error.no_matching_variant_found
-                 error_source__073_
-                 sexp__095_
+               Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__095_
            in
            `has_field res0__097_
          | _ ->
            Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source__073_
+             error_source
              _tag__089_
              _sexp__068_)
       | "include_subdirs" as _tag__086_ ->
@@ -195,7 +189,7 @@ let __t_of_sexp__ =
            `include_subdirs res0__088_
          | _ ->
            Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source__073_
+             error_source
              _tag__086_
              _sexp__068_)
       | "instrumentation" as _tag__083_ ->
@@ -207,7 +201,7 @@ let __t_of_sexp__ =
            `instrumentation res0__085_
          | _ ->
            Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source__073_
+             error_source
              _tag__083_
              _sexp__068_)
       | "library" as _tag__080_ ->
@@ -217,7 +211,7 @@ let __t_of_sexp__ =
            `library res0__082_
          | _ ->
            Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source__073_
+             error_source
              _tag__080_
              _sexp__068_)
       | "lint" as _tag__077_ ->
@@ -227,7 +221,7 @@ let __t_of_sexp__ =
            `lint res0__079_
          | _ ->
            Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source__073_
+             error_source
              _tag__077_
              _sexp__068_)
       | "preprocess" as _tag__074_ ->
@@ -237,7 +231,7 @@ let __t_of_sexp__ =
            `preprocess res0__076_
          | _ ->
            Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source__073_
+             error_source
              _tag__074_
              _sexp__068_)
       | "stanza" as _tag__070_ ->
@@ -247,23 +241,22 @@ let __t_of_sexp__ =
            `stanza res0__072_
          | _ ->
            Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source__073_
+             error_source
              _tag__070_
              _sexp__068_)
       | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
    | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__067_ ->
-     Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source__073_ sexp__067_
+     Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__067_
    | Sexplib0.Sexp.List [] as sexp__067_ ->
-     Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source__073_ sexp__067_
+     Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__067_
    : Sexplib0.Sexp.t -> t)
 ;;
 
 let t_of_sexp =
-  (let error_source__102_ = "lib/dunolint/src/dune0/predicate.ml.t" in
-   fun sexp__101_ ->
+  (fun sexp__101_ ->
      try __t_of_sexp__ sexp__101_ with
      | Sexplib0.Sexp_conv_error.No_variant_match ->
-       Sexplib0.Sexp_conv_error.no_matching_variant_found error_source__102_ sexp__101_
+       Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__101_
    : Sexplib0.Sexp.t -> t)
 ;;
 

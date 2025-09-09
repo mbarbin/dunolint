@@ -43,7 +43,7 @@ If the config is supplied, but it is invalid, dunolint will complain.
   File ".dunolint", line 1, characters 1-5:
   1 | (blah)
        ^^^^
-  Error: config_v0.t_of_sexp: record conversion: only pairs expected, their
+  Error: config.v0.t_of_sexp: record conversion: only pairs expected, their
   first element must be an atom.
   [123]
 
