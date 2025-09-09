@@ -187,6 +187,8 @@ end
 module T = struct
   [@@@coverage off]
 
+  let error_source = "config_v0.t"
+
   type t =
     { skip_subtree : Skip_subtree.t option [@sexp.option]
     ; rules : Rule.t list
@@ -219,10 +221,9 @@ module T = struct
   ;;
 
   let t_of_sexp =
-    (let error_source__076_ = "lib/dunolint/src/config_v0.ml.T.t" in
-     fun x__077_ ->
+    (fun x__077_ ->
        Sexplib0.Sexp_conv_record.record_of_sexp
-         ~caller:error_source__076_
+         ~caller:error_source
          ~fields:
            (Field
               { name = "skip_subtree"

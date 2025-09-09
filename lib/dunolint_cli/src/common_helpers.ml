@@ -69,21 +69,6 @@ let skip_subtree ~globs =
     ]
 ;;
 
-let error_message_cleanup_pattern =
-  lazy (Re.Perl.compile_pat {|^(?:[^/]*[/])*([^/]*)\.ml\.([^.]*)\.[^:]*:(.*)$|})
-;;
-
-let clean_up_error_message str =
-  let pattern = Lazy.force error_message_cleanup_pattern in
-  match Re.exec_opt pattern str with
-  | None -> str
-  | Some match_info ->
-    let basename = Re.Group.get match_info 1 in
-    let module_name = Re.Group.get match_info 2 in
-    let rest = Re.Group.get match_info 3 in
-    Printf.sprintf "%s.%s:%s" basename module_name rest
-;;
-
 let loc_of_parsexp_range ~filename (range : Parsexp.Positions.range) =
   let source_code_position ({ line; col; offset } : Parsexp.Positions.pos) =
     { Lexing.pos_fname = filename
@@ -126,7 +111,7 @@ let load_config_exn ~filename =
        in
        let message =
          match Parsexp.Of_sexp_error.user_exn of_sexp_error with
-         | Failure str -> clean_up_error_message str
+         | Failure str -> if String.is_suffix str ~suffix:"." then str else str ^ "."
          | exn -> Exn.to_string exn [@coverage off]
        in
        Err.raise ~loc [ Pp.text message ])

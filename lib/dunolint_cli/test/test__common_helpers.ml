@@ -18,35 +18,3 @@
 (*  and the LGPL-3.0 Linking Exception along with this library. If not, see      *)
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
-
-module Common_helpers = Dunolint_cli.Private.Common_helpers
-
-let%expect_test "clean_up_error_message" =
-  let test input =
-    let output = Common_helpers.clean_up_error_message input in
-    print_endline (output : string)
-  in
-  (* Test the main transformation pattern. *)
-  test "lib/dunolint/src/config_v0.ml.T.t_of_sexp: record conversion: only pairs expected";
-  [%expect {| config_v0.T: record conversion: only pairs expected |}];
-  (* Test with different paths. *)
-  test "src/config.ml.Config.t_of_sexp: invalid format";
-  [%expect {| config.Config: invalid format |}];
-  (* Test with complex nested paths. *)
-  test "lib/foo/bar/baz/module_name.ml.Module.function_name: some error";
-  [%expect {| module_name.Module: some error |}];
-  (* Test strings that don't match the pattern - should remain unchanged. *)
-  test "simple error message";
-  [%expect {| simple error message |}];
-  test "Error: something went wrong";
-  [%expect {| Error: something went wrong |}];
-  (* Test edge cases. *)
-  test "";
-  [%expect {||}];
-  test "file.ml.Module.func: error";
-  [%expect {| file.Module: error |}];
-  (* Test with various extensions - only .ml should match. *)
-  test "lib/test.mli.Module.func: error";
-  [%expect {| lib/test.mli.Module.func: error |}];
-  ()
-;;

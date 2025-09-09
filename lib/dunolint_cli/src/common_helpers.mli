@@ -28,13 +28,6 @@ val below : doc:string -> Relative_path.t option Command.Arg.t
 
 val skip_subtree : globs:string list -> Dunolint.Config.Skip_subtree.t
 
-(** Transforms error messages to make the files relocalizable by extracting
-    basename and module name from OCaml module paths.
-
-    For example, transforms "lib/dunolint/src/config_v0.ml.T.t_of_sexp: error message"
-    into "config_v0.T: error message". *)
-val clean_up_error_message : string -> string
-
 (** A helper for loading the config with some effort regarding producing located
     error messages when able. *)
 val load_config_exn : filename:string -> Dunolint.Config.t
