@@ -26,7 +26,6 @@ module Predicate = struct
     [ `no_preprocessing
     | `pps of Pps.Predicate.t Blang.t
     ]
-  [@@deriving_inline compare, equal, sexp]
 
   let compare =
     (fun a__001_ ->
@@ -104,6 +103,4 @@ module Predicate = struct
          [ Sexplib0.Sexp.Atom "pps"; Blang.sexp_of_t Pps.Predicate.sexp_of_t v__024_ ]
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end

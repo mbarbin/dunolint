@@ -27,7 +27,6 @@ module T = struct
     | `dune of Dune.Predicate.t Blang.t
     | `dune_project of Dune_project.Predicate.t Blang.t
     ]
-  [@@deriving_inline compare, equal, sexp]
 
   let compare =
     (fun a__001_ ->
@@ -142,8 +141,6 @@ module T = struct
          ]
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end
 
 include T

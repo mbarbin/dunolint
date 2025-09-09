@@ -24,11 +24,8 @@ type t =
   | `False
   | `False_if_hidden_includes_supported
   ]
-[@@deriving_inline enumerate]
 
 let all = ([ `True; `False; `False_if_hidden_includes_supported ] : t list)
-
-[@@@deriving.end]
 
 let of_string = function
   | "true" -> Some `True

@@ -36,21 +36,18 @@ include Validated_string.Make (struct
 module Predicate = struct
   [@@@coverage off]
 
-  type name = t [@@deriving_inline compare, equal, sexp]
+  type name = t
 
   let compare_name = (compare : name -> name -> int)
   let equal_name = (equal : name -> name -> bool)
   let name_of_sexp = (t_of_sexp : Sexplib0.Sexp.t -> name)
   let sexp_of_name = (sexp_of_t : name -> Sexplib0.Sexp.t)
 
-  [@@@deriving.end]
-
   type t =
     [ `equals of name
     | `is_prefix of string
     | `is_suffix of string
     ]
-  [@@deriving_inline compare, equal, sexp]
 
   let compare =
     (fun a__006_ ->
@@ -158,6 +155,4 @@ module Predicate = struct
        Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "is_suffix"; sexp_of_string v__041_ ]
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end

@@ -22,7 +22,7 @@
 module Predicate = struct
   [@@@coverage off]
 
-  type t = [ `is_present ] [@@deriving_inline compare, equal, sexp]
+  type t = [ `is_present ]
 
   let compare =
     (fun a__001_ ->
@@ -81,6 +81,4 @@ module Predicate = struct
   let sexp_of_t =
     (fun `is_present -> Sexplib0.Sexp.Atom "is_present" : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end

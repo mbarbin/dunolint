@@ -24,7 +24,7 @@ module Value = Implicit_transitive_deps__value
 module Predicate = struct
   [@@@coverage off]
 
-  type t = [ `equals of Value.t ] [@@deriving_inline compare, equal, sexp]
+  type t = [ `equals of Value.t ]
 
   let compare =
     (fun a__001_ ->
@@ -97,6 +97,4 @@ module Predicate = struct
        Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "equals"; Value.sexp_of_t v__020_ ]
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end

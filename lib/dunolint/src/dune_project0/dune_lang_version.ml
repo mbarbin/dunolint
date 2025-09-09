@@ -24,7 +24,7 @@ open! Import
 module T0 = struct
   [@@@coverage off]
 
-  type t = int * int [@@deriving_inline equal, compare, sexp]
+  type t = int * int
 
   let equal =
     (fun a__001_ ->
@@ -67,8 +67,6 @@ module T0 = struct
        Sexplib0.Sexp.List [ res0__022_; res1__023_ ]
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end
 
 include T0
@@ -84,7 +82,6 @@ module Predicate = struct
     | `greater_than_or_equal_to of t
     | `less_than_or_equal_to of t
     ]
-  [@@deriving_inline compare, equal, sexp]
 
   let compare =
     (fun a__024_ ->
@@ -196,6 +193,4 @@ module Predicate = struct
          [ Sexplib0.Sexp.Atom "less_than_or_equal_to"; sexp_of_t v__059_ ]
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end

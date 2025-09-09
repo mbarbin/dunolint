@@ -28,7 +28,6 @@ module Predicate = struct
     | `executable
     | `executables
     ]
-  [@@deriving_inline compare, equal, sexp]
 
   let compare =
     (fun a__001_ ->
@@ -105,6 +104,4 @@ module Predicate = struct
      | `executables -> Sexplib0.Sexp.Atom "executables"
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end

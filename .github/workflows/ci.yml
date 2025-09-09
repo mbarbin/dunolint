@@ -42,10 +42,8 @@ jobs:
       - name: Install dependencies
         run: opam install . --deps-only --with-doc --with-test --with-dev-setup
 
-      # We are *not* building @lint here due to formatting unstability issue
-      # with ppxlib.deriving_inline. Solving this is left as future work.
       - name: Build
-        run: opam exec -- dune build @all
+        run: opam exec -- dune build @all @lint
 
       - name: Run tests
         run: |

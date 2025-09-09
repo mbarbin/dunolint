@@ -31,7 +31,6 @@ module Predicate = struct
       | `some
       | `equals of string
       ]
-    [@@deriving_inline compare, equal, sexp]
 
     let compare =
       (fun a__001_ ->
@@ -124,8 +123,6 @@ module Predicate = struct
          Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "equals"; sexp_of_string v__020_ ]
        : t -> Sexplib0.Sexp.t)
     ;;
-
-    [@@@deriving.end]
   end
 
   module Flag = struct
@@ -135,7 +132,6 @@ module Predicate = struct
         | `driver
         | `pp of Pp.Name.t
         ]
-      [@@deriving_inline compare, equal, sexp]
 
       let compare =
         (fun a__021_ ->
@@ -228,8 +224,6 @@ module Predicate = struct
            Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "pp"; Pp.Name.sexp_of_t v__040_ ]
          : t -> Sexplib0.Sexp.t)
       ;;
-
-      [@@@deriving.end]
     end
 
     type t =
@@ -237,7 +231,6 @@ module Predicate = struct
       ; param : Param.t
       ; applies_to : Applies_to.t
       }
-    [@@deriving_inline compare, equal, sexp]
 
     let compare =
       (fun a__041_ ->
@@ -326,8 +319,6 @@ module Predicate = struct
          Sexplib0.Sexp.List bnds__048_
        : t -> Sexplib0.Sexp.t)
     ;;
-
-    [@@@deriving.end]
   end
 
   module Pp_with_flag = struct
@@ -336,7 +327,6 @@ module Predicate = struct
       ; flag : string
       ; param : Param.t
       }
-    [@@deriving_inline compare, equal, sexp]
 
     let compare =
       (fun a__055_ ->
@@ -425,8 +415,6 @@ module Predicate = struct
          Sexplib0.Sexp.List bnds__062_
        : t -> Sexplib0.Sexp.t)
     ;;
-
-    [@@@deriving.end]
   end
 
   type t =
@@ -434,7 +422,6 @@ module Predicate = struct
     | `flag of Flag.t
     | `pp_with_flag of Pp_with_flag.t
     ]
-  [@@deriving_inline compare, equal, sexp]
 
   let compare =
     (fun a__069_ ->
@@ -538,6 +525,4 @@ module Predicate = struct
          [ Sexplib0.Sexp.Atom "pp_with_flag"; Pp_with_flag.sexp_of_t v__104_ ]
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end

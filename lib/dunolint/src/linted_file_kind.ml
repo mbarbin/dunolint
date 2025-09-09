@@ -26,7 +26,6 @@ module T = struct
     [ `dune
     | `dune_project
     ]
-  [@@deriving_inline enumerate, sexp]
 
   let all = ([ `dune; `dune_project ] : t list)
 
@@ -66,8 +65,6 @@ module T = struct
      | `dune_project -> Sexplib0.Sexp.Atom "dune_project"
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end
 
 include T

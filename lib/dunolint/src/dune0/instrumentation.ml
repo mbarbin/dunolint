@@ -41,7 +41,7 @@ end
 module Predicate = struct
   [@@@coverage off]
 
-  type t = [ `backend of Backend.Name.t ] [@@deriving_inline compare, equal, sexp]
+  type t = [ `backend of Backend.Name.t ]
 
   let compare =
     (fun a__001_ ->
@@ -110,6 +110,4 @@ module Predicate = struct
        Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "backend"; Backend.Name.sexp_of_t v__020_ ]
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end

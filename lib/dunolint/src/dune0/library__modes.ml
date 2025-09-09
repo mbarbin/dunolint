@@ -28,7 +28,6 @@ module Predicate = struct
     [ `has_mode of Compilation_mode.t
     | `has_modes of Compilation_mode.t list
     ]
-  [@@deriving_inline compare, equal, sexp]
 
   let compare =
     (fun a__001_ ->
@@ -122,6 +121,4 @@ module Predicate = struct
          ]
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end

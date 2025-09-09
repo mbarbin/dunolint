@@ -28,7 +28,6 @@ module T = struct
     | `best
     | `melange
     ]
-  [@@deriving_inline enumerate, sexp]
 
   let all = ([ `byte; `native; `best; `melange ] : t list)
 
@@ -74,8 +73,6 @@ module T = struct
      | `melange -> Sexplib0.Sexp.Atom "melange"
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end
 
 include T

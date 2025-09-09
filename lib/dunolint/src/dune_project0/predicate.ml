@@ -27,7 +27,6 @@ type t =
   | `implicit_transitive_deps of Implicit_transitive_deps.Predicate.t Blang.t
   | `name of Name.Predicate.t Blang.t
   ]
-[@@deriving_inline compare, equal, sexp]
 
 let compare =
   (fun a__001_ ->
@@ -168,5 +167,3 @@ let sexp_of_t =
        [ Sexplib0.Sexp.Atom "name"; Blang.sexp_of_t Name.Predicate.sexp_of_t v__060_ ]
    : t -> Sexplib0.Sexp.t)
 ;;
-
-[@@@deriving.end]

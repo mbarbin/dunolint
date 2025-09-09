@@ -31,7 +31,6 @@ type t =
   | `preprocess of Preprocess.Predicate.t Blang.t
   | `stanza of Stanza.Predicate.t Blang.t
   ]
-[@@deriving_inline compare, equal, sexp]
 
 let compare =
   (fun a__001_ ->
@@ -313,5 +312,3 @@ let sexp_of_t =
        [ Sexplib0.Sexp.Atom "stanza"; Blang.sexp_of_t Stanza.Predicate.sexp_of_t v__110_ ]
    : t -> Sexplib0.Sexp.t)
 ;;
-
-[@@@deriving.end]

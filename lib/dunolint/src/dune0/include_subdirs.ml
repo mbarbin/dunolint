@@ -27,7 +27,6 @@ module Mode = struct
     | `unqualified
     | `qualified
     ]
-  [@@deriving_inline compare, equal, sexp]
 
   let compare =
     (fun a__001_ ->
@@ -97,14 +96,12 @@ module Mode = struct
      | `qualified -> Sexplib0.Sexp.Atom "qualified"
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end
 
 module Predicate = struct
   [@@@coverage off]
 
-  type t = [ `equals of Mode.t ] [@@deriving_inline compare, equal, sexp]
+  type t = [ `equals of Mode.t ]
 
   let compare =
     (fun a__013_ ->
@@ -173,6 +170,4 @@ module Predicate = struct
        Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "equals"; Mode.sexp_of_t v__032_ ]
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end

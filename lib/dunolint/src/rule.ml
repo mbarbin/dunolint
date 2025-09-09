@@ -30,7 +30,6 @@ module T = struct
     | `skip_subtree
     | `cond of ('predicate Blang.t * ('predicate, 'invariant) t) list
     ]
-  [@@deriving_inline compare, equal, sexp]
 
   let rec compare
     :  'predicate 'invariant.
@@ -213,8 +212,6 @@ module T = struct
               v__061_
           ]
   ;;
-
-  [@@@deriving.end]
 end
 
 include T

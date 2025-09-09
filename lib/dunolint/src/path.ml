@@ -34,7 +34,6 @@ module Predicate = struct
     [ `equals of Relative_path.t
     | `glob of Glob.t
     ]
-  [@@deriving_inline compare, equal, sexp]
 
   let compare =
     (fun a__001_ ->
@@ -122,6 +121,4 @@ module Predicate = struct
        Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "glob"; Glob.sexp_of_t v__028_ ]
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end

@@ -33,7 +33,6 @@ module Predicate = struct
     | `preprocess of Preprocess.Predicate.t Blang.t
     | `public_name of Public_name.Predicate.t Blang.t
     ]
-  [@@deriving_inline compare, equal, sexp]
 
   let compare =
     (fun a__001_ ->
@@ -275,6 +274,4 @@ module Predicate = struct
          ]
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end

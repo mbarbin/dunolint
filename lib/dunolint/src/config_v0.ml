@@ -26,7 +26,6 @@ module Skip_subtree = struct
 
   module Predicate = struct
     type t = [ `path of Path.Predicate.t Blang.t ]
-    [@@deriving_inline compare, equal, sexp]
 
     let compare =
       (fun a__001_ ->
@@ -106,12 +105,10 @@ module Skip_subtree = struct
            [ Sexplib0.Sexp.Atom "path"; Blang.sexp_of_t Path.Predicate.sexp_of_t v__024_ ]
        : t -> Sexplib0.Sexp.t)
     ;;
-
-    [@@@deriving.end]
   end
 
   module Result = struct
-    type t = | [@@deriving_inline compare, equal, sexp]
+    type t = |
 
     let compare = (Stdlib.compare : t -> t -> int)
     let equal = (Stdlib.( = ) : t -> t -> bool)
@@ -133,11 +130,9 @@ module Skip_subtree = struct
        | _ -> .
        : t -> Sexplib0.Sexp.t)
     ;;
-
-    [@@@deriving.end]
   end
 
-  type t = (Predicate.t, Result.t) Rule.t [@@deriving_inline compare, equal, sexp]
+  type t = (Predicate.t, Result.t) Rule.t
 
   let compare =
     (fun a__033_ ->
@@ -159,14 +154,12 @@ module Skip_subtree = struct
     (fun x__047_ -> Rule.sexp_of_t Predicate.sexp_of_t Result.sexp_of_t x__047_
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end
 
 module Rule = struct
   [@@@coverage off]
 
-  type t = (Predicate.t, Condition.t) Rule.t [@@deriving_inline compare, equal, sexp]
+  type t = (Predicate.t, Condition.t) Rule.t
 
   let compare =
     (fun a__048_ ->
@@ -189,8 +182,6 @@ module Rule = struct
     (fun x__062_ -> Rule.sexp_of_t Predicate.sexp_of_t Condition.sexp_of_t x__062_
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end
 
 module T = struct
@@ -200,7 +191,6 @@ module T = struct
     { skip_subtree : Skip_subtree.t option [@sexp.option]
     ; rules : Rule.t list
     }
-  [@@deriving_inline compare, equal, sexp]
 
   let compare =
     (fun a__063_ ->
@@ -277,8 +267,6 @@ module T = struct
        Sexplib0.Sexp.List bnds__078_
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end
 
 include T
