@@ -83,6 +83,8 @@
    (>= 0.0.9))
   (dunolint-lib
    (= :version))
+  (dunolint-lib-base
+   (= :version))
   (file-rewriter
    (>= 0.0.3))
   (fmt
@@ -159,6 +161,8 @@
   (dunolint
    (= :version))
   (dunolint-lib
+   (= :version))
+  (dunolint-lib-base
    (= :version))
   (expect_test_helpers_core
    (>= v0.17))
@@ -250,6 +254,8 @@
   (dunolint
    (= :version))
   (dunolint-lib
+   (= :version))
+  (dunolint-lib-base
    (= :version))
   (dunolint-tests
    (= :version))
