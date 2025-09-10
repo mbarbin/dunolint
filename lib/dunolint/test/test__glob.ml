@@ -71,6 +71,57 @@ let%expect_test "test" =
   [%expect {| (is_match false) |}];
   test g "aconstant";
   [%expect {| (is_match false) |}];
+  let g = Glob.v "vendor/**" in
+  test g "vendor/foo/bar/dune";
+  [%expect {| (is_match true) |}];
+  test g "vendor/dune";
+  [%expect {| (is_match true) |}];
+  test g "vendor/";
+  [%expect {| (is_match true) |}];
+  test g "vendor";
+  [%expect {| (is_match false) |}];
+  let g = Glob.v "vendor/**/*" in
+  test g "vendor/foo/bar/dune";
+  [%expect {| (is_match true) |}];
+  test g "vendor/dune";
+  [%expect {| (is_match true) |}];
+  let g = Glob.v "vendor/*" in
+  test g "vendor/foo/bar/dune";
+  [%expect {| (is_match false) |}];
+  test g "vendor/dune";
+  [%expect {| (is_match true) |}];
+  test g "vendor/";
+  [%expect {| (is_match true) |}];
+  test g "vendor";
+  [%expect {| (is_match false) |}];
+  let g = Glob.v "vendor/*/*" in
+  test g "vendor/foo/bar/dune";
+  [%expect {| (is_match false) |}];
+  test g "vendor/dune";
+  [%expect {| (is_match false) |}];
+  let g = Glob.v "**/_build" in
+  test g "_build";
+  [%expect {| (is_match false) |}];
+  test g "foo/_build";
+  [%expect {| (is_match true) |}];
+  test g "foo/bar/_build";
+  [%expect {| (is_match true) |}];
+  test g "foo/_build/bar";
+  [%expect {| (is_match false) |}];
+  let g = Glob.v "_build/" in
+  test g "./_build";
+  [%expect {| (is_match false) |}];
+  test g "./_build/";
+  [%expect {| (is_match false) |}];
+  test g "_build/";
+  [%expect {| (is_match true) |}];
+  let g = Glob.v "_build" in
+  test g "./_build";
+  [%expect {| (is_match false) |}];
+  test g "./_build/";
+  [%expect {| (is_match false) |}];
+  test g "_build/";
+  [%expect {| (is_match false) |}];
   ()
 ;;
 
