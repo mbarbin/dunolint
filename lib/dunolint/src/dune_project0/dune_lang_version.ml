@@ -61,9 +61,7 @@ let t_of_sexp sexp =
   match
     match (sexp : Sexp.t) with
     | List [ Atom a; Atom b ] ->
-      (* CR-soon mbarbin: For now we maintain this parsing compatibility however
-         we'll deprecate this when parsing the version 1 of the config. *)
-      of_two_atoms a b
+      if Sexp_helpers.parsing_config_version_0.contents then of_two_atoms a b else None
     | List _ -> None
     | Atom str ->
       (match String.split str ~on:'.' with
