@@ -1,7 +1,8 @@
-## 0.0.2025XXXX (unreleased)
+## 0.0.20250910 (2025-09-10)
 
 ### Added
 
+- Support new `(lang dunolint 1.0)` config stanzas format for `dunolint` files (#105, @mbarbin).
 - New lib `dunolint-lib-base` to extend `dunolint-lib` for base users (#99, @mbarbin).
 
 ### Changed
