@@ -31,3 +31,10 @@ val skip_subtree : globs:string list -> Dunolint.Config.Skip_subtree.t
 (** A helper for loading the config with some effort regarding producing located
     error messages when able. *)
 val load_config_exn : filename:string -> Dunolint.Config.t
+
+(** A helper to load a config file, either supplied or inferred from the context
+    and add some optional rules. *)
+val load_config_opt_exn
+  :  config:string option
+  -> append_extra_rules:Dunolint.Config.Rule.t list
+  -> Dunolint.Config.t

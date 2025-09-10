@@ -37,19 +37,7 @@ let main =
        >>| List.map ~f:(fun condition -> `enforce condition)
      in
      let config =
-       match config with
-       | Some filename -> Common_helpers.load_config_exn ~filename
-       | None ->
-         Dunolint.Config.create
-           ~skip_subtree:(Common_helpers.skip_subtree ~globs:[])
-           ~rules:[]
-           ()
-     in
-     let config =
-       Dunolint.Config.create
-         ?skip_subtree:(Dunolint.Config.skip_subtree config)
-         ~rules:(Dunolint.Config.rules config @ enforce)
-         ()
+       Common_helpers.load_config_opt_exn ~config ~append_extra_rules:enforce
      in
      Dunolint_engine.run ~config:dunolint_engine_config
      @@ fun dunolint_engine ->
