@@ -261,6 +261,10 @@ end
 
 include T
 
+let t_of_sexp sexp =
+  Sexp_helpers.when_parsing_config_version_0 ~f:(fun () -> t_of_sexp sexp)
+;;
+
 let skip_subtree t = t.skip_subtree
 let rules t = t.rules
 let create ?skip_subtree ?(rules = []) () = { skip_subtree; rules }

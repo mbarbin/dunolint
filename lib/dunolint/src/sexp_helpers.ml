@@ -19,24 +19,49 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Blang = Blang
-module Condition = Condition
-module Config = Config
-module Dune = Dune
-module Dune_project = Dune_project
-module Glob = Glob
-module Linted_file_kind = Linted_file_kind
-module Path = Path
-module Predicate = Predicate
-module Rule = Rule
-module Trilang = Trilang
+module type T_of_sexp = sig
+  type t
 
-module Std = struct
-  module Blang = Blang
-  module Dune = Dune
-  module Dune_project = Dune_project
+  val t_of_sexp : Sexp.t -> t
 end
 
-module Private = struct
-  module Sexp_helpers = Sexp_helpers
-end
+let parsing_config_version_0 = ref false
+
+let when_parsing_config_version_0 ~f =
+  let init = parsing_config_version_0.contents in
+  Fun.protect
+    (fun () ->
+       parsing_config_version_0 := true;
+       f ())
+    ~finally:(fun () -> parsing_config_version_0 := init)
+;;
+
+let parse_inline_record
+      (type a)
+      (module M : T_of_sexp with type t = a)
+      ~error_source
+      ~context
+      ~tag
+      ~fields
+  =
+  let arg =
+    match (fields : Sexp.t list) with
+    | [ (List (List _ :: _) as list) ] ->
+      if !parsing_config_version_0
+      then list
+      else
+        Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
+          error_source
+          tag
+          context [@coverage off]
+        (* out edge bisect_ppx issue. *)
+    | list -> Sexp.List list
+  in
+  match M.t_of_sexp arg with
+  | ok -> ok
+  | exception Sexplib0.Sexp.Of_sexp_error (exn, _) ->
+    let bt = Printexc.get_raw_backtrace () in
+    (Printexc.raise_with_backtrace
+       (Sexplib0.Sexp.Of_sexp_error (exn, context))
+       bt [@coverage off] (* out edge bisect_ppx issue. *))
+;;

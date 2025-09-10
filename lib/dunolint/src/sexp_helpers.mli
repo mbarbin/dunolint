@@ -19,26 +19,60 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-module Blang = Blang
-module Condition = Condition
-module Config = Config
-module Dune = Dune
-module Dune_project = Dune_project
-module Glob = Glob
-module Linted_file_kind = Linted_file_kind
-module Path = Path
-module Predicate = Predicate
-module Rule = Rule
-module Trilang = Trilang
+(** Some helpers used by sexp serializers. *)
 
-module Std : sig
-  (** [Std] is meant to be open to access common modules from the root path. *)
+module type T_of_sexp = sig
+  type t
 
-  module Blang = Blang
-  module Dune = Dune
-  module Dune_project = Dune_project
+  val t_of_sexp : Sexp.t -> t
 end
 
-module Private : sig
-  module Sexp_helpers = Sexp_helpers
-end
+(** During the transition to support version 0 of the config, we allow wrapped
+    records for older formats. Once we'll be done migrating to version 1, we can
+    retire this. This is [false] by default and requires to be set to [true] to
+    parse version 0. *)
+val parsing_config_version_0 : bool ref
+
+(** Temporarily set [parsing_config_version_0] to true for the execution of [f]
+    (protected). *)
+val when_parsing_config_version_0 : f:(unit -> 'a) -> 'a
+
+(** When a record is embedded by a variant or polymorphic variant we'd like to
+    support a syntax with less parens around. For example:
+
+    Suppose you have a record type M:
+
+    {[
+      module M = struct
+        type t =
+          { a : string
+          ; b : int
+          }
+      end
+
+      type t = [ `cons of M.t ]
+    ]}
+
+    We'd like to parse:
+
+    {[
+      cons (a hello) (b 42)
+    ]}
+
+    Instead of:
+
+    {[
+      cons ((a hello) (b 42))
+    ]}
+
+    However care must be applied for the parsing exceptions raised by use an
+    actual sexp of the input, otherwise there would be no location. [context] is
+    the sexp used to error out, and [fields] the record fields. M is able to
+    parse the fields when they are wrapped by a [Sexp.List] constructor. *)
+val parse_inline_record
+  :  (module T_of_sexp with type t = 'a)
+  -> error_source:string
+  -> context:Sexp.t
+  -> tag:string
+  -> fields:Sexp.t list
+  -> 'a
