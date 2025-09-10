@@ -19,6 +19,8 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open! Import
+
 module Relative_path = struct
   include Relative_path
 
@@ -26,9 +28,100 @@ module Relative_path = struct
 end
 
 module Predicate = struct
+  [@@@coverage off]
+
   type t =
     [ `equals of Relative_path.t
     | `glob of Glob.t
     ]
-  [@@deriving compare, equal, sexp]
+  [@@deriving_inline compare, equal, sexp]
+
+  let compare =
+    (fun a__001_ ->
+       fun b__002_ ->
+       if Stdlib.( == ) a__001_ b__002_
+       then 0
+       else (
+         match a__001_, b__002_ with
+         | `equals _left__003_, `equals _right__004_ ->
+           Relative_path.compare _left__003_ _right__004_
+         | `glob _left__005_, `glob _right__006_ -> Glob.compare _left__005_ _right__006_
+         | x, y -> Stdlib.compare x y)
+     : t -> t -> int)
+  ;;
+
+  let equal =
+    (fun a__007_ ->
+       fun b__008_ ->
+       if Stdlib.( == ) a__007_ b__008_
+       then true
+       else (
+         match a__007_, b__008_ with
+         | `equals _left__009_, `equals _right__010_ ->
+           Relative_path.equal _left__009_ _right__010_
+         | `glob _left__011_, `glob _right__012_ -> Glob.equal _left__011_ _right__012_
+         | x, y -> Stdlib.( = ) x y)
+     : t -> t -> bool)
+  ;;
+
+  let __t_of_sexp__ =
+    (let error_source__021_ = "lib/dunolint/src/path.ml.Predicate.t" in
+     function
+     | Sexplib0.Sexp.Atom atom__014_ as _sexp__016_ ->
+       (match atom__014_ with
+        | "equals" ->
+          Sexplib0.Sexp_conv_error.ptag_takes_args error_source__021_ _sexp__016_
+        | "glob" ->
+          Sexplib0.Sexp_conv_error.ptag_takes_args error_source__021_ _sexp__016_
+        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
+     | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__014_ :: sexp_args__017_) as
+       _sexp__016_ ->
+       (match atom__014_ with
+        | "equals" as _tag__022_ ->
+          (match sexp_args__017_ with
+           | arg0__023_ :: [] ->
+             let res0__024_ = Relative_path.t_of_sexp arg0__023_ in
+             `equals res0__024_
+           | _ ->
+             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
+               error_source__021_
+               _tag__022_
+               _sexp__016_)
+        | "glob" as _tag__018_ ->
+          (match sexp_args__017_ with
+           | arg0__019_ :: [] ->
+             let res0__020_ = Glob.t_of_sexp arg0__019_ in
+             `glob res0__020_
+           | _ ->
+             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
+               error_source__021_
+               _tag__018_
+               _sexp__016_)
+        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
+     | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__015_ ->
+       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source__021_ sexp__015_
+     | Sexplib0.Sexp.List [] as sexp__015_ ->
+       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source__021_ sexp__015_
+     : Sexplib0.Sexp.t -> t)
+  ;;
+
+  let t_of_sexp =
+    (let error_source__026_ = "lib/dunolint/src/path.ml.Predicate.t" in
+     fun sexp__025_ ->
+       try __t_of_sexp__ sexp__025_ with
+       | Sexplib0.Sexp_conv_error.No_variant_match ->
+         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source__026_ sexp__025_
+     : Sexplib0.Sexp.t -> t)
+  ;;
+
+  let sexp_of_t =
+    (function
+     | `equals v__027_ ->
+       Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "equals"; Relative_path.sexp_of_t v__027_ ]
+     | `glob v__028_ ->
+       Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "glob"; Glob.sexp_of_t v__028_ ]
+     : t -> Sexplib0.Sexp.t)
+  ;;
+
+  [@@@deriving.end]
 end

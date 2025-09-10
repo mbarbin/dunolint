@@ -57,3 +57,18 @@ let%expect_test "to_string/of_string" =
   [%expect {| (Error (Msg "Invalid linted file kind: \"invalid\"")) |}];
   ()
 ;;
+
+let%expect_test "sort" =
+  let sort ts = List.sort ts ~compare:Dunolint.Linted_file_kind.compare in
+  let test ts = print_s [%sexp (sort ts : Dunolint.Linted_file_kind.t list)] in
+  test [ `dune_project; `dune ];
+  [%expect {| (dune dune_project) |}];
+  require
+    [%here]
+    (List.equal
+       Dunolint.Linted_file_kind.equal
+       Dunolint.Linted_file_kind.all
+       (sort Dunolint.Linted_file_kind.all));
+  [%expect {||}];
+  ()
+;;

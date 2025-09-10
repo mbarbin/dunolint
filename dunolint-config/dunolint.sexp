@@ -24,6 +24,8 @@
          (library
           (and (public_name (is_prefix dunolint-tests.))
            (name (is_suffix _test)))))))
+      ((path (glob lib/dunolint_base/src/*))
+       (enforce (dune (library (public_name (equals dunolint-lib-base))))))
       ((path (or (glob lib/**/*) (glob vendor/**/*)))
        (enforce
         (dune

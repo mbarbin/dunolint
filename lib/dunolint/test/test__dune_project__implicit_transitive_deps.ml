@@ -63,3 +63,22 @@ let%expect_test "predicate" =
   [%expect {| (equals false-if-hidden-includes-supported) |}];
   ()
 ;;
+
+let%expect_test "sort" =
+  let sort ts =
+    List.sort ts ~compare:Dune_project.Implicit_transitive_deps.Value.compare
+  in
+  let test ts =
+    print_s [%sexp (sort ts : Dune_project.Implicit_transitive_deps.Value.t list)]
+  in
+  test [ `False; `True; `False_if_hidden_includes_supported ];
+  [%expect {| (true false false-if-hidden-includes-supported) |}];
+  require
+    [%here]
+    (List.equal
+       Dune_project.Implicit_transitive_deps.Value.equal
+       Dune_project.Implicit_transitive_deps.Value.all
+       (sort Dune_project.Implicit_transitive_deps.Value.all));
+  [%expect {||}];
+  ()
+;;

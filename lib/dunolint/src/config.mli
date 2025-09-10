@@ -19,8 +19,12 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-type t [@@deriving compare, equal, sexp]
+type t
 
+val equal : t -> t -> bool
+val compare : t -> t -> int
+
+include Sexpable.S with type t := t
 module V0 = Config_v0
 
 (** {1 Create} *)

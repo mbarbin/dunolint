@@ -24,5 +24,9 @@ module Predicate : sig
     [ `equals of Relative_path.t
     | `glob of Glob.t
     ]
-  [@@deriving compare, equal, sexp]
+
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+
+  include Sexpable.S with type t := t
 end

@@ -8,20 +8,60 @@
   -warn-error
   +a
   -open
-  Base
+  Fpath_sexp0
   -open
-  Fpath_sexp0)
+  Sexplib0
+  -open
+  Sexplib0.Sexp_conv)
  (libraries
-  base
   dunolint-lib.vendor_blang
   dunolint-lib.vendor_vcs
   fpath-sexp0
-  re)
+  re
+  sexplib0)
+ (modules
+  (:standard \ stdlib_compat4xx stdlib_compat5xx))
  (instrumentation
   (backend bisect_ppx))
  (lint
-  (pps ppx_js_style -allow-let-operators -check-doc-comments))
- (preprocess
-  (pps -unused-code-warnings=force ppx_compare ppx_enumerate ppx_sexp_conv)))
+  (pps
+   -unused-code-warnings=force
+   ;; Actual linters
+   ppx_js_style
+   -allow-let-operators
+   -check-doc-comments
+   ;; Ppx used with deriving_inline
+   ppx_compare
+   ppx_enumerate
+   ppx_sexp_conv))
+ (preprocess no_preprocessing))
 
 (include_subdirs qualified)
+
+(rule
+ (enabled_if
+  (< %{ocaml_version} 5.1))
+ (target stdlib_compat.ml)
+ (action
+  (copy stdlib_compat4xx.ml %{target})))
+
+(rule
+ (enabled_if
+  (>= %{ocaml_version} 5.1))
+ (target stdlib_compat.ml)
+ (action
+  (copy stdlib_compat5xx.ml %{target})))
+
+(rule
+ (enabled_if
+  (< %{ocaml_version} 5.1))
+ (target stdlib_compat.mli)
+ (action
+  (copy stdlib_compat4xx.mli %{target})))
+
+(rule
+ (enabled_if
+  (>= %{ocaml_version} 5.1))
+ (target stdlib_compat.mli)
+ (action
+  (copy stdlib_compat5xx.mli %{target})))

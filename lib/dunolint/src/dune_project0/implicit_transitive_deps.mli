@@ -22,5 +22,10 @@
 module Value = Implicit_transitive_deps__value
 
 module Predicate : sig
-  type t = [ `equals of Value.t ] [@@deriving compare, equal, sexp]
+  type t = [ `equals of Value.t ]
+
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+
+  include Sexpable.S with type t := t
 end

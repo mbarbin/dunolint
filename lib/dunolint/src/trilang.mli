@@ -23,8 +23,11 @@ type t =
   | True
   | False
   | Undefined
-[@@deriving equal, compare, enumerate, sexp_of]
 
+val equal : t -> t -> bool
+val compare : t -> t -> int
+val sexp_of_t : t -> Sexp.t
+val all : t list
 val const : bool -> t
 val eval : 'a Blang.t -> f:('a -> t) -> t
 

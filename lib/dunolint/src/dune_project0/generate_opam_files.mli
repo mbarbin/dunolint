@@ -20,5 +20,10 @@
 (*_********************************************************************************)
 
 module Predicate : sig
-  type t = [ `is_present ] [@@deriving compare, equal, sexp]
+  type t = [ `is_present ]
+
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+
+  include Sexpable.S with type t := t
 end

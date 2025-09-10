@@ -22,7 +22,6 @@
 type t
 
 include Container_key.S with type t := t
-include Comparable.S with type t := t
 include Validated_string.S with type t := t
 
 module Predicate : sig
@@ -33,5 +32,9 @@ module Predicate : sig
     | `is_prefix of string
     | `is_suffix of string
     ]
-  [@@deriving compare, equal, sexp]
+
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+
+  include Sexpable.S with type t := t
 end

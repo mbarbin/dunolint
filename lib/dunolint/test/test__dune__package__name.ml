@@ -36,6 +36,8 @@ let%expect_test "of_string" =
   [%expect {| (Error (Msg "\"pkg-dash\": invalid Package_name")) |}];
   test "pkg_underscore";
   [%expect {| (Ok pkg_underscore) |}];
+  test "pkg_UPPERCASE";
+  [%expect {| (Ok pkg_UPPERCASE) |}];
   test "pkg.dot";
   [%expect {| (Error (Msg "\"pkg.dot\": invalid Package_name")) |}];
   test "pkg#sharp";

@@ -38,5 +38,9 @@ module Predicate : sig
       (** The field is present, it has a [pps] subfield, and this subfield
           verifies the condition that is supplied. *)
     ]
-  [@@deriving compare, equal, sexp]
+
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+
+  include Sexpable.S with type t := t
 end

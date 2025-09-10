@@ -50,6 +50,12 @@ let () =
                       [ public_name (is_prefix "dunolint-tests.")
                       ; name (is_suffix "_test")
                       ]))) )
+       ; ( path (glob "lib/dunolint_base/src/*")
+         , enforce
+             (dune
+                (library
+                   (public_name (equals (Dune.Library.Public_name.v "dunolint-lib-base")))))
+         )
        ; ( path (or_ [ glob "lib/**/*"; glob "vendor/**/*" ])
          , enforce
              (dune

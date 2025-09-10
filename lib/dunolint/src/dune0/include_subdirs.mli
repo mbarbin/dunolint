@@ -25,9 +25,18 @@ module Mode : sig
     | `unqualified
     | `qualified
     ]
-  [@@deriving compare, equal, sexp]
+
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+
+  include Sexpable.S with type t := t
 end
 
 module Predicate : sig
-  type t = [ `equals of Mode.t ] [@@deriving compare, equal, sexp]
+  type t = [ `equals of Mode.t ]
+
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+
+  include Sexpable.S with type t := t
 end
