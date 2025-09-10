@@ -22,7 +22,7 @@
 module T = struct
   [@@@coverage off]
 
-  type t = Predicate.t Blang.t [@@deriving_inline compare, equal, sexp]
+  type t = Predicate.t Blang.t
 
   let compare =
     (fun a__001_ -> fun b__002_ -> Blang.compare Predicate.compare a__001_ b__002_
@@ -41,8 +41,6 @@ module T = struct
   let sexp_of_t =
     (fun x__011_ -> Blang.sexp_of_t Predicate.sexp_of_t x__011_ : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end
 
 include T

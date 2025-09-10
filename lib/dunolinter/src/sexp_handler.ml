@@ -219,3 +219,28 @@ let insert_new_fields ~sexps_rewriter ~indicative_field_ordering ~fields ~new_fi
         ~offset:(Loc.stop_offset pred_loc)
         ~text:("\n" ^ indentation ^ Sexp.to_string_hum new_field)))
 ;;
+
+let loc_of_parsexp_range ~filename (range : Parsexp.Positions.range) =
+  let source_code_position ({ line; col; offset } : Parsexp.Positions.pos) =
+    { Lexing.pos_fname = filename
+    ; pos_lnum = line
+    ; pos_cnum = offset
+    ; pos_bol = offset - col
+    }
+  in
+  Loc.create (source_code_position range.start_pos, source_code_position range.end_pos)
+;;
+
+let read (type a) (module M : S with type t = a) ~sexps_rewriter ~field =
+  match M.read ~sexps_rewriter ~field with
+  | ok -> Ok ok
+  | exception Sexp.Of_sexp_error (exn, sexp) ->
+    let loc = Sexps_rewriter.loc sexps_rewriter sexp in
+    let message =
+      match exn with
+      | Failure str ->
+        Pp.text (if String.is_suffix str ~suffix:"." then str else str ^ ".")
+      | exn -> Err.exn exn [@coverage off]
+    in
+    Error (Err.create ~loc [ message ])
+;;

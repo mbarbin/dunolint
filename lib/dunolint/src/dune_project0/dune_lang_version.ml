@@ -24,7 +24,9 @@ open! Import
 module T0 = struct
   [@@@coverage off]
 
-  type t = int * int [@@deriving_inline equal, compare, sexp]
+  let error_source = "dune_lang_version.t0.t"
+
+  type t = int * int
 
   let equal =
     (fun a__001_ ->
@@ -47,16 +49,13 @@ module T0 = struct
   ;;
 
   let t_of_sexp =
-    (let error_source__019_ =
-       "lib/dunolint/src/dune_project0/dune_lang_version.ml.T0.t"
-     in
-     function
+    (function
      | Sexplib0.Sexp.List [ arg0__014_; arg1__015_ ] ->
        let res0__016_ = int_of_sexp arg0__014_
        and res1__017_ = int_of_sexp arg1__015_ in
        res0__016_, res1__017_
      | sexp__018_ ->
-       Sexplib0.Sexp_conv_error.tuple_of_size_n_expected error_source__019_ 2 sexp__018_
+       Sexplib0.Sexp_conv_error.tuple_of_size_n_expected error_source 2 sexp__018_
      : Sexplib0.Sexp.t -> t)
   ;;
 
@@ -67,8 +66,6 @@ module T0 = struct
        Sexplib0.Sexp.List [ res0__022_; res1__023_ ]
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end
 
 include T0
@@ -79,12 +76,13 @@ let to_string (a, b) = Printf.sprintf "%d.%d" a b
 module Predicate = struct
   [@@@coverage off]
 
+  let error_source = "dune_lang_version.t"
+
   type nonrec t =
     [ `equals of t
     | `greater_than_or_equal_to of t
     | `less_than_or_equal_to of t
     ]
-  [@@deriving_inline compare, equal, sexp]
 
   let compare =
     (fun a__024_ ->
@@ -119,18 +117,14 @@ module Predicate = struct
   ;;
 
   let __t_of_sexp__ =
-    (let error_source__048_ =
-       "lib/dunolint/src/dune_project0/dune_lang_version.ml.Predicate.t"
-     in
-     function
+    (function
      | Sexplib0.Sexp.Atom atom__041_ as _sexp__043_ ->
        (match atom__041_ with
-        | "equals" ->
-          Sexplib0.Sexp_conv_error.ptag_takes_args error_source__048_ _sexp__043_
+        | "equals" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__043_
         | "greater_than_or_equal_to" ->
-          Sexplib0.Sexp_conv_error.ptag_takes_args error_source__048_ _sexp__043_
+          Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__043_
         | "less_than_or_equal_to" ->
-          Sexplib0.Sexp_conv_error.ptag_takes_args error_source__048_ _sexp__043_
+          Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__043_
         | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
      | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__041_ :: sexp_args__044_) as
        _sexp__043_ ->
@@ -142,7 +136,7 @@ module Predicate = struct
              `equals res0__054_
            | _ ->
              Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source__048_
+               error_source
                _tag__052_
                _sexp__043_)
         | "greater_than_or_equal_to" as _tag__049_ ->
@@ -152,7 +146,7 @@ module Predicate = struct
              `greater_than_or_equal_to res0__051_
            | _ ->
              Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source__048_
+               error_source
                _tag__049_
                _sexp__043_)
         | "less_than_or_equal_to" as _tag__045_ ->
@@ -162,25 +156,22 @@ module Predicate = struct
              `less_than_or_equal_to res0__047_
            | _ ->
              Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source__048_
+               error_source
                _tag__045_
                _sexp__043_)
         | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
      | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__042_ ->
-       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source__048_ sexp__042_
+       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__042_
      | Sexplib0.Sexp.List [] as sexp__042_ ->
-       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source__048_ sexp__042_
+       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__042_
      : Sexplib0.Sexp.t -> t)
   ;;
 
   let t_of_sexp =
-    (let error_source__056_ =
-       "lib/dunolint/src/dune_project0/dune_lang_version.ml.Predicate.t"
-     in
-     fun sexp__055_ ->
+    (fun sexp__055_ ->
        try __t_of_sexp__ sexp__055_ with
        | Sexplib0.Sexp_conv_error.No_variant_match ->
-         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source__056_ sexp__055_
+         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__055_
      : Sexplib0.Sexp.t -> t)
   ;;
 
@@ -196,6 +187,4 @@ module Predicate = struct
          [ Sexplib0.Sexp.Atom "less_than_or_equal_to"; sexp_of_t v__059_ ]
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end

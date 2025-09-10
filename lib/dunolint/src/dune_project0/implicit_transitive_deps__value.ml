@@ -24,11 +24,8 @@ type t =
   | `False
   | `False_if_hidden_includes_supported
   ]
-[@@deriving_inline enumerate]
 
 let all = ([ `True; `False; `False_if_hidden_includes_supported ] : t list)
-
-[@@@deriving.end]
 
 let of_string = function
   | "true" -> Some `True
@@ -45,12 +42,20 @@ let to_string = function
 
 let sexp_of_t t = Sexp.Atom (to_string t)
 
-let t_of_sexp = function
+let t_of_sexp sexp =
+  match (sexp : Sexp.t) with
   | Sexp.Atom s ->
     (match of_string s with
      | Some v -> v
-     | None -> failwith ("Invalid implicit_transitive_deps value: " ^ s))
-  | _ -> failwith "Expected atom for implicit_transitive_deps value"
+     | None ->
+       raise
+         (Sexp.Of_sexp_error
+            ( Failure (Printf.sprintf "Unsupported implicit_transitive_deps value [%s]." s)
+            , sexp )))
+  | _ ->
+    raise
+      (Sexp.Of_sexp_error
+         (Failure "Expected atom for implicit_transitive_deps value.", sexp))
 ;;
 
 let to_comparable_int = function

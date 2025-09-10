@@ -25,12 +25,9 @@ type t =
   | `implicit_transitive_deps of Implicit_transitive_deps.Predicate.t Blang.t
   | `name of Name.Predicate.t Blang.t
   ]
-[@@deriving_inline compare, equal, sexp]
 
 val compare : t -> t -> int
 val equal : t -> t -> bool
 val sexp_of_t : t -> Sexplib0.Sexp.t
 val t_of_sexp : Sexplib0.Sexp.t -> t
 val __t_of_sexp__ : Sexplib0.Sexp.t -> t
-
-[@@@deriving.end]

@@ -23,7 +23,6 @@ type t =
   | True
   | False
   | Undefined
-[@@deriving_inline equal, compare, enumerate, sexp_of]
 
 let equal = (Stdlib.( = ) : t -> t -> bool)
 let compare = (Stdlib.compare : t -> t -> int)
@@ -36,8 +35,6 @@ let sexp_of_t =
    | Undefined -> Sexplib0.Sexp.Atom "Undefined"
    : t -> Sexplib0.Sexp.t)
 ;;
-
-[@@@deriving.end]
 
 let const = function
   | true -> True

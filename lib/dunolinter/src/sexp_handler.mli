@@ -120,3 +120,14 @@ val insert_new_fields
   -> fields:Sexp.t list
   -> new_fields:Sexp.t list
   -> unit
+
+(** Wrap [M.read] with an exception handler that improves the error message and
+    add location when able. *)
+val read
+  :  (module S with type t = 'a)
+  -> sexps_rewriter:Sexps_rewriter.t
+  -> field:Sexp.t
+  -> ('a, Err.t) Result.t
+
+(** Shared utils to map a Parsexp range to a Loc.t. *)
+val loc_of_parsexp_range : filename:string -> Parsexp.Positions.range -> Loc.t

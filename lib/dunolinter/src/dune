@@ -24,6 +24,7 @@
   pp
   pplumbing.err
   pplumbing.pp-tty
+  re
   sexps-rewriter)
  (instrumentation
   (backend bisect_ppx))

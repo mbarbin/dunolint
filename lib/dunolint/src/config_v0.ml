@@ -25,8 +25,9 @@ module Skip_subtree = struct
   [@@@coverage off]
 
   module Predicate = struct
+    let error_source = "config.v0.skip_subtree.t"
+
     type t = [ `path of Path.Predicate.t Blang.t ]
-    [@@deriving_inline compare, equal, sexp]
 
     let compare =
       (fun a__001_ ->
@@ -53,14 +54,10 @@ module Skip_subtree = struct
     ;;
 
     let __t_of_sexp__ =
-      (let error_source__021_ =
-         "lib/dunolint/src/config_v0.ml.Skip_subtree.Predicate.t"
-       in
-       function
+      (function
        | Sexplib0.Sexp.Atom atom__014_ as _sexp__016_ ->
          (match atom__014_ with
-          | "path" ->
-            Sexplib0.Sexp_conv_error.ptag_takes_args error_source__021_ _sexp__016_
+          | "path" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__016_
           | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
        | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__014_ :: sexp_args__017_) as
          _sexp__016_ ->
@@ -72,31 +69,22 @@ module Skip_subtree = struct
                `path res0__020_
              | _ ->
                Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-                 error_source__021_
+                 error_source
                  _tag__018_
                  _sexp__016_)
           | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
        | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__015_ ->
-         Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var
-           error_source__021_
-           sexp__015_
+         Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__015_
        | Sexplib0.Sexp.List [] as sexp__015_ ->
-         Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var
-           error_source__021_
-           sexp__015_
+         Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__015_
        : Sexplib0.Sexp.t -> t)
     ;;
 
     let t_of_sexp =
-      (let error_source__023_ =
-         "lib/dunolint/src/config_v0.ml.Skip_subtree.Predicate.t"
-       in
-       fun sexp__022_ ->
+      (fun sexp__022_ ->
          try __t_of_sexp__ sexp__022_ with
          | Sexplib0.Sexp_conv_error.No_variant_match ->
-           Sexplib0.Sexp_conv_error.no_matching_variant_found
-             error_source__023_
-             sexp__022_
+           Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__022_
        : Sexplib0.Sexp.t -> t)
     ;;
 
@@ -106,25 +94,23 @@ module Skip_subtree = struct
            [ Sexplib0.Sexp.Atom "path"; Blang.sexp_of_t Path.Predicate.sexp_of_t v__024_ ]
        : t -> Sexplib0.Sexp.t)
     ;;
-
-    [@@@deriving.end]
   end
 
   module Result = struct
-    type t = | [@@deriving_inline compare, equal, sexp]
+    let error_source = "config.v0.skip_subtree.result.t"
+
+    type t = |
 
     let compare = (Stdlib.compare : t -> t -> int)
     let equal = (Stdlib.( = ) : t -> t -> bool)
 
     let t_of_sexp =
-      (let error_source__031_ = "lib/dunolint/src/config_v0.ml.Skip_subtree.Result.t" in
-       function
+      (function
        | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__030_ ->
-         Sexplib0.Sexp_conv_error.nested_list_invalid_sum error_source__031_ sexp__030_
+         Sexplib0.Sexp_conv_error.nested_list_invalid_sum error_source sexp__030_
        | Sexplib0.Sexp.List [] as sexp__030_ ->
-         Sexplib0.Sexp_conv_error.empty_list_invalid_sum error_source__031_ sexp__030_
-       | sexp__030_ ->
-         Sexplib0.Sexp_conv_error.unexpected_stag error_source__031_ sexp__030_
+         Sexplib0.Sexp_conv_error.empty_list_invalid_sum error_source sexp__030_
+       | sexp__030_ -> Sexplib0.Sexp_conv_error.unexpected_stag error_source sexp__030_
        : Sexplib0.Sexp.t -> t)
     ;;
 
@@ -133,11 +119,9 @@ module Skip_subtree = struct
        | _ -> .
        : t -> Sexplib0.Sexp.t)
     ;;
-
-    [@@@deriving.end]
   end
 
-  type t = (Predicate.t, Result.t) Rule.t [@@deriving_inline compare, equal, sexp]
+  type t = (Predicate.t, Result.t) Rule.t
 
   let compare =
     (fun a__033_ ->
@@ -159,14 +143,12 @@ module Skip_subtree = struct
     (fun x__047_ -> Rule.sexp_of_t Predicate.sexp_of_t Result.sexp_of_t x__047_
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end
 
 module Rule = struct
   [@@@coverage off]
 
-  type t = (Predicate.t, Condition.t) Rule.t [@@deriving_inline compare, equal, sexp]
+  type t = (Predicate.t, Condition.t) Rule.t
 
   let compare =
     (fun a__048_ ->
@@ -189,18 +171,17 @@ module Rule = struct
     (fun x__062_ -> Rule.sexp_of_t Predicate.sexp_of_t Condition.sexp_of_t x__062_
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end
 
 module T = struct
   [@@@coverage off]
 
+  let error_source = "config.v0.t"
+
   type t =
     { skip_subtree : Skip_subtree.t option [@sexp.option]
     ; rules : Rule.t list
     }
-  [@@deriving_inline compare, equal, sexp]
 
   let compare =
     (fun a__063_ ->
@@ -229,10 +210,9 @@ module T = struct
   ;;
 
   let t_of_sexp =
-    (let error_source__076_ = "lib/dunolint/src/config_v0.ml.T.t" in
-     fun x__077_ ->
+    (fun x__077_ ->
        Sexplib0.Sexp_conv_record.record_of_sexp
-         ~caller:error_source__076_
+         ~caller:error_source
          ~fields:
            (Field
               { name = "skip_subtree"
@@ -277,8 +257,6 @@ module T = struct
        Sexplib0.Sexp.List bnds__078_
      : t -> Sexplib0.Sexp.t)
   ;;
-
-  [@@@deriving.end]
 end
 
 include T

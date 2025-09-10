@@ -27,11 +27,8 @@ module Element = struct
     type t =
       | Ppx
       | Other
-    [@@deriving_inline compare]
 
     let compare = (Stdlib.compare : t -> t -> int)
-
-    [@@@deriving.end]
   end
 
   [@@@coverage off]
@@ -40,7 +37,6 @@ module Element = struct
     { prefix : Prefix.t
     ; name : string
     }
-  [@@deriving_inline compare]
 
   let compare =
     (fun a__003_ ->
@@ -53,19 +49,15 @@ module Element = struct
          | n -> n)
      : t -> t -> int)
   ;;
-
-  [@@@deriving.end]
 end
 
 module Elements = struct
-  type t = Element.t list [@@deriving_inline compare]
+  type t = Element.t list
 
   let compare =
     (fun a__005_ -> fun b__006_ -> compare_list Element.compare a__005_ b__006_
      : t -> t -> int)
   ;;
-
-  [@@@deriving.end]
 
   let of_name pp =
     let ts = String.split pp ~on:'.' in

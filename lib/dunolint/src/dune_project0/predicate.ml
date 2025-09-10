@@ -21,13 +21,14 @@
 
 [@@@coverage off]
 
+let error_source = "predicate.t"
+
 type t =
   [ `dune_lang_version of Dune_lang_version.Predicate.t Blang.t
   | `generate_opam_files of Generate_opam_files.Predicate.t Blang.t
   | `implicit_transitive_deps of Implicit_transitive_deps.Predicate.t Blang.t
   | `name of Name.Predicate.t Blang.t
   ]
-[@@deriving_inline compare, equal, sexp]
 
 let compare =
   (fun a__001_ ->
@@ -68,17 +69,16 @@ let equal =
 ;;
 
 let __t_of_sexp__ =
-  (let error_source__045_ = "lib/dunolint/src/dune_project0/predicate.ml.t" in
-   function
+  (function
    | Sexplib0.Sexp.Atom atom__038_ as _sexp__040_ ->
      (match atom__038_ with
       | "dune_lang_version" ->
-        Sexplib0.Sexp_conv_error.ptag_takes_args error_source__045_ _sexp__040_
+        Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__040_
       | "generate_opam_files" ->
-        Sexplib0.Sexp_conv_error.ptag_takes_args error_source__045_ _sexp__040_
+        Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__040_
       | "implicit_transitive_deps" ->
-        Sexplib0.Sexp_conv_error.ptag_takes_args error_source__045_ _sexp__040_
-      | "name" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source__045_ _sexp__040_
+        Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__040_
+      | "name" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__040_
       | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
    | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__038_ :: sexp_args__041_) as _sexp__040_
      ->
@@ -92,7 +92,7 @@ let __t_of_sexp__ =
            `dune_lang_version res0__054_
          | _ ->
            Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source__045_
+             error_source
              _tag__052_
              _sexp__040_)
       | "generate_opam_files" as _tag__049_ ->
@@ -104,7 +104,7 @@ let __t_of_sexp__ =
            `generate_opam_files res0__051_
          | _ ->
            Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source__045_
+             error_source
              _tag__049_
              _sexp__040_)
       | "implicit_transitive_deps" as _tag__046_ ->
@@ -116,7 +116,7 @@ let __t_of_sexp__ =
            `implicit_transitive_deps res0__048_
          | _ ->
            Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source__045_
+             error_source
              _tag__046_
              _sexp__040_)
       | "name" as _tag__042_ ->
@@ -126,23 +126,22 @@ let __t_of_sexp__ =
            `name res0__044_
          | _ ->
            Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source__045_
+             error_source
              _tag__042_
              _sexp__040_)
       | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
    | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__039_ ->
-     Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source__045_ sexp__039_
+     Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__039_
    | Sexplib0.Sexp.List [] as sexp__039_ ->
-     Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source__045_ sexp__039_
+     Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__039_
    : Sexplib0.Sexp.t -> t)
 ;;
 
 let t_of_sexp =
-  (let error_source__056_ = "lib/dunolint/src/dune_project0/predicate.ml.t" in
-   fun sexp__055_ ->
+  (fun sexp__055_ ->
      try __t_of_sexp__ sexp__055_ with
      | Sexplib0.Sexp_conv_error.No_variant_match ->
-       Sexplib0.Sexp_conv_error.no_matching_variant_found error_source__056_ sexp__055_
+       Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__055_
    : Sexplib0.Sexp.t -> t)
 ;;
 
@@ -168,5 +167,3 @@ let sexp_of_t =
        [ Sexplib0.Sexp.Atom "name"; Blang.sexp_of_t Name.Predicate.sexp_of_t v__060_ ]
    : t -> Sexplib0.Sexp.t)
 ;;
-
-[@@@deriving.end]
