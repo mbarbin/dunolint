@@ -164,8 +164,10 @@ Supplying an absent file or an invalid one results in errors:
   [124]
 
   $ dunolint tools lint-file dune-project --config=dune-project
-  File "dune-project", line 3, characters 0-0:
-  Error: s-expression followed by data
+  File "dune-project", line 1, characters 0-16:
+  1 | (lang dune 3.17)
+      ^^^^^^^^^^^^^^^^
+  Error: Dunolint config expected to start with (lang dunolint VERSION).
   [123]
 
 The path that is used by the config is the filename supplied when it is

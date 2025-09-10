@@ -46,32 +46,26 @@ let below ~doc =
     ~doc
 ;;
 
-let skip_subtree ~globs =
-  let open Dunolint.Config.Std in
-  cond
-    [ ( path
-          (or_
-             (List.concat
-                [ List.map globs ~f:glob
-                ; List.concat_map
-                    ~f:(fun pat -> [ glob ("**/" ^ pat); glob pat ])
-                    [ ".git/"
-                    ; "_build/"
-                    ; "_opam/"
-                    ; "_coverage/"
-                    ; "node_modules/"
-                    ; "doc/build/"
-                    ; ".docusaurus/"
-                    ; "*.t/"
-                    ]
-                ]))
-      , skip_subtree )
+let skip_subtrees ~globs =
+  List.concat
+    [ List.map globs ~f:Dunolint.Glob.v
+    ; List.concat_map
+        ~f:(fun pat -> [ Dunolint.Glob.v ("**/" ^ pat); Dunolint.Glob.v pat ])
+        [ ".git/"
+        ; "_build/"
+        ; "_opam/"
+        ; "_coverage/"
+        ; "node_modules/"
+        ; "doc/build/"
+        ; ".docusaurus/"
+        ; "*.t/"
+        ]
     ]
 ;;
 
 let load_config_exn ~filename =
   let contents = In_channel.read_all filename in
-  match Parsexp.Single_and_positions.parse_string contents with
+  match Parsexp.Many_and_positions.parse_string contents with
   | Error parse_error ->
     let position = Parsexp.Parse_error.position parse_error in
     let message = Parsexp.Parse_error.message parse_error in
@@ -81,19 +75,14 @@ let load_config_exn ~filename =
         { start_pos = position; end_pos = position }
     in
     Err.raise ~loc [ Pp.text message ]
-  | Ok (sexp, positions) ->
-    (match Parsexp.Conv_single.conv (sexp, positions) Dunolint.Config.t_of_sexp with
-     | Ok t -> t
-     | Error of_sexp_error ->
+  | Ok (sexps, positions) ->
+    (match Dunolint.Config.of_stanzas sexps with
+     | t -> t
+     | exception Sexp.Of_sexp_error (exn, sub) ->
        let range =
-         match Parsexp.Of_sexp_error.location of_sexp_error with
+         match Parsexp.Positions.find_sub_sexp_in_list_phys positions sexps ~sub with
          | Some _ as range -> range
-         | None ->
-           (let sub = Parsexp.Of_sexp_error.sub_sexp of_sexp_error in
-            (match Parsexp.Positions.find_sub_sexp_phys positions sexp ~sub with
-             | Some _ as range -> range
-             | None -> None))
-           [@coverage off]
+         | None -> None [@coverage off]
        in
        let loc =
          match range with
@@ -101,7 +90,7 @@ let load_config_exn ~filename =
          | None -> Loc.of_file ~path:(Fpath.v filename) [@coverage off]
        in
        let message =
-         match Parsexp.Of_sexp_error.user_exn of_sexp_error with
+         match exn with
          | Failure str ->
            Pp.text (if String.is_suffix str ~suffix:"." then str else str ^ ".")
          | exn -> Err.exn exn [@coverage off]
@@ -119,10 +108,28 @@ let load_config_opt_exn ~config ~append_extra_rules =
       let filename = Absolute_path.to_string default_file in
       if Stdlib.Sys.file_exists filename
       then load_config_exn ~filename:"dunolint"
-      else Dunolint.Config.create ~skip_subtree:(skip_subtree ~globs:[]) ~rules:[] ()
+      else
+        Dunolint.Config.V1.create [ `skip_paths (skip_subtrees ~globs:[]) ]
+        |> Dunolint.Config.v1
   in
-  Dunolint.Config.create
-    ?skip_subtree:(Dunolint.Config.skip_subtree config)
-    ~rules:(Dunolint.Config.rules config @ append_extra_rules)
-    ()
+  let config =
+    match Dunolint.Config.Private.view config with
+    | `v0 config ->
+      Dunolint.Config.V0.create
+        ?skip_subtree:(Dunolint.Config.V0.skip_subtree config)
+        ~rules:(Dunolint.Config.V0.rules config @ append_extra_rules)
+        ()
+      |> Dunolint.Config.v0
+    | `v1 config ->
+      Dunolint.Config.V1.create
+        (List.concat
+           [ List.map (Dunolint.Config.V1.skip_paths config) ~f:(fun globs ->
+               `skip_paths globs)
+           ; List.map
+               (Dunolint.Config.V1.rules config @ append_extra_rules)
+               ~f:(fun rule -> `rule rule)
+           ])
+      |> Dunolint.Config.v1
+  in
+  config
 ;;

@@ -40,11 +40,10 @@ If the config is supplied, but it is invalid, dunolint will complain.
   $ printf '(blah)\n' > dunolint
 
   $ dunolint lint --yes
-  File "dunolint", line 1, characters 1-5:
+  File "dunolint", line 1, characters 0-6:
   1 | (blah)
-       ^^^^
-  Error: config.v0.t_of_sexp: record conversion: only pairs expected, their
-  first element must be an atom.
+      ^^^^^^
+  Error: Dunolint config expected to start with (lang dunolint VERSION).
   [123]
 
 Unsupported config versions are reported with a located error message.
@@ -55,7 +54,7 @@ Unsupported config versions are reported with a located error message.
   File "dunolint", line 1, characters 10-16:
   1 | ((version 101101)(blah))
                 ^^^^^^
-  Error: Unsupported dunolint config version [101101].
+  Error: The (version _) syntax is only supported with version 0.
   [123]
 
 If there are no rules, the linting will succeed but does nothing in this case.
