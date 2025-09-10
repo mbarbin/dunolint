@@ -35,27 +35,58 @@ let () =
        ])
 ;;
 
-let () = add_rule (cond [ path (glob "_build/*"), skip_subtree ])
-let skip_subtrees = ref []
+let skip_paths_ref = ref []
+let skip_paths (globs : string list) = skip_paths_ref := globs :: !skip_paths_ref
+let () = skip_paths [ ".git/*" ]
 
-let add_skip_subtree (condition : Dunolint.Config.V0.Skip_subtree.Predicate.t Blang.t) =
-  skip_subtrees := condition :: !skip_subtrees
-;;
+module Format = struct
+  type t =
+    [ `v0
+    | `v1
+    ]
 
-let () = add_skip_subtree (path (or_ (List.map ~f:glob [ ".git/*" ])))
+  let all = [ `v0; `v1 ]
 
-let config () =
-  let skip_subtree = cond [ or_ (List.rev !skip_subtrees), skip_subtree ] in
+  let to_string = function
+    | `v0 -> "v0"
+    | `v1 -> "v1"
+  ;;
+end
+
+let config_v0 () =
+  add_rule (cond [ path (glob "_build/*"), skip_subtree ]);
+  let globs = List.rev_map (List.concat !skip_paths_ref) ~f:glob in
+  let skip_subtree = cond [ path (or_ globs), skip_subtree ] in
   let rules = List.rev !rules in
   Dunolint.Config.v0 (Dunolint.Config.V0.create ~skip_subtree ~rules ())
+;;
+
+let config_v1 () =
+  skip_paths [ "_build/*" ];
+  let skip_paths =
+    List.rev_map !skip_paths_ref ~f:(fun globs ->
+      `skip_paths (List.map globs ~f:Dunolint.Glob.v))
+  in
+  let rules = List.rev_map !rules ~f:(fun rule -> `rule rule) in
+  Dunolint.Config.v1 (Dunolint.Config.V1.create (skip_paths @ rules))
 ;;
 
 let main =
   Command.make
     ~summary:"Generate a dunolint config for the lint-file.t test."
     (let open Command.Std in
-     let+ () = Arg.return () in
-     let config = config () in
+     let+ format =
+       Arg.named
+         [ "format" ]
+         (Param.enumerated (module Format))
+         ~docv:"Format"
+         ~doc:"Which format of config to use."
+     in
+     let config =
+       match format with
+       | `v0 -> config_v0 ()
+       | `v1 -> config_v1 ()
+     in
      print_endline
        (Dunolint.Config.to_file_contents
           config
