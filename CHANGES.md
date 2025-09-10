@@ -1,11 +1,18 @@
 ## 0.0.2025XXXX (unreleased)
 
+### Added
+
+- New lib `dunolint-lib-base` to extend `dunolint-lib` for base users (#99, @mbarbin).
+
 ### Changed
 
+- Change dune-lang sexps to be atoms (e.g. "3.19") instead of tuples (#101, @mbarbin).
+- Remove base and ppx dependencies from `dunolint-lib` (#99, @mbarbin).
 - Always use versioned sexp for config (#98, @mbarbin).
 
 ### Fixed
 
+- Improve location and messages for sexp loading errors (#100, @mbarbin).
 - Config loading errors are no longer internal errors and now reported with locations when able (#97, @mbarbin).
 
 ## 0.0.20250907 (2025-09-07)
