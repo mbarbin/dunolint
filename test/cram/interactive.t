@@ -34,7 +34,7 @@ created.
 
 We run the lint command in dry-run mode to visualize the changes suggested.
 
-  $ dunolint lint --config=dunolint --dry-run
+  $ dunolint lint --dry-run
   dry-run: Would edit file "dune-project":
   -1,1 +1,1
   -|(name main)
@@ -48,7 +48,7 @@ We run the lint command in dry-run mode to visualize the changes suggested.
 
 Note it is possible to restrict the run to a subdirectory only.
 
-  $ dunolint lint --config=dunolint --dry-run --below lib/
+  $ dunolint lint --dry-run --below lib/
   dry-run: Would edit file "lib/foo/dune":
   -1,2 +1,2
     (library
@@ -63,7 +63,7 @@ We disable the pager for the test.
 
 We can quit at any time during the interactive loop.
 
-  $ printf 'q\n' | dunolint lint --config=dunolint --interactive
+  $ printf 'q\n' | dunolint lint --interactive
   Would edit file "dune-project":
   -1,1 +1,1
   -|(name main)
@@ -73,7 +73,7 @@ We can quit at any time during the interactive loop.
 
 We can choose to refuse some diff, and accept others.
 
-  $ printf 'n\ny\n' | dunolint lint --config=dunolint --interactive
+  $ printf 'n\ny\n' | dunolint lint --interactive
   Would edit file "dune-project":
   -1,1 +1,1
   -|(name main)

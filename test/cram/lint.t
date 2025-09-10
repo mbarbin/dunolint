@@ -39,7 +39,7 @@ If the config is supplied, but it is invalid, dunolint will complain.
 
   $ printf '(blah)\n' > dunolint
 
-  $ dunolint lint --yes --config=dunolint
+  $ dunolint lint --yes
   File "dunolint", line 1, characters 1-5:
   1 | (blah)
        ^^^^
@@ -51,7 +51,7 @@ Unsupported config versions are reported with a located error message.
 
   $ printf '((version 101101)(blah))\n' > dunolint
 
-  $ dunolint lint --yes --config=dunolint
+  $ dunolint lint --yes
   File "dunolint", line 1, characters 10-16:
   1 | ((version 101101)(blah))
                 ^^^^^^
@@ -62,7 +62,7 @@ If there are no rules, the linting will succeed but does nothing in this case.
 
   $ printf '((rules ()))\n' > dunolint
 
-  $ dunolint lint --yes --config=dunolint
+  $ dunolint lint --yes
 
 Now let's load a config. To make it easier to write in this test, we're
 generating an actual config from an OCaml file.
@@ -81,7 +81,7 @@ generating an actual config from an OCaml file.
 
 Let's lint with this config.
 
-  $ dunolint lint --yes --config=dunolint
+  $ dunolint lint --yes
   Editing file "dune-project":
   -1,3 +1,3
     (lang dune 3.17)
