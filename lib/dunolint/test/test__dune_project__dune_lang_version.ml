@@ -38,25 +38,60 @@ let%expect_test "to_string various versions" =
     4.5 |}]
 ;;
 
+let%expect_test "of_sexp" =
+  let test sexp =
+    match Dune_project.Dune_lang_version.t_of_sexp sexp with
+    | t -> print_endline (Dune_project.Dune_lang_version.to_string t)
+    | exception exn -> print_s [%sexp (exn : Exn.t)]
+  in
+  test (Atom "3.19");
+  [%expect {| 3.19 |}];
+  test (List []);
+  [%expect
+    {| (Of_sexp_error "Invalid version - expected [MAJOR.MINOR]." (invalid_sexp ())) |}];
+  test (List [ Atom "3"; Atom "19" ]);
+  [%expect {| 3.19 |}];
+  test (Atom "");
+  [%expect
+    {| (Of_sexp_error "Invalid version - expected [MAJOR.MINOR]." (invalid_sexp "")) |}];
+  test (Atom ".");
+  [%expect
+    {| (Of_sexp_error "Invalid version - expected [MAJOR.MINOR]." (invalid_sexp .)) |}];
+  test (Atom "3.");
+  [%expect
+    {| (Of_sexp_error "Invalid version - expected [MAJOR.MINOR]." (invalid_sexp 3.)) |}];
+  test (Atom "3");
+  [%expect
+    {| (Of_sexp_error "Invalid version - expected [MAJOR.MINOR]." (invalid_sexp 3)) |}];
+  test (Atom "3.19.1");
+  [%expect
+    {|
+    (Of_sexp_error
+     "Invalid version - expected [MAJOR.MINOR]."
+     (invalid_sexp 3.19.1))
+    |}];
+  ()
+;;
+
 let%expect_test "predicate equals" =
   let version = Dune_project.Dune_lang_version.create (3, 20) in
   let predicate = `equals version in
   print_s [%sexp (predicate : Dune_project.Dune_lang_version.Predicate.t)];
-  [%expect {| (equals (3 20)) |}]
+  [%expect {| (equals 3.20) |}]
 ;;
 
 let%expect_test "predicate greater_than_or_equal_to" =
   let version = Dune_project.Dune_lang_version.create (3, 18) in
   let predicate = `greater_than_or_equal_to version in
   print_s [%sexp (predicate : Dune_project.Dune_lang_version.Predicate.t)];
-  [%expect {| (greater_than_or_equal_to (3 18)) |}]
+  [%expect {| (greater_than_or_equal_to 3.18) |}]
 ;;
 
 let%expect_test "predicate less_than_or_equal_to" =
   let version = Dune_project.Dune_lang_version.create (4, 0) in
   let predicate = `less_than_or_equal_to version in
   print_s [%sexp (predicate : Dune_project.Dune_lang_version.Predicate.t)];
-  [%expect {| (less_than_or_equal_to (4 0)) |}]
+  [%expect {| (less_than_or_equal_to 4.0) |}]
 ;;
 
 let%expect_test "equal comparison" =
@@ -96,13 +131,5 @@ let%expect_test "sort versions" =
     List.sort unsorted_versions ~compare:Dune_project.Dune_lang_version.compare
   in
   print_s [%sexp (sorted_versions : Dune_project.Dune_lang_version.t list)];
-  [%expect
-    {|
-    ((1 12)
-     (2 8)
-     (3 15)
-     (3 20)
-     (4 0)
-     (4 1))
-    |}]
+  [%expect {| (1.12 2.8 3.15 3.20 4.0 4.1) |}]
 ;;

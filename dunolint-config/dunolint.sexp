@@ -12,7 +12,7 @@
       skip_subtree))))
   (rules
    ((enforce
-     (dune_project (dune_lang_version (greater_than_or_equal_to (3 17)))))
+     (dune_project (dune_lang_version (greater_than_or_equal_to 3.17))))
     (cond
      (((path (glob dunolint-config/**/*))
        (enforce (dune (library (public_name (is_prefix dunolint-tests.))))))

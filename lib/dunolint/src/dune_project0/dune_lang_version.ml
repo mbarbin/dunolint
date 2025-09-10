@@ -24,8 +24,6 @@ open! Import
 module T0 = struct
   [@@@coverage off]
 
-  let error_source = "dune_lang_version.t0.t"
-
   type t = int * int
 
   let equal =
@@ -47,31 +45,37 @@ module T0 = struct
        | n -> n
      : t -> t -> int)
   ;;
-
-  let t_of_sexp =
-    (function
-     | Sexplib0.Sexp.List [ arg0__014_; arg1__015_ ] ->
-       let res0__016_ = int_of_sexp arg0__014_
-       and res1__017_ = int_of_sexp arg1__015_ in
-       res0__016_, res1__017_
-     | sexp__018_ ->
-       Sexplib0.Sexp_conv_error.tuple_of_size_n_expected error_source 2 sexp__018_
-     : Sexplib0.Sexp.t -> t)
-  ;;
-
-  let sexp_of_t =
-    (fun (arg0__020_, arg1__021_) ->
-       let res0__022_ = sexp_of_int arg0__020_
-       and res1__023_ = sexp_of_int arg1__021_ in
-       Sexplib0.Sexp.List [ res0__022_; res1__023_ ]
-     : t -> Sexplib0.Sexp.t)
-  ;;
 end
 
 include T0
 
-let create t = t
 let to_string (a, b) = Printf.sprintf "%d.%d" a b
+let sexp_of_t t = Sexp.Atom (to_string t)
+
+let t_of_sexp sexp =
+  let of_two_atoms a b =
+    match Int.of_string_opt a, Int.of_string_opt b with
+    | Some a, Some b -> Some (a, b)
+    | _ -> None
+  in
+  match
+    match (sexp : Sexp.t) with
+    | List [ Atom a; Atom b ] ->
+      (* CR-soon mbarbin: For now we maintain this parsing compatibility however
+         we'll deprecate this when parsing the version 1 of the config. *)
+      of_two_atoms a b
+    | List _ -> None
+    | Atom str ->
+      (match String.split str ~on:'.' with
+       | [ a; b ] -> of_two_atoms a b
+       | _ -> None)
+  with
+  | Some t -> t
+  | None ->
+    raise (Sexp.Of_sexp_error (Failure "Invalid version - expected [MAJOR.MINOR].", sexp))
+;;
+
+let create t = t
 
 module Predicate = struct
   [@@@coverage off]

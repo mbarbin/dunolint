@@ -96,7 +96,7 @@ let%expect_test "lint" =
         [%sexp
           (Dune_project_linter.Dune_lang_version.dune_lang_version s
            : Dune_project.Dune_lang_version.t)];
-      [%expect {| (3 17) |}];
+      [%expect {| 3.17 |}];
       Dune_project_linter.Dune_lang_version.set_dune_lang_version
         s
         ~dune_lang_version:(Dune_project.Dune_lang_version.create (3, 20));

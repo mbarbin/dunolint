@@ -30,6 +30,12 @@ module Char = struct
   ;;
 end
 
+module Int = struct
+  include Int
+
+  let of_string_opt = int_of_string_opt
+end
+
 module List = struct
   include ListLabels
 
