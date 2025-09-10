@@ -6,6 +6,7 @@
 
 ### Changed
 
+- Now autoload config files if present at "$PWD/dunolint" (#102, @mbarbin).
 - Change dune-lang sexps to be atoms (e.g. "3.19") instead of tuples (#101, @mbarbin).
 - Remove base and ppx dependencies from `dunolint-lib` (#99, @mbarbin).
 - Always use versioned sexp for config (#98, @mbarbin).

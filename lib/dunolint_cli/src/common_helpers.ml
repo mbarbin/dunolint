@@ -108,3 +108,21 @@ let load_config_exn ~filename =
        in
        Err.raise ~loc [ message ])
 ;;
+
+let load_config_opt_exn ~config ~append_extra_rules =
+  let config =
+    match config with
+    | Some filename -> load_config_exn ~filename
+    | None ->
+      let cwd = Unix.getcwd () |> Absolute_path.v in
+      let default_file = Absolute_path.extend cwd (Fsegment.v "dunolint") in
+      let filename = Absolute_path.to_string default_file in
+      if Stdlib.Sys.file_exists filename
+      then load_config_exn ~filename
+      else Dunolint.Config.create ~skip_subtree:(skip_subtree ~globs:[]) ~rules:[] ()
+  in
+  Dunolint.Config.create
+    ?skip_subtree:(Dunolint.Config.skip_subtree config)
+    ~rules:(Dunolint.Config.rules config @ append_extra_rules)
+    ()
+;;

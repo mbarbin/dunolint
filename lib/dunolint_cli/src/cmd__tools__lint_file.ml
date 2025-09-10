@@ -197,19 +197,7 @@ let main =
      let save_in_place = save_in_place ~in_place ~file in
      let cwd = Unix.getcwd () |> Absolute_path.v in
      let config =
-       match config with
-       | Some filename -> Common_helpers.load_config_exn ~filename
-       | None ->
-         Dunolint.Config.create
-           ~skip_subtree:(Common_helpers.skip_subtree ~globs:[])
-           ~rules:[]
-           ()
-     in
-     let config =
-       Dunolint.Config.create
-         ?skip_subtree:(Dunolint.Config.skip_subtree config)
-         ~rules:(Dunolint.Config.rules config @ enforce)
-         ()
+       Common_helpers.load_config_opt_exn ~config ~append_extra_rules:enforce
      in
      let path = select_path ~cwd ~filename ~file in
      let linter = select_linter ~path:(path :> Fpath.t) in
