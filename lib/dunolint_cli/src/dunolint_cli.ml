@@ -39,7 +39,12 @@ let main =
     ; ( "tools"
       , Command.group
           ~summary:"Tools commands (miscellaneous)."
-          [ "lint-file", Cmd__tools__lint_file.main ] )
+          [ ( "config"
+            , Command.group
+                ~summary:"Utils related to config files."
+                [ "validate", Cmd__tools__config__validate.main ] )
+          ; "lint-file", Cmd__tools__lint_file.main
+          ] )
     ]
 ;;
 

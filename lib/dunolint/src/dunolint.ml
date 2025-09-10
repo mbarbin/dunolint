@@ -36,3 +36,7 @@ module Std = struct
   module Dune = Dune
   module Dune_project = Dune_project
 end
+
+module Private = struct
+  module Sexp_helpers = Sexp_helpers
+end

@@ -50,7 +50,7 @@ module Trilang = struct
 end
 
 module T = struct
-  type t = (Trilang.t, int) Dunolint.Rule.t [@@deriving compare, sexp]
+  type t = (Trilang.t, int) Dunolint.Rule.Stable.V1.t [@@deriving compare, sexp]
 
   let equal t1 t2 = 0 = compare t1 t2
 end
@@ -66,12 +66,17 @@ let%expect_test "sexp" =
   [%expect {| (enforce 42) |}];
   test `return;
   [%expect {| return |}];
-  test `skip_subtree;
-  [%expect {| skip_subtree |}];
+  require_does_raise [%here] (fun () -> test `skip_subtree);
+  [%expect
+    {|
+    (Of_sexp_error
+     "The [skip_subtree] construct is not allowed in version 1 of dunolint config."
+     (invalid_sexp skip_subtree))
+    |}];
   test (`cond []);
-  [%expect {| (cond ()) |}];
+  [%expect {| (cond) |}];
   test (`cond [ Blang.true_, `enforce 42 ]);
-  [%expect {| (cond ((true (enforce 42)))) |}];
+  [%expect {| (cond (true (enforce 42))) |}];
   test
     (`cond
         [ Blang.base Trilang.False, `enforce 1
@@ -80,10 +85,10 @@ let%expect_test "sexp" =
         ]);
   [%expect
     {|
-    (cond (
+    (cond
       ((T False)     (enforce 1))
       ((T Undefined) (enforce 2))
-      ((T True)      (enforce 3))))
+      ((T True)      (enforce 3)))
     |}];
   ()
 ;;

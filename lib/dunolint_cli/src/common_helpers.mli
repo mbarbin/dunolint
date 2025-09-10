@@ -26,7 +26,8 @@ val sexpable_param : (module Sexpable.S with type t = 'a) -> 'a Command.Param.t
 (** Restrict the scope of a command to a subdirectory only. "Below this path". *)
 val below : doc:string -> Relative_path.t option Command.Arg.t
 
-val skip_subtree : globs:string list -> Dunolint.Config.Skip_subtree.t
+(** A list of defaults directories to skip. *)
+val skip_subtrees : globs:string list -> Dunolint.Glob.t list
 
 (** A helper for loading the config with some effort regarding producing located
     error messages when able. *)
@@ -38,3 +39,5 @@ val load_config_opt_exn
   :  config:string option
   -> append_extra_rules:Dunolint.Config.Rule.t list
   -> Dunolint.Config.t
+
+val ancestors_directories : path:Relative_path.t -> Relative_path.t list

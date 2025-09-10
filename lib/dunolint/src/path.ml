@@ -79,7 +79,13 @@ module Predicate = struct
           (match sexp_args__017_ with
            | arg0__023_ :: [] ->
              let res0__024_ = Relative_path.t_of_sexp arg0__023_ in
-             `equals res0__024_
+             if Sexp_helpers.parsing_config_version_0.contents
+             then `equals res0__024_
+             else
+               Sexplib0.Sexp_conv.of_sexp_error
+                 "The [path.equals] construct is not allowed in version 1 of dunolint \
+                  config."
+                 _sexp__016_
            | _ ->
              Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
                error_source

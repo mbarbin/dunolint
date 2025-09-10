@@ -19,16 +19,16 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-open Dunolint.Config.V0.Std
+open Dunolint.Config.V1.Std
 
 let rules = ref []
 
 type dune_rule = (Dunolint.Predicate.t, Dunolint.Condition.t) Dunolint.Rule.t
 
-let add_rule cs = rules := (cs : dune_rule) :: !rules
+let rule cs = rules := `rule (cs : dune_rule) :: !rules
 
 let () =
-  add_rule
+  rule
     (enforce
        (dune_project
           (dune_lang_version
@@ -36,9 +36,9 @@ let () =
 ;;
 
 let () =
-  add_rule
+  rule
     (cond
-       [ ( path (glob "dunolint-config/**/*")
+       [ ( path (glob "dunolint-config/**")
          , enforce (dune (library (public_name (is_prefix "dunolint-tests.")))) )
        ; ( path (or_ [ glob "lib/test_helpers/src/*"; glob "test/expect/*" ])
          , enforce (dune (library (public_name (is_prefix "dunolint-tests.")))) )
@@ -56,7 +56,7 @@ let () =
                 (library
                    (public_name (equals (Dune.Library.Public_name.v "dunolint-lib-base")))))
          )
-       ; ( path (or_ [ glob "lib/**/*"; glob "vendor/**/*" ])
+       ; ( path (or_ [ glob "lib/**"; glob "vendor/**" ])
          , enforce
              (dune
                 (library
@@ -71,7 +71,7 @@ let () =
 ;;
 
 let () =
-  add_rule
+  rule
     (cond
        [ ( dune (preprocess (pps true_))
          , enforce
@@ -89,9 +89,9 @@ let () =
 let bisect_ppx = Dune.Instrumentation.Backend.Name.v "bisect_ppx"
 
 let () =
-  add_rule
+  rule
     (cond
-       [ ( path (or_ [ glob "vendor/**/*" ])
+       [ ( path (or_ [ glob "vendor/**" ])
          , enforce (dune (library (not_ (has_field `instrumentation)))) )
        ; true_, enforce (dune (instrumentation (backend bisect_ppx)))
        ])
@@ -100,9 +100,9 @@ let () =
 let ppx_js_style = Dune.Pp.Name.v "ppx_js_style"
 
 let () =
-  add_rule
+  rule
     (cond
-       [ path (or_ [ glob "vendor/blang/*" ]), return
+       [ path (or_ [ glob "vendor/blang/**" ]), return
        ; ( true_
          , enforce
              (dune
@@ -124,31 +124,28 @@ let () =
        ])
 ;;
 
-let skip_subtrees = ref []
+let skip_paths_ref = ref []
 
-let add_skip_subtree (condition : Dunolint.Config.V0.Skip_subtree.Predicate.t Blang.t) =
-  skip_subtrees := condition :: !skip_subtrees
+let skip_paths paths =
+  skip_paths_ref := `skip_paths (List.map paths ~f:Dunolint.Glob.v) :: !skip_paths_ref
 ;;
 
 let () =
-  add_skip_subtree
-    (or_
-       (List.map
-          ~f:(fun pat -> path (or_ [ glob ("**/" ^ pat); glob pat ]))
-          [ ".git/"
-          ; "_build/"
-          ; "_opam/"
-          ; "_coverage/"
-          ; "node_modules/"
-          ; "doc/build/"
-          ; ".docusaurus/"
-          ]))
+  List.iter
+    ~f:(fun pat -> skip_paths [ "**/" ^ pat; pat ])
+    [ ".git/"
+    ; "_build/"
+    ; "_opam/"
+    ; "_coverage/"
+    ; "node_modules/"
+    ; "doc/build/"
+    ; ".docusaurus/"
+    ]
 ;;
 
 let config () =
-  let skip_subtree = cond [ or_ (List.rev !skip_subtrees), skip_subtree ] in
-  let rules = List.rev !rules in
-  Dunolint.Config.v0 (Dunolint.Config.V0.create ~skip_subtree ~rules ())
+  Dunolint.Config.v1
+    (Dunolint.Config.V1.create (List.rev !skip_paths_ref @ List.rev !rules))
 ;;
 
 let main =

@@ -23,46 +23,11 @@ type t
 
 val equal : t -> t -> bool
 val compare : t -> t -> int
-
-include Sexpable.S with type t := t
+val sexp_of_t : t -> Sexp.t
+val of_stanzas : Sexp.t list -> t
+val to_stanzas : t -> Sexp.t list
 
 (** {1 Getters} *)
-
-(** {2 Skip subtree}
-
-    This part relate to making dunolint ignor parts of your project,
-    namely not visiting entire sub directories of your repo. *)
-
-module Skip_subtree : sig
-  module Predicate : sig
-    type t = [ `path of Path.Predicate.t Blang.t ]
-
-    val equal : t -> t -> bool
-    val compare : t -> t -> int
-
-    include Sexpable.S with type t := t
-  end
-
-  module Result : sig
-    type t = |
-
-    val equal : t -> t -> bool
-    val compare : t -> t -> int
-
-    include Sexpable.S with type t := t
-  end
-
-  type t = (Predicate.t, Result.t) Rule.t
-
-  val equal : t -> t -> bool
-  val compare : t -> t -> int
-
-  include Sexpable.S with type t := t
-end
-
-val skip_subtree : t -> Skip_subtree.t option
-
-(** {2 Generic rules} *)
 
 module Rule : sig
   type t = (Predicate.t, Condition.t) Rule.t
@@ -73,10 +38,11 @@ module Rule : sig
   include Sexpable.S with type t := t
 end
 
+val skip_paths : t -> Glob.t list list
 val rules : t -> Rule.t list
 
 (** {1 Creating configs} *)
 
-val create : ?skip_subtree:Skip_subtree.t -> ?rules:Rule.t list -> unit -> t
+val create : [ `skip_paths of Glob.t list | `rule of Rule.t ] list -> t
 
 module Std = Edsl_std

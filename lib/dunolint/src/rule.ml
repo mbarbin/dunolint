@@ -24,8 +24,6 @@ open! Import
 module T = struct
   [@@@coverage off]
 
-  let error_source = "rule.t"
-
   type ('predicate, 'invariant) t =
     [ `enforce of 'invariant
     | `return
@@ -100,111 +98,6 @@ module T = struct
           _right__024_
       | x, y -> Stdlib.( = ) x y)
   ;;
-
-  let rec __t_of_sexp__
-    :  'predicate 'invariant.
-       (Sexplib0.Sexp.t -> 'predicate)
-    -> (Sexplib0.Sexp.t -> 'invariant)
-    -> Sexplib0.Sexp.t
-    -> ('predicate, 'invariant) t
-    =
-    fun _of_predicate__037_ ->
-    fun _of_invariant__038_ -> function
-      | Sexplib0.Sexp.Atom atom__040_ as _sexp__042_ ->
-        (match atom__040_ with
-         | "return" -> `return
-         | "skip_subtree" -> `skip_subtree
-         | "enforce" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__042_
-         | "cond" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__042_
-         | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-      | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__040_ :: sexp_args__043_) as
-        _sexp__042_ ->
-        (match atom__040_ with
-         | "enforce" as _tag__053_ ->
-           (match sexp_args__043_ with
-            | arg0__054_ :: [] ->
-              let res0__055_ = _of_invariant__038_ arg0__054_ in
-              `enforce res0__055_
-            | _ ->
-              Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-                error_source
-                _tag__053_
-                _sexp__042_)
-         | "cond" as _tag__045_ ->
-           (match sexp_args__043_ with
-            | arg0__051_ :: [] ->
-              let res0__052_ =
-                list_of_sexp
-                  (function
-                    | Sexplib0.Sexp.List [ arg0__046_; arg1__047_ ] ->
-                      let res0__048_ = Blang.t_of_sexp _of_predicate__037_ arg0__046_
-                      and res1__049_ =
-                        t_of_sexp _of_predicate__037_ _of_invariant__038_ arg1__047_
-                      in
-                      res0__048_, res1__049_
-                    | sexp__050_ ->
-                      Sexplib0.Sexp_conv_error.tuple_of_size_n_expected
-                        error_source
-                        2
-                        sexp__050_)
-                  arg0__051_
-              in
-              `cond res0__052_
-            | _ ->
-              Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-                error_source
-                _tag__045_
-                _sexp__042_)
-         | "return" -> Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__042_
-         | "skip_subtree" ->
-           Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__042_
-         | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-      | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__041_ ->
-        Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__041_
-      | Sexplib0.Sexp.List [] as sexp__041_ ->
-        Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__041_
-
-  and t_of_sexp
-    :  'predicate 'invariant.
-       (Sexplib0.Sexp.t -> 'predicate)
-    -> (Sexplib0.Sexp.t -> 'invariant)
-    -> Sexplib0.Sexp.t
-    -> ('predicate, 'invariant) t
-    =
-    fun _of_predicate__037_ ->
-    fun _of_invariant__038_ ->
-    fun sexp__056_ ->
-    try __t_of_sexp__ _of_predicate__037_ _of_invariant__038_ sexp__056_ with
-    | Sexplib0.Sexp_conv_error.No_variant_match ->
-      Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__056_
-  ;;
-
-  let rec sexp_of_t
-    :  'predicate 'invariant.
-       ('predicate -> Sexplib0.Sexp.t)
-    -> ('invariant -> Sexplib0.Sexp.t)
-    -> ('predicate, 'invariant) t
-    -> Sexplib0.Sexp.t
-    =
-    fun _of_predicate__058_ ->
-    fun _of_invariant__059_ -> function
-      | `enforce v__060_ ->
-        Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "enforce"; _of_invariant__059_ v__060_ ]
-      | `return -> Sexplib0.Sexp.Atom "return"
-      | `skip_subtree -> Sexplib0.Sexp.Atom "skip_subtree"
-      | `cond v__061_ ->
-        Sexplib0.Sexp.List
-          [ Sexplib0.Sexp.Atom "cond"
-          ; sexp_of_list
-              (fun (arg0__062_, arg1__063_) ->
-                 let res0__064_ = Blang.sexp_of_t _of_predicate__058_ arg0__062_
-                 and res1__065_ =
-                   sexp_of_t _of_predicate__058_ _of_invariant__059_ arg1__063_
-                 in
-                 Sexplib0.Sexp.List [ res0__064_; res1__065_ ])
-              v__061_
-          ]
-  ;;
 end
 
 include T
@@ -225,3 +118,246 @@ let eval t ~f =
   in
   aux_t t
 ;;
+
+module Stable = struct
+  module V1 = struct
+    [@@@coverage off]
+
+    let error_source = "rule.v1.t"
+
+    type ('predicate, 'invariant) t =
+      [ `enforce of 'invariant
+      | `return
+      | `skip_subtree
+      | `cond of ('predicate Blang.t * ('predicate, 'invariant) t) list
+      ]
+
+    let rec __t_of_sexp__
+      :  'predicate 'invariant.
+         (Sexplib0.Sexp.t -> 'predicate)
+      -> (Sexplib0.Sexp.t -> 'invariant)
+      -> Sexplib0.Sexp.t
+      -> ('predicate, 'invariant) t
+      =
+      fun _of_predicate__073_ ->
+      fun _of_invariant__074_ -> function
+        | Sexplib0.Sexp.Atom atom__076_ as _sexp__078_ ->
+          (match atom__076_ with
+           | "return" -> `return
+           | "skip_subtree" ->
+             if Sexp_helpers.parsing_config_version_0.contents
+             then `skip_subtree [@coverage off]
+             else
+               (* We'll drop this constructor entirely when we remove support
+                  for version 0. *)
+               Sexplib0.Sexp_conv.of_sexp_error
+                 "The [skip_subtree] construct is not allowed in version 1 of dunolint \
+                  config."
+                 _sexp__078_
+           | "enforce" ->
+             Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__078_
+           | "cond" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__078_
+           | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
+        | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__076_ :: sexp_args__079_) as
+          _sexp__078_ ->
+          (match atom__076_ with
+           | "enforce" as _tag__089_ ->
+             (match sexp_args__079_ with
+              | arg0__090_ :: [] ->
+                let res0__091_ = _of_invariant__074_ arg0__090_ in
+                `enforce res0__091_
+              | _ ->
+                Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
+                  error_source
+                  _tag__089_
+                  _sexp__078_)
+           | "cond" as _tag__081_ ->
+             let res0__088_ =
+               List.map sexp_args__079_ ~f:(function
+                 | Sexplib0.Sexp.List [ arg0__082_; arg1__083_ ] ->
+                   let res0__084_ = Blang.t_of_sexp _of_predicate__073_ arg0__082_
+                   and res1__085_ =
+                     t_of_sexp _of_predicate__073_ _of_invariant__074_ arg1__083_
+                   in
+                   res0__084_, res1__085_
+                 | sexp__086_ ->
+                   Sexplib0.Sexp_conv_error.tuple_of_size_n_expected
+                     error_source
+                     2
+                     sexp__086_)
+             in
+             `cond res0__088_
+           | "return" -> Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__078_
+           | "skip_subtree" ->
+             Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__078_
+           | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
+        | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__077_ ->
+          Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__077_
+        | Sexplib0.Sexp.List [] as sexp__077_ ->
+          Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__077_
+
+    and t_of_sexp
+      :  'predicate 'invariant.
+         (Sexplib0.Sexp.t -> 'predicate)
+      -> (Sexplib0.Sexp.t -> 'invariant)
+      -> Sexplib0.Sexp.t
+      -> ('predicate, 'invariant) t
+      =
+      fun _of_predicate__073_ ->
+      fun _of_invariant__074_ ->
+      fun sexp__092_ ->
+      try __t_of_sexp__ _of_predicate__073_ _of_invariant__074_ sexp__092_ with
+      | Sexplib0.Sexp_conv_error.No_variant_match ->
+        Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__092_
+    ;;
+
+    let rec sexp_of_t
+      :  'predicate 'invariant.
+         ('predicate -> Sexplib0.Sexp.t)
+      -> ('invariant -> Sexplib0.Sexp.t)
+      -> ('predicate, 'invariant) t
+      -> Sexplib0.Sexp.t
+      =
+      fun _of_predicate__094_ ->
+      fun _of_invariant__095_ -> function
+        | `enforce v__096_ ->
+          Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "enforce"; _of_invariant__095_ v__096_ ]
+        | `return -> Sexplib0.Sexp.Atom "return"
+        | `skip_subtree -> Sexplib0.Sexp.Atom "skip_subtree"
+        | `cond v__097_ ->
+          Sexplib0.Sexp.List
+            (Sexplib0.Sexp.Atom "cond"
+             :: List.map v__097_ ~f:(fun (arg0__098_, arg1__099_) ->
+               let res0__100_ = Blang.sexp_of_t _of_predicate__094_ arg0__098_
+               and res1__101_ =
+                 sexp_of_t _of_predicate__094_ _of_invariant__095_ arg1__099_
+               in
+               Sexplib0.Sexp.List [ res0__100_; res1__101_ ]))
+    ;;
+
+    let compare = compare
+    let equal = equal
+  end
+
+  module V0 = struct
+    [@@@coverage off]
+
+    let error_source = "rule.v0.t"
+
+    type ('predicate, 'invariant) t =
+      [ `enforce of 'invariant
+      | `return
+      | `skip_subtree
+      | `cond of ('predicate Blang.t * ('predicate, 'invariant) t) list
+      ]
+
+    let rec __t_of_sexp__
+      :  'predicate 'invariant.
+         (Sexplib0.Sexp.t -> 'predicate)
+      -> (Sexplib0.Sexp.t -> 'invariant)
+      -> Sexplib0.Sexp.t
+      -> ('predicate, 'invariant) t
+      =
+      fun _of_predicate__001_ ->
+      fun _of_invariant__002_ -> function
+        | Sexplib0.Sexp.Atom atom__004_ as _sexp__006_ ->
+          (match atom__004_ with
+           | "return" -> `return
+           | "skip_subtree" -> `skip_subtree
+           | "enforce" ->
+             Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__006_
+           | "cond" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__006_
+           | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
+        | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__004_ :: sexp_args__007_) as
+          _sexp__006_ ->
+          (match atom__004_ with
+           | "enforce" as _tag__017_ ->
+             (match sexp_args__007_ with
+              | arg0__018_ :: [] ->
+                let res0__019_ = _of_invariant__002_ arg0__018_ in
+                `enforce res0__019_
+              | _ ->
+                Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
+                  error_source
+                  _tag__017_
+                  _sexp__006_)
+           | "cond" as _tag__009_ ->
+             (match sexp_args__007_ with
+              | arg0__015_ :: [] ->
+                let res0__016_ =
+                  list_of_sexp
+                    (function
+                      | Sexplib0.Sexp.List [ arg0__010_; arg1__011_ ] ->
+                        let res0__012_ = Blang.t_of_sexp _of_predicate__001_ arg0__010_
+                        and res1__013_ =
+                          t_of_sexp _of_predicate__001_ _of_invariant__002_ arg1__011_
+                        in
+                        res0__012_, res1__013_
+                      | sexp__014_ ->
+                        Sexplib0.Sexp_conv_error.tuple_of_size_n_expected
+                          error_source
+                          2
+                          sexp__014_)
+                    arg0__015_
+                in
+                `cond res0__016_
+              | _ ->
+                Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
+                  error_source
+                  _tag__009_
+                  _sexp__006_)
+           | "return" -> Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__006_
+           | "skip_subtree" ->
+             Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__006_
+           | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
+        | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__005_ ->
+          Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__005_
+        | Sexplib0.Sexp.List [] as sexp__005_ ->
+          Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__005_
+
+    and t_of_sexp
+      :  'predicate 'invariant.
+         (Sexplib0.Sexp.t -> 'predicate)
+      -> (Sexplib0.Sexp.t -> 'invariant)
+      -> Sexplib0.Sexp.t
+      -> ('predicate, 'invariant) t
+      =
+      fun _of_predicate__001_ ->
+      fun _of_invariant__002_ ->
+      fun sexp__020_ ->
+      try __t_of_sexp__ _of_predicate__001_ _of_invariant__002_ sexp__020_ with
+      | Sexplib0.Sexp_conv_error.No_variant_match ->
+        Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__020_
+    ;;
+
+    let rec sexp_of_t
+      :  'predicate 'invariant.
+         ('predicate -> Sexplib0.Sexp.t)
+      -> ('invariant -> Sexplib0.Sexp.t)
+      -> ('predicate, 'invariant) t
+      -> Sexplib0.Sexp.t
+      =
+      fun _of_predicate__022_ ->
+      fun _of_invariant__023_ -> function
+        | `enforce v__024_ ->
+          Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "enforce"; _of_invariant__023_ v__024_ ]
+        | `return -> Sexplib0.Sexp.Atom "return"
+        | `skip_subtree -> Sexplib0.Sexp.Atom "skip_subtree"
+        | `cond v__025_ ->
+          Sexplib0.Sexp.List
+            [ Sexplib0.Sexp.Atom "cond"
+            ; sexp_of_list
+                (fun (arg0__026_, arg1__027_) ->
+                   let res0__028_ = Blang.sexp_of_t _of_predicate__022_ arg0__026_
+                   and res1__029_ =
+                     sexp_of_t _of_predicate__022_ _of_invariant__023_ arg1__027_
+                   in
+                   Sexplib0.Sexp.List [ res0__028_; res1__029_ ])
+                v__025_
+            ]
+    ;;
+
+    let compare = compare
+    let equal = equal
+  end
+end

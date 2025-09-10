@@ -19,55 +19,44 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-open Dunolint.Config.Std
+module Blang = Blang
+module Dune = Dune
+module Dune_project = Dune_project
+include Blang.O
 
-let%expect_test "predicate" =
-  let test p = Common.test_predicate (module Dune.Pps.Predicate) p in
-  test (pp (Dune.Pp.Name.v "ppx_compare"));
-  [%expect {| (pp ppx_compare) |}];
-  test (flag { name = "-a"; param = `any; applies_to = `any });
-  [%expect
-    {|
-    (flag
-      (name       -a)
-      (param      any)
-      (applies_to any))
-    |}];
-  test (flag { name = "-a"; param = `none; applies_to = `driver });
-  [%expect
-    {|
-    (flag
-      (name       -a)
-      (param      none)
-      (applies_to driver))
-    |}];
-  test
-    (flag
-       { name = "-a"; param = `some; applies_to = `pp (Dune.Pp.Name.v "ppx_js_style") });
-  [%expect
-    {|
-    (flag
-      (name  -a)
-      (param some)
-      (applies_to (pp ppx_js_style)))
-    |}];
-  test
-    (flag
-       { name = "-unused-code-warnings"; param = `equals "force"; applies_to = `driver });
-  [%expect
-    {| (flag (name -unused-code-warnings) (param (equals force)) (applies_to driver)) |}];
-  test
-    (pp_with_flag
-       { pp = Dune.Pp.Name.v "ppx_js_style"
-       ; flag = "-allow-let-operators"
-       ; param = `none
-       });
-  [%expect
-    {|
-    (pp_with_flag
-      (pp    ppx_js_style)
-      (flag  -allow-let-operators)
-      (param none))
-    |}];
-  ()
-;;
+let backend p = Blang.base (`backend p)
+let cond clauses = `cond clauses
+let dune p = Blang.base (`dune p)
+let dune_lang_version p = Blang.base (`dune_lang_version p)
+let dune_project p = Blang.base (`dune_project p)
+let enforce p = `enforce p
+let equals p = Blang.base (`equals p)
+let executable p = Blang.base (`executable p)
+let flag p = Blang.base (`flag p)
+let generate_opam_files p = Blang.base (`generate_opam_files p)
+let glob p = Blang.base (`glob (Glob.v p))
+let greater_than_or_equal_to p = Blang.base (`greater_than_or_equal_to p)
+let has_field p = Blang.base (`has_field p)
+let has_mode p = Blang.base (`has_mode p)
+let has_modes p = Blang.base (`has_modes p)
+let implicit_transitive_deps p = Blang.base (`implicit_transitive_deps p)
+let include_subdirs p = Blang.base (`include_subdirs p)
+let instrumentation p = Blang.base (`instrumentation p)
+let is_prefix p = Blang.base (`is_prefix p)
+let is_present = Blang.base `is_present
+let is_suffix p = Blang.base (`is_suffix p)
+let less_than_or_equal_to p = Blang.base (`less_than_or_equal_to p)
+let library p = Blang.base (`library p)
+let lint p = Blang.base (`lint p)
+let modes p = Blang.base (`modes p)
+let name p = Blang.base (`name p)
+let no_preprocessing = Blang.base `no_preprocessing
+let path p = Blang.base (`path p)
+let pp p = Blang.base (`pp p)
+let pps p = Blang.base (`pps p)
+let pp_with_flag p = Blang.base (`pp_with_flag p)
+let preprocess p = Blang.base (`preprocess p)
+let public_name p = Blang.base (`public_name p)
+let return = `return
+let skip_subtree = `skip_subtree
+let stanza p = Blang.base (`stanza p)

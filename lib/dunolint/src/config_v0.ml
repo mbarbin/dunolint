@@ -121,26 +121,28 @@ module Skip_subtree = struct
     ;;
   end
 
-  type t = (Predicate.t, Result.t) Rule.t
+  type t = (Predicate.t, Result.t) Rule.Stable.V0.t
 
   let compare =
     (fun a__033_ ->
-       fun b__034_ -> Rule.compare Predicate.compare Result.compare a__033_ b__034_
+       fun b__034_ ->
+       Rule.Stable.V0.compare Predicate.compare Result.compare a__033_ b__034_
      : t -> t -> int)
   ;;
 
   let equal =
-    (fun a__039_ -> fun b__040_ -> Rule.equal Predicate.equal Result.equal a__039_ b__040_
+    (fun a__039_ ->
+       fun b__040_ -> Rule.Stable.V0.equal Predicate.equal Result.equal a__039_ b__040_
      : t -> t -> bool)
   ;;
 
   let t_of_sexp =
-    (fun x__046_ -> Rule.t_of_sexp Predicate.t_of_sexp Result.t_of_sexp x__046_
+    (fun x__046_ -> Rule.Stable.V0.t_of_sexp Predicate.t_of_sexp Result.t_of_sexp x__046_
      : Sexplib0.Sexp.t -> t)
   ;;
 
   let sexp_of_t =
-    (fun x__047_ -> Rule.sexp_of_t Predicate.sexp_of_t Result.sexp_of_t x__047_
+    (fun x__047_ -> Rule.Stable.V0.sexp_of_t Predicate.sexp_of_t Result.sexp_of_t x__047_
      : t -> Sexplib0.Sexp.t)
   ;;
 end
@@ -148,27 +150,30 @@ end
 module Rule = struct
   [@@@coverage off]
 
-  type t = (Predicate.t, Condition.t) Rule.t
+  type t = (Predicate.t, Condition.t) Rule.Stable.V0.t
 
   let compare =
     (fun a__048_ ->
-       fun b__049_ -> Rule.compare Predicate.compare Condition.compare a__048_ b__049_
+       fun b__049_ ->
+       Rule.Stable.V0.compare Predicate.compare Condition.compare a__048_ b__049_
      : t -> t -> int)
   ;;
 
   let equal =
     (fun a__054_ ->
-       fun b__055_ -> Rule.equal Predicate.equal Condition.equal a__054_ b__055_
+       fun b__055_ -> Rule.Stable.V0.equal Predicate.equal Condition.equal a__054_ b__055_
      : t -> t -> bool)
   ;;
 
   let t_of_sexp =
-    (fun x__061_ -> Rule.t_of_sexp Predicate.t_of_sexp Condition.t_of_sexp x__061_
+    (fun x__061_ ->
+       Rule.Stable.V0.t_of_sexp Predicate.t_of_sexp Condition.t_of_sexp x__061_
      : Sexplib0.Sexp.t -> t)
   ;;
 
   let sexp_of_t =
-    (fun x__062_ -> Rule.sexp_of_t Predicate.sexp_of_t Condition.sexp_of_t x__062_
+    (fun x__062_ ->
+       Rule.Stable.V0.sexp_of_t Predicate.sexp_of_t Condition.sexp_of_t x__062_
      : t -> Sexplib0.Sexp.t)
   ;;
 end
@@ -261,50 +266,12 @@ end
 
 include T
 
+let t_of_sexp sexp =
+  Sexp_helpers.when_parsing_config_version_0 ~f:(fun () -> t_of_sexp sexp)
+;;
+
 let skip_subtree t = t.skip_subtree
 let rules t = t.rules
 let create ?skip_subtree ?(rules = []) () = { skip_subtree; rules }
 
-module Std = struct
-  module Blang = Blang
-  module Dune = Dune
-  module Dune_project = Dune_project
-  include Blang.O
-
-  let backend p = Blang.base (`backend p)
-  let cond clauses = `cond clauses
-  let dune p = Blang.base (`dune p)
-  let dune_lang_version p = Blang.base (`dune_lang_version p)
-  let dune_project p = Blang.base (`dune_project p)
-  let enforce p = `enforce p
-  let equals p = Blang.base (`equals p)
-  let executable p = Blang.base (`executable p)
-  let flag p = Blang.base (`flag p)
-  let generate_opam_files p = Blang.base (`generate_opam_files p)
-  let glob p = Blang.base (`glob (Glob.v p))
-  let greater_than_or_equal_to p = Blang.base (`greater_than_or_equal_to p)
-  let has_field p = Blang.base (`has_field p)
-  let has_mode p = Blang.base (`has_mode p)
-  let has_modes p = Blang.base (`has_modes p)
-  let implicit_transitive_deps p = Blang.base (`implicit_transitive_deps p)
-  let include_subdirs p = Blang.base (`include_subdirs p)
-  let instrumentation p = Blang.base (`instrumentation p)
-  let is_prefix p = Blang.base (`is_prefix p)
-  let is_present = Blang.base `is_present
-  let is_suffix p = Blang.base (`is_suffix p)
-  let less_than_or_equal_to p = Blang.base (`less_than_or_equal_to p)
-  let library p = Blang.base (`library p)
-  let lint p = Blang.base (`lint p)
-  let modes p = Blang.base (`modes p)
-  let name p = Blang.base (`name p)
-  let no_preprocessing = Blang.base `no_preprocessing
-  let path p = Blang.base (`path p)
-  let pp p = Blang.base (`pp p)
-  let pps p = Blang.base (`pps p)
-  let pp_with_flag p = Blang.base (`pp_with_flag p)
-  let preprocess p = Blang.base (`preprocess p)
-  let public_name p = Blang.base (`public_name p)
-  let return = `return
-  let skip_subtree = `skip_subtree
-  let stanza p = Blang.base (`stanza p)
-end
+module Std = Edsl_std

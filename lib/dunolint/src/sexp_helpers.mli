@@ -19,64 +19,60 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-type t
+(** Some helpers used by sexp serializers. *)
 
-val equal : t -> t -> bool
-val compare : t -> t -> int
+module type T_of_sexp = sig
+  type t
 
-include Sexpable.S with type t := t
-
-(** {1 Getters} *)
-
-(** {2 Skip subtree}
-
-    This part relate to making dunolint ignor parts of your project,
-    namely not visiting entire sub directories of your repo. *)
-
-module Skip_subtree : sig
-  module Predicate : sig
-    type t = [ `path of Path.Predicate.t Blang.t ]
-
-    val equal : t -> t -> bool
-    val compare : t -> t -> int
-
-    include Sexpable.S with type t := t
-  end
-
-  module Result : sig
-    type t = |
-
-    val equal : t -> t -> bool
-    val compare : t -> t -> int
-
-    include Sexpable.S with type t := t
-  end
-
-  type t = (Predicate.t, Result.t) Rule.t
-
-  val equal : t -> t -> bool
-  val compare : t -> t -> int
-
-  include Sexpable.S with type t := t
+  val t_of_sexp : Sexp.t -> t
 end
 
-val skip_subtree : t -> Skip_subtree.t option
+(** During the transition to support version 0 of the config, we allow wrapped
+    records for older formats. Once we'll be done migrating to version 1, we can
+    retire this. This is [false] by default and requires to be set to [true] to
+    parse version 0. *)
+val parsing_config_version_0 : bool ref
 
-(** {2 Generic rules} *)
+(** Temporarily set [parsing_config_version_0] to true for the execution of [f]
+    (protected). *)
+val when_parsing_config_version_0 : f:(unit -> 'a) -> 'a
 
-module Rule : sig
-  type t = (Predicate.t, Condition.t) Rule.t
+(** When a record is embedded by a variant or polymorphic variant we'd like to
+    support a syntax with less parens around. For example:
 
-  val equal : t -> t -> bool
-  val compare : t -> t -> int
+    Suppose you have a record type M:
 
-  include Sexpable.S with type t := t
-end
+    {[
+      module M = struct
+        type t =
+          { a : string
+          ; b : int
+          }
+      end
 
-val rules : t -> Rule.t list
+      type t = [ `cons of M.t ]
+    ]}
 
-(** {1 Creating configs} *)
+    We'd like to parse:
 
-val create : ?skip_subtree:Skip_subtree.t -> ?rules:Rule.t list -> unit -> t
+    {[
+      cons (a hello) (b 42)
+    ]}
 
-module Std = Edsl_std
+    Instead of:
+
+    {[
+      cons ((a hello) (b 42))
+    ]}
+
+    However care must be applied for the parsing exceptions raised by use an
+    actual sexp of the input, otherwise there would be no location. [context] is
+    the sexp used to error out, and [fields] the record fields. M is able to
+    parse the fields when they are wrapped by a [Sexp.List] constructor. *)
+val parse_inline_record
+  :  (module T_of_sexp with type t = 'a)
+  -> error_source:string
+  -> context:Sexp.t
+  -> tag:string
+  -> fields:Sexp.t list
+  -> 'a

@@ -53,16 +53,36 @@ module Save_in_place = struct
   ;;
 end
 
-let skip_subtree ~config ~path =
-  match Dunolint.Config.skip_subtree config with
-  | None -> `return
-  | Some condition ->
-    (match
-       Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
-         Dunolinter.eval_path ~path ~condition)
-     with
-     | `enforce _ -> .
-     | (`return | `skip_subtree) as result -> result)
+let skip_file ~config ~(path : Relative_path.t) =
+  let ancestors = Common_helpers.ancestors_directories ~path in
+  match Dunolint.Config.Private.view config with
+  | `v0 v0 ->
+    (match Dunolint.Config.V0.skip_subtree v0 with
+     | None -> `return
+     | Some condition ->
+       (match
+          List.exists (path :: ancestors) ~f:(fun path ->
+            match
+              Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
+                Dunolinter.eval_path ~path ~condition)
+            with
+            | `enforce _ -> .
+            | `return -> false
+            | `skip_subtree -> true)
+        with
+        | true -> `skip_subtree
+        | false -> `return))
+  | `v1 v1 ->
+    let skip_paths = Dunolint.Config.V1.skip_paths v1 |> List.concat in
+    let file = Relative_path.to_string path in
+    let ancestors = List.map ancestors ~f:Relative_path.to_string in
+    if List.exists skip_paths ~f:(fun glob -> Dunolint.Glob.test glob file)
+    then `skip_file
+    else if
+      List.exists ancestors ~f:(fun ancestor ->
+        List.exists skip_paths ~f:(fun glob -> Dunolint.Glob.test glob ancestor))
+    then `skip_subtree
+    else `return
 ;;
 
 let lint_file
@@ -207,8 +227,8 @@ let main =
        | None -> In_channel.input_all In_channel.stdin
      in
      let output =
-       match skip_subtree ~config ~path with
-       | `skip_subtree -> original_contents
+       match skip_file ~config ~path with
+       | `skip_file | `skip_subtree -> original_contents
        | `return ->
          let rules = Dunolint.Config.rules config in
          lint_file linter ~format_file ~rules ~path ~original_contents

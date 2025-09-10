@@ -23,7 +23,8 @@ open Dunolint.Config.Std
 
 let%expect_test "predicate" =
   let test p = Common.test_predicate (module Dunolint.Path.Predicate) p in
-  test (equals (Relative_path.v "path/to/file"));
+  Dunolint.Private.Sexp_helpers.when_parsing_config_version_0 ~f:(fun () ->
+    test (equals (Relative_path.v "path/to/file")));
   [%expect {| (equals path/to/file) |}];
   test (glob ".git/*");
   [%expect {| (glob .git/*) |}];

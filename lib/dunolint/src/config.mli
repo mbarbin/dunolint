@@ -24,12 +24,17 @@ type t
 val equal : t -> t -> bool
 val compare : t -> t -> int
 
-include Sexpable.S with type t := t
+(** This is used by tests for quick debug. To print the config into a file, see
+    {!val:to_file_contents}. *)
+val sexp_of_t : t -> Sexp.t
+
 module V0 = Config_v0
+module V1 = Config_v1
 
 (** {1 Create} *)
 
 val v0 : V0.t -> t
+val v1 : V1.t -> t
 
 (** {1 Save to file} *)
 
@@ -40,10 +45,15 @@ val v0 : V0.t -> t
     edited. *)
 val to_file_contents : t -> generated_by:string -> string
 
+(** To/from stanzas. *)
+
+val of_stanzas : Sexp.t list -> t
+val to_stanzas : t -> Sexp.t list
+
 (** {1 Private Utils} *)
 
 module Private : sig
-  val view : t -> [ `v0 of V0.t ]
+  val view : t -> [ `v0 of V0.t | `v1 of V1.t ]
 end
 
 (** {1 Compatibility}

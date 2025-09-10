@@ -20,6 +20,11 @@
 (*_********************************************************************************)
 
 module Predicate : sig
+  (** Do not use [equals] in new code, this will result in deserialization
+      errors because we are deprecating the support for [equals] seeing how
+      [glob] can support exact matches. When/If dropping support for
+      [Relative_path] then [fpath-sexp] no longer needs to be a dependency of
+      this library. *)
   type t =
     [ `equals of Relative_path.t
     | `glob of Glob.t

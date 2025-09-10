@@ -619,10 +619,10 @@ let%expect_test "enforce" =
     (Dunolinter.Handler.Enforce_failure
       (loc _)
       (condition (
-        flag (
-          (name       --driver)
-          (param      some)
-          (applies_to driver)))))
+        flag
+        (name       --driver)
+        (param      some)
+        (applies_to driver))))
     |}];
   let t = parse {| (pps --driver=screw) |} in
   enforce t [ flag { name = "--driver"; param = `some; applies_to = `any } ];
@@ -638,10 +638,10 @@ let%expect_test "enforce" =
     (Dunolinter.Handler.Enforce_failure
       (loc _)
       (condition (
-        flag (
-          (name       --driver)
-          (param      some)
-          (applies_to driver)))))
+        flag
+        (name       --driver)
+        (param      some)
+        (applies_to driver))))
     |}];
   let t = parse {| (pps) |} in
   enforce t [ flag { name = "--driver"; param = `any; applies_to = `any } ];
