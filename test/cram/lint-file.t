@@ -137,16 +137,25 @@ an OCaml file.
   > (name my_project_name)
   > EOF
 
-Currently the behavior of the lint-file command is to not load config files on
-its own. See below how the name of the project is not linted:
+Currently the behavior of the lint-file command is to load a config file on its
+own if it is in the current cwd and named "dunolint". See below how the name of
+the project is indeed linted:
 
   $ dunolint tools lint-file dune-project
   (lang dune 3.17)
   
+  (name foo)
+
+However, you may supply a config to use.
+
+  $ printf "((rules()))\n" > empty-config
+  $ dunolint tools lint-file dune-project --config=empty-config
+  (lang dune 3.17)
+  
   (name my_project_name)
 
-However, you may supply a config to use. The test config enforces the project
-name so its effect is visible in this test (it is changed to "foo"):
+The test config enforces the project name so its effect is visible in this test
+(it is changed to "foo"):
 
   $ dunolint tools lint-file dune-project --config=dunolint
   (lang dune 3.17)
@@ -179,7 +188,7 @@ of the config.
 If the file is at a path configured to be in a skipped directory, the command
 won't apply linting rules to it.
 
-  $ cat dune | dunolint tools lint-file --filename=.git/dune
+  $ cat dune | dunolint tools lint-file --filename=.git/dune --config=empty-config
   (library
    (name mylib)
    (libraries a b c))
