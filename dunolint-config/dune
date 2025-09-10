@@ -1,8 +1,0 @@
-(rule
- (mode promote)
- (package dunolint-tests)
- (alias runtest)
- (action
-  (with-stdout-to
-   "dunolint.sexp"
-   (run %{bin:dunolint-dunolint-config-gen}))))
