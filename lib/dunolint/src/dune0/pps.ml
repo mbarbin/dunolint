@@ -457,26 +457,22 @@ module Predicate = struct
                error_source
                _tag__097_
                _sexp__088_)
-        | "flag" as _tag__094_ ->
-          (match sexp_args__089_ with
-           | arg0__095_ :: [] ->
-             let res0__096_ = Flag.t_of_sexp arg0__095_ in
-             `flag res0__096_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__094_
-               _sexp__088_)
-        | "pp_with_flag" as _tag__090_ ->
-          (match sexp_args__089_ with
-           | arg0__091_ :: [] ->
-             let res0__092_ = Pp_with_flag.t_of_sexp arg0__091_ in
-             `pp_with_flag res0__092_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__090_
-               _sexp__088_)
+        | "flag" as tag ->
+          `flag
+            (Sexp_helpers.parse_inline_record
+               (module Flag)
+               ~error_source
+               ~context:_sexp__088_
+               ~tag
+               ~fields:sexp_args__089_)
+        | "pp_with_flag" as tag ->
+          `pp_with_flag
+            (Sexp_helpers.parse_inline_record
+               (module Pp_with_flag)
+               ~error_source
+               ~context:_sexp__088_
+               ~tag
+               ~fields:sexp_args__089_)
         | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
      | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__087_ ->
        Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__087_
@@ -498,10 +494,19 @@ module Predicate = struct
      | `pp v__102_ ->
        Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "pp"; Pp.Name.sexp_of_t v__102_ ]
      | `flag v__103_ ->
-       Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "flag"; Flag.sexp_of_t v__103_ ]
+       let sexps =
+         match Flag.sexp_of_t v__103_ with
+         | List sexps -> sexps
+         | Atom _ -> assert false
+       in
+       Sexplib0.Sexp.List (Sexplib0.Sexp.Atom "flag" :: sexps)
      | `pp_with_flag v__104_ ->
-       Sexplib0.Sexp.List
-         [ Sexplib0.Sexp.Atom "pp_with_flag"; Pp_with_flag.sexp_of_t v__104_ ]
+       let sexps =
+         match Pp_with_flag.sexp_of_t v__104_ with
+         | List sexps -> sexps
+         | Atom _ -> assert false
+       in
+       Sexplib0.Sexp.List (Sexplib0.Sexp.Atom "pp_with_flag" :: sexps)
      : t -> Sexplib0.Sexp.t)
   ;;
 end

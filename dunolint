@@ -41,9 +41,8 @@
         (dune
          (preprocess
           (pps
-           (flag
-            ((name -unused-code-warnings) (param (equals force))
-             (applies_to driver))))))))))
+           (flag (name -unused-code-warnings) (param (equals force))
+            (applies_to driver)))))))))
     (cond
      (((path (glob vendor/**/*))
        (enforce (dune (library (not (has_field instrumentation))))))
@@ -56,9 +55,7 @@
          (lint
           (pps
            (and (pp ppx_js_style)
-            (flag
-             ((name -allow-let-operators) (param none)
-              (applies_to (pp ppx_js_style))))
-            (flag
-             ((name -check-doc-comments) (param none)
-              (applies_to (pp ppx_js_style))))))))))))))))
+            (flag (name -allow-let-operators) (param none)
+             (applies_to (pp ppx_js_style)))
+            (flag (name -check-doc-comments) (param none)
+             (applies_to (pp ppx_js_style)))))))))))))))
