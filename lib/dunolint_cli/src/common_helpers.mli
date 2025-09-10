@@ -39,3 +39,5 @@ val load_config_opt_exn
   :  config:string option
   -> append_extra_rules:Dunolint.Config.Rule.t list
   -> Dunolint.Config.t
+
+val ancestors_directories : path:Relative_path.t -> Relative_path.t list

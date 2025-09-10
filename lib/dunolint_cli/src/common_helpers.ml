@@ -133,3 +133,13 @@ let load_config_opt_exn ~config ~append_extra_rules =
   in
   config
 ;;
+
+let ancestors_directories ~(path : Relative_path.t) =
+  let segs = Fpath.segs (path :> Fpath.t) in
+  List.init (List.length segs) ~f:(fun i ->
+    List.take segs i
+    |> List.map ~f:Fsegment.v
+    |> Relative_path.of_list
+    |> Relative_path.to_dir_path)
+  |> List.filter ~f:(fun path -> not (Relative_path.equal Relative_path.empty path))
+;;
