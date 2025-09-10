@@ -1,3 +1,9 @@
+## 0.0.20250910-1 (2025-09-10)
+
+### Fixed
+
+- Missing opam dependency `dunolint-lib-base` (@mbarbin).
+
 ## 0.0.20250910 (2025-09-10)
 
 ### Added
