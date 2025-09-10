@@ -45,9 +45,9 @@ module String : sig
 
   val t_of_sexp : Sexp.t -> t
   val sexp_of_t : t -> Sexp.t
+  val concat : sep:string -> string list -> string
   val is_prefix : string -> prefix:string -> bool
   val is_empty : string -> bool
-  val concat : sep:string -> string list -> string
   val split : string -> on:char -> string list
 end
 

@@ -48,9 +48,9 @@ module String = struct
 
   let t_of_sexp = string_of_sexp
   let sexp_of_t = sexp_of_string
+  let concat ~sep li = String.concat sep li
   let is_prefix t ~prefix = String.starts_with ~prefix t
   let is_empty t = String.length t = 0
-  let concat ~sep li = String.concat sep li
   let split t ~on = split_on_char ~sep:on t
 end
 
