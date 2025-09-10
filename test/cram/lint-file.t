@@ -139,7 +139,8 @@ an OCaml file.
 
 Currently the behavior of the lint-file command is to load a config file on its
 own if it is in the current cwd and named "dunolint". See below how the name of
-the project is indeed linted:
+the project is indeed linted. The test config enforces the project name so its
+effect is visible in this test (it is changed to "foo"):
 
   $ dunolint tools lint-file dune-project
   (lang dune 3.17)
@@ -153,14 +154,6 @@ However, you may supply a config to use.
   (lang dune 3.17)
   
   (name my_project_name)
-
-The test config enforces the project name so its effect is visible in this test
-(it is changed to "foo"):
-
-  $ dunolint tools lint-file dune-project --config=dunolint
-  (lang dune 3.17)
-  
-  (name foo)
 
 Supplying an absent file or an invalid one results in errors:
 
@@ -179,7 +172,7 @@ The path that is used by the config is the filename supplied when it is
 overridden. In particular note how here we are executing the `return` statement
 of the config.
 
-  $ dunolint tools lint-file dune-project --config=dunolint \
+  $ dunolint tools lint-file dune-project \
   >   --filename=vendor/dune-project
   (lang dune 3.17)
   
@@ -193,7 +186,7 @@ won't apply linting rules to it.
    (name mylib)
    (libraries a b c))
 
-  $ cat dune | dunolint tools lint-file --filename=.git/dune --config=dunolint
+  $ cat dune | dunolint tools lint-file --filename=.git/dune
   (library (name mylib)
    (libraries b c a))
 
@@ -201,7 +194,7 @@ Note however that the result is currently different when the `skip_subtree` is
 returned from a rule, rather than from the dedicated section. This is probably
 confusing and we may revisit this later. Keeping as a regression test for now.
 
-  $ cat dune | dunolint tools lint-file --filename=_build/dune --config=dunolint
+  $ cat dune | dunolint tools lint-file --filename=_build/dune
   (library
    (name mylib)
    (libraries b c a))

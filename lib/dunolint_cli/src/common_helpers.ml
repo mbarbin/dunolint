@@ -118,7 +118,7 @@ let load_config_opt_exn ~config ~append_extra_rules =
       let default_file = Absolute_path.extend cwd (Fsegment.v "dunolint") in
       let filename = Absolute_path.to_string default_file in
       if Stdlib.Sys.file_exists filename
-      then load_config_exn ~filename
+      then load_config_exn ~filename:"dunolint"
       else Dunolint.Config.create ~skip_subtree:(skip_subtree ~globs:[]) ~rules:[] ()
   in
   Dunolint.Config.create
