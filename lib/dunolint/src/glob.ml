@@ -28,13 +28,20 @@ type t =
 
 let to_string t = t.src
 
-let of_string src =
+let of_string_opt src =
   try
     let t = Re.Glob.glob ~anchored:true ~expand_braces:true ~pathname:true src in
-    { src; re = Re.compile t }
+    Ok { src; re = Re.compile t }
   with
   | Re.Glob.Parse_error ->
     let bt = Stdlib.Printexc.get_raw_backtrace () in
+    Error bt
+;;
+
+let of_string src =
+  match of_string_opt src with
+  | Ok t -> t
+  | Error bt ->
     Stdlib.Printexc.raise_with_backtrace
       (Invalid_argument (Printf.sprintf "Re.Glob.Parse_error: %s" src))
       bt
@@ -43,6 +50,12 @@ let of_string src =
 let v = of_string
 let equal t1 t2 = String.equal (to_string t1) (to_string t2)
 let test t a = Re.execp t.re a
-let t_of_sexp sexp = sexp |> String.t_of_sexp |> of_string
+
+let t_of_sexp sexp =
+  match of_string_opt (sexp |> String.t_of_sexp) with
+  | Ok t -> t
+  | Error _ -> raise (Sexp.Of_sexp_error (Failure "Invalid glob.", sexp))
+;;
+
 let sexp_of_t t = t |> to_string |> String.sexp_of_t
 let compare t1 t2 = String.compare (to_string t1) (to_string t2)
