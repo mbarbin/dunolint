@@ -27,6 +27,12 @@ module Char : sig
   val is_alphanum : char -> bool
 end
 
+module Int : sig
+  include module type of Int
+
+  val of_string_opt : string -> int option
+end
+
 module List : sig
   include module type of ListLabels
 
