@@ -34,9 +34,49 @@ type ('predicate, 'invariant) t =
 val compare : ('p -> 'p -> int) -> ('i -> 'i -> int) -> ('p, 'i) t -> ('p, 'i) t -> int
 val equal : ('p -> 'p -> bool) -> ('i -> 'i -> bool) -> ('p, 'i) t -> ('p, 'i) t -> bool
 
-include Sexpable.S2 with type ('p, 'i) t := ('p, 'i) t
-
 val eval
   :  ('predicate, 'invariant) t
   -> f:('predicate -> Trilang.t)
   -> [ `enforce of 'invariant | `return | `skip_subtree ]
+
+module Stable : sig
+  module V1 : sig
+    type nonrec ('a, 'b) t = ('a, 'b) t
+
+    val compare
+      :  ('p -> 'p -> int)
+      -> ('i -> 'i -> int)
+      -> ('p, 'i) t
+      -> ('p, 'i) t
+      -> int
+
+    val equal
+      :  ('p -> 'p -> bool)
+      -> ('i -> 'i -> bool)
+      -> ('p, 'i) t
+      -> ('p, 'i) t
+      -> bool
+
+    include Sexpable.S2 with type ('p, 'i) t := ('p, 'i) t
+  end
+
+  module V0 : sig
+    type nonrec ('a, 'b) t = ('a, 'b) t
+
+    val compare
+      :  ('p -> 'p -> int)
+      -> ('i -> 'i -> int)
+      -> ('p, 'i) t
+      -> ('p, 'i) t
+      -> int
+
+    val equal
+      :  ('p -> 'p -> bool)
+      -> ('i -> 'i -> bool)
+      -> ('p, 'i) t
+      -> ('p, 'i) t
+      -> bool
+
+    include Sexpable.S2 with type ('p, 'i) t := ('p, 'i) t
+  end
+end

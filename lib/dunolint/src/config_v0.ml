@@ -121,26 +121,28 @@ module Skip_subtree = struct
     ;;
   end
 
-  type t = (Predicate.t, Result.t) Rule.t
+  type t = (Predicate.t, Result.t) Rule.Stable.V0.t
 
   let compare =
     (fun a__033_ ->
-       fun b__034_ -> Rule.compare Predicate.compare Result.compare a__033_ b__034_
+       fun b__034_ ->
+       Rule.Stable.V0.compare Predicate.compare Result.compare a__033_ b__034_
      : t -> t -> int)
   ;;
 
   let equal =
-    (fun a__039_ -> fun b__040_ -> Rule.equal Predicate.equal Result.equal a__039_ b__040_
+    (fun a__039_ ->
+       fun b__040_ -> Rule.Stable.V0.equal Predicate.equal Result.equal a__039_ b__040_
      : t -> t -> bool)
   ;;
 
   let t_of_sexp =
-    (fun x__046_ -> Rule.t_of_sexp Predicate.t_of_sexp Result.t_of_sexp x__046_
+    (fun x__046_ -> Rule.Stable.V0.t_of_sexp Predicate.t_of_sexp Result.t_of_sexp x__046_
      : Sexplib0.Sexp.t -> t)
   ;;
 
   let sexp_of_t =
-    (fun x__047_ -> Rule.sexp_of_t Predicate.sexp_of_t Result.sexp_of_t x__047_
+    (fun x__047_ -> Rule.Stable.V0.sexp_of_t Predicate.sexp_of_t Result.sexp_of_t x__047_
      : t -> Sexplib0.Sexp.t)
   ;;
 end
@@ -148,27 +150,30 @@ end
 module Rule = struct
   [@@@coverage off]
 
-  type t = (Predicate.t, Condition.t) Rule.t
+  type t = (Predicate.t, Condition.t) Rule.Stable.V0.t
 
   let compare =
     (fun a__048_ ->
-       fun b__049_ -> Rule.compare Predicate.compare Condition.compare a__048_ b__049_
+       fun b__049_ ->
+       Rule.Stable.V0.compare Predicate.compare Condition.compare a__048_ b__049_
      : t -> t -> int)
   ;;
 
   let equal =
     (fun a__054_ ->
-       fun b__055_ -> Rule.equal Predicate.equal Condition.equal a__054_ b__055_
+       fun b__055_ -> Rule.Stable.V0.equal Predicate.equal Condition.equal a__054_ b__055_
      : t -> t -> bool)
   ;;
 
   let t_of_sexp =
-    (fun x__061_ -> Rule.t_of_sexp Predicate.t_of_sexp Condition.t_of_sexp x__061_
+    (fun x__061_ ->
+       Rule.Stable.V0.t_of_sexp Predicate.t_of_sexp Condition.t_of_sexp x__061_
      : Sexplib0.Sexp.t -> t)
   ;;
 
   let sexp_of_t =
-    (fun x__062_ -> Rule.sexp_of_t Predicate.sexp_of_t Condition.sexp_of_t x__062_
+    (fun x__062_ ->
+       Rule.Stable.V0.sexp_of_t Predicate.sexp_of_t Condition.sexp_of_t x__062_
      : t -> Sexplib0.Sexp.t)
   ;;
 end
