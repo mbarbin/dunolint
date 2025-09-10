@@ -20,35 +20,22 @@
 (*********************************************************************************)
 
 let main =
-  Command.group
-    ~summary:"A linter for build files in OCaml dune projects."
+  Command.make
+    ~summary:"Validate the supplied config file."
     ~readme:(fun () ->
-      "The goal of $(b,dunolint) is to check customizable invariants in your repo and \
-       help with ergonomic issues, such as applying systematic changes across many \
-       files. It supports things like enabling instrumentation, configuring recurring \
-       lint or preprocess flags, sorting libraries alphabetically, and more. You can use \
-       it at your convenience during development, and enforce consistency by integrating \
-       it into your CI pipeline.\n\n\
-       Main commands include:\n\n\
-       - $(b,lint): apply linting configuration to an entire project at once, perhaps \
-       interactively.\n\n\
-       - $(b,tools): a collection of more specific commands, for example to facilitate \
-       the integration with other tools.\n\n\
-       For more information, use the $(b,--help) flag on a subcommand.")
-    [ "lint", Cmd__lint.main
-    ; ( "tools"
-      , Command.group
-          ~summary:"Tools commands (miscellaneous)."
-          [ ( "config"
-            , Command.group
-                ~summary:"Utils related to config files."
-                [ "validate", Cmd__tools__config__validate.main ] )
-          ; "lint-file", Cmd__tools__lint_file.main
-          ] )
-    ]
+      "You can use this command to validate that the supplied file is a valid config \
+       file for $(b,dunolint).")
+    (let open Command.Std in
+     let+ filename = Arg.pos ~pos:0 Param.file ~doc:"Config file to customize dunolint."
+     and+ print =
+       Arg.flag [ "print" ] ~doc:"Print the parsed config as a S-expression."
+     in
+     let config = Common_helpers.load_config_exn ~filename in
+     if print
+     then (
+       let sexps = Dunolint.Config.to_stanzas config in
+       print_endline
+         (List.mapi sexps ~f:(fun i s ->
+            (if i > 0 then "\n" else "") ^ Sexp.to_string_hum s)
+          |> String.concat ~sep:"\n")))
 ;;
-
-module Private = struct
-  module Common_helpers = Common_helpers
-  module Linter = Linter
-end
