@@ -1,0 +1,6 @@
+(mdx
+ (package dunolint-dev)
+ (deps
+  (package dunolint)
+  (glob_files *.txt))
+ (preludes prelude.txt))
