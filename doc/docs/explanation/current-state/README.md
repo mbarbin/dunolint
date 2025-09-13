@@ -4,7 +4,7 @@ The project is currently in the early stages of development, and there is little
 
 ## Versioning Tags
 
-Releases are named using the scheme `0.0.YYYMMDD` while the project is still in its early days. This will allow us to transition to a different scheme later if desired, in accordance with the version comparison function used by *opam*.
+Releases are named using the scheme `0.0.YYYYMMDD` while the project is still in its early days. This will allow us to transition to a different scheme later if desired, in accordance with the version comparison function used by *opam*.
 
 ## Interfaces and Behavior
 

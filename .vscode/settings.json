@@ -24,7 +24,6 @@
         "ppxlib",
         "subdirs",
         "toplevel",
-        "Trilang",
-        "YYYMMDD"
+        "Trilang"
     ]
 }

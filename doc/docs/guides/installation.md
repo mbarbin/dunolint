@@ -6,7 +6,7 @@ You can choose to install dunolint from either:
 - A custom opam-repository (more frequent releases)
 - From source (most recent version, PRs, etc.)
 
-Releases are currently versioned using the scheme `0.0.YYYMMDD` while we are in the early stages of development.
+Releases are currently versioned using the scheme `0.0.YYYYMMDD` while we are in the early stages of development.
 
 For more information about the versioning scheme and the current state of *dunolint*, please see [this page](../explanation/current-state/README.md).
 
