@@ -4,21 +4,41 @@ This is your first introduction to dunolint - a tool that helps you maintain con
 
 ## Simulating an Existing Project
 
+<details>
+<summary>
 For this mdx tutorial, let's simulate a typical OCaml project with a simple library:
+</summary>
+
+For the purpose of this compiled documentation (mdx) we've prepared the contents of a simple dune file under the file `dune.txt` in our repo, we'll copy it as `src/dune` to make the rest of the test use it.
 
 ```bash
 $ mkdir -p src
-$ cat dune.txt | tee src/dune
+$ cat dune.txt > src/dune
+```
+</details>
+
+```bash
+$ cat src/dune
 (library
  (name mylib))
 ```
 
 ## Creating Your First Dunolint Configuration
 
-Say you want all libraries & executables to have code coverage instrumentation. Create a config file named `dunolint`:
+Say you want all libraries & executables to have code coverage instrumentation.
+
+<details>
+<summary>
+Create a config file named `dunolint`:
+</summary>
 
 ```bash
-$ cat dunolint.txt | tee dunolint
+$ cat dunolint.txt > dunolint
+```
+</details>
+
+```bash
+$ cat dunolint
 (lang dunolint 1.0)
 
 (rule
