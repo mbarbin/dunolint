@@ -13,6 +13,8 @@
   -open
   Fpath_base
   -open
+  Pplumbing_err
+  -open
   Stdio
   -open
   Expect_test_helpers_base)
@@ -26,7 +28,7 @@
   fpath-base
   loc
   pp
-  pplumbing.err
+  pplumbing-err
   sexps-rewriter
   stdio
   test_helpers)

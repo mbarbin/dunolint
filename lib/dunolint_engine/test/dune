@@ -13,6 +13,8 @@
   -open
   Fpath_sexp0
   -open
+  Pplumbing_err
+  -open
   Stdio
   -open
   Expect_test_helpers_base)
@@ -28,7 +30,7 @@
   expect_test_helpers_core.expect_test_helpers_base
   file-rewriter
   fpath-sexp0
-  pplumbing.err
+  pplumbing-err
   sexps-rewriter
   stdio
   unix)

@@ -12,6 +12,14 @@
   -open
   Fpath_base
   -open
+  Pplumbing_pp_tty
+  -open
+  Pplumbing_err
+  -open
+  Pplumbing_log
+  -open
+  Pplumbing_log_cli
+  -open
   Stdio
   -open
   Cmdlang
@@ -30,10 +38,10 @@
   loc
   parsexp
   pp
-  pplumbing.err
-  pplumbing.log
-  pplumbing.log-cli
-  pplumbing.pp-tty
+  pplumbing-err
+  pplumbing-log
+  pplumbing-log-cli
+  pplumbing-pp-tty
   re
   sexps-rewriter
   stdio

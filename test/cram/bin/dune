@@ -19,9 +19,9 @@
  (libraries
   base
   cmdlang
+  cmdlang-cmdliner-err-runner
   dunolint
   fpath-sexp0
-  pplumbing.cmdlang-cmdliner-runner
   stdio)
  (instrumentation
   (backend bisect_ppx))

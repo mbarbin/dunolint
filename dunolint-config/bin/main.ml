@@ -20,7 +20,7 @@
 (*********************************************************************************)
 
 let () =
-  Cmdlang_cmdliner_runner.run
+  Cmdlang_cmdliner_err_runner.run
     Dunolint_dunolint_config.Config.main
     ~name:"dunolint-dunolint-config-gen"
     ~version:"%%VERSION%%"

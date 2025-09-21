@@ -13,6 +13,8 @@
   -open
   Fpath_sexp0
   -open
+  Pplumbing_err
+  -open
   Expect_test_helpers_base
   -open
   Dunolint_base
@@ -30,7 +32,7 @@
   parsexp
   patdiff.expect_test_patdiff
   pp
-  pplumbing.err
+  pplumbing-err
   sexps-rewriter
   test_helpers)
  (instrumentation
