@@ -94,5 +94,5 @@ let main =
 ;;
 
 let () =
-  Cmdlang_cmdliner_runner.run main ~name:"lint-file-config-gen" ~version:"%%VERSION%%"
+  Cmdlang_cmdliner_err_runner.run main ~name:"lint-file-config-gen" ~version:"%%VERSION%%"
 ;;

@@ -2,7 +2,7 @@
  (name main)
  (public_name dunolint-dunolint-config-gen)
  (package dunolint-tests)
- (libraries dunolint_dunolint_config pplumbing.cmdlang-cmdliner-runner)
+ (libraries cmdlang-cmdliner-err-runner dunolint_dunolint_config)
  (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a)
  (instrumentation
   (backend bisect_ppx))

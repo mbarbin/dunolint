@@ -12,6 +12,10 @@
   -open
   Fpath_base
   -open
+  Pplumbing_pp_tty
+  -open
+  Pplumbing_err
+  -open
   Sexplib0
   -open
   Dunolint_base
@@ -27,8 +31,8 @@
   loc
   parsexp
   pp
-  pplumbing.err
-  pplumbing.pp-tty
+  pplumbing-err
+  pplumbing-pp-tty
   sexplib0
   sexps-rewriter)
  (instrumentation

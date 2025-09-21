@@ -20,5 +20,8 @@
 (*********************************************************************************)
 
 let () =
-  Cmdlang_cmdliner_runner.run Dunolint_cli.main ~name:"dunolint" ~version:"%%VERSION%%"
+  Cmdlang_cmdliner_err_runner.run
+    Dunolint_cli.main
+    ~name:"dunolint"
+    ~version:"%%VERSION%%"
 ;;

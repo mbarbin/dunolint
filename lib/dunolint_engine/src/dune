@@ -12,6 +12,12 @@
   -open
   Fpath_base
   -open
+  Pplumbing_pp_tty
+  -open
+  Pplumbing_err
+  -open
+  Pplumbing_log
+  -open
   Stdio
   -open
   Cmdlang
@@ -36,9 +42,9 @@
   patdiff
   patdiff.expect_test_patdiff
   pp
-  pplumbing.err
-  pplumbing.log
-  pplumbing.pp-tty
+  pplumbing-err
+  pplumbing-log
+  pplumbing-pp-tty
   sexplib0
   sexps-rewriter
   stdio

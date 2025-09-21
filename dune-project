@@ -81,6 +81,8 @@
    (>= v0.17))
   (cmdlang
    (>= 0.0.9))
+  (cmdlang-cmdliner-err-runner
+   (>= 0.0.16))
   (dunolint-lib
    (= :version))
   (dunolint-lib-base
@@ -107,8 +109,14 @@
    (>= v0.17))
   (pp
    (>= 2.0.0))
-  (pplumbing
-   (>= 0.0.14))
+  (pplumbing-err
+   (>= 0.0.16))
+  (pplumbing-log
+   (>= 0.0.16))
+  (pplumbing-log-cli
+   (>= 0.0.16))
+  (pplumbing-pp-tty
+   (>= 0.0.16))
   (ppx_compare
    (>= v0.17))
   (ppx_enumerate
@@ -156,6 +164,8 @@
    (>= v0.17))
   (cmdlang
    (>= 0.0.9))
+  (cmdlang-cmdliner-err-runner
+   (>= 0.0.16))
   (cmdlang-stdlib-runner
    (>= 0.0.9))
   (dunolint
@@ -186,8 +196,14 @@
    (>= v0.17))
   (pp
    (>= 2.0.0))
-  (pplumbing
-   (>= 0.0.14))
+  (pplumbing-err
+   (>= 0.0.16))
+  (pplumbing-log
+   (>= 0.0.16))
+  (pplumbing-log-cli
+   (>= 0.0.16))
+  (pplumbing-pp-tty
+   (>= 0.0.16))
   (ppx_compare
    (>= v0.17))
   (ppx_enumerate
@@ -249,6 +265,8 @@
    (>= 2.8.3))
   (cmdlang
    (>= 0.0.9))
+  (cmdlang-cmdliner-err-runner
+   (>= 0.0.16))
   (cmdlang-stdlib-runner
    (>= 0.0.9))
   (dunolint
@@ -285,8 +303,14 @@
    (>= v0.17))
   (pp
    (>= 2.0.0))
-  (pplumbing
-   (>= 0.0.14))
+  (pplumbing-err
+   (>= 0.0.16))
+  (pplumbing-log
+   (>= 0.0.16))
+  (pplumbing-log-cli
+   (>= 0.0.16))
+  (pplumbing-pp-tty
+   (>= 0.0.16))
   (ppx_compare
    (>= v0.17))
   (ppx_enumerate
