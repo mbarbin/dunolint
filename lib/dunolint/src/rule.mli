@@ -25,7 +25,10 @@ type ('predicate, 'invariant) t =
     (** [return] stops the evaluation of the rule without trying to enforce any
         invariant. *)
   | `skip_subtree
-    (** This causes the linter to finish the linting of the current rule,
+    (** The construct [skip_subtree] is deprecated and will be removed soon.
+        Using it will cause an error during config loading since version "1.0".
+
+        This causes the linter to finish the linting of the current rule,
         however any remaining rule will be skipped, and the entire subtree will
         not be linted. *)
   | `cond of ('predicate Blang.t * ('predicate, 'invariant) t) list

@@ -4,6 +4,8 @@ Dunolint's configuration language allows the user to express custom linting rule
 
 This documents introduces the terminology used in the config language and then explains how to construct and use the configuration language effectively.
 
+If you are looking for the config language reference instead, head over [here](../../reference/config/README.md).
+
 ## Fragments
 
 A **fragment** is a part of a file that is scrutinized during the linting process. It is loaded from disk, parsed, and is checked against specified expectations.
@@ -119,7 +121,6 @@ A rule specifies the actions to be taken during the linting of a fragment. Evalu
 
 - `(enforce INVARIANT)`: The rule specifies an invariant to enforce during linting.
 - `return`: stops the evaluation of the rule without trying to enforce any invariant.
-- `skip_subtree`: this causes the linter to finish the linting of the current rule, however any remaining rule will be skipped for the fragment a hand, and the entire subtree at point will not be linted.
 
 In addition to these results construct, a conditional control structure is provided in the form of an operator named *cond*.
 
@@ -127,7 +128,6 @@ In addition to these results construct, a conditional control structure is provi
 type ('predicate, 'invariant) t =
   [ `enforce of 'invariant
   | `return
-  | `skip_subtree
   | `cond of ('predicate Blang.t * ('predicate, 'invariant) t) list
   ]
 [@@deriving compare, equal, sexp]
@@ -141,7 +141,7 @@ Rules are evaluated under a context that knows to assign *trilang* values to pre
 val eval
   :  ('predicate, 'invariant) t
   -> f:('predicate -> Trilang.t)
-  -> [ `enforce of 'invariant | `return | `skip_subtree ]
+  -> [ `enforce of 'invariant | `return ]
 ```
 
 **Cond:**

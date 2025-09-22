@@ -258,7 +258,7 @@ When enforced, *dunolint* suggests to add the pp to the list of arguments, initi
 
 **Negation**: When the negation of the predicate is enforced, *dunolint* suggests removing the pp from the list if present, along with any flags that may be associated with it.
 
-2. `(flag ((name FLAG) (param PARAM) (applies_to APPLIES_TO)))`
+2. `(flag (name FLAG) (param PARAM) (applies_to APPLIES_TO))`
 
 - PARAM: `any | none | some | (equals VALUE)`
 - APPLIES_TO: `any | driver | (pp PP_NAME)`
@@ -294,7 +294,7 @@ Param matching evaluation is pretty self explanatory, *any* matches anything, *n
 
 It is possible to enforce the `(flag _)` predicate, when the specification is unambiguous as to how to create a new flag if a matching one is not already present (for example, it can't have PARAM=any, etc.). The `(flag _)` predicate may only be negated when `PARAM=any` in which case *dunolint* will suggests removing any matching flag.
 
-3. `(pp_with_flag ((pp PP_NAME) (flag FLAG) (param PARAM)))`
+3. `(pp_with_flag (pp PP_NAME) (flag FLAG) (param PARAM))`
 
 This is a convenient wrapper for combining the two previous predicates into a single one, to assert the present of a pp with a flag applied to it.
 
@@ -314,7 +314,7 @@ Condition: `(dune (lint (pps PREDICATE)))`
 | --------- | ------- |
 | (pp ppx_js_style) | True |
 | (not (pp ppx_js_style)) | False. Suggestion: remove "ppx_js_style -check-doc-comments" |
-| (flag ((name -allow-let-operators)(param none)(applies_to (pp ppx_js_style)))) | False. Suggestion: add "-allow-let-operators" right after "ppx_js_style" |
+| (flag (name -allow-let-operators)(param none)(applies_to (pp ppx_js_style))) | False. Suggestion: add "-allow-let-operators" right after "ppx_js_style" |
 
 ## preprocess
 
@@ -359,19 +359,17 @@ Compilation modes are ordered by *dunolint* as: `byte < native < best < melange`
 
 The predicates of the `modes` selector are:
 
-1. `(equals MODES)`
-
-Returns *true* iif the set defined by the compilation modes supplied is an exact match for the set of compilation modes present in the FRAGMENT.
-
-When enforced, *dunolint* suggests to replace the existing fragment with the list of values specified by the predicate.
-
-2. `(has_mode MODE)`
+1. `(has_mode MODE)`
 
 Returns *true* iif the mode specified is present in the list of values found in the fragment.
 
 When enforced, *dunolint* suggests adding the mode to the list of values found in the fragment, if it is not already among the existing values.
 
 **Negation**: When the negation of the predicate *has_mode* is enforced, *dunolint* suggests removing the supplied mode from the fragment if this mode is currently present.
+
+2. `(has_modes MODES)`
+
+This is a shorthand for the conjunction of `(has_mode MODE)` for all the MODES.
 
 **Examples:**
 
@@ -385,8 +383,7 @@ Condition: `(dune (library (modes PREDICATE)))`
 
 | Predicate | Result |
 | --------- | ------ |
-| (equals (byte native)) | True |
-| (equals (byte)) | False. Suggestion: remove *native* |
+| (has_modes byte native) | True |
 | (has_mode byte) | True |
 | (has_mode best) | False. Suggestion: add *best*, keep existing values. |
 | (not (has_mode native)) | False. Suggestion: remove *native* |

@@ -32,11 +32,15 @@ Stanza:
 
 Its evaluation is *undefined* for all other stanzas. Its predicates are:
 
-1. `(equals BOOL)`
+1. `(equals VALUE)`
 
-Returns *true* iif the BOOL value supplied is an exact match for the value present in the FRAGMENT.
+Returns *true* iif the VALUE supplied is an exact match for the value present in the FRAGMENT.
 
-When enforced, dunolint suggests to replace the existing bool value with the one specified by the predicate. Doesn't support suggestion when negated (if you need to, simply go and assert the opposite boolean value).
+```pre
+VALUE := true | false | false-if-hidden-includes-supported
+```
+
+When enforced, dunolint suggests to replace the existing fragment's value with the one specified by the predicate. Doesn't support suggestion when negated (if you need to, simply go and enforce the equality with the desired value).
 
 **Examples:**
 
