@@ -23,7 +23,7 @@ let main =
   Command.make
     ~summary:"Lint project."
     (let open Command.Std in
-     let+ dunolint_engine_config = Dunolint_engine.Config.arg
+     let+ running_mode = Dunolint_engine.Running_mode.arg
      and+ () = Log_cli.set_config ()
      and+ config =
        Arg.named_opt [ "config" ] Param.file ~doc:"Path to dunolint config file."
@@ -39,7 +39,7 @@ let main =
      let config =
        Common_helpers.load_config_opt_exn ~config ~append_extra_rules:enforce
      in
-     Dunolint_engine.run ~config:dunolint_engine_config
+     Dunolint_engine.run ~running_mode
      @@ fun dunolint_engine ->
      Dunolint_engine.visit
        dunolint_engine

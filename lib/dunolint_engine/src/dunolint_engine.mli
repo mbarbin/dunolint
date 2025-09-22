@@ -19,8 +19,8 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-module Config = Config
 module File_kind = File_kind
+module Running_mode = Running_mode
 
 type t
 
@@ -91,8 +91,8 @@ val lint_file
 val format_dune_file : new_contents:string -> string
 
 (** This calls [f] once, registers all requests enqueued during the execution of
-    [f], and then depending on the config, either do a dry-run, or actually
-    perform the desired transformations.
+    [f], and then depending on the running mode, either do a dry-run, or
+    actually perform the desired transformations.
 
     The intended use is for [f] to contain one or several calls to a function
     that uses [t] to perform some dunolint linting, such as [visit],
@@ -104,11 +104,11 @@ val format_dune_file : new_contents:string -> string
     In addition to enqueuing debug messages and errors, this function outputs
     messages regarding I/O actions executed during linting. These messages are
     produced onto [stdout]. *)
-val run : config:Config.t -> (t -> 'a) -> 'a
+val run : running_mode:Running_mode.t -> (t -> 'a) -> 'a
 
 (** {1 Step by step API} *)
 
-val create : config:Config.t -> t
+val create : running_mode:Running_mode.t -> unit -> t
 
 (** Apply all the changes that have been saved into [t] to the file system, or
     merely print them if we're in dry-run mode. *)

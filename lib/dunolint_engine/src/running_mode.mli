@@ -19,24 +19,12 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-type t [@@deriving sexp_of]
+type t =
+  | Dry_run
+  | Check
+  | Force_yes
+  | Interactive
+[@@deriving compare, equal, sexp_of]
 
 val default : t
 val arg : t Cmdlang.Command.Arg.t
-
-(** {1 Getters} *)
-
-module Running_mode : sig
-  type t =
-    | Dry_run
-    | Check
-    | Force_yes
-    | Interactive
-  [@@deriving compare, equal, sexp_of]
-end
-
-val running_mode : t -> Running_mode.t
-
-(** {1 Create} *)
-
-val create : running_mode:Running_mode.t -> t

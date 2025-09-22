@@ -24,8 +24,8 @@ module Unix = UnixLabels
 
 let src = Logs.Src.create "dunolint" ~doc:"dunolint"
 
-module Config = Config
 module File_kind = File_kind
+module Running_mode = Running_mode
 
 module Edited_file = struct
   (* Edited files are indexed by their path relative to the root_path provided
@@ -38,11 +38,13 @@ module Edited_file = struct
 end
 
 type t =
-  { config : Config.t
+  { running_mode : Running_mode.t
   ; edited_files : Edited_file.t Hashtbl.M(Relative_path).t
   }
 
-let create ~config = { config; edited_files = Hashtbl.create (module Relative_path) }
+let create ~running_mode () =
+  { running_mode; edited_files = Hashtbl.create (module Relative_path) }
+;;
 
 let file_exists ~path =
   match (Unix.stat (Relative_path.to_string path)).st_kind with
@@ -246,7 +248,7 @@ let rec mkdirs path =
 ;;
 
 let materialize t =
-  let running_mode = Config.running_mode t.config in
+  let running_mode = t.running_mode in
   let edited_files =
     Hashtbl.to_alist t.edited_files
     |> List.sort ~compare:(fun (p1, _) (p2, _) -> Relative_path.compare p1 p2)
@@ -425,12 +427,12 @@ let visit ?below (_ : t) ~f =
   visit [ [ root_path ] ]
 ;;
 
-let run ~config f =
-  let t = create ~config in
+let run ~running_mode f =
+  let t = create ~running_mode () in
   let result = f t in
   materialize t;
   let () =
-    match Config.running_mode config with
+    match running_mode with
     | Dry_run | Force_yes | Interactive -> ()
     | Check ->
       if not (Hashtbl.is_empty t.edited_files)
