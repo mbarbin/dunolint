@@ -24,6 +24,8 @@
   -open
   Cmdlang
   -open
+  Volgo_base
+  -open
   Dunolint.Std)
  (libraries
   base
@@ -45,7 +47,10 @@
   re
   sexps-rewriter
   stdio
-  unix)
+  unix
+  volgo-base
+  volgo-git-unix
+  volgo-hg-unix)
  (instrumentation
   (backend bisect_ppx))
  (lint

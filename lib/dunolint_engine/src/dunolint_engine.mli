@@ -104,11 +104,11 @@ val format_dune_file : new_contents:string -> string
     In addition to enqueuing debug messages and errors, this function outputs
     messages regarding I/O actions executed during linting. These messages are
     produced onto [stdout]. *)
-val run : running_mode:Running_mode.t -> (t -> 'a) -> 'a
+val run : repo_root:Vcs.Repo_root.t -> running_mode:Running_mode.t -> (t -> 'a) -> 'a
 
 (** {1 Step by step API} *)
 
-val create : running_mode:Running_mode.t -> unit -> t
+val create : repo_root:Vcs.Repo_root.t -> running_mode:Running_mode.t -> unit -> t
 
 (** Apply all the changes that have been saved into [t] to the file system, or
     merely print them if we're in dry-run mode. *)

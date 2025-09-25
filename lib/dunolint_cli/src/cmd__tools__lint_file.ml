@@ -216,8 +216,12 @@ let main =
      in
      let save_in_place = save_in_place ~in_place ~file in
      let cwd = Unix.getcwd () |> Absolute_path.v in
+     let enclosing_repo = Common_helpers.find_enclosing_repo ~from:cwd in
      let config =
-       Common_helpers.load_config_opt_exn ~config ~append_extra_rules:enforce
+       Common_helpers.load_config_opt_exn
+         ~enclosing_repo
+         ~config
+         ~append_extra_rules:enforce
      in
      let path = select_path ~cwd ~filename ~file in
      let linter = select_linter ~path:(path :> Fpath.t) in

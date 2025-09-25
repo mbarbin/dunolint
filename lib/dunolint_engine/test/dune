@@ -17,7 +17,9 @@
   -open
   Stdio
   -open
-  Expect_test_helpers_base)
+  Expect_test_helpers_base
+  -open
+  Volgo_base)
  (libraries
   base
   cmdlang
@@ -33,7 +35,8 @@
   pplumbing-err
   sexps-rewriter
   stdio
-  unix)
+  unix
+  volgo-base)
  (instrumentation
   (backend bisect_ppx))
  (lint

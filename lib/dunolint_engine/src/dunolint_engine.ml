@@ -42,7 +42,7 @@ type t =
   ; edited_files : Edited_file.t Hashtbl.M(Relative_path).t
   }
 
-let create ~running_mode () =
+let create ~repo_root:_ ~running_mode () =
   { running_mode; edited_files = Hashtbl.create (module Relative_path) }
 ;;
 
@@ -427,8 +427,8 @@ let visit ?below (_ : t) ~f =
   visit [ [ root_path ] ]
 ;;
 
-let run ~running_mode f =
-  let t = create ~running_mode () in
+let run ~repo_root ~running_mode f =
+  let t = create ~repo_root ~running_mode () in
   let result = f t in
   materialize t;
   let () =

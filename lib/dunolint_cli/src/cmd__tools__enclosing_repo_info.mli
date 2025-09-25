@@ -19,41 +19,4 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-(** For use in the rest of the files in this directory. *)
-
-val sexpable_param : (module Sexpable.S with type t = 'a) -> 'a Command.Param.t
-
-(** Restrict the scope of a command to a subdirectory only. "Below this path". *)
-val below : doc:string -> Relative_path.t option Command.Arg.t
-
-(** A list of defaults directories to skip. *)
-val skip_subtrees : globs:string list -> Dunolint.Glob.t list
-
-(** A helper for loading the config with some effort regarding producing located
-    error messages when able. *)
-val load_config_exn : filename:string -> Dunolint.Config.t
-
-(** A helper to load a config file, either supplied or inferred from the context
-    and add some optional rules. *)
-val load_config_opt_exn
-  :  enclosing_repo:Enclosing_repo.t option
-  -> config:string option
-  -> append_extra_rules:Dunolint.Config.Rule.t list
-  -> Dunolint.Config.t
-
-val ancestors_directories : path:Relative_path.t -> Relative_path.t list
-
-(** Find enclosing repo or raise an error with [Err]. *)
-val find_enclosing_repo_exn : from:Absolute_path.t -> Enclosing_repo.t
-
-val find_enclosing_repo : from:Absolute_path.t -> Enclosing_repo.t option
-
-(** When supplying path arguments that are aimed to designate paths in repo,
-    we need to resolve them according to where the [repo_root] is in relation
-    to the cwd. We interpret relative paths as relative to the cwd from which
-    the program started. *)
-val relativize
-  :  repo_root:Vcs.Repo_root.t
-  -> cwd:Absolute_path.t
-  -> path:Fpath.t
-  -> Vcs.Path_in_repo.t
+val main : unit Command.t

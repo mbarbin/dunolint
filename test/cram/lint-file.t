@@ -1,6 +1,12 @@
 The dunolint command line tool exposes a util to ease integration with editors.
 We test it here while calling it from the shell.
 
+First we need to setup a repo in a way that satisfies the test environment. This
+includes specifics required by the GitHub Actions environment.
+
+  $ volgo-vcs init -q .
+  $ volgo-vcs set-user-config --user.name "Test User" --user.email "test@example.com"
+
 By default the command reads from `stdin`.
 
   $ printf '(lang dune 3.17)\n' | dunolint tools lint-file
@@ -281,3 +287,12 @@ The command is idempotent.
   $ dunolint tools lint-file dune --in-place
 
   $ diff dune dune-backup
+
+We have introduced requirements for the dunolint commands to be run from within
+a supported repository. However for now we have maintained the support to run
+specifically the `lint-file` command from within Emacs outside of a repository.
+
+We monitor that this works below:
+
+  $ printf '(lang\n dune\n 3.17)\n' | (cd / && dunolint tools lint-file --filename=dune-project)
+  (lang dune 3.17)

@@ -20,36 +20,35 @@
 (*********************************************************************************)
 
 let main =
-  Command.group
-    ~summary:"A linter for build files in OCaml dune projects."
+  Command.make
+    ~summary:"A util to get info about the enclosing repo."
     ~readme:(fun () ->
-      "The goal of $(b,dunolint) is to check customizable invariants in your repo and \
-       help with ergonomic issues, such as applying systematic changes across many \
-       files. It supports things like enabling instrumentation, configuring recurring \
-       lint or preprocess flags, sorting libraries alphabetically, and more. You can use \
-       it at your convenience during development, and enforce consistency by integrating \
-       it into your CI pipeline.\n\n\
-       Main commands include:\n\n\
-       - $(b,lint): apply linting configuration to an entire project at once, perhaps \
-       interactively.\n\n\
-       - $(b,tools): a collection of more specific commands, for example to facilitate \
-       the integration with other tools.\n\n\
-       For more information, use the $(b,--help) flag on a subcommand.")
-    [ "lint", Cmd__lint.main
-    ; ( "tools"
-      , Command.group
-          ~summary:"Tools commands (miscellaneous)."
-          [ ( "config"
-            , Command.group
-                ~summary:"Utils related to config files."
-                [ "validate", Cmd__tools__config__validate.main ] )
-          ; "enclosing-repo-info", Cmd__tools__enclosing_repo_info.main
-          ; "lint-file", Cmd__tools__lint_file.main
-          ] )
-    ]
+      "This command locates the root of the repository containing the current working \
+       directory.\n\n\
+       It then displays a S-expression containing several fields related to that \
+       repository and the current path.\n\n\
+       - $(b,repo_root) : The root of the enclosing repo (absolute path).\n\n\
+       - $(b,path_in_repo) : The path of the current directory related to the repo root \
+       (relative path).\n\n\
+       - $(b,vcs_kind) : The kind of version control for the enclosing repository \
+       (git|hg).")
+    (let open Command.Std in
+     let+ below = Common_helpers.below ~doc:"Select a subdirectory." in
+     let cwd = Unix.getcwd () |> Absolute_path.v in
+     let { Enclosing_repo.vcs_kind; repo_root; vcs = _ } =
+       Common_helpers.find_enclosing_repo_exn ~from:cwd
+     in
+     let path_in_repo =
+       Common_helpers.relativize
+         ~repo_root
+         ~cwd
+         ~path:(Option.value below ~default:Relative_path.empty :> Fpath.t)
+     in
+     print_s
+       [%sexp
+         { repo_root : Vcs.Repo_root.t
+         ; path_in_repo : Vcs.Path_in_repo.t
+         ; vcs_kind : Enclosing_repo.Vcs_kind.t
+         }];
+     ())
 ;;
-
-module Private = struct
-  module Common_helpers = Common_helpers
-  module Linter = Linter
-end

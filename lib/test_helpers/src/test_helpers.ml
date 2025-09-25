@@ -53,7 +53,8 @@ let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
 let is_undefined b = require_equal [%here] (module Dunolint.Trilang) b Undefined
 
 let run_linter ~config =
-  let dunolint_engine = Dunolint_engine.create ~running_mode:Dry_run () in
+  let repo_root = Vcs.Repo_root.v (Unix.getcwd ()) in
+  let dunolint_engine = Dunolint_engine.create ~repo_root ~running_mode:Dry_run () in
   let () =
     Dunolint_engine.visit dunolint_engine ~f:(fun ~parent_dir ~subdirectories:_ ~files ->
       Dunolint_cli.Private.Linter.visit_directory

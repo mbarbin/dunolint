@@ -1,5 +1,13 @@
 In this test we exercise the interactive mode.
 
+First we need to setup a repo in a way that satisfies the test environment. This
+includes specifics required by the GitHub Actions environment.
+
+  $ volgo-vcs init -q .
+  $ volgo-vcs set-user-config --user.name "Test User" --user.email "test@example.com"
+
+Initiate some files to lint.
+
   $ cat > dune-project <<EOF
   > (name main)
   > EOF
@@ -19,6 +27,7 @@ Where this is nothing to lint, the interactive command exits with no prompt.
 
   $ dunolint lint --interactive --verbose
   dunolint: [INFO] Linting file "dune-project"
+  dunolint: [INFO] Skipping children of directory ".git/"
   dunolint: [INFO] Skipping children of directory "_build/"
   dunolint: [INFO] Linting file "lib/foo/dune"
 

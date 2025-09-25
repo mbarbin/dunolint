@@ -3,6 +3,7 @@
  (deps
   (package dunolint-lib)
   (package dunolint)
+  (package volgo-vcs)
   %{bin:dunolint}
   (glob_files *.exe)
   (glob_files *.sexp)))

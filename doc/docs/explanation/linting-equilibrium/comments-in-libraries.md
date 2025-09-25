@@ -1,5 +1,16 @@
 # Comments in `libraries`
 
+<details>
+<summary>
+First we need to setup a repo in a way that satisfies the test environment.
+</summary>
+
+```sh
+$ volgo-vcs init -q .
+$ volgo-vcs set-user-config --user.name "Test User" --user.email "test@example.com"
+```
+</details>
+
 The `libraries` dependencies listed in `library` stanzas are sorted alphabetically. For example, this dune file:
 
 ```sh

@@ -2,5 +2,6 @@
  (package dunolint-dev)
  (deps
   (package dunolint-lib)
-  (package dunolint))
+  (package dunolint)
+  (package volgo-vcs))
  (preludes prelude.txt))

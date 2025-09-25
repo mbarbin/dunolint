@@ -19,41 +19,29 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-(** For use in the rest of the files in this directory. *)
+(** This application works from within a Git or Mercurial repository.
 
-val sexpable_param : (module Sexpable.S with type t = 'a) -> 'a Command.Param.t
+    This module specifies which functionality the rest of the application relies
+    on, by defining the specific set of traits that are required. We make use of
+    the [volgo] library for this. *)
 
-(** Restrict the scope of a command to a subdirectory only. "Below this path". *)
-val below : doc:string -> Relative_path.t option Command.Arg.t
+module Vcs_kind : sig
+  (** The kind of vcs supported by the cli. *)
+  type t =
+    [ `Git
+    | `Hg
+    ]
+  [@@deriving sexp_of]
+end
 
-(** A list of defaults directories to skip. *)
-val skip_subtrees : globs:string list -> Dunolint.Glob.t list
+(** The specific list of traits that must be implemented by a vcs backend in
+    order for it to be used by the cli. *)
+type vcs = < Vcs.Trait.file_system ; Vcs.Trait.ls_files > Vcs.t
 
-(** A helper for loading the config with some effort regarding producing located
-    error messages when able. *)
-val load_config_exn : filename:string -> Dunolint.Config.t
-
-(** A helper to load a config file, either supplied or inferred from the context
-    and add some optional rules. *)
-val load_config_opt_exn
-  :  enclosing_repo:Enclosing_repo.t option
-  -> config:string option
-  -> append_extra_rules:Dunolint.Config.Rule.t list
-  -> Dunolint.Config.t
-
-val ancestors_directories : path:Relative_path.t -> Relative_path.t list
-
-(** Find enclosing repo or raise an error with [Err]. *)
-val find_enclosing_repo_exn : from:Absolute_path.t -> Enclosing_repo.t
-
-val find_enclosing_repo : from:Absolute_path.t -> Enclosing_repo.t option
-
-(** When supplying path arguments that are aimed to designate paths in repo,
-    we need to resolve them according to where the [repo_root] is in relation
-    to the cwd. We interpret relative paths as relative to the cwd from which
-    the program started. *)
-val relativize
-  :  repo_root:Vcs.Repo_root.t
-  -> cwd:Absolute_path.t
-  -> path:Fpath.t
-  -> Vcs.Path_in_repo.t
+(** A type to represent the vcs found when walking up from within a directory
+    located inside a repo. *)
+type t =
+  { vcs_kind : Vcs_kind.t
+  ; repo_root : Vcs.Repo_root.t
+  ; vcs : vcs
+  }

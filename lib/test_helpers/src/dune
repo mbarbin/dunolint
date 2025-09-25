@@ -16,7 +16,9 @@
   -open
   Stdio
   -open
-  Expect_test_helpers_base)
+  Expect_test_helpers_base
+  -open
+  Volgo_base)
  (libraries
   base
   dune_linter
@@ -31,7 +33,8 @@
   pp
   pplumbing-err
   sexps-rewriter
-  stdio)
+  stdio
+  volgo-base)
  (instrumentation
   (backend bisect_ppx))
  (lint

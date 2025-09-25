@@ -1,6 +1,12 @@
 In this test we monitor behavior related to skip constructs, which is the
 ability from the config to instruct dunolint to skip files or entire subtrees.
 
+First we need to setup a repo in a way that satisfies the test environment. This
+includes specifics required by the GitHub Actions environment.
+
+  $ volgo-vcs init -q .
+  $ volgo-vcs set-user-config --user.name "Test User" --user.email "test@example.com"
+
 Let's start with a setup in which rules are applied.
 
   $ cat > dunolint <<EOF

@@ -98,7 +98,7 @@ let load_config_exn ~filename =
        Err.raise ~loc [ message ])
 ;;
 
-let load_config_opt_exn ~config ~append_extra_rules =
+let load_config_opt_exn ~enclosing_repo:_ ~config ~append_extra_rules =
   let config =
     match config with
     | Some filename -> load_config_exn ~filename
@@ -142,4 +142,47 @@ let ancestors_directories ~(path : Relative_path.t) =
     |> Relative_path.of_list
     |> Relative_path.to_dir_path)
   |> List.filter ~f:(fun path -> not (Relative_path.equal Relative_path.empty path))
+;;
+
+let find_enclosing_repo ~from =
+  let vcs_git = Volgo_git_unix.create () in
+  match
+    Vcs.find_enclosing_repo_root
+      vcs_git
+      ~from
+      ~store:[ Fsegment.dot_git, `Git; Fsegment.dot_hg, `Hg ]
+  with
+  | None -> None
+  | Some ((`Git as vcs_kind), repo_root) ->
+    Some { Enclosing_repo.vcs_kind; repo_root; vcs = (vcs_git :> Enclosing_repo.vcs) }
+  | Some ((`Hg as vcs_kind), repo_root) ->
+    let vcs_hg = Volgo_hg_unix.create () in
+    Some { Enclosing_repo.vcs_kind; repo_root; vcs = (vcs_hg :> Enclosing_repo.vcs) }
+;;
+
+let find_enclosing_repo_exn ~from =
+  match find_enclosing_repo ~from with
+  | Some t -> t
+  | None ->
+    Err.raise
+      Pp.O.
+        [ Pp.text "Failed to locate enclosing repo root from "
+          ++ Pp_tty.path (module Absolute_path) from
+          ++ Pp.text "."
+        ]
+;;
+
+let relativize ~repo_root ~cwd ~path =
+  let path = Absolute_path.relativize ~root:cwd path in
+  match
+    Absolute_path.chop_prefix path ~prefix:(repo_root |> Vcs.Repo_root.to_absolute_path)
+  with
+  | Some relative_path -> Vcs.Path_in_repo.of_relative_path relative_path
+  | None ->
+    Err.raise
+      Pp.O.
+        [ Pp.text "Path "
+          ++ Pp_tty.path (module Absolute_path) path
+          ++ Pp.text " is not in repo."
+        ]
 ;;

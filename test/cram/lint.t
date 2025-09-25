@@ -1,5 +1,11 @@
 In this test we do some linting based on a config.
 
+First we need to setup a repo in a way that satisfies the test environment. This
+includes specifics required by the GitHub Actions environment.
+
+  $ volgo-vcs init -q .
+  $ volgo-vcs set-user-config --user.name "Test User" --user.email "test@example.com"
+
 Let's create some files.
 
   $ cat > dune-project <<EOF

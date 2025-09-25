@@ -36,10 +36,17 @@ let main =
          ~doc:"Add condition to enforce."
        >>| List.map ~f:(fun condition -> `enforce condition)
      in
-     let config =
-       Common_helpers.load_config_opt_exn ~config ~append_extra_rules:enforce
+     let cwd = Unix.getcwd () |> Absolute_path.v in
+     let ({ Enclosing_repo.vcs_kind = _; repo_root; vcs = _ } as enclosing_repo) =
+       Common_helpers.find_enclosing_repo_exn ~from:cwd
      in
-     Dunolint_engine.run ~running_mode
+     let config =
+       Common_helpers.load_config_opt_exn
+         ~enclosing_repo:(Some enclosing_repo)
+         ~config
+         ~append_extra_rules:enforce
+     in
+     Dunolint_engine.run ~repo_root ~running_mode
      @@ fun dunolint_engine ->
      Dunolint_engine.visit
        dunolint_engine

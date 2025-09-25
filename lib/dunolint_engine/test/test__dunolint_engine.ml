@@ -23,7 +23,8 @@ open Dunolint.Config.Std
 module Unix = UnixLabels
 
 let%expect_test "lint" =
-  let t = Dunolint_engine.create ~running_mode:Dry_run () in
+  let repo_root = Vcs.Repo_root.v (Unix.getcwd ()) in
+  let t = Dunolint_engine.create ~repo_root ~running_mode:Dry_run () in
   Out_channel.write_all
     "dune-project"
     ~data:
@@ -147,7 +148,8 @@ let%expect_test "format_dune_file" =
 
 let%expect_test "create-files" =
   (* The engine may be used to create files where they are not initially present. *)
-  let t = Dunolint_engine.create ~running_mode:Force_yes () in
+  let repo_root = Vcs.Repo_root.v (Unix.getcwd ()) in
+  let t = Dunolint_engine.create ~repo_root ~running_mode:Force_yes () in
   Dunolint_engine.lint_file t ~path:(Relative_path.v "lib/a/dune") ~create_file:(fun () ->
     let library = Dune_linter.Library.create ~name:(Dune.Library.Name.v "my-lib") () in
     Sexp.to_string_mach (Dune_linter.Library.write library));
@@ -204,7 +206,8 @@ let%expect_test "create-files" =
 
 let%expect_test "lint-absent-files" =
   (* By default, [lint-file] will not create a file if no initializer is supplied. *)
-  let t = Dunolint_engine.create ~running_mode:Force_yes () in
+  let repo_root = Vcs.Repo_root.v (Unix.getcwd ()) in
+  let t = Dunolint_engine.create ~repo_root ~running_mode:Force_yes () in
   Dunolint_engine.lint_file t ~path:(Relative_path.v "absent/file/dune");
   [%expect {||}];
   Err.For_test.protect (fun () -> Dunolint_engine.materialize t);
@@ -231,7 +234,8 @@ let%expect_test "invalid files" =
   (* When encountering invalid files during linting, errors are reported, but
      the execution continues so other valid files are still linted. *)
   Err.For_test.protect (fun () ->
-    let t = Dunolint_engine.create ~running_mode:Dry_run () in
+    let repo_root = Vcs.Repo_root.v (Unix.getcwd ()) in
+    let t = Dunolint_engine.create ~repo_root ~running_mode:Dry_run () in
     Unix.mkdir "invalid" ~perm:0o755;
     Out_channel.write_all
       "dune-project"
@@ -287,7 +291,8 @@ let%expect_test "invalid files" =
 
 let%expect_test "file errors" =
   Unix.mkdir "tempdir" ~perm:0o755;
-  let t = Dunolint_engine.create ~running_mode:Force_yes () in
+  let repo_root = Vcs.Repo_root.v (Unix.getcwd ()) in
+  let t = Dunolint_engine.create ~repo_root ~running_mode:Force_yes () in
   (* If you are trying to lint a path that is not a regular file, you get an
      error right away rather than during [materialize]. *)
   Err.For_test.protect (fun () ->
@@ -304,7 +309,8 @@ let%expect_test "file errors" =
 ;;
 
 let%expect_test "file-system errors" =
-  let t = Dunolint_engine.create ~running_mode:Force_yes () in
+  let repo_root = Vcs.Repo_root.v (Unix.getcwd ()) in
+  let t = Dunolint_engine.create ~repo_root ~running_mode:Force_yes () in
   Dunolint_engine.lint_file t ~path:(Relative_path.v "foo/file") ~create_file:(fun () ->
     "Hello File");
   (* Let's say [foo] gets created as a regular file in the interval. *)
