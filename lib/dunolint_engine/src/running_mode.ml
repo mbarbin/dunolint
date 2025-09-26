@@ -19,26 +19,20 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Running_mode = struct
-  type t =
-    | Dry_run
-    | Check
-    | Force_yes
-    | Interactive
-  [@@deriving compare, equal, sexp_of]
-end
+type t =
+  | Dry_run
+  | Check
+  | Force_yes
+  | Interactive
+[@@deriving compare, equal, sexp_of]
 
-type t = { running_mode : Running_mode.t } [@@deriving sexp_of]
-
-let default = { running_mode = Interactive }
-let running_mode t = t.running_mode
-let create ~running_mode = { running_mode }
+let default = Interactive
 
 let arg =
   let open Command.Std in
   let running_mode
         ((switch :: _ : _ Command.Nonempty_list.t) as switches)
-        ~(running_mode : Running_mode.t)
+        ~(running_mode : t)
         ~doc
     =
     Arg.flag switches ~doc
@@ -74,7 +68,7 @@ let arg =
          Exit with a non-zero exit code in case some linting changes are required. This \
          execution mode is meant for scripts and CI pipelines."
   in
-  let running_mode : Running_mode.t =
+  let running_mode : t =
     match List.filter_opt [ dry_run; interactive; yes; check ] with
     | [] -> if Unix.isatty Unix.stdout then Interactive [@coverage off] else Force_yes
     | [ (_, mode) ] -> mode
@@ -90,5 +84,5 @@ let arg =
     (* [@coverage off] is due to out edge instrumentation, but this
        case is exercised during the tests. *)
   in
-  { running_mode }
+  running_mode
 ;;

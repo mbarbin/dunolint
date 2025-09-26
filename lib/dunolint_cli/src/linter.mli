@@ -27,12 +27,6 @@ val lint_stanza
   -> return:[> `skip_subtree ] With_return.return
   -> unit
 
-module Visitor_decision : sig
-  type t =
-    | Continue
-    | Skip_subtree
-end
-
 val visit_directory
   :  dunolint_engine:Dunolint_engine.t
   -> config:Dunolint.Config.t

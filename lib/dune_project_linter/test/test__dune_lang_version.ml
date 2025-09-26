@@ -39,23 +39,23 @@ let%expect_test "read/write" =
   test {| (lang dune 3.INVALID) |};
   [%expect
     {|
-    Internal Error: Failure("Invalid version format: 3.INVALID")
-    <backtrace disabled in tests>
-    [125]
+    File "dune-project", line 1, characters 12-21:
+    Error: Invalid version format: "3.INVALID".
+    [123]
     |}];
   test {| (lang dune invalid) |};
   [%expect
     {|
-    Internal Error: Failure("Expected VERSION.MINOR format, got: invalid")
-    <backtrace disabled in tests>
-    [125]
+    File "dune-project", line 1, characters 12-19:
+    Error: Expected VERSION.MINOR format, got: "invalid".
+    [123]
     |}];
   test {| (lang invalid 3.20) |};
   [%expect
     {|
-    Internal Error: Failure("Expected (lang dune VERSION) format")
-    <backtrace disabled in tests>
-    [125]
+    File "dune-project", line 1, characters 1-20:
+    Error: Expected (lang dune VERSION) format.
+    [123]
     |}];
   ()
 ;;

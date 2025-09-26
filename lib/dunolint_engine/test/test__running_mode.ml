@@ -21,10 +21,12 @@
 
 let eval_args args =
   let command =
-    Cmdlang.Command.make Dunolint_engine.Config.arg ~summary:"Test eval-stdlib-runner."
+    Cmdlang.Command.make
+      Dunolint_engine.Running_mode.arg
+      ~summary:"Test eval-stdlib-runner."
   in
   match Cmdlang_stdlib_runner.eval command ~argv:(Array.of_list ("dunolint" :: args)) with
-  | Ok t -> print_s [%sexp (t : Dunolint_engine.Config.t)]
+  | Ok t -> print_s [%sexp (t : Dunolint_engine.Running_mode.t)]
   | Error (`Help msg) -> print_endline msg [@coverage off]
   | Error (`Bad msg) ->
     (Stdlib.print_string msg;
@@ -40,15 +42,15 @@ let%expect_test "running modes" =
      This is indeed what happens during the expect-test, because it is run in a
      context where stdout is not a tty. *)
   eval_args [];
-  [%expect {| ((running_mode Force_yes)) |}];
+  [%expect {| Force_yes |}];
   (* The interactive mode can be forced. *)
   eval_args [ "--interactive" ];
-  [%expect {| ((running_mode Interactive)) |}];
+  [%expect {| Interactive |}];
   (* There are other running modes available. *)
   eval_args [ "--check" ];
-  [%expect {| ((running_mode Check)) |}];
+  [%expect {| Check |}];
   eval_args [ "--dry-run" ];
-  [%expect {| ((running_mode Dry_run)) |}];
+  [%expect {| Dry_run |}];
   (* But they are mutually exclusive. *)
   eval_args [ "--check"; "--dry-run" ];
   [%expect
@@ -61,8 +63,8 @@ let%expect_test "running modes" =
 
 let%expect_test "create" =
   (* The API lets you create config programmatically. *)
-  let t = Dunolint_engine.Config.create ~running_mode:Dry_run in
-  print_s [%sexp (t : Dunolint_engine.Config.t)];
-  [%expect {| ((running_mode Dry_run)) |}];
+  let t = Dunolint_engine.Running_mode.Dry_run in
+  print_s [%sexp (t : Dunolint_engine.Running_mode.t)];
+  [%expect {| Dry_run |}];
   ()
 ;;
