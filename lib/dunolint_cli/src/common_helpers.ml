@@ -143,3 +143,20 @@ let ancestors_directories ~(path : Relative_path.t) =
     |> Relative_path.to_dir_path)
   |> List.filter ~f:(fun path -> not (Relative_path.equal Relative_path.empty path))
 ;;
+
+let root =
+  let open Command.Std in
+  let+ root =
+    Arg.named_opt
+      [ "root" ]
+      (Param.validated_string (module Fpath))
+      ~docv:"DIR"
+      ~doc:"Use this directory as dune workspace root instead of guessing it."
+  in
+  Option.map root ~f:(fun root ->
+    match Fpath.classify root with
+    | `Absolute path -> path
+    | `Relative path ->
+      let cwd = Unix.getcwd () |> Absolute_path.v in
+      Absolute_path.append cwd path)
+;;

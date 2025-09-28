@@ -22,6 +22,7 @@
         "patdiff",
         "pplumbing",
         "ppxlib",
+        "Stdune",
         "subdirs",
         "toplevel",
         "Trilang"
