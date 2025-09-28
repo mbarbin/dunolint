@@ -156,3 +156,11 @@ let find_exn ~default_is_cwd ~specified_by_user =
                 https://dune.readthedocs.io/en/stable/usage.html#finding-the-root"
            ])
 ;;
+
+let chdir t ~level =
+  let cwd = Unix.getcwd () |> Absolute_path.v in
+  if (not (Absolute_path.equal t cwd)) && Err.log_enables ~level
+  then
+    prerr_endline (Printf.sprintf "Entering directory '%s'" (Absolute_path.to_string t));
+  Unix.chdir (Absolute_path.to_string t)
+;;

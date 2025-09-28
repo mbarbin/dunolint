@@ -39,11 +39,7 @@ let sexpable_param (type a) (module M : Sexpable.S with type t = a) =
 
 let below ~doc =
   let open Command.Std in
-  Arg.named_opt
-    [ "below" ]
-    (Param.validated_string (module Relative_path))
-    ~docv:"PATH"
-    ~doc
+  Arg.named_opt [ "below" ] (Param.validated_string (module Fpath)) ~docv:"PATH" ~doc
 ;;
 
 let skip_subtrees ~globs =
@@ -159,4 +155,19 @@ let root =
     | `Relative path ->
       let cwd = Unix.getcwd () |> Absolute_path.v in
       Absolute_path.append cwd path)
+;;
+
+let relativize ~workspace_root ~cwd ~path =
+  let path = Absolute_path.relativize ~root:cwd path in
+  match
+    Absolute_path.chop_prefix path ~prefix:(workspace_root |> Workspace_root.path)
+  with
+  | Some relative_path -> relative_path
+  | None ->
+    Err.raise
+      Pp.O.
+        [ Pp.text "Path "
+          ++ Pp_tty.path (module Absolute_path) path
+          ++ Pp.text " is not in dune workspace."
+        ]
 ;;

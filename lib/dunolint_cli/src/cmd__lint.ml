@@ -35,7 +35,21 @@ let main =
          ~docv:"COND"
          ~doc:"Add condition to enforce."
        >>| List.map ~f:(fun condition -> `enforce condition)
+     and+ root = Common_helpers.root in
+     let cwd = Unix.getcwd () |> Absolute_path.v in
+     let workspace_root =
+       Workspace_root.find_exn ~default_is_cwd:false ~specified_by_user:root
      in
+     let below =
+       Option.map below ~f:(fun below ->
+         Common_helpers.relativize ~workspace_root ~cwd ~path:below)
+     in
+     let config =
+       Option.map config ~f:(fun config ->
+         Common_helpers.relativize ~workspace_root ~cwd ~path:(Fpath.v config)
+         |> Relative_path.to_string)
+     in
+     Workspace_root.chdir workspace_root ~level:Warning;
      let config =
        Common_helpers.load_config_opt_exn ~config ~append_extra_rules:enforce
      in

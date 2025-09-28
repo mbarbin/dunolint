@@ -60,3 +60,11 @@ val find_exn : default_is_cwd:bool -> specified_by_user:Absolute_path.t option -
 (** {1 Getters} *)
 
 val path : t -> Absolute_path.t
+
+(** {1 chdir} *)
+
+(** Early in the programs life we would change the running directory to be the
+    workspace root. If [t] does not equal to [cwd] this function will also print
+    a message on stderr indicating that the directory is changing if the specified
+    log-level is turned on. *)
+val chdir : t -> level:Err.Level.t -> unit

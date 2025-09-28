@@ -48,3 +48,10 @@ Exercise and monitor cases of finding the root of the current dune workspace.
   $ (cd project-bar && dunolint tools find-workspace-root --root ${ROOT})
   $TESTCASE_ROOT
 
+When entering the workspace-root dunolint produces a message on stderr unless
+the log-level does not activate warnings.
+
+  $ (cd project-bar && dunolint lint --root ${ROOT})
+  Entering directory '$TESTCASE_ROOT'
+
+  $ (cd project-bar && dunolint lint --root ${ROOT} --log-level=error)
