@@ -43,29 +43,20 @@
   * SOFTWARE.
   *
   *  Changes:
+  *
+  * - Use [Err] instead of [User_message].
+  * - Use [Workspace_root] for the root dir.
+  * - Remove [create].
+  * - Make the type abstract add getters.
+  * - Rename [create_exn] as [find_exn].
 *)
 
 (** Finding the root of the workspace *)
 
-module Kind : sig
-  type t =
-    | Explicit
-    | Dune_workspace
-    | Dune_project
-    | Cwd
-end
+type t
 
-type t =
-  { dir : string
-  ; to_cwd : string list (** How to reach the cwd from the root *)
-  ; reach_from_root_prefix : string
-    (** Prefix filenames with this to reach them from the root *)
-  ; kind : Kind.t
-  }
+val find_exn : default_is_cwd:bool -> specified_by_user:Absolute_path.t option -> t
 
-val create
-  :  default_is_cwd:bool
-  -> specified_by_user:string option
-  -> (t, User_message.t) result
+(** {1 Getters} *)
 
-val create_exn : default_is_cwd:bool -> specified_by_user:string option -> t
+val path : t -> Absolute_path.t
