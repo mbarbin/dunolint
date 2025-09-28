@@ -134,12 +134,16 @@ Using --below with a relative path from the root.
   -|(name nested_project)
   +|(name fixed_name)
 
-Test that --below flag fails when path is not in workspace.
+Test that --below flag fails when path is not in workspace. Create a directory
+outside the workspace (as a sibling):
 
-  $ cd /tmp
-  $ dunolint lint --root ${ROOT} --below subdir2 --dry-run
-  Error: Path "/tmp/subdir2" is not in dune workspace.
+  $ mkdir -p ../outside_workspace
+  $ cd ../outside_workspace
+  $ dunolint lint --root ${ROOT} --below subdir2 --dry-run 2> output
   [123]
+  $ grep -q "not in dune workspace" output
+  $ cd ${ROOT}
+  $ rm -rf ../outside_workspace
 
 Test that paths are resolved correctly when using --below from a different cwd.
 
