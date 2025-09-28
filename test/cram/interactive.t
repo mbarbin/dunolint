@@ -1,5 +1,11 @@
 In this test we exercise the interactive mode.
 
+Initialize the project root.
+
+  $ touch dune-workspace
+
+Create some files to lint.
+
   $ cat > dune-project <<EOF
   > (name main)
   > EOF

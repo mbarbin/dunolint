@@ -1,6 +1,10 @@
 In this test we monitor behavior related to skip constructs, which is the
 ability from the config to instruct dunolint to skip files or entire subtrees.
 
+Initialize the project root.
+
+  $ touch dune-workspace
+
 Let's start with a setup in which rules are applied.
 
   $ cat > dunolint <<EOF

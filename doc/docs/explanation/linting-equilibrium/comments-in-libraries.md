@@ -1,5 +1,11 @@
 # Comments in `libraries`
 
+For the purpose of this compiled documentation (mdx) we'll make it so that we are placed in a dedicated workspace for the duration of the test.
+
+```sh
+$ touch dune-workspace
+```
+
 The `libraries` dependencies listed in `library` stanzas are sorted alphabetically. For example, this dune file:
 
 ```sh

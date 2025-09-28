@@ -1,5 +1,11 @@
 Dunolint simply skips over stanzas that it doesn't know about.
 
+Initialize the project root.
+
+  $ touch dune-workspace
+
+Create some unknown/unsupported/invalid stanzas.
+
   $ cat > dune-project <<EOF
   > (name main)
   > 

@@ -2,6 +2,12 @@ The dunolint command line tool comes with a util to be used during CI
 called `check`. Its goal is to show the parts that are not compliant
 and exit with a non-zero code when linting errors are detected.
 
+Initialize the project root.
+
+  $ touch dune-workspace
+
+There is nothing to lint on an empty project.
+
   $ dunolint lint --check
 
 Let's add some files.

@@ -1,6 +1,12 @@
 The dunolint command line tool comes with a util to enforce conditions
 interactively from the terminal.
 
+Initialize the project root.
+
+  $ touch dune-workspace
+
+There is nothing to lint on an empty project.
+
   $ dunolint lint
 
 Let's add some files.

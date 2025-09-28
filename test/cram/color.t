@@ -1,5 +1,9 @@
 In this test we monitor the behavior of color settings.
 
+Initialize the project root.
+
+  $ touch dune-workspace
+
 Let's create some files to lint.
 
   $ cat > dune <<EOF

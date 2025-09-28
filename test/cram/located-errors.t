@@ -2,6 +2,12 @@ In this test we monitor certain error messages when loading invalid build files.
 In particular we look for certain regression to make sure errors are located and
 messages are clear.
 
+Initialize the project root.
+
+  $ touch dune-workspace
+
+Create some files to lint.
+
   $ cat > dune-project <<EOF
   > (lang dune 3.17)
   > EOF

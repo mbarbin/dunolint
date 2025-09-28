@@ -1,5 +1,9 @@
 In this test we do some linting based on a config.
 
+Initialize the project root.
+
+  $ touch dune-workspace
+
 Let's create some files.
 
   $ cat > dune-project <<EOF

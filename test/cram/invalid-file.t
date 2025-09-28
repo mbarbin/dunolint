@@ -1,5 +1,11 @@
 We exercise here the behavior of the linter upon encountering invalid files.
 
+Initialize the project root.
+
+  $ touch dune-workspace
+
+Create some invalid files.
+
   $ cat > dune-project <<EOF
   > (name main))
   > EOF

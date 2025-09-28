@@ -1,6 +1,10 @@
 The dunolint command line tool exposes a util to ease integration with editors.
 We test it here while calling it from the shell.
 
+Initialize the project root.
+
+  $ touch dune-workspace
+
 By default the command reads from `stdin`.
 
   $ printf '(lang dune 3.17)\n' | dunolint tools lint-file
