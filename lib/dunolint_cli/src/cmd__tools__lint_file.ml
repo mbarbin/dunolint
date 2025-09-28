@@ -151,6 +151,11 @@ let main =
        $(b,stdin) and print its linted result on $(b,stdout).\n\n\
        By default, the contents will be read from $(b,stdin). You may supply the path to \
        a file instead.\n\n\
+       When the file is located within a dune workspace, dunolint will use that \
+       workspace to locate the relevant $(b,dunolint) config file for linting. If no \
+       workspace is found or if the file is outside any workspace, the current working \
+       directory is used as the default workspace root. The workspace root can be \
+       overridden using the $(b,--root) flag.\n\n\
        When the contents of the file is read from stdin, or if the file given does not \
        permit to recognize the linted file kind solely from its path, the name of the \
        file may be overridden.")
