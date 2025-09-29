@@ -1,0 +1,5 @@
+(mdx
+ (package dunolint-dev)
+ (deps
+  (package dunolint))
+ (preludes prelude.txt))
