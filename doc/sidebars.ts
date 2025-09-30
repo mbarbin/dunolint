@@ -18,6 +18,7 @@ const sidebars: SidebarsConfig = {
       label: 'Tutorials',
       items: [
         { type: 'doc', id: 'tutorials/quick-start/README', label: 'Quick Start' },
+        { type: 'doc', id: 'tutorials/first-run-through/README', label: 'First Run Through' },
       ],
     },
   ],
@@ -40,6 +41,7 @@ const sidebars: SidebarsConfig = {
       label: 'Reference',
       items: [
         { type: 'doc', id: 'reference/odoc', label: 'OCaml Packages' },
+        { type: 'doc', id: 'reference/default-rules', label: 'Default Rules' },
         {
           type: 'category', label: 'Config Language Reference',
           link: { type: 'doc', id: 'reference/config/README' },
@@ -61,6 +63,7 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'explanation/current-state/README', label: 'Current State' },
         { type: 'doc', id: 'explanation/workspace-root', label: 'Workspace Root' },
         { type: 'doc', id: 'explanation/config/README', label: 'Config Language Design' },
+        { type: 'doc', id: 'explanation/canonical-ordering', label: 'Canonical Ordering' },
         {
           type: 'category', label: 'Linting Equilibrium',
           link: { type: 'doc', id: 'explanation/linting-equilibrium/README' },
