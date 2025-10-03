@@ -1,3 +1,21 @@
+## 0.0.202510XX (unreleased)
+
+### Added
+
+- Added 'First Run Through' tutorial (#115, @mbarbin).
+- Added 'Quick Start' tutorial (#106, @mbarbin).
+
+### Changed
+
+- Remove support for `--enforce` in lint-file tool (#118, @mbarbin).
+- Update doc for `(lang dunolint 1.0)` (#110, @mbarbin).
+- Upgrade to recent `pplumbing` repackaging (#109, @mbarbin).
+- Upgrade `crs` actions (#108, @mbarbin).
+
+### Fixed
+
+- Fix parsing errors of dune version in dune-project (#112, @mbarbin).
+
 ## 0.0.20250910-1 (2025-09-10)
 
 ### Fixed
