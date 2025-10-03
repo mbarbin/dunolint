@@ -12,6 +12,8 @@
   -open
   Fpath_base
   -open
+  Stdio
+  -open
   Pplumbing_pp_tty
   -open
   Pplumbing_err
@@ -29,7 +31,8 @@
   pplumbing-err
   pplumbing-pp-tty
   re
-  sexps-rewriter)
+  sexps-rewriter
+  stdio)
  (instrumentation
   (backend bisect_ppx))
  (lint

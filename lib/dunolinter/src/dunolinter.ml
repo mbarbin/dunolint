@@ -20,6 +20,7 @@
 (*********************************************************************************)
 
 module Comment_handler = Comment_handler
+module Config_handler = Config_handler
 module Enforce_result = Enforce_result
 module Handler = Handler
 module Linter = Linter

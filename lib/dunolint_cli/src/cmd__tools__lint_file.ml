@@ -19,6 +19,7 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open! Import
 module Unix = UnixLabels
 
 module Save_in_place = struct
@@ -54,14 +55,16 @@ module Save_in_place = struct
 end
 
 let skip_file ~config ~(path : Relative_path.t) =
-  let ancestors = Common_helpers.ancestors_directories ~path in
+  let paths_to_check_for_skip_predicates =
+    Path_in_workspace.paths_to_check_for_skip_predicates ~path
+  in
   match Dunolint.Config.Private.view config with
   | `v0 v0 ->
     (match Dunolint.Config.V0.skip_subtree v0 with
      | None -> `return
      | Some condition ->
        (match
-          List.exists (path :: ancestors) ~f:(fun path ->
+          List.exists (path :: paths_to_check_for_skip_predicates) ~f:(fun path ->
             match
               Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
                 Dunolinter.eval_path ~path ~condition)
@@ -75,7 +78,9 @@ let skip_file ~config ~(path : Relative_path.t) =
   | `v1 v1 ->
     let skip_paths = Dunolint.Config.V1.skip_paths v1 |> List.concat in
     let file = Relative_path.to_string path in
-    let ancestors = List.map ancestors ~f:Relative_path.to_string in
+    let ancestors =
+      List.map paths_to_check_for_skip_predicates ~f:Relative_path.to_string
+    in
     if List.exists skip_paths ~f:(fun glob -> Dunolint.Glob.test glob file)
     then `skip_file
     else if

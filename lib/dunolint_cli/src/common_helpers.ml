@@ -59,51 +59,16 @@ let skip_subtrees ~globs =
     ]
 ;;
 
-let load_config_exn ~filename =
-  let contents = In_channel.read_all filename in
-  match Parsexp.Many_and_positions.parse_string contents with
-  | Error parse_error ->
-    let position = Parsexp.Parse_error.position parse_error in
-    let message = Parsexp.Parse_error.message parse_error in
-    let loc =
-      Dunolinter.Sexp_handler.loc_of_parsexp_range
-        ~filename
-        { start_pos = position; end_pos = position }
-    in
-    Err.raise ~loc [ Pp.text message ]
-  | Ok (sexps, positions) ->
-    (match Dunolint.Config.of_stanzas sexps with
-     | t -> t
-     | exception Sexp.Of_sexp_error (exn, sub) ->
-       let range =
-         match Parsexp.Positions.find_sub_sexp_in_list_phys positions sexps ~sub with
-         | Some _ as range -> range
-         | None -> None [@coverage off]
-       in
-       let loc =
-         match range with
-         | Some range -> Dunolinter.Sexp_handler.loc_of_parsexp_range ~filename range
-         | None -> Loc.of_file ~path:(Fpath.v filename) [@coverage off]
-       in
-       let message =
-         match exn with
-         | Failure str ->
-           Pp.text (if String.is_suffix str ~suffix:"." then str else str ^ ".")
-         | exn -> Err.exn exn [@coverage off]
-       in
-       Err.raise ~loc [ message ])
-;;
-
 let load_config_opt_exn ~config ~append_extra_rules =
   let config =
     match config with
-    | Some filename -> load_config_exn ~filename
+    | Some filename -> Dunolinter.Config_handler.load_config_exn ~filename
     | None ->
       let cwd = Unix.getcwd () |> Absolute_path.v in
       let default_file = Absolute_path.extend cwd (Fsegment.v "dunolint") in
       let filename = Absolute_path.to_string default_file in
       if Stdlib.Sys.file_exists filename
-      then load_config_exn ~filename:"dunolint"
+      then Dunolinter.Config_handler.load_config_exn ~filename:"dunolint"
       else
         Dunolint.Config.V1.create [ `skip_paths (skip_subtrees ~globs:[]) ]
         |> Dunolint.Config.v1
@@ -128,16 +93,6 @@ let load_config_opt_exn ~config ~append_extra_rules =
       |> Dunolint.Config.v1
   in
   config
-;;
-
-let ancestors_directories ~(path : Relative_path.t) =
-  let segs = Fpath.segs (path :> Fpath.t) in
-  List.init (List.length segs) ~f:(fun i ->
-    List.take segs i
-    |> List.map ~f:Fsegment.v
-    |> Relative_path.of_list
-    |> Relative_path.to_dir_path)
-  |> List.filter ~f:(fun path -> not (Relative_path.equal Relative_path.empty path))
 ;;
 
 let root =

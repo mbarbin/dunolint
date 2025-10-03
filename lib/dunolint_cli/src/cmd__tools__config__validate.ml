@@ -30,7 +30,7 @@ let main =
      and+ print =
        Arg.flag [ "print" ] ~doc:"Print the parsed config as a S-expression."
      in
-     let config = Common_helpers.load_config_exn ~filename in
+     let config = Dunolinter.Config_handler.load_config_exn ~filename in
      if print
      then (
        let sexps = Dunolint.Config.to_stanzas config in

@@ -19,6 +19,8 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open! Import
+
 let maybe_autoformat_file ~previous_contents ~new_contents =
   (* For the time being we are using here a heuristic to drive whether to
      autoformat linted files. This is motivated by pragmatic reasoning and lower
@@ -110,7 +112,9 @@ module Dune_lint = Lint_file (Dune_linter)
 module Dune_project_lint = Lint_file (Dune_project_linter)
 
 let visit_directory ~dunolint_engine ~config ~parent_dir ~files =
-  let parent_dirs = Common_helpers.ancestors_directories ~path:parent_dir in
+  let paths_to_check_for_skip_predicates =
+    Path_in_workspace.paths_to_check_for_skip_predicates ~path:parent_dir
+  in
   match
     match Dunolint.Config.Private.view config with
     | `v0 v0 ->
@@ -118,7 +122,7 @@ let visit_directory ~dunolint_engine ~config ~parent_dir ~files =
        | None -> `return
        | Some condition ->
          (match
-            List.exists parent_dirs ~f:(fun parent_dir ->
+            List.exists paths_to_check_for_skip_predicates ~f:(fun parent_dir ->
               match
                 Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
                   Dunolinter.eval_path ~path:parent_dir ~condition)
@@ -131,7 +135,9 @@ let visit_directory ~dunolint_engine ~config ~parent_dir ~files =
           | false -> `return))
     | `v1 v1 ->
       let skip_subtrees = Dunolint.Config.V1.skip_paths v1 |> List.concat in
-      let parent_dirs = List.map parent_dirs ~f:Relative_path.to_string in
+      let parent_dirs =
+        List.map paths_to_check_for_skip_predicates ~f:Relative_path.to_string
+      in
       if
         List.exists parent_dirs ~f:(fun parent_dir ->
           List.exists skip_subtrees ~f:(fun glob -> Dunolint.Glob.test glob parent_dir))
