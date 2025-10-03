@@ -7,7 +7,7 @@
 
 ### Changed
 
-- Remove support for `--enforce` in lint-file tool (#116, @mbarbin).
+- Remove support for `--enforce` in lint-file tool (#118, @mbarbin).
 - Update doc for `(lang dunolint 1.0)` (#110, @mbarbin).
 - Upgrade to recent `pplumbing` repackaging (#109, @mbarbin).
 - Upgrade `crs` actions (#108, @mbarbin).
