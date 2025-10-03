@@ -168,6 +168,8 @@
    (>= 0.0.16))
   (cmdlang-stdlib-runner
    (>= 0.0.9))
+  (cmdliner
+   (< 2.0))
   (dunolint
    (= :version))
   (dunolint-lib
@@ -269,6 +271,8 @@
    (>= 0.0.16))
   (cmdlang-stdlib-runner
    (>= 0.0.9))
+  (cmdliner
+   (< 2.0))
   (dunolint
    (= :version))
   (dunolint-lib
