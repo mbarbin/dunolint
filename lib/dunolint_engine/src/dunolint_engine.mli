@@ -116,4 +116,10 @@ val materialize : t -> unit
 
 module Private : sig
   val mkdirs : Relative_path.t -> unit
+
+  (** Path operations for workspace-relative paths with escaping prevention.
+
+      This module is exported for testing purposes. See
+      {!Path_in_workspace} for documentation. *)
+  module Path_in_workspace = Path_in_workspace
 end

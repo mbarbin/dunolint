@@ -445,4 +445,6 @@ let run ~running_mode f =
 
 module Private = struct
   let mkdirs = mkdirs
+
+  module Path_in_workspace = Path_in_workspace
 end
