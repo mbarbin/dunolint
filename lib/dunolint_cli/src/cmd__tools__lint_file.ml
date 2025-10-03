@@ -127,24 +127,6 @@ let select_linter ~path =
           ]
 ;;
 
-let select_path ~cwd ~filename ~file =
-  match Option.first_some filename file with
-  | None -> Relative_path.v "stdin"
-  | Some file ->
-    (match Fpath.classify file with
-     | `Relative path -> path
-     | `Absolute path ->
-       (match Absolute_path.chop_prefix path ~prefix:cwd with
-        | Some path -> path
-        | None ->
-          Err.raise
-            Pp.O.
-              [ Pp.text "Invalid absolute file path, must be within cwd."
-              ; Pp.verbatim "file: " ++ Pp_tty.path (module Absolute_path) path
-              ; Pp.verbatim "cwd: " ++ Pp_tty.path (module Absolute_path) cwd
-              ]))
-;;
-
 let main =
   let in_place_switch = "in-place" in
   let save_in_place ~in_place ~file =
@@ -169,6 +151,11 @@ let main =
        $(b,stdin) and print its linted result on $(b,stdout).\n\n\
        By default, the contents will be read from $(b,stdin). You may supply the path to \
        a file instead.\n\n\
+       When the file is located within a dune workspace, dunolint will use that \
+       workspace to locate the relevant $(b,dunolint) config file for linting. If no \
+       workspace is found or if the file is outside any workspace, the current working \
+       directory is used as the default workspace root. The workspace root can be \
+       overridden using the $(b,--root) flag.\n\n\
        When the contents of the file is read from stdin, or if the file given does not \
        permit to recognize the linted file kind solely from its path, the name of the \
        file may be overridden.")
@@ -206,15 +193,36 @@ let main =
          Param.bool
          ~default:true
          ~doc:"Format file with after linting, using [dune format-dune-file]."
-     in
+     and+ root = Common_helpers.root in
      let save_in_place = save_in_place ~in_place ~file in
      let cwd = Unix.getcwd () |> Absolute_path.v in
+     let workspace_root =
+       Workspace_root.find_exn ~default_is_cwd:true ~specified_by_user:root
+     in
+     let filename =
+       Option.map filename ~f:(fun filename ->
+         Common_helpers.relativize ~workspace_root ~cwd ~path:filename)
+     in
+     let file =
+       Option.map file ~f:(fun file ->
+         Common_helpers.relativize ~workspace_root ~cwd ~path:file)
+     in
+     let config =
+       Option.map config ~f:(fun config ->
+         Common_helpers.relativize ~workspace_root ~cwd ~path:(Fpath.v config)
+         |> Relative_path.to_string)
+     in
+     Workspace_root.chdir workspace_root ~level:Debug;
      let config = Common_helpers.load_config_opt_exn ~config ~append_extra_rules:[] in
-     let path = select_path ~cwd ~filename ~file in
+     let path =
+       match Option.first_some filename file with
+       | Some file -> file
+       | None -> Relative_path.v "stdin"
+     in
      let linter = select_linter ~path:(path :> Fpath.t) in
      let original_contents =
        match file with
-       | Some file -> In_channel.read_all (file |> Fpath.to_string)
+       | Some file -> In_channel.read_all (file |> Relative_path.to_string)
        | None -> In_channel.input_all In_channel.stdin
      in
      let output =

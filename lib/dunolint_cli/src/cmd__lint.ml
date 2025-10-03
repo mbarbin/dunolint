@@ -22,6 +22,16 @@
 let main =
   Command.make
     ~summary:"Lint project."
+    ~readme:(fun () ->
+      "This command lints files in a dune project starting from the workspace root.\n\n\
+       Dunolint will first locate the workspace root by searching for \
+       $(b,dune-workspace) or $(b,dune-project) files in the current directory and its \
+       ancestors, then change to that directory before performing linting operations.\n\n\
+       The workspace root can be overridden using the $(b,--root) flag. If a \
+       $(b,dunolint) config file exists at the workspace root, it will be loaded \
+       automatically unless $(b,--config) is specified.\n\n\
+       Use $(b,--below) to limit linting to a specific subdirectory while still using \
+       the workspace root's configuration.")
     (let open Command.Std in
      let+ running_mode = Dunolint_engine.Running_mode.arg
      and+ () = Log_cli.set_config ()
@@ -35,7 +45,21 @@ let main =
          ~docv:"COND"
          ~doc:"Add condition to enforce."
        >>| List.map ~f:(fun condition -> `enforce condition)
+     and+ root = Common_helpers.root in
+     let cwd = Unix.getcwd () |> Absolute_path.v in
+     let workspace_root =
+       Workspace_root.find_exn ~default_is_cwd:false ~specified_by_user:root
      in
+     let below =
+       Option.map below ~f:(fun below ->
+         Common_helpers.relativize ~workspace_root ~cwd ~path:below)
+     in
+     let config =
+       Option.map config ~f:(fun config ->
+         Common_helpers.relativize ~workspace_root ~cwd ~path:(Fpath.v config)
+         |> Relative_path.to_string)
+     in
+     Workspace_root.chdir workspace_root ~level:Warning;
      let config =
        Common_helpers.load_config_opt_exn ~config ~append_extra_rules:enforce
      in

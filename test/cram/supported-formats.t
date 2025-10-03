@@ -1,6 +1,10 @@
 In this file we monitor that we can still load the config from various
 compatibility formats, until we explicitly decide to drop the support.
 
+Initialize the project root.
+
+  $ touch dune-workspace
+
 An empty file is a valid config.
 
   $ touch dunolint

@@ -8,6 +8,12 @@ repo: [https://github.com/ocaml/merlin]
 path: [src/ocaml/merlin_specific/dune]
 rev : [f358bb6201d57b1b5feb501054144ac683710554]
 
+Initialize the project root.
+
+  $ touch dune-workspace
+
+Reproduce the file:
+
   $ cat > dune <<EOF
   > (library
   >  (name merlin_specific)

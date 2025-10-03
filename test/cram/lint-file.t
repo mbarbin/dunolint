@@ -1,6 +1,11 @@
 The dunolint command line tool exposes a util to ease integration with editors.
 We test it here while calling it from the shell.
 
+Initialize the project root.
+
+  $ ROOT=$(pwd)
+  $ touch dune-workspace
+
 By default the command reads from `stdin`.
 
   $ printf '(lang dune 3.17)\n' | dunolint tools lint-file
@@ -86,9 +91,7 @@ However, it shouldn't be an absolute path, unless it points to a path that is
 within the current working directory.
 
   $ cat dune | dunolint tools lint-file --filename=/path/to/my/file/dune
-  Error: Invalid absolute file path, must be within cwd.
-  file: "/path/to/my/file/dune"
-  cwd: "$TESTCASE_ROOT"
+  Error: Path "/path/to/my/file/dune" is not in dune workspace.
   [123]
 
   $ cat dune | dunolint tools lint-file --filename=$PWD/path/to/my/file/dune
@@ -178,6 +181,56 @@ Supplying an absent file or an invalid one results in errors:
       ^^^^^^^^^^^^^^^^
   Error: Dunolint config expected to start with (lang dunolint VERSION).
   [123]
+
+Test that absolute paths work for --config parameter:
+
+  $ ABSCONFIG=$PWD/empty-config
+  $ dunolint tools lint-file dune-project --config=$ABSCONFIG
+  (lang dune 3.17)
+  
+  (name my_project_name)
+
+Test with absolute config path from a subdirectory:
+
+  $ mkdir -p subdir
+  $ cd subdir
+  $ dunolint tools lint-file --filename=dune-project --config=$ABSCONFIG < ../dune-project
+  (lang dune 3.17)
+  
+  (name my_project_name)
+
+Absolute config paths should work even when the config enforces rules:
+
+  $ ABSCONFIG_WITH_RULES=$PWD/../dunolint
+  $ dunolint tools lint-file --filename=dune-project --config=$ABSCONFIG_WITH_RULES < ../dune-project
+  (lang dune 3.17)
+  
+  (name foo)
+  $ cd ..
+
+Test linting a file using an absolute path:
+
+  $ ABSPATH=$PWD/dune-project
+  $ dunolint tools lint-file $ABSPATH
+  (lang dune 3.17)
+  
+  (name foo)
+
+Absolute paths must be within the current workspace root directory:
+
+  $ cd subdir
+  $ dunolint tools lint-file $ABSPATH --root .
+  Error: Path
+  "$TESTCASE_ROOT/dune-project"
+  is not in dune workspace.
+  [123]
+
+  $ dunolint tools lint-file $ABSPATH
+  (lang dune 3.17)
+  
+  (name foo)
+
+  $ cd ..
 
 The path that is used by the config is the filename supplied when it is
 overridden. In particular note how here we are executing the `return` statement
@@ -273,3 +326,41 @@ The command is idempotent.
   $ dunolint tools lint-file dune --in-place
 
   $ diff dune dune-backup
+
+Test linting a file from outside the dune workspace. This should work and
+re-order the libraries without error.
+
+  $ NO_WORKSPACE=$(mktemp -d)
+
+  $ cat > ${NO_WORKSPACE}/dune <<EOF
+  > (library (name mylib)
+  >  (libraries c b a))
+  > EOF
+
+  $ (cd ${NO_WORKSPACE} && dunolint tools find-workspace-root)
+  Error: I cannot find the root of the current dune workspace/project.
+  If you would like to create a new dune project, you can type:
+  
+      dune init project NAME
+  
+  Otherwise, please make sure to run dune inside an existing project or
+  workspace. For more information about how dune identifies the root of the
+  current workspace/project, please refer to
+  https://dune.readthedocs.io/en/stable/usage.html#finding-the-root
+  [123]
+
+  $ (cd ${NO_WORKSPACE} && dunolint tools lint-file dune)
+  (library
+   (name mylib)
+   (libraries a b c))
+
+Verify that the command works when run from $NO_WORKSPACE directly when reading
+from stdin with filename override:
+
+  $ cd ${NO_WORKSPACE}
+  $ cat dune | dunolint tools lint-file --filename=dune
+  (library
+   (name mylib)
+   (libraries a b c))
+  $ cd ${ROOT}
+  $ rm -rf ${NO_WORKSPACE}

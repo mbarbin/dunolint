@@ -3,6 +3,10 @@ particular we look for certain regression to make sure errors are located and
 messages are clear, especially for certain situation known to be tricky in the
 implementation.
 
+Initialize the project root.
+
+  $ touch dune-workspace
+
 Version 0 with no fields.
 
   $ cat > dunolint <<EOF

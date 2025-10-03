@@ -9,9 +9,10 @@ This is your first introduction to dunolint - a tool that helps you maintain con
 For this mdx tutorial, let's simulate a typical OCaml project with a simple library:
 </summary>
 
-For the purpose of this compiled documentation (mdx) we've prepared the contents of a simple dune file under the file `dune.txt` in our repo, we'll copy it as `src/dune` to make the rest of the test use it.
+For the purpose of this compiled documentation (mdx) we've prepared the contents of a simple dune file under the file `dune.txt` in our repo, we'll copy it as `src/dune` to make the rest of the test use it. We're also initializing a workspace file to set the project root used during the execution of this document.
 
 ```bash
+$ touch dune-workspace
 $ mkdir -p src
 $ cat dune.txt > src/dune
 ```

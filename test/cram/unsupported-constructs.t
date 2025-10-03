@@ -2,6 +2,12 @@ Sometimes dunolint fails to parse a dune construct, due to some programming
 error, or dunolint not being up to date with dune. In this test we monitor the
 errors produced in such cases.
 
+Initialize the project root.
+
+  $ touch dune-workspace
+
+Create build files.
+
   $ cat > dune-project <<EOF
   > (name main)
   > 
