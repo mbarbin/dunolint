@@ -372,6 +372,10 @@ let visit ?below (_ : t) ~f =
     | [] -> ()
     | [] :: tl -> visit tl
     | (parent_dir :: tl) :: rest ->
+      Log.debug ~src (fun () ->
+        Pp.O.
+          [ Pp.text "Visiting directory " ++ Pp_tty.path (module Relative_path) parent_dir
+          ]);
       let entries =
         Stdlib.Sys.readdir (Relative_path.to_string parent_dir)
         |> Array.to_list
@@ -404,10 +408,6 @@ let visit ?below (_ : t) ~f =
              `Trd ())
             [@coverage off])
       in
-      Log.debug ~src (fun () ->
-        Pp.O.
-          [ Pp.text "Visiting directory " ++ Pp_tty.path (module Relative_path) parent_dir
-          ]);
       (match (f ~parent_dir ~subdirectories ~files : Visitor_decision.t) with
        | Break -> () [@coverage off]
        | Continue ->
