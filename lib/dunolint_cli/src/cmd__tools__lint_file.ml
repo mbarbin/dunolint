@@ -213,9 +213,7 @@ let main =
          |> Relative_path.to_string)
      in
      Workspace_root.chdir workspace_root ~level:Debug;
-     let config =
-       Common_helpers.load_config_opt_exn ~config ~append_extra_rules:[]
-     in
+     let config = Common_helpers.load_config_opt_exn ~config ~append_extra_rules:[] in
      let path =
        match Option.first_some filename file with
        | Some file -> file
