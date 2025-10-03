@@ -18,33 +18,3 @@
 (*  and the LGPL-3.0 Linking Exception along with this library. If not, see      *)
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
-
-module Common_helpers = Dunolint_cli.Private.Common_helpers
-
-let%expect_test "ancestors" =
-  let test path =
-    print_s
-      [%sexp
-        (Common_helpers.ancestors_directories ~path:(Relative_path.v path)
-         : Relative_path.t list)]
-  in
-  test "./";
-  [%expect {| () |}];
-  test ".";
-  [%expect {| () |}];
-  test "foo";
-  [%expect {| () |}];
-  test "foo/";
-  [%expect {| (foo/) |}];
-  test "foo/bar";
-  [%expect {| (foo/) |}];
-  test "foo/bar/bin";
-  [%expect {| (foo/ foo/bar/) |}];
-  test "foo/bar/bin/";
-  [%expect {| (foo/ foo/bar/ foo/bar/bin/) |}];
-  test "foo/bar/bin/baz";
-  [%expect {| (foo/ foo/bar/ foo/bar/bin/) |}];
-  test "foo/bar/.";
-  [%expect {| (foo/ foo/bar/) |}];
-  ()
-;;

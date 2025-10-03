@@ -19,23 +19,37 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-let main =
-  Command.make
-    ~summary:"Validate the supplied config file."
-    ~readme:(fun () ->
-      "You can use this command to validate that the supplied file is a valid config \
-       file for $(b,dunolint).")
-    (let open Command.Std in
-     let+ filename = Arg.pos ~pos:0 Param.file ~doc:"Config file to customize dunolint."
-     and+ print =
-       Arg.flag [ "print" ] ~doc:"Print the parsed config as a S-expression."
-     in
-     let config = Dunolinter.Config_handler.load_config_exn ~filename in
-     if print
-     then (
-       let sexps = Dunolint.Config.to_stanzas config in
-       print_endline
-         (List.mapi sexps ~f:(fun i s ->
-            (if i > 0 then "\n" else "") ^ Sexp.to_string_hum s)
-          |> String.concat ~sep:"\n")))
+let load_config_exn ~filename =
+  let contents = In_channel.read_all filename in
+  match Parsexp.Many_and_positions.parse_string contents with
+  | Error parse_error ->
+    let position = Parsexp.Parse_error.position parse_error in
+    let message = Parsexp.Parse_error.message parse_error in
+    let loc =
+      Sexp_handler.loc_of_parsexp_range
+        ~filename
+        { start_pos = position; end_pos = position }
+    in
+    Err.raise ~loc [ Pp.text message ]
+  | Ok (sexps, positions) ->
+    (match Dunolint.Config.of_stanzas sexps with
+     | t -> t
+     | exception Sexp.Of_sexp_error (exn, sub) ->
+       let range =
+         match Parsexp.Positions.find_sub_sexp_in_list_phys positions sexps ~sub with
+         | Some _ as range -> range
+         | None -> None [@coverage off]
+       in
+       let loc =
+         match range with
+         | Some range -> Sexp_handler.loc_of_parsexp_range ~filename range
+         | None -> Loc.of_file ~path:(Fpath.v filename) [@coverage off]
+       in
+       let message =
+         match exn with
+         | Failure str ->
+           Pp.text (if String.is_suffix str ~suffix:"." then str else str ^ ".")
+         | exn -> Err.exn exn [@coverage off]
+       in
+       Err.raise ~loc [ message ])
 ;;
