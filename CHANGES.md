@@ -14,6 +14,7 @@
 
 ### Fixed
 
+- Fix workspace root detection in dune test envs (#120, @mbarbin).
 - Fix parsing errors of dune version in dune-project (#112, @mbarbin).
 
 ## 0.0.20250910-1 (2025-09-10)
