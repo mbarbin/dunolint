@@ -28,8 +28,9 @@ module File_kind = File_kind
 module Running_mode = Running_mode
 
 module Edited_file = struct
-  (* Edited files are indexed by their path relative to the root_path provided
-     during the creation of the engine [t]. *)
+  (* Edited files are indexed by their path relative to the workspace root that
+     is assumed to be located at the [cwd] active during creation and use of the
+     engine [t]. *)
   type t =
     { path : Relative_path.t
     ; original_contents : string (* Empty if the file is new *)
@@ -241,7 +242,7 @@ let rec mkdirs path =
   match is_directory_exn ~path with
   | `Yes -> ()
   | `Absent ->
-    (match Relative_path.parent path with
+    (match Path_in_workspace.parent path with
      | None -> () [@coverage off]
      | Some path -> mkdirs path);
     Unix.mkdir (Relative_path.to_string path) ~perm:0o755
@@ -259,7 +260,7 @@ let materialize t =
     List.iteri edited_files ~f:(fun i { path; original_contents; new_contents } ->
       if i > 0 then print_endline "";
       let should_mkdir =
-        match Relative_path.parent path with
+        match Path_in_workspace.parent path with
         | None -> None [@coverage off]
         | Some parent_dir as some ->
           (match is_directory_exn ~path:parent_dir with
@@ -361,6 +362,48 @@ module Visitor_decision = struct
     | Skip_subtree
 end
 
+module Directory_entries = struct
+  type t =
+    { subdirectories : string list
+    ; files : string list
+    }
+
+  let readdir ~parent_dir =
+    let entries =
+      Stdlib.Sys.readdir (Relative_path.to_string parent_dir)
+      |> Array.to_list
+      |> List.sort ~compare:String.compare
+    in
+    let subdirectories, files, _ =
+      entries
+      |> List.partition3_map ~f:(fun entry ->
+        match
+          (Unix.lstat (Stdlib.Filename.concat (Relative_path.to_string parent_dir) entry))
+            .st_kind
+        with
+        | S_DIR -> `Fst entry
+        | S_REG -> `Snd entry
+        | s_kind ->
+          let () =
+            match[@coverage off] s_kind with
+            | S_DIR | S_REG -> assert false
+            | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK -> ()
+          in
+          `Trd ()
+        | exception Unix.Unix_error (EACCES, _, _) ->
+          (Err.warning
+             Pp.O.
+               [ Pp.text "Permission denied - skipping "
+                 ++ Pp_tty.path (module Relative_path) parent_dir
+                 ++ Pp.text "."
+               ];
+           `Trd ())
+          [@coverage off])
+    in
+    { subdirectories; files }
+  ;;
+end
+
 let visit ?below (_ : t) ~f =
   let root_path =
     match below with
@@ -371,42 +414,13 @@ let visit ?below (_ : t) ~f =
     | [] -> ()
     | [] :: tl -> visit tl
     | (parent_dir :: tl) :: rest ->
-      let entries =
-        Stdlib.Sys.readdir (Relative_path.to_string parent_dir)
-        |> Array.to_list
-        |> List.sort ~compare:String.compare
-      in
-      let subdirectories, files, _ =
-        entries
-        |> List.partition3_map ~f:(fun entry ->
-          match
-            (Unix.lstat
-               (Stdlib.Filename.concat (Relative_path.to_string parent_dir) entry))
-              .st_kind
-          with
-          | S_DIR -> `Fst entry
-          | S_REG -> `Snd entry
-          | s_kind ->
-            let () =
-              match[@coverage off] s_kind with
-              | S_DIR | S_REG -> assert false
-              | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK -> ()
-            in
-            `Trd ()
-          | exception Unix.Unix_error (EACCES, _, _) ->
-            (Err.warning
-               Pp.O.
-                 [ Pp.text "Permission denied - skipping "
-                   ++ Pp_tty.path (module Relative_path) parent_dir
-                   ++ Pp.text "."
-                 ];
-             `Trd ())
-            [@coverage off])
-      in
       Log.debug ~src (fun () ->
         Pp.O.
           [ Pp.text "Visiting directory " ++ Pp_tty.path (module Relative_path) parent_dir
           ]);
+      let { Directory_entries.subdirectories; files } =
+        Directory_entries.readdir ~parent_dir
+      in
       (match (f ~parent_dir ~subdirectories ~files : Visitor_decision.t) with
        | Break -> () [@coverage off]
        | Continue ->
