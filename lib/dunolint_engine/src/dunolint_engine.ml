@@ -362,6 +362,48 @@ module Visitor_decision = struct
     | Skip_subtree
 end
 
+module Directory_entries = struct
+  type t =
+    { subdirectories : string list
+    ; files : string list
+    }
+
+  let readdir ~parent_dir =
+    let entries =
+      Stdlib.Sys.readdir (Relative_path.to_string parent_dir)
+      |> Array.to_list
+      |> List.sort ~compare:String.compare
+    in
+    let subdirectories, files, _ =
+      entries
+      |> List.partition3_map ~f:(fun entry ->
+        match
+          (Unix.lstat (Stdlib.Filename.concat (Relative_path.to_string parent_dir) entry))
+            .st_kind
+        with
+        | S_DIR -> `Fst entry
+        | S_REG -> `Snd entry
+        | s_kind ->
+          let () =
+            match[@coverage off] s_kind with
+            | S_DIR | S_REG -> assert false
+            | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK -> ()
+          in
+          `Trd ()
+        | exception Unix.Unix_error (EACCES, _, _) ->
+          (Err.warning
+             Pp.O.
+               [ Pp.text "Permission denied - skipping "
+                 ++ Pp_tty.path (module Relative_path) parent_dir
+                 ++ Pp.text "."
+               ];
+           `Trd ())
+          [@coverage off])
+    in
+    { subdirectories; files }
+  ;;
+end
+
 let visit ?below (_ : t) ~f =
   let root_path =
     match below with
@@ -376,37 +418,8 @@ let visit ?below (_ : t) ~f =
         Pp.O.
           [ Pp.text "Visiting directory " ++ Pp_tty.path (module Relative_path) parent_dir
           ]);
-      let entries =
-        Stdlib.Sys.readdir (Relative_path.to_string parent_dir)
-        |> Array.to_list
-        |> List.sort ~compare:String.compare
-      in
-      let subdirectories, files, _ =
-        entries
-        |> List.partition3_map ~f:(fun entry ->
-          match
-            (Unix.lstat
-               (Stdlib.Filename.concat (Relative_path.to_string parent_dir) entry))
-              .st_kind
-          with
-          | S_DIR -> `Fst entry
-          | S_REG -> `Snd entry
-          | s_kind ->
-            let () =
-              match[@coverage off] s_kind with
-              | S_DIR | S_REG -> assert false
-              | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK -> ()
-            in
-            `Trd ()
-          | exception Unix.Unix_error (EACCES, _, _) ->
-            (Err.warning
-               Pp.O.
-                 [ Pp.text "Permission denied - skipping "
-                   ++ Pp_tty.path (module Relative_path) parent_dir
-                   ++ Pp.text "."
-                 ];
-             `Trd ())
-            [@coverage off])
+      let { Directory_entries.subdirectories; files } =
+        Directory_entries.readdir ~parent_dir
       in
       (match (f ~parent_dir ~subdirectories ~files : Visitor_decision.t) with
        | Break -> () [@coverage off]
