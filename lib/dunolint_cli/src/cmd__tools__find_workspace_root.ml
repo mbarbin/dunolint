@@ -28,7 +28,8 @@ let main =
        directories. Dune requires at least one of these two files to operate.\n\n\
        See also $(i,https://dune.readthedocs.io/en/stable/usage.html#finding-the-root).")
     (let open Command.Std in
-     let+ root = Common_helpers.root in
+     let+ () = Log_cli.set_config ()
+     and+ root = Common_helpers.root in
      let workspace_root =
        Workspace_root.find_exn ~default_is_cwd:false ~specified_by_user:root
      in
