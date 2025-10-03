@@ -16,6 +16,13 @@ Exercise and monitor cases of finding the root of the current dune workspace.
 
   $ cd $ROOT
 
+We should also have code in place that ensure that during the dune tests
+environment, we are not using an actual enclosing repo dir as workspace root,
+even if that repo contains a `dune-workspace` root file.
+
+  $ dunolint tools find-workspace-root 2>&1 | head -n 1
+  Error: I cannot find the root of the current dune workspace/project.
+
   $ mkdir workspace-foo
 
   $ cd workspace-foo

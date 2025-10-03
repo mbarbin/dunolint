@@ -93,7 +93,15 @@ end
 
 let find () =
   let cwd = Unix.getcwd () in
-  let rec loop counter ~(candidate : Candidate.t option) ~to_cwd dir : Candidate.t option =
+  let rec loop counter ~candidate ~to_cwd dir =
+    (* This special case prevents actual enclosing repo dir to be mistaken as
+       workspace root in the context of running tests with dune. *)
+    if String.equal (Stdlib.Filename.basename dir) "_build"
+    then candidate
+    else loop_internal counter ~candidate ~to_cwd dir
+  and loop_internal counter ~(candidate : Candidate.t option) ~to_cwd dir
+    : Candidate.t option
+    =
     match Stdlib.Sys.readdir dir with
     | exception Sys_error msg ->
       (Err.warning
@@ -130,7 +138,7 @@ let find () =
         let base = Stdlib.Filename.basename dir in
         loop (counter + 1) parent ~candidate ~to_cwd:(base :: to_cwd)))
   in
-  loop 0 ~to_cwd:[] cwd ~candidate:None
+  loop 0 ~candidate:None ~to_cwd:[] cwd
 ;;
 
 let find_exn ~default_is_cwd ~specified_by_user =
