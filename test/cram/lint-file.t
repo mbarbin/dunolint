@@ -210,14 +210,6 @@ But if the file is not ignored, we see that it is linted.
    (name mylib)
    (libraries a b c))
 
-It is also possible to pass invariants directly to the command from the command
-line.
-
-  $ dunolint tools lint-file dune-project --enforce='(dune_project (name (equals bar)))'
-  (lang dune 3.17)
-  
-  (name bar)
-
 The lint result may be saved directly to the input file with the flag
 `--in-place`. There are a few corner cases to cover here, such as what happens
 when the filename is overridden. The intention is to target the actual input

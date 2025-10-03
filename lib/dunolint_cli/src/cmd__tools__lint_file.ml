@@ -206,19 +206,10 @@ let main =
          Param.bool
          ~default:true
          ~doc:"Format file with after linting, using [dune format-dune-file]."
-     and+ enforce =
-       Arg.named_multi
-         [ "enforce" ]
-         (Common_helpers.sexpable_param (module Dunolint.Condition))
-         ~docv:"COND"
-         ~doc:"Add condition to enforce."
-       >>| List.map ~f:(fun condition -> `enforce condition)
      in
      let save_in_place = save_in_place ~in_place ~file in
      let cwd = Unix.getcwd () |> Absolute_path.v in
-     let config =
-       Common_helpers.load_config_opt_exn ~config ~append_extra_rules:enforce
-     in
+     let config = Common_helpers.load_config_opt_exn ~config ~append_extra_rules:[] in
      let path = select_path ~cwd ~filename ~file in
      let linter = select_linter ~path:(path :> Fpath.t) in
      let original_contents =
