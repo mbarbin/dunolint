@@ -28,8 +28,9 @@ module File_kind = File_kind
 module Running_mode = Running_mode
 
 module Edited_file = struct
-  (* Edited files are indexed by their path relative to the root_path provided
-     during the creation of the engine [t]. *)
+  (* Edited files are indexed by their path relative to the workspace root that
+     is assumed to be located at the [cwd] active during creation and use of the
+     engine [t]. *)
   type t =
     { path : Relative_path.t
     ; original_contents : string (* Empty if the file is new *)
@@ -241,7 +242,7 @@ let rec mkdirs path =
   match is_directory_exn ~path with
   | `Yes -> ()
   | `Absent ->
-    (match Relative_path.parent path with
+    (match Path_in_workspace.parent path with
      | None -> () [@coverage off]
      | Some path -> mkdirs path);
     Unix.mkdir (Relative_path.to_string path) ~perm:0o755
@@ -259,7 +260,7 @@ let materialize t =
     List.iteri edited_files ~f:(fun i { path; original_contents; new_contents } ->
       if i > 0 then print_endline "";
       let should_mkdir =
-        match Relative_path.parent path with
+        match Path_in_workspace.parent path with
         | None -> None [@coverage off]
         | Some parent_dir as some ->
           (match is_directory_exn ~path:parent_dir with
