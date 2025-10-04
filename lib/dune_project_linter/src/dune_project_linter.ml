@@ -64,17 +64,17 @@ module Linter = struct
         ~original_sexp
         ~sexps_rewriter
     =
-    let eval (t : m) ~predicate =
+    let eval (t : m) ~path ~predicate =
       match (predicate : Dunolint.Predicate.t) with
       | `path condition -> Dunolinter.eval_path ~path ~condition
       | `dune _ -> Dunolint.Trilang.Undefined
       | `dune_project condition ->
         Dunolint.Trilang.eval condition ~f:(fun predicate -> M.eval t ~predicate)
     in
-    let enforce =
+    let enforce (m : m) ~path ~condition =
       Dunolinter.Linter.enforce
         (module Dunolint.Predicate)
-        ~eval
+        ~eval:(fun t ~predicate -> eval t ~path ~predicate)
         ~enforce:(fun t predicate ->
           match predicate with
           | Not _ -> Eval
@@ -82,9 +82,11 @@ module Linter = struct
           | T (`dune_project condition) ->
             M.enforce t ~condition;
             Ok)
+        m
+        ~condition
     in
-    let eval predicate = eval inner_stanza ~predicate in
-    let enforce condition = enforce inner_stanza ~condition in
+    let eval ~path ~predicate = eval inner_stanza ~path ~predicate in
+    let enforce ~path ~condition = enforce inner_stanza ~path ~condition in
     Dunolinter.Private.Stanza.create
       { stanza; path; original_sexp; sexps_rewriter; linter = T { eval; enforce } }
   ;;

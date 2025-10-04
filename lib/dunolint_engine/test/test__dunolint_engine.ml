@@ -23,6 +23,7 @@ open Dunolint.Config.Std
 module Unix = UnixLabels
 
 let%expect_test "lint" =
+  let path = Relative_path.v "dune-project" in
   let t = Dunolint_engine.create ~running_mode:Dry_run () in
   Out_channel.write_all
     "dune-project"
@@ -39,7 +40,7 @@ let%expect_test "lint" =
   (* In this section we exercise some ways dunolint_engine can be used as a library. *)
   Dunolint_engine.lint_dune_project_file
     t
-    ~path:(Relative_path.v "dune-project")
+    ~path
     ~f:(fun stanza ->
       (* The API has a few getters. *)
       print_s [%sexp (Dunolinter.path stanza : Relative_path.t)];
@@ -71,7 +72,10 @@ let%expect_test "lint" =
           | T { eval = _; enforce } ->
             (* Similarly to using typed setters, the side effect is performed
                but the rewrite is done during materialization. *)
-            enforce (dune_project (name (equals (Dune_project.Name.v "a-better-name"))));
+            enforce
+              ~path
+              ~condition:
+                (dune_project (name (equals (Dune_project.Name.v "a-better-name"))));
             [%expect {||}];
             ())
        | _ ->
@@ -157,9 +161,10 @@ let%expect_test "create-files" =
      files will stay untouched. *)
   Dunolint_engine.lint_file t ~path:(Relative_path.v "lib/a/dune");
   (* Another option to apply lints is to go through the [Dunolinter] API. *)
+  let path = Relative_path.v "lib/a/dune" in
   Dunolint_engine.lint_dune_file
     t
-    ~path:(Relative_path.v "lib/a/dune")
+    ~path
     ~f:(fun stanza ->
       match Dunolinter.linter stanza with
       | Unhandled ->
@@ -170,8 +175,11 @@ let%expect_test "create-files" =
         () [@coverage off]
       | T { eval = _; enforce } ->
         enforce
-          (dune
-             (library (public_name (equals (Dune.Library.Public_name.v "a-public-name")))));
+          ~path
+          ~condition:
+            (dune
+               (library
+                  (public_name (equals (Dune.Library.Public_name.v "a-public-name")))));
         [%expect {||}];
         ())
     ~with_linter:(fun linter ->

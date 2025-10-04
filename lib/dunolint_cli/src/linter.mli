@@ -27,7 +27,8 @@ val should_skip_subtree
 val maybe_autoformat_file : previous_contents:string -> new_contents:string -> string
 
 val lint_stanza
-  :  context:Dunolint_engine.Context.t
+  :  path:Relative_path.t
+  -> context:Dunolint_engine.Context.t
   -> stanza:'a Dunolinter.Stanza.t
   -> return:[> `skip_subtree ] With_return.return
   -> unit

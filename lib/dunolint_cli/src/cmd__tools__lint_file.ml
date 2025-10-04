@@ -67,7 +67,7 @@ let lint_file
     let (_ : [ `continue | `skip_subtree ]) =
       With_return.with_return (fun return ->
         File_linter.visit linter ~f:(fun stanza ->
-          Linter.lint_stanza ~context ~stanza ~return);
+          Linter.lint_stanza ~path ~context ~stanza ~return);
         `continue)
     in
     let new_contents = File_linter.contents linter in

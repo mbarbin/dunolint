@@ -24,8 +24,9 @@ module type S = Linter_intf.S
 type t =
   | Unhandled
   | T :
-      { eval : Dunolint.Predicate.t -> Dunolint.Trilang.t
-      ; enforce : Dunolint.Predicate.t Blang.t -> unit
+      { eval :
+          path:Relative_path.t -> predicate:Dunolint.Predicate.t -> Dunolint.Trilang.t
+      ; enforce : path:Relative_path.t -> condition:Dunolint.Predicate.t Blang.t -> unit
       }
       -> t
 

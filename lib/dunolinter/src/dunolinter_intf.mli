@@ -50,13 +50,11 @@ module type S = sig
 
   (** {1 Creation} *)
 
-  (** A [t] shall be created from a string that would yield a
-      successful parsing of many sexps and positions from a dune file,
-      using the [Parsexp] library. The [path] is provided to create a
-      [Loc.t] for error messages, as well as serve during condition
-      evaluation based on paths, but no I/O is actually performed on
-      disk - the sexps are parsed from the string provided by the
-      parameter [original_contents].
+  (** A [t] shall be created from a string that would yield a successful parsing
+      of many sexps and positions from a dune file, using the [Parsexp] library.
+      The [path] is provided to create a [Loc.t] for error messages, but no I/O
+      is actually performed on disk - the sexps are parsed from the string
+      provided by the parameter [original_contents].
 
       The type is intended to make it easy to connect to code using
       [Err], such as shown below:

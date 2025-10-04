@@ -50,10 +50,9 @@ let print_diff t =
 ;;
 
 let%expect_test "lint" =
+  let path = Relative_path.v "path/to/dune" in
   let t =
-    match
-      Dune_linter.create ~path:(Relative_path.v "path/to/dune") ~original_contents
-    with
+    match Dune_linter.create ~path ~original_contents with
     | Ok t -> t
     | Error _ -> assert false
   in
@@ -120,14 +119,18 @@ let%expect_test "lint" =
     | T { eval; enforce } ->
       (match
          eval
-           Dunolint.Config.Std.(
-             `dune (library (name (equals (Dunolint.Dune.Library.Name.v "foo_foo")))))
+           ~path
+           ~predicate:
+             Dunolint.Config.Std.(
+               `dune (library (name (equals (Dunolint.Dune.Library.Name.v "foo_foo")))))
        with
        | False | Undefined -> ()
        | True ->
          enforce
-           Dunolint.Config.Std.(
-             dune (library (name (equals (Dunolint.Dune.Library.Name.v "bar")))))));
+           ~path
+           ~condition:
+             Dunolint.Config.Std.(
+               dune (library (name (equals (Dunolint.Dune.Library.Name.v "bar")))))));
   print_diff t;
   [%expect
     {|
@@ -146,8 +149,9 @@ let%expect_test "lint" =
   Dune_linter.visit t ~f:(fun stanza ->
     match Dunolinter.linter stanza with
     | Unhandled -> () [@coverage off]
-    | T { eval = _; enforce = apply } ->
+    | T { eval = _; enforce } ->
       let () =
+        let apply condition = enforce ~path ~condition in
         let open Dunolint.Config.Std in
         apply (dune (executable (name (equals (Dune.Executable.Name.v "my-exec")))));
         (* Enforcing unapplicable invariants has no effect. *)

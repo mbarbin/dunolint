@@ -42,12 +42,9 @@ let print_diff t =
 ;;
 
 let%expect_test "lint" =
+  let path = Relative_path.v "path/to/dune-project" in
   let t =
-    match
-      Dune_project_linter.create
-        ~path:(Relative_path.v "path/to/dune-project")
-        ~original_contents
-    with
+    match Dune_project_linter.create ~path ~original_contents with
     | Ok t -> t
     | Error _ -> assert false
   in
@@ -124,8 +121,10 @@ let%expect_test "lint" =
     | Unhandled -> () [@coverage off]
     | T { eval; enforce = _ } ->
       (match
-         let open Dunolint.Config.Std in
-         eval (`dune_project (generate_opam_files Blang.true_))
+         eval
+           ~path
+           ~predicate:
+             Dunolint.Config.Std.(`dune_project (generate_opam_files Blang.true_))
        with
        | False -> assert false
        | Undefined -> ()
@@ -160,7 +159,8 @@ let%expect_test "lint" =
   Dune_project_linter.visit t ~f:(fun stanza ->
     match Dunolinter.linter stanza with
     | Unhandled -> () [@coverage off]
-    | T { eval = _; enforce = apply } ->
+    | T { eval = _; enforce } ->
+      let apply condition = enforce ~path ~condition in
       let () =
         let open Dunolint.Config.Std in
         apply (dune_project (name (equals (Dune_project.Name.v "foo"))));

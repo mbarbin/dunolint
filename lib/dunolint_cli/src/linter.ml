@@ -75,7 +75,7 @@ module Visitor_decision = struct
     | Skip_subtree
 end
 
-let lint_stanza ~context ~stanza ~(return : _ With_return.return) =
+let lint_stanza ~path ~context ~stanza ~(return : _ With_return.return) =
   let loc =
     Sexps_rewriter.loc
       (Dunolinter.sexps_rewriter stanza)
@@ -89,9 +89,9 @@ let lint_stanza ~context ~stanza ~(return : _ With_return.return) =
          deepest, so deeper configs can override shallower ones. *)
       List.iter (Dunolint_engine.Context.configs context) ~f:(fun config ->
         List.iter (Dunolint.Config.rules config) ~f:(fun rule ->
-          match Dunolint.Rule.eval rule ~f:eval with
+          match Dunolint.Rule.eval rule ~f:(fun predicate -> eval ~path ~predicate) with
           | `return -> ()
-          | `enforce condition -> enforce condition
+          | `enforce condition -> enforce ~path ~condition
           | `skip_subtree -> return.return `skip_subtree)))
 ;;
 
@@ -112,7 +112,8 @@ module Lint_file (Linter : Dunolinter.S) = struct
         | Ok linter ->
           let result =
             With_return.with_return (fun return ->
-              Linter.visit linter ~f:(fun stanza -> lint_stanza ~context ~stanza ~return);
+              Linter.visit linter ~f:(fun stanza ->
+                lint_stanza ~path ~context ~stanza ~return);
               `continue)
           in
           let () =
