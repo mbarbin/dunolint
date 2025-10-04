@@ -103,12 +103,9 @@ val format_dune_file : new_contents:string -> string
     that uses [t] to perform some dunolint linting, such as [visit],
     [lint_dune_file], etc.
 
-    The [process_mgr] argument is used in order to spawn [dune format-dune-file]
-    processes to reformat dune files after they have been linted.
-
-    The [root_configs] parameter allows specifying configs that will be included
-    in the context passed to the visit callback. These configs are treated as if
-    they were located at the workspace root.
+    This is a convenience wrapper around [create], calling [f], and
+    [materialize]. The [root_configs] and [running_mode] parameters are
+    forwarded to [create].
 
     In addition to enqueuing debug messages and errors, this function outputs
     messages regarding I/O actions executed during linting. These messages are
@@ -121,6 +118,15 @@ val run
 
 (** {1 Step by step API} *)
 
+(** Create a new linting engine.
+
+    The [root_configs] parameter allows specifying configs that will be included
+    in the context passed to the visit callback. These configs are treated as if
+    they were located at the workspace root.
+
+    The [running_mode] determines whether changes are applied (Force_yes),
+    previewed (Dry_run), interactively confirmed (Interactive), or checked
+    without modification (Check). *)
 val create
   :  ?root_configs:Dunolint.Config.t list
   -> running_mode:Running_mode.t
