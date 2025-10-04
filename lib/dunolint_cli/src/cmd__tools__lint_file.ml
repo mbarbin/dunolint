@@ -182,12 +182,17 @@ let main =
          |> Relative_path.to_string)
      in
      Workspace_root.chdir workspace_root ~level:Debug;
+     let path =
+       match Option.first_some filename file with
+       | Some file -> file
+       | None -> Relative_path.v "stdin"
+     in
      let root_configs =
        List.concat
          [ [ Common_helpers.default_skip_paths_config () ]
          ; (match Common_helpers.load_config_opt ~config with
-            | Some config -> [ config ]
-            | None -> [])
+            | None -> []
+            | Some config -> [ config ])
          ]
      in
      let context =
@@ -195,11 +200,6 @@ let main =
          root_configs
          ~init:Dunolint_engine.Context.empty
          ~f:(fun context config -> Dunolint_engine.Context.add_config context ~config)
-     in
-     let path =
-       match Option.first_some filename file with
-       | Some file -> file
-       | None -> Relative_path.v "stdin"
      in
      let linter = select_linter ~path:(path :> Fpath.t) in
      let original_contents =
