@@ -137,10 +137,8 @@ let visit_directory ~dunolint_engine ~context ~parent_dir ~files =
              | `skip_subtree -> true))
       | `v1 v1 ->
         let skip_subtrees = Dunolint.Config.V1.skip_paths v1 |> List.concat in
-        let parent_dirs =
-          List.map paths_to_check_for_skip_predicates ~f:Relative_path.to_string
-        in
-        List.exists parent_dirs ~f:(fun parent_dir ->
+        List.exists paths_to_check_for_skip_predicates ~f:(fun parent_dir ->
+          let parent_dir = Relative_path.to_string parent_dir in
           List.exists skip_subtrees ~f:(fun glob -> Dunolint.Glob.test glob parent_dir)))
   in
   match should_skip_subtree with
