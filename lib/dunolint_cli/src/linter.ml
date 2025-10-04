@@ -50,7 +50,7 @@ module Visitor_decision = struct
     | Skip_subtree
 end
 
-let lint_stanza ~rules ~stanza ~(return : _ With_return.return) =
+let lint_stanza ~context ~stanza ~(return : _ With_return.return) =
   let loc =
     Sexps_rewriter.loc
       (Dunolinter.sexps_rewriter stanza)
@@ -60,23 +60,27 @@ let lint_stanza ~rules ~stanza ~(return : _ With_return.return) =
     match Dunolinter.linter stanza with
     | Unhandled -> ()
     | T { eval; enforce } ->
-      List.iter rules ~f:(fun rule ->
-        if false
-        then
-          Err.debug
-            ~loc
-            (lazy
-              [ Pp.text "Applying rule"
-              ; Err.sexp [%sexp (rule : Dunolint.Config.Rule.t)]
-              ]) [@coverage off];
-        match Dunolint.Rule.eval rule ~f:eval with
-        | `return -> ()
-        | `enforce condition -> enforce condition
-        | `skip_subtree -> return.return `skip_subtree))
+      (* [Context.configs] returns configs in processing order: shallowest to
+         deepest, so deeper configs can override shallower ones. *)
+      List.iter (Dunolint_engine.Context.configs context) ~f:(fun config ->
+        let rules = Dunolint.Config.rules config in
+        List.iter rules ~f:(fun rule ->
+          if false
+          then
+            Err.debug
+              ~loc
+              (lazy
+                [ Pp.text "Applying rule"
+                ; Err.sexp [%sexp (rule : Dunolint.Config.Rule.t)]
+                ]) [@coverage off];
+          match Dunolint.Rule.eval rule ~f:eval with
+          | `return -> ()
+          | `enforce condition -> enforce condition
+          | `skip_subtree -> return.return `skip_subtree)))
 ;;
 
 module Lint_file (Linter : Dunolinter.S) = struct
-  let lint_file ~dunolint_engine ~rules ~(path : Relative_path.t) =
+  let lint_file ~dunolint_engine ~context ~(path : Relative_path.t) =
     let previous_contents_ref = ref "" in
     let visitor_decision = ref Visitor_decision.Continue in
     Dunolint_engine.lint_file
@@ -92,7 +96,7 @@ module Lint_file (Linter : Dunolinter.S) = struct
         | Ok linter ->
           let result =
             With_return.with_return (fun return ->
-              Linter.visit linter ~f:(fun stanza -> lint_stanza ~rules ~stanza ~return);
+              Linter.visit linter ~f:(fun stanza -> lint_stanza ~context ~stanza ~return);
               `continue)
           in
           let () =
@@ -111,53 +115,48 @@ end
 module Dune_lint = Lint_file (Dune_linter)
 module Dune_project_lint = Lint_file (Dune_project_linter)
 
-let visit_directory ~dunolint_engine ~config ~parent_dir ~files =
+let visit_directory ~dunolint_engine ~context ~parent_dir ~files =
   let paths_to_check_for_skip_predicates =
     Path_in_workspace.paths_to_check_for_skip_predicates ~path:parent_dir
   in
-  match
-    match Dunolint.Config.Private.view config with
-    | `v0 v0 ->
-      (match Dunolint.Config.V0.skip_subtree v0 with
-       | None -> `return
-       | Some condition ->
-         (match
-            List.exists paths_to_check_for_skip_predicates ~f:(fun parent_dir ->
-              match
-                Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
-                  Dunolinter.eval_path ~path:parent_dir ~condition)
-              with
-              | `enforce _ -> .
-              | `return -> false
-              | `skip_subtree -> true)
-          with
-          | true -> `skip_subtree
-          | false -> `return))
-    | `v1 v1 ->
-      let skip_subtrees = Dunolint.Config.V1.skip_paths v1 |> List.concat in
-      let parent_dirs =
-        List.map paths_to_check_for_skip_predicates ~f:Relative_path.to_string
-      in
-      if
-        List.exists parent_dirs ~f:(fun parent_dir ->
-          List.exists skip_subtrees ~f:(fun glob -> Dunolint.Glob.test glob parent_dir))
-      then `skip_subtree
-      else `return
-  with
-  | `skip_subtree -> Dunolint_engine.Visitor_decision.Skip_subtree
-  | `return ->
-    let rules = Dunolint.Config.rules config in
+  (* Check skip_subtree across all configs in context. *)
+  let should_skip_subtree =
+    List.exists (Dunolint_engine.Context.configs context) ~f:(fun config ->
+      match Dunolint.Config.Private.view config with
+      | `v0 v0 ->
+        (match Dunolint.Config.V0.skip_subtree v0 with
+         | None -> false
+         | Some condition ->
+           List.exists paths_to_check_for_skip_predicates ~f:(fun parent_dir ->
+             match
+               Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
+                 Dunolinter.eval_path ~path:parent_dir ~condition)
+             with
+             | `enforce _ -> .
+             | `return -> false
+             | `skip_subtree -> true))
+      | `v1 v1 ->
+        let skip_subtrees = Dunolint.Config.V1.skip_paths v1 |> List.concat in
+        List.exists paths_to_check_for_skip_predicates ~f:(fun parent_dir ->
+          let parent_dir = Relative_path.to_string parent_dir in
+          List.exists skip_subtrees ~f:(fun glob -> Dunolint.Glob.test glob parent_dir)))
+  in
+  match should_skip_subtree with
+  | true -> Dunolint_engine.Visitor_decision.Skip_subtree
+  | false ->
     let rec loop = function
       | [] -> Dunolint_engine.Visitor_decision.Continue
       | file :: files ->
         let path = Relative_path.extend parent_dir (Fsegment.v file) in
+        (* Check if file should be skipped across all configs. *)
         let skip_file =
-          match Dunolint.Config.Private.view config with
-          | `v0 _ -> false
-          | `v1 v1 ->
-            let filename = Relative_path.to_string path in
-            let skip_files = Dunolint.Config.V1.skip_paths v1 |> List.concat in
-            List.exists skip_files ~f:(fun glob -> Dunolint.Glob.test glob filename)
+          List.exists (Dunolint_engine.Context.configs context) ~f:(fun config ->
+            match Dunolint.Config.Private.view config with
+            | `v0 _ -> false
+            | `v1 v1 ->
+              let filename = Relative_path.to_string path in
+              let skip_files = Dunolint.Config.V1.skip_paths v1 |> List.concat in
+              List.exists skip_files ~f:(fun glob -> Dunolint.Glob.test glob filename))
         in
         (match
            if skip_file
@@ -167,9 +166,9 @@ let visit_directory ~dunolint_engine ~config ~parent_dir ~files =
              | Error (`Msg _) -> Visitor_decision.Continue
              | Ok linted_file_kind ->
                (match linted_file_kind with
-                | `dune -> Dune_lint.lint_file ~dunolint_engine ~rules ~path
+                | `dune -> Dune_lint.lint_file ~dunolint_engine ~context ~path
                 | `dune_project ->
-                  Dune_project_lint.lint_file ~dunolint_engine ~rules ~path))
+                  Dune_project_lint.lint_file ~dunolint_engine ~context ~path))
          with
          | Continue -> loop files
          | Skip_subtree -> Dunolint_engine.Visitor_decision.Skip_subtree)

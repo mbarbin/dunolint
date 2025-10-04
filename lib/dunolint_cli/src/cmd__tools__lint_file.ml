@@ -54,46 +54,35 @@ module Save_in_place = struct
   ;;
 end
 
-let skip_file ~config ~(path : Relative_path.t) =
+let skip_file ~context ~(path : Relative_path.t) =
   let paths_to_check_for_skip_predicates =
     Path_in_workspace.paths_to_check_for_skip_predicates ~path
   in
-  match Dunolint.Config.Private.view config with
-  | `v0 v0 ->
-    (match Dunolint.Config.V0.skip_subtree v0 with
-     | None -> `return
-     | Some condition ->
-       (match
-          List.exists (path :: paths_to_check_for_skip_predicates) ~f:(fun path ->
-            match
-              Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
-                Dunolinter.eval_path ~path ~condition)
-            with
-            | `enforce _ -> .
-            | `return -> false
-            | `skip_subtree -> true)
-        with
-        | true -> `skip_subtree
-        | false -> `return))
-  | `v1 v1 ->
-    let skip_paths = Dunolint.Config.V1.skip_paths v1 |> List.concat in
-    let file = Relative_path.to_string path in
-    let ancestors =
-      List.map paths_to_check_for_skip_predicates ~f:Relative_path.to_string
-    in
-    if List.exists skip_paths ~f:(fun glob -> Dunolint.Glob.test glob file)
-    then `skip_file
-    else if
-      List.exists ancestors ~f:(fun ancestor ->
-        List.exists skip_paths ~f:(fun glob -> Dunolint.Glob.test glob ancestor))
-    then `skip_subtree
-    else `return
+  List.exists (Dunolint_engine.Context.configs context) ~f:(fun config ->
+    match Dunolint.Config.Private.view config with
+    | `v0 v0 ->
+      (match Dunolint.Config.V0.skip_subtree v0 with
+       | None -> false
+       | Some condition ->
+         List.exists paths_to_check_for_skip_predicates ~f:(fun path ->
+           match
+             Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
+               Dunolinter.eval_path ~path ~condition)
+           with
+           | `enforce _ -> .
+           | `return -> false
+           | `skip_subtree -> true))
+    | `v1 v1 ->
+      let skip_paths = Dunolint.Config.V1.skip_paths v1 |> List.concat in
+      List.exists paths_to_check_for_skip_predicates ~f:(fun path ->
+        let path = Relative_path.to_string path in
+        List.exists skip_paths ~f:(fun glob -> Dunolint.Glob.test glob path)))
 ;;
 
 let lint_file
       (module File_linter : Dunolinter.S)
       ~format_file
-      ~rules
+      ~context
       ~path
       ~original_contents
   =
@@ -103,7 +92,7 @@ let lint_file
     let (_ : [ `continue | `skip_subtree ]) =
       With_return.with_return (fun return ->
         File_linter.visit linter ~f:(fun stanza ->
-          Linter.lint_stanza ~rules ~stanza ~return);
+          Linter.lint_stanza ~context ~stanza ~return);
         `continue)
     in
     let new_contents = File_linter.contents linter in
@@ -218,7 +207,15 @@ let main =
          |> Relative_path.to_string)
      in
      Workspace_root.chdir workspace_root ~level:Debug;
-     let config = Common_helpers.load_config_opt_exn ~config ~append_extra_rules:[] in
+     let root_configs =
+       [ Common_helpers.load_config_opt_exn ~config ~append_extra_rules:[] ]
+     in
+     let context =
+       List.fold
+         root_configs
+         ~init:Dunolint_engine.Context.empty
+         ~f:(fun context config -> Dunolint_engine.Context.add_config context ~config)
+     in
      let path =
        match Option.first_some filename file with
        | Some file -> file
@@ -231,11 +228,9 @@ let main =
        | None -> In_channel.input_all In_channel.stdin
      in
      let output =
-       match skip_file ~config ~path with
-       | `skip_file | `skip_subtree -> original_contents
-       | `return ->
-         let rules = Dunolint.Config.rules config in
-         lint_file linter ~format_file ~rules ~path ~original_contents
+       if skip_file ~context ~path
+       then original_contents
+       else lint_file linter ~format_file ~context ~path ~original_contents
      in
      let () =
        match save_in_place with

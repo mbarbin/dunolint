@@ -19,17 +19,40 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-val maybe_autoformat_file : previous_contents:string -> new_contents:string -> string
+(** Auto-discovery and accumulation of contextual information during tree
+    traversal.
 
-val lint_stanza
-  :  context:Dunolint_engine.Context.t
-  -> stanza:'a Dunolinter.Stanza.t
-  -> return:[> `skip_subtree ] With_return.return
-  -> unit
+    This module provides a context that is built up as the linting engine
+    traverses the directory tree, accumulating information that affects how
+    linting is performed.
 
-val visit_directory
-  :  dunolint_engine:Dunolint_engine.t
-  -> context:Dunolint_engine.Context.t
-  -> parent_dir:Relative_path.t
-  -> files:string list
-  -> Dunolint_engine.Visitor_decision.t
+    The context currently holds a list of dunolint configurations. The order
+    follows the principle of a functional stack: data is added at the head as it
+    is discovered when going deeper in the directory structure, and the
+    {!configs} function returns them in rule processing order (shallowest to
+    deepest).
+
+    {2 Planned evolution}
+
+    The context is designed to support future enhancements:
+
+    + {b Config autoloading}: Automatically discover and load dunolint config
+      files from the workspace root and subdirectories during traversal, with
+      location tracking to enable path-relative rule evaluation.
+    + {b Additional dune context}: Include information from enclosing
+      dune-project files and dune describe output to provide richer context
+      for linting rules (e.g., project metadata, library dependencies). *)
+
+type t
+
+(** An empty context. *)
+val empty : t
+
+(** Add a config to the context. *)
+val add_config : t -> config:Dunolint.Config.t -> t
+
+(** Get the list of configs in the context. Returns configs in rule processing
+    order: from least specific (root) to most specific (closest to current
+    location), so that deeper configs can override rules from shallower
+    configs. *)
+val configs : t -> Dunolint.Config.t list

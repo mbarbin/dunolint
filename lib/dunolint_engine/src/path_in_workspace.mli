@@ -191,46 +191,44 @@ val parent : t -> t option
 val ancestors_autoloading_dirs : path:t -> t list
 
 (** [paths_to_check_for_skip_predicates ~path] returns paths to check against
-    skip predicates during tree traversal.
+    skip predicates during tree traversal, including the path itself.
 
-    This function has different semantics from {!ancestors_autoloading_dirs}:
-    - For files: returns parent directories only
-    - For directories (trailing ["/"]): returns ancestors {b including the directory itself}
-    - Never includes workspace root ["./"]
+    Returns parent directories plus the path itself, ordered from root to
+    deepest. The workspace root ["./"] is never included in the results.
 
-    The returned list is ordered from root to deepest.
-
-    Returns [[]] when:
-    - [path] is equal to [empty] (the path ["./"])
-    - [path] is a file in the workspace root
+    Returns [[]] when [path] is equal to [empty] (the path ["."]).
 
     Raises [Invalid_argument] if [path] is an escaping path (contains leading
     [".."] after normalization).
 
     {b Examples:}
 
-    File paths return parent directories only:
+    File paths return parent directories and the file itself:
     {[
       paths_to_check_for_skip_predicates ~path:(v "foo/bar/bin")
-      (* Returns: ["foo/"; "foo/bar/"] *)
+      (* Returns: ["foo/"; "foo/bar/"; "foo/bar/bin"] *)
     ]}
 
-    Directory paths (trailing ["/"]) include the directory itself:
+    Directory paths (trailing ["/"]) include parent directories and the
+    directory itself:
     {[
       paths_to_check_for_skip_predicates ~path:(v "foo/bar/bin/")
       (* Returns: ["foo/"; "foo/bar/"; "foo/bar/bin/"] *)
     ]}
 
-    Root and single files return empty:
+    Single files at the root return just the file:
     {[
-      paths_to_check_for_skip_predicates ~path:(v "file.ml");
-      (* Returns: [] *)
+      paths_to_check_for_skip_predicates ~path:(v "file.ml")
+      (* Returns: ["file.ml"] *)
+    ]}
+
+    Workspace root returns empty:
+    {[
       paths_to_check_for_skip_predicates ~path:empty
       (* Returns: [] *)
     ]}
 
     This function is used when checking if paths match skip predicates in
-    already-loaded configs. The directory-includes-self behavior is important:
-    when visiting a directory during traversal, you want to check if that
-    directory itself should be skipped. *)
+    already-loaded configs. The path itself is included so that skip predicates
+    can be checked against both the path and its ancestors. *)
 val paths_to_check_for_skip_predicates : path:t -> t list

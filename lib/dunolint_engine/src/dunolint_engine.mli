@@ -21,6 +21,7 @@
 
 module File_kind = File_kind
 module Running_mode = Running_mode
+module Context = Context
 
 type t
 
@@ -48,6 +49,9 @@ end
     [subdirectories] and [files] are the base names of the contents of the
     parent directory currently being visited.
 
+    [context] contains the accumulated configuration context for the current
+    directory being visited.
+
     If you want to visit only a subtree of the repository, you may provide
     [below], which must be a relative path to a subdirectory of the [cwd]
     provided for creating [t]. *)
@@ -55,7 +59,8 @@ val visit
   :  ?below:Relative_path.t
   -> t
   -> f:
-       (parent_dir:Relative_path.t
+       (context:Context.t
+        -> parent_dir:Relative_path.t
         -> subdirectories:string list
         -> files:string list
         -> Visitor_decision.t)
@@ -98,17 +103,35 @@ val format_dune_file : new_contents:string -> string
     that uses [t] to perform some dunolint linting, such as [visit],
     [lint_dune_file], etc.
 
-    The [process_mgr] argument is used in order to spawn [dune format-dune-file]
-    processes to reformat dune files after they have been linted.
+    This is a convenience wrapper around [create], calling [f], and
+    [materialize]. The [root_configs] and [running_mode] parameters are
+    forwarded to [create].
 
     In addition to enqueuing debug messages and errors, this function outputs
     messages regarding I/O actions executed during linting. These messages are
     produced onto [stdout]. *)
-val run : running_mode:Running_mode.t -> (t -> 'a) -> 'a
+val run
+  :  ?root_configs:Dunolint.Config.t list
+  -> running_mode:Running_mode.t
+  -> (t -> 'a)
+  -> 'a
 
 (** {1 Step by step API} *)
 
-val create : running_mode:Running_mode.t -> unit -> t
+(** Create a new linting engine.
+
+    The [root_configs] parameter allows specifying configs that will be included
+    in the context passed to the visit callback. These configs are treated as if
+    they were located at the workspace root.
+
+    The [running_mode] determines whether changes are applied (Force_yes),
+    previewed (Dry_run), interactively confirmed (Interactive), or checked
+    without modification (Check). *)
+val create
+  :  ?root_configs:Dunolint.Config.t list
+  -> running_mode:Running_mode.t
+  -> unit
+  -> t
 
 (** Apply all the changes that have been saved into [t] to the file system, or
     merely print them if we're in dry-run mode. *)

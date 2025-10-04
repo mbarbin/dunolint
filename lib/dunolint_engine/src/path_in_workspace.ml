@@ -78,11 +78,18 @@ let paths_to_check_for_skip_predicates ~path =
   else (
     check_escape_path_exn path;
     let segs = Fpath.segs (path :> Fpath.t) in
-    List.init
-      (List.length segs - 1)
-      ~f:(fun i ->
-        List.take segs (i + 1)
-        |> List.map ~f:Fsegment.v
-        |> Relative_path.of_list
-        |> Relative_path.to_dir_path))
+    let ancestors =
+      List.init
+        (List.length segs - 1)
+        ~f:(fun i ->
+          List.take segs (i + 1)
+          |> List.map ~f:Fsegment.v
+          |> Relative_path.of_list
+          |> Relative_path.to_dir_path)
+    in
+    (* For directories, the last ancestor is already the directory itself.
+       For files, we need to append the file path. *)
+    if List.mem ancestors path ~equal:Relative_path.equal
+    then ancestors
+    else ancestors @ [ path ])
 ;;
