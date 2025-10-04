@@ -61,7 +61,15 @@ let main =
      in
      Workspace_root.chdir workspace_root ~level:Warning;
      let root_configs =
-       [ Common_helpers.load_config_opt_exn ~config ~append_extra_rules:enforce ]
+       List.concat
+         [ [ Common_helpers.default_skip_paths_config () ]
+         ; (match Common_helpers.load_config_opt ~config with
+            | Some config -> [ config ]
+            | None -> [])
+         ; (match Common_helpers.enforce_rules_config ~rules:enforce with
+            | Some config -> [ config ]
+            | None -> [])
+         ]
      in
      Dunolint_engine.run ~root_configs ~running_mode
      @@ fun dunolint_engine ->
