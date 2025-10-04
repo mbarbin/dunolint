@@ -63,11 +63,13 @@ let main =
      let config =
        Common_helpers.load_config_opt_exn ~config ~append_extra_rules:enforce
      in
-     Dunolint_engine.run ~running_mode
+     (* Build root_configs list from the loaded config. *)
+     let root_configs = [ config ] in
+     Dunolint_engine.run ~root_configs ~running_mode
      @@ fun dunolint_engine ->
      Dunolint_engine.visit
        dunolint_engine
        ?below
-       ~f:(fun ~parent_dir ~subdirectories:_ ~files ->
-         Linter.visit_directory ~dunolint_engine ~config ~parent_dir ~files))
+       ~f:(fun ~context ~parent_dir ~subdirectories:_ ~files ->
+         Linter.visit_directory ~dunolint_engine ~context ~parent_dir ~files))
 ;;

@@ -26,6 +26,7 @@ let src = Logs.Src.create "dunolint" ~doc:"dunolint"
 
 module File_kind = File_kind
 module Running_mode = Running_mode
+module Context = Context
 
 module Edited_file = struct
   (* Edited files are indexed by their path relative to the workspace root that
@@ -41,10 +42,11 @@ end
 type t =
   { running_mode : Running_mode.t
   ; edited_files : Edited_file.t Hashtbl.M(Relative_path).t
+  ; root_configs : Dunolint.Config.t list
   }
 
-let create ~running_mode () =
-  { running_mode; edited_files = Hashtbl.create (module Relative_path) }
+let create ?(root_configs = []) ~running_mode () =
+  { running_mode; edited_files = Hashtbl.create (module Relative_path); root_configs }
 ;;
 
 let file_exists ~path =
@@ -362,6 +364,12 @@ module Visitor_decision = struct
     | Skip_subtree
 end
 
+let build_context_from_root_configs ~root_configs =
+  (* Build a context from root_configs. *)
+  List.fold root_configs ~init:Context.empty ~f:(fun context config ->
+    Context.add_config context ~config)
+;;
+
 module Directory_entries = struct
   type t =
     { subdirectories : string list
@@ -404,12 +412,14 @@ module Directory_entries = struct
   ;;
 end
 
-let visit ?below (_ : t) ~f =
+let visit ?below (t : t) ~f =
   let root_path =
     match below with
     | None -> Relative_path.empty
     | Some below -> Relative_path.to_dir_path below
   in
+  (* Build initial context from root_configs. *)
+  let context = build_context_from_root_configs ~root_configs:t.root_configs in
   let rec visit = function
     | [] -> ()
     | [] :: tl -> visit tl
@@ -421,7 +431,7 @@ let visit ?below (_ : t) ~f =
       let { Directory_entries.subdirectories; files } =
         Directory_entries.readdir ~parent_dir
       in
-      (match (f ~parent_dir ~subdirectories ~files : Visitor_decision.t) with
+      (match (f ~context ~parent_dir ~subdirectories ~files : Visitor_decision.t) with
        | Break -> () [@coverage off]
        | Continue ->
          visit
@@ -441,8 +451,8 @@ let visit ?below (_ : t) ~f =
   visit [ [ root_path ] ]
 ;;
 
-let run ~running_mode f =
-  let t = create ~running_mode () in
+let run ?(root_configs = []) ~running_mode f =
+  let t = create ~root_configs ~running_mode () in
   let result = f t in
   materialize t;
   let () =

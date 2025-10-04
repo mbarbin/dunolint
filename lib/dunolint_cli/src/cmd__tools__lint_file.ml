@@ -93,7 +93,7 @@ let skip_file ~config ~(path : Relative_path.t) =
 let lint_file
       (module File_linter : Dunolinter.S)
       ~format_file
-      ~rules
+      ~context
       ~path
       ~original_contents
   =
@@ -103,7 +103,7 @@ let lint_file
     let (_ : [ `continue | `skip_subtree ]) =
       With_return.with_return (fun return ->
         File_linter.visit linter ~f:(fun stanza ->
-          Linter.lint_stanza ~rules ~stanza ~return);
+          Linter.lint_stanza ~context ~stanza ~return);
         `continue)
     in
     let new_contents = File_linter.contents linter in
@@ -234,8 +234,10 @@ let main =
        match skip_file ~config ~path with
        | `skip_file | `skip_subtree -> original_contents
        | `return ->
-         let rules = Dunolint.Config.rules config in
-         lint_file linter ~format_file ~rules ~path ~original_contents
+         let context =
+           Dunolint_engine.Context.empty |> Dunolint_engine.Context.add_config ~config
+         in
+         lint_file linter ~format_file ~context ~path ~original_contents
      in
      let () =
        match save_in_place with
