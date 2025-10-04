@@ -148,18 +148,18 @@ let visit_directory ~dunolint_engine ~context ~parent_dir ~files =
     let rec loop = function
       | [] -> Dunolint_engine.Visitor_decision.Continue
       | file :: files ->
-        let path = Relative_path.extend parent_dir (Fsegment.v file) in
         (match
-           if should_skip_file ~context ~path
-           then Visitor_decision.Continue
-           else (
-             match Dunolint.Linted_file_kind.of_string file with
-             | Error (`Msg _) -> Visitor_decision.Continue
-             | Ok linted_file_kind ->
-               (match linted_file_kind with
-                | `dune -> Dune_lint.lint_file ~dunolint_engine ~context ~path
-                | `dune_project ->
-                  Dune_project_lint.lint_file ~dunolint_engine ~context ~path))
+           match Dunolint.Linted_file_kind.of_string file with
+           | Error (`Msg _) -> Visitor_decision.Continue
+           | Ok linted_file_kind ->
+             let path = Relative_path.extend parent_dir (Fsegment.v file) in
+             if should_skip_file ~context ~path
+             then Visitor_decision.Continue
+             else (
+               match linted_file_kind with
+               | `dune -> Dune_lint.lint_file ~dunolint_engine ~context ~path
+               | `dune_project ->
+                 Dune_project_lint.lint_file ~dunolint_engine ~context ~path)
          with
          | Continue -> loop files
          | Skip_subtree -> Dunolint_engine.Visitor_decision.Skip_subtree)
