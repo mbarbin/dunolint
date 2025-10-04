@@ -27,8 +27,8 @@
     linting is performed.
 
     The context currently holds a list of dunolint configurations. The order
-    follows the principle of a functional stack: data is added at the head as
-    it is discovered when going deeper in the directory structure, and the
+    follows the principle of a functional stack: data is added at the head as it
+    is discovered when going deeper in the directory structure, and the
     {!configs} function returns them in rule processing order (shallowest to
     deepest).
 
@@ -51,8 +51,8 @@ val empty : t
 (** Add a config to the context. *)
 val add_config : t -> config:Dunolint.Config.t -> t
 
-(** Get the list of configs in the context.
-    Returns configs in rule processing order: from least specific (root) to
-    most specific (closest to current location), so that deeper configs can
-    override rules from shallower configs. *)
+(** Get the list of configs in the context. Returns configs in rule processing
+    order: from least specific (root) to most specific (closest to current
+    location), so that deeper configs can override rules from shallower
+    configs. *)
 val configs : t -> Dunolint.Config.t list

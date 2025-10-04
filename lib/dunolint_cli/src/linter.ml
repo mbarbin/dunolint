@@ -60,8 +60,8 @@ let lint_stanza ~context ~stanza ~(return : _ With_return.return) =
     match Dunolinter.linter stanza with
     | Unhandled -> ()
     | T { eval; enforce } ->
-      (* Context.configs returns configs in processing order: shallowest to
-         deepest, so deeper configs can override shallower ones *)
+      (* [Context.configs] returns configs in processing order: shallowest to
+         deepest, so deeper configs can override shallower ones. *)
       List.iter (Dunolint_engine.Context.configs context) ~f:(fun config ->
         let rules = Dunolint.Config.rules config in
         List.iter rules ~f:(fun rule ->
@@ -119,7 +119,7 @@ let visit_directory ~dunolint_engine ~context ~parent_dir ~files =
   let paths_to_check_for_skip_predicates =
     Path_in_workspace.paths_to_check_for_skip_predicates ~path:parent_dir
   in
-  (* Check skip_subtree across all configs in context *)
+  (* Check skip_subtree across all configs in context. *)
   let should_skip_subtree =
     List.exists (Dunolint_engine.Context.configs context) ~f:(fun config ->
       match Dunolint.Config.Private.view config with
@@ -150,7 +150,7 @@ let visit_directory ~dunolint_engine ~context ~parent_dir ~files =
       | [] -> Dunolint_engine.Visitor_decision.Continue
       | file :: files ->
         let path = Relative_path.extend parent_dir (Fsegment.v file) in
-        (* Check if file should be skipped across all configs *)
+        (* Check if file should be skipped across all configs. *)
         let skip_file =
           List.exists (Dunolint_engine.Context.configs context) ~f:(fun config ->
             match Dunolint.Config.Private.view config with
