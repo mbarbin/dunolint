@@ -88,16 +88,7 @@ let lint_stanza ~context ~stanza ~(return : _ With_return.return) =
       (* [Context.configs] returns configs in processing order: shallowest to
          deepest, so deeper configs can override shallower ones. *)
       List.iter (Dunolint_engine.Context.configs context) ~f:(fun config ->
-        let rules = Dunolint.Config.rules config in
-        List.iter rules ~f:(fun rule ->
-          if false
-          then
-            Err.debug
-              ~loc
-              (lazy
-                [ Pp.text "Applying rule"
-                ; Err.sexp [%sexp (rule : Dunolint.Config.Rule.t)]
-                ]) [@coverage off];
+        List.iter (Dunolint.Config.rules config) ~f:(fun rule ->
           match Dunolint.Rule.eval rule ~f:eval with
           | `return -> ()
           | `enforce condition -> enforce condition
