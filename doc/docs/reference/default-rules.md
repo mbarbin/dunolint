@@ -38,6 +38,32 @@ We've focused on fields that have been most impactful in our experience, but we 
 
 Comments are preserved and moved along with their associated items. See [Comments in Libraries](../explanation/linting-equilibrium/comments-in-libraries.md) for detailed behavior.
 
+## Default Skipped Paths
+
+Dunolint automatically ignores certain directories that typically contain build artifacts, version control metadata, or third-party dependencies. These paths are skipped by default to avoid unnecessary linting and improve performance.
+
+### Skipped Directories
+
+The following directories are ignored by default (anywhere in your project tree, including nested locations):
+
+- `.git/` - Git version control metadata
+- `.hg/` - Mercurial version control metadata
+- `_build/` - Dune build artifacts
+- `_opam/` - Local OPAM switch
+- `_coverage/` - Code coverage reports
+- `node_modules/` - NPM dependencies
+- `doc/build/` - Documentation build artifacts
+- `.docusaurus/` - Docusaurus build artifacts
+- `*.t/` - Cram test directories
+
+These paths are skipped regardless of whether you have a custom configuration file. You can add your own skip paths using the `(skip_paths ...)` construct in your configuration file (see [Config Language Reference](config/README.md)).
+
+### Future Enhancements
+
+This default list is a baseline to get started. A more robust approach might involve integrating with version control ignore patterns (like `.gitignore` or `.hgignore`), though this presents challenges such as detecting which VCS is in use (if any).
+
+If you have ideas about how dunolint should handle default skip paths, or if you encounter directories that should be added to (or removed from) this default list, please share your feedback in the [discussions](https://github.com/mbarbin/dunolint/discussions) or [issues](https://github.com/mbarbin/dunolint/issues). Your input helps shape the tool's development!
+
 ## No Additional Rules by Default
 
 Apart from canonical ordering, dunolint does not enforce any other rules by default. To add more linting rules, you need to create a `dunolint` configuration file.

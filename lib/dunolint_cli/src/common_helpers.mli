@@ -30,12 +30,16 @@ val below : doc:string -> Fpath.t option Command.Arg.t
 (** A list of defaults directories to skip. *)
 val skip_subtrees : globs:string list -> Dunolint.Glob.t list
 
-(** A helper to load a config file, either supplied or inferred from the context
-    and add some optional rules. *)
-val load_config_opt_exn
-  :  config:string option
-  -> append_extra_rules:Dunolint.Config.Rule.t list
-  -> Dunolint.Config.t
+(** Create a default config with only skip_paths for common directories. *)
+val default_skip_paths_config : unit -> Dunolint.Config.t
+
+(** Create a config containing only the given enforce rules, or None if the list
+    is empty. *)
+val enforce_rules_config : rules:Dunolint.Config.Rule.t list -> Dunolint.Config.t option
+
+(** Load a config file from the given path, or try to load from the default
+    "dunolint" file if no path is provided. Returns None if no config is found. *)
+val load_config_opt : config:string option -> Dunolint.Config.t option
 
 (** Override the workspace root - same as with dune. *)
 val root : Absolute_path.t option Command.Arg.t

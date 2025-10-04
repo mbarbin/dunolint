@@ -246,17 +246,16 @@ If the file is at a path configured to be in a skipped directory, the command
 won't apply linting rules to it.
 
   $ cat dune | dunolint tools lint-file --filename=.git/dune --config=empty-config
-  (library
-   (name mylib)
-   (libraries a b c))
+  (library (name mylib)
+   (libraries b c a))
 
-It is ignored by the config [dunolint].
+The `.git/` directory is skipped by default, regardless of the config used.
 
   $ cat dune | dunolint tools lint-file --filename=.git/dune
   (library (name mylib)
    (libraries b c a))
 
-But if the file is not ignored, we see that it is linted.
+But if the file is not in a default skipped path, we see that it is linted.
 
   $ cat dune | dunolint tools lint-file --filename=linted/dune
   (library

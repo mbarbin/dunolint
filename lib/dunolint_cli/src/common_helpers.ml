@@ -48,6 +48,7 @@ let skip_subtrees ~globs =
     ; List.concat_map
         ~f:(fun pat -> [ Dunolint.Glob.v ("**/" ^ pat); Dunolint.Glob.v pat ])
         [ ".git/"
+        ; ".hg/"
         ; "_build/"
         ; "_opam/"
         ; "_coverage/"
@@ -59,40 +60,30 @@ let skip_subtrees ~globs =
     ]
 ;;
 
-let load_config_opt_exn ~config ~append_extra_rules =
-  let config =
-    match config with
-    | Some filename -> Dunolinter.Config_handler.load_config_exn ~filename
-    | None ->
-      let cwd = Unix.getcwd () |> Absolute_path.v in
-      let default_file = Absolute_path.extend cwd (Fsegment.v "dunolint") in
-      let filename = Absolute_path.to_string default_file in
-      if Stdlib.Sys.file_exists filename
-      then Dunolinter.Config_handler.load_config_exn ~filename:"dunolint"
-      else
-        Dunolint.Config.V1.create [ `skip_paths (skip_subtrees ~globs:[]) ]
-        |> Dunolint.Config.v1
-  in
-  let config =
-    match Dunolint.Config.Private.view config with
-    | `v0 config ->
-      Dunolint.Config.V0.create
-        ?skip_subtree:(Dunolint.Config.V0.skip_subtree config)
-        ~rules:(Dunolint.Config.V0.rules config @ append_extra_rules)
-        ()
-      |> Dunolint.Config.v0
-    | `v1 config ->
-      Dunolint.Config.V1.create
-        (List.concat
-           [ List.map (Dunolint.Config.V1.skip_paths config) ~f:(fun globs ->
-               `skip_paths globs)
-           ; List.map
-               (Dunolint.Config.V1.rules config @ append_extra_rules)
-               ~f:(fun rule -> `rule rule)
-           ])
-      |> Dunolint.Config.v1
-  in
-  config
+let default_skip_paths_config () =
+  Dunolint.Config.V1.create [ `skip_paths (skip_subtrees ~globs:[]) ]
+  |> Dunolint.Config.v1
+;;
+
+let enforce_rules_config ~rules =
+  match rules with
+  | [] -> None
+  | _ :: _ ->
+    Some
+      (Dunolint.Config.V1.create (List.map rules ~f:(fun rule -> `rule rule))
+       |> Dunolint.Config.v1)
+;;
+
+let load_config_opt ~config =
+  match config with
+  | Some filename -> Some (Dunolinter.Config_handler.load_config_exn ~filename)
+  | None ->
+    let cwd = Unix.getcwd () |> Absolute_path.v in
+    let default_file = Absolute_path.extend cwd (Fsegment.v "dunolint") in
+    let filename = Absolute_path.to_string default_file in
+    if Stdlib.Sys.file_exists filename
+    then Some (Dunolinter.Config_handler.load_config_exn ~filename:"dunolint")
+    else None
 ;;
 
 let root =

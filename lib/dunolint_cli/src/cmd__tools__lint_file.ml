@@ -208,7 +208,12 @@ let main =
      in
      Workspace_root.chdir workspace_root ~level:Debug;
      let root_configs =
-       [ Common_helpers.load_config_opt_exn ~config ~append_extra_rules:[] ]
+       List.concat
+         [ [ Common_helpers.default_skip_paths_config () ]
+         ; (match Common_helpers.load_config_opt ~config with
+            | Some config -> [ config ]
+            | None -> [])
+         ]
      in
      let context =
        List.fold
