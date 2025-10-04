@@ -53,8 +53,9 @@ let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
 let is_undefined b = require_equal [%here] (module Dunolint.Trilang) b Undefined
 
 let run_linter ~config =
-  let root_configs = [ config ] in
-  let dunolint_engine = Dunolint_engine.create ~root_configs ~running_mode:Dry_run () in
+  let dunolint_engine =
+    Dunolint_engine.create ~root_configs:[ config ] ~running_mode:Dry_run ()
+  in
   let () =
     Dunolint_engine.visit
       dunolint_engine

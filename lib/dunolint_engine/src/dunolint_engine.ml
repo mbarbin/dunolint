@@ -451,8 +451,8 @@ let visit ?below (t : t) ~f =
   visit [ [ root_path ] ]
 ;;
 
-let run ?(root_configs = []) ~running_mode f =
-  let t = create ~root_configs ~running_mode () in
+let run ?root_configs ~running_mode f =
+  let t = create ?root_configs ~running_mode () in
   let result = f t in
   materialize t;
   let () =

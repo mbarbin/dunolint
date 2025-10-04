@@ -60,11 +60,9 @@ let main =
          |> Relative_path.to_string)
      in
      Workspace_root.chdir workspace_root ~level:Warning;
-     let config =
-       Common_helpers.load_config_opt_exn ~config ~append_extra_rules:enforce
+     let root_configs =
+       [ Common_helpers.load_config_opt_exn ~config ~append_extra_rules:enforce ]
      in
-     (* Build root_configs list from the loaded config. *)
-     let root_configs = [ config ] in
      Dunolint_engine.run ~root_configs ~running_mode
      @@ fun dunolint_engine ->
      Dunolint_engine.visit
