@@ -64,7 +64,7 @@ let skip_file ~context ~(path : Relative_path.t) =
       (match Dunolint.Config.V0.skip_subtree v0 with
        | None -> false
        | Some condition ->
-         List.exists (path :: paths_to_check_for_skip_predicates) ~f:(fun path ->
+         List.exists paths_to_check_for_skip_predicates ~f:(fun path ->
            match
              Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
                Dunolinter.eval_path ~path ~condition)
@@ -74,7 +74,7 @@ let skip_file ~context ~(path : Relative_path.t) =
            | `skip_subtree -> true))
     | `v1 v1 ->
       let skip_paths = Dunolint.Config.V1.skip_paths v1 |> List.concat in
-      List.exists (path :: paths_to_check_for_skip_predicates) ~f:(fun path ->
+      List.exists paths_to_check_for_skip_predicates ~f:(fun path ->
         let path = Relative_path.to_string path in
         List.exists skip_paths ~f:(fun glob -> Dunolint.Glob.test glob path)))
 ;;

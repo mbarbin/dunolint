@@ -250,23 +250,23 @@ let%expect_test "paths_to_check_for_skip_predicates - matches CLI behavior" =
   [%expect {| () |}];
   test ".";
   [%expect {| () |}];
-  (* File in root - no parents *)
+  (* File in root - includes the file itself *)
   test "foo";
-  [%expect {| () |}];
+  [%expect {| (foo) |}];
   (* Directory in root - includes itself *)
   test "foo/";
   [%expect {| (foo/) |}];
-  (* File - returns parents only *)
+  (* File - returns parents and the file itself *)
   test "foo/bar";
-  [%expect {| (foo/) |}];
+  [%expect {| (foo/ foo/bar) |}];
   test "foo/bar/bin";
-  [%expect {| (foo/ foo/bar/) |}];
+  [%expect {| (foo/ foo/bar/ foo/bar/bin) |}];
   (* Directory - includes itself AND parents *)
   test "foo/bar/bin/";
   [%expect {| (foo/ foo/bar/ foo/bar/bin/) |}];
   (* More files *)
   test "foo/bar/bin/baz";
-  [%expect {| (foo/ foo/bar/ foo/bar/bin/) |}];
+  [%expect {| (foo/ foo/bar/ foo/bar/bin/ foo/bar/bin/baz) |}];
   test "foo/bar/.";
   [%expect {| (foo/ foo/bar/) |}];
   ()
