@@ -21,6 +21,31 @@
 
 open! Import
 
+let should_skip_subtree ~context ~(path : Relative_path.t) =
+  let paths_to_check_for_skip_predicates =
+    Path_in_workspace.paths_to_check_for_skip_predicates ~path
+  in
+  List.exists (Dunolint_engine.Context.configs context) ~f:(fun config ->
+    match Dunolint.Config.Private.view config with
+    | `v0 v0 ->
+      (match Dunolint.Config.V0.skip_subtree v0 with
+       | None -> false
+       | Some condition ->
+         List.exists paths_to_check_for_skip_predicates ~f:(fun path ->
+           match
+             Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
+               Dunolinter.eval_path ~path ~condition)
+           with
+           | `enforce _ -> .
+           | `return -> false
+           | `skip_subtree -> true))
+    | `v1 v1 ->
+      let skip_paths = Dunolint.Config.V1.skip_paths v1 |> List.concat in
+      List.exists paths_to_check_for_skip_predicates ~f:(fun path ->
+        let path = Relative_path.to_string path in
+        List.exists skip_paths ~f:(fun glob -> Dunolint.Glob.test glob path)))
+;;
+
 let maybe_autoformat_file ~previous_contents ~new_contents =
   (* For the time being we are using here a heuristic to drive whether to
      autoformat linted files. This is motivated by pragmatic reasoning and lower
@@ -116,32 +141,7 @@ module Dune_lint = Lint_file (Dune_linter)
 module Dune_project_lint = Lint_file (Dune_project_linter)
 
 let visit_directory ~dunolint_engine ~context ~parent_dir ~files =
-  let paths_to_check_for_skip_predicates =
-    Path_in_workspace.paths_to_check_for_skip_predicates ~path:parent_dir
-  in
-  (* Check skip_subtree across all configs in context. *)
-  let should_skip_subtree =
-    List.exists (Dunolint_engine.Context.configs context) ~f:(fun config ->
-      match Dunolint.Config.Private.view config with
-      | `v0 v0 ->
-        (match Dunolint.Config.V0.skip_subtree v0 with
-         | None -> false
-         | Some condition ->
-           List.exists paths_to_check_for_skip_predicates ~f:(fun parent_dir ->
-             match
-               Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
-                 Dunolinter.eval_path ~path:parent_dir ~condition)
-             with
-             | `enforce _ -> .
-             | `return -> false
-             | `skip_subtree -> true))
-      | `v1 v1 ->
-        let skip_subtrees = Dunolint.Config.V1.skip_paths v1 |> List.concat in
-        List.exists paths_to_check_for_skip_predicates ~f:(fun parent_dir ->
-          let parent_dir = Relative_path.to_string parent_dir in
-          List.exists skip_subtrees ~f:(fun glob -> Dunolint.Glob.test glob parent_dir)))
-  in
-  match should_skip_subtree with
+  match should_skip_subtree ~context ~path:parent_dir with
   | true -> Dunolint_engine.Visitor_decision.Skip_subtree
   | false ->
     let rec loop = function

@@ -54,31 +54,6 @@ module Save_in_place = struct
   ;;
 end
 
-let skip_file ~context ~(path : Relative_path.t) =
-  let paths_to_check_for_skip_predicates =
-    Path_in_workspace.paths_to_check_for_skip_predicates ~path
-  in
-  List.exists (Dunolint_engine.Context.configs context) ~f:(fun config ->
-    match Dunolint.Config.Private.view config with
-    | `v0 v0 ->
-      (match Dunolint.Config.V0.skip_subtree v0 with
-       | None -> false
-       | Some condition ->
-         List.exists paths_to_check_for_skip_predicates ~f:(fun path ->
-           match
-             Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
-               Dunolinter.eval_path ~path ~condition)
-           with
-           | `enforce _ -> .
-           | `return -> false
-           | `skip_subtree -> true))
-    | `v1 v1 ->
-      let skip_paths = Dunolint.Config.V1.skip_paths v1 |> List.concat in
-      List.exists paths_to_check_for_skip_predicates ~f:(fun path ->
-        let path = Relative_path.to_string path in
-        List.exists skip_paths ~f:(fun glob -> Dunolint.Glob.test glob path)))
-;;
-
 let lint_file
       (module File_linter : Dunolinter.S)
       ~format_file
@@ -233,7 +208,7 @@ let main =
        | None -> In_channel.input_all In_channel.stdin
      in
      let output =
-       if skip_file ~context ~path
+       if Linter.should_skip_subtree ~context ~path
        then original_contents
        else lint_file linter ~format_file ~context ~path ~original_contents
      in

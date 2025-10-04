@@ -19,6 +19,11 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
+val should_skip_subtree
+  :  context:Dunolint_engine.Context.t
+  -> path:Relative_path.t
+  -> bool
+
 val maybe_autoformat_file : previous_contents:string -> new_contents:string -> string
 
 val lint_stanza
