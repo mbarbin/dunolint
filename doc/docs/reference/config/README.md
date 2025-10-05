@@ -6,7 +6,9 @@ If you are looking for a general introduction to the configuration language desi
 
 ## Config Filename
 
-Dunolint config files are expected to be named `dunolint`. At the moment *dunolint* (the executable) will automatically load a config file named `dunolint` if there is one in the root directory from where the executable is run. We have plans for the linter to load automatically any `dunolint` file found dynamically while walking the tree, however this is not implemented yet. See this [discussion](https://github.com/mbarbin/dunolint/discussions/41). We'll update this section when that feature lands.
+Dunolint config files are expected to be named `dunolint`. The linter automatically discovers and loads any `dunolint` files found while traversing the project tree during linting operations. Configs accumulate from the workspace root down to each linted file's directory, with deeper configs taking precedence when rules modify the same fields.
+
+For details on how config autoloading works, see [Config Autoloading](../../explanation/config-autoloading.md).
 
 ## General syntax
 

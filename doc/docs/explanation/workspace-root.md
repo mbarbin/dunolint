@@ -40,9 +40,9 @@ Entering directory '/path/to/workspace/root'
 
 ## Automatic Config Loading
 
-After changing to the workspace root, Dunolint will automatically load a config file named `dunolint` if it exists at the root and no explicit `--config` flag was provided. This allows for zero-configuration setups where the config file is placed at the project root.
+After changing to the workspace root, Dunolint automatically discovers and loads `dunolint` config files during linting operations. Configs are accumulated from the workspace root down to each linted file's directory, allowing you to have different linting rules for different parts of your project.
 
-**Warning:** Currently, only a file named exactly `dunolint` at the workspace root is loaded automatically. Future versions plan to support auto-loading of any `dunolint` files found while traversing the project tree during linting operations.
+For details on how config autoloading works, see [Config Autoloading](./config-autoloading.md).
 
 ## Working with Subdirectories: `--below` vs `--root`
 
@@ -88,13 +88,11 @@ workspace/
 ```
 
 From within `subproject/`:
-- `dunolint lint` - Uses `workspace/` as root, applies rule A to all files
-- `dunolint lint --below .` - Uses `workspace/` as root, applies rule A only to subproject files
-- `dunolint lint --root .` - Uses `subproject/` as root, applies rule B to subproject files
+- `dunolint lint` - Uses `workspace/` as root, applies both rule A and rule B to subproject files
+- `dunolint lint --below .` - Uses `workspace/` as root, applies both rule A and rule B to subproject files
+- `dunolint lint --root .` - Uses `subproject/` as root, applies only rule B to subproject files
 
-**Important:** Even though `--below .` and `--root .` lint the same files when run from a subproject, they may apply different rules depending on where config files are located in the directory hierarchy.
-
-**Note:** The behavior described above reflects the current implementation. We are actively working on enhancing config loading so that subproject configs (like rule B in this example) will also be applied when linting files within their directories, regardless of which directory is used as the workspace root. This documentation will be updated when that enhancement lands.
+**Important:** Even though `--below .` and `--root .` lint the same files when run from a subproject, they may apply different rules depending on where config files are located in the directory hierarchy. With `--below`, configs accumulate from the workspace root down (both rule A and B apply). With `--root`, only configs from the specified root down are loaded (only rule B applies).
 
 ## Path Resolution
 
