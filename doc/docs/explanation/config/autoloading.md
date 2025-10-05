@@ -121,5 +121,5 @@ This will show:
 
 ## See Also
 
-- [Config Reference](README.md) - Complete config file syntax and options
-- [Workspace Root](./workspace-root.md) - How dunolint finds the workspace root
+- [Config Reference](../../reference/config/README.md) - Complete config file syntax and options
+- [Workspace Root](../workspace-root.md) - How dunolint finds the workspace root

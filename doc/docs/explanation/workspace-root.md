@@ -42,7 +42,7 @@ Entering directory '/path/to/workspace/root'
 
 After changing to the workspace root, Dunolint automatically discovers and loads `dunolint` config files during linting operations. Configs are accumulated from the workspace root down to each linted file's directory, allowing you to have different linting rules for different parts of your project.
 
-For details on how config autoloading works, see [Config Autoloading](./config-autoloading.md).
+For details on how config autoloading works, see [Config Autoloading](./config/autoloading.md).
 
 ## Working with Subdirectories: `--below` vs `--root`
 

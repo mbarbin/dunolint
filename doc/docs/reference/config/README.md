@@ -2,13 +2,13 @@
 
 This document references the constructs and conventions in use in the `dunolint` config files.
 
-If you are looking for a general introduction to the configuration language design and semantics at a higher abstraction level, head over to [this section](../../explanation/config/README.md).
+If you are looking for a general introduction to the configuration language design and semantics at a higher abstraction level, head over to [this section](../../explanation/config/language-design.md).
 
 ## Config Filename
 
 Dunolint config files are expected to be named `dunolint`. The linter automatically discovers and loads any `dunolint` files found while traversing the project tree during linting operations. Configs accumulate from the workspace root down to each linted file's directory, with deeper configs taking precedence when rules modify the same fields.
 
-For details on how config autoloading works, see [Config Autoloading](../../explanation/config-autoloading.md).
+For details on how config autoloading works, see [Config Autoloading](../../explanation/config/autoloading.md).
 
 ## General syntax
 
