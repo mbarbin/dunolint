@@ -122,6 +122,24 @@ let%expect_test "test" =
   [%expect {| (is_match false) |}];
   test g "_build/";
   [%expect {| (is_match false) |}];
+  let g = Glob.v "**" in
+  test g "file";
+  [%expect {| (is_match true) |}];
+  test g "foo/file";
+  [%expect {| (is_match true) |}];
+  test g "./";
+  [%expect {| (is_match false) |}];
+  test g ".";
+  [%expect {| (is_match false) |}];
+  let g = Glob.v "*" in
+  test g "file";
+  [%expect {| (is_match true) |}];
+  test g "foo/file";
+  [%expect {| (is_match false) |}];
+  test g "./";
+  [%expect {| (is_match false) |}];
+  test g ".";
+  [%expect {| (is_match false) |}];
   ()
 ;;
 

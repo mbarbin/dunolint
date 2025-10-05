@@ -74,18 +74,6 @@ let enforce_rules_config ~rules =
        |> Dunolint.Config.v1)
 ;;
 
-let load_config_opt ~config =
-  match config with
-  | Some filename -> Some (Dunolinter.Config_handler.load_config_exn ~filename)
-  | None ->
-    let cwd = Unix.getcwd () |> Absolute_path.v in
-    let default_file = Absolute_path.extend cwd (Fsegment.v "dunolint") in
-    let filename = Absolute_path.to_string default_file in
-    if Stdlib.Sys.file_exists filename
-    then Some (Dunolinter.Config_handler.load_config_exn ~filename:"dunolint")
-    else None
-;;
-
 let root =
   let open Command.Std in
   let+ root =

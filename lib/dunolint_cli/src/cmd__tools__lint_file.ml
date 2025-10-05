@@ -120,14 +120,16 @@ let main =
        $(b,stdin) and print its linted result on $(b,stdout).\n\n\
        By default, the contents will be read from $(b,stdin). You may supply the path to \
        a file instead.\n\n\
-       When the file is located within a dune workspace, dunolint will use that \
-       workspace to locate the relevant $(b,dunolint) config file for linting. If no \
-       workspace is found or if the file is outside any workspace, the current working \
-       directory is used as the default workspace root. The workspace root can be \
-       overridden using the $(b,--root) flag.\n\n\
-       When the contents of the file is read from stdin, or if the file given does not \
-       permit to recognize the linted file kind solely from its path, the name of the \
-       file may be overridden.")
+       When the file is located within a dune workspace, dunolint will auto-discover and \
+       load $(b,dunolint) config files from parent directories up to the workspace root. \
+       If no workspace is found or if the file is outside any workspace, the current \
+       working directory is used as the default workspace root. The workspace root can \
+       be overridden using the $(b,--root) flag.\n\n\
+       When reading from stdin, the $(b,--filename) flag should be used to specify the \
+       logical path of the file being linted. This path is used to: (1) infer the file \
+       kind (e.g. dune vs dune-project), (2) discover which config files to load based \
+       on the file's location in the directory hierarchy, and (3) evaluate skip_paths \
+       rules.")
     (let open Command.Std in
      let+ () = Log_cli.set_config ()
      and+ file =
@@ -142,10 +144,11 @@ let main =
          (Param.validated_string (module Fpath))
          ~docv:"path/to/file"
          ~doc:
-           "When supplied, this value is only used as a string in error messages and to \
-            derive the linted file kind from its basename, but that path is not used to \
-            load contents from disk. This may be used to override an actual file name or \
-            to name the input when it comes from $(b,stdin)."
+           "Logical path of the file being linted. Used to infer the file kind from its \
+            basename, discover config files from parent directories, and evaluate \
+            skip_paths rules. This flag is particularly useful when reading from \
+            $(b,stdin) to specify where the file logically resides in the project \
+            hierarchy."
      and+ in_place =
        Arg.flag
          [ in_place_switch ]
@@ -155,7 +158,12 @@ let main =
             Supplying this flag results in failure when the input is read from \
             $(b,stdin)."
      and+ config =
-       Arg.named_opt [ "config" ] Param.file ~doc:"Path to dunolint config file."
+       Arg.named_opt
+         [ "config" ]
+         Param.file
+         ~doc:
+           "Path to dunolint config file. When specified, disables auto-discovery of \
+            config files from parent directories."
      and+ format_file =
        Arg.named_with_default
          [ "format-file" ]
@@ -187,19 +195,33 @@ let main =
        | Some file -> file
        | None -> Relative_path.v "stdin"
      in
+     let autoload_config = Option.is_none config in
      let root_configs =
        List.concat
          [ [ Common_helpers.default_skip_paths_config () ]
-         ; (match Common_helpers.load_config_opt ~config with
+         ; (match config with
             | None -> []
-            | Some config -> [ config ])
+            | Some config_path ->
+              [ Dunolinter.Config_handler.load_config_exn ~filename:config_path ])
          ]
      in
      let context =
-       List.fold
-         root_configs
-         ~init:Dunolint_engine.Context.empty
-         ~f:(fun context config -> Dunolint_engine.Context.add_config context ~config)
+       if autoload_config
+       then (
+         (* [root_configs] are added to discovered configs by [build_context]. *)
+         let engine = Dunolint_engine.create ~root_configs ~running_mode:Dry_run () in
+         Dunolint_engine.build_context engine ~path)
+       else
+         (* When autoload is disabled, we still need the [root_configs]. Since
+            build_context won't be called, manually create the context. *)
+         List.fold
+           root_configs
+           ~init:Dunolint_engine.Context.empty
+           ~f:(fun context config ->
+             Dunolint_engine.Context.add_config
+               context
+               ~config
+               ~location:Relative_path.empty)
      in
      let linter = select_linter ~path:(path :> Fpath.t) in
      let original_contents =

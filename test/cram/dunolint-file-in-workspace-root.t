@@ -49,8 +49,10 @@ Test that explicit --config overrides the automatic loading.
   -|(name my_project_name)
   +|(name override_name)
 
-Test that a dunolint file in the current directory (if different from workspace
-root) is NOT loaded automatically.
+Test that dunolint configs in subdirectories ARE discovered and loaded during
+autoloading. When linting files in a subdirectory, both the workspace root
+config and the subdirectory config are applied, with the subdirectory config
+taking precedence for files in that directory.
 
   $ mkdir subdir-with-config
   $ cd subdir-with-config
@@ -58,7 +60,7 @@ root) is NOT loaded automatically.
   > (lang dunolint 1.0)
   > 
   > (rule
-  >  (enforce (dune_project (name (equals should_not_be_used)))))
+  >  (enforce (dune_project (name (equals subdir_enforced_name)))))
   > EOF
   $ cat > dune-project <<EOF
   > (lang dune 3.17)
@@ -79,12 +81,20 @@ root) is NOT loaded automatically.
     (lang dune 3.17)
     
   -|(name subdir_project)
-  +|(name corrected_name)
+  +|(name subdir_enforced_name)
   $ cd ..
 
-The automatic loading only works for files named exactly "dunolint" at the
-workspace root, not other names like ".dunolint" or "dunolint.config".
+The automatic loading only works for files named exactly "dunolint". Files with
+other names like ".dunolint" or "dunolint.config" are not discovered. Here we
+rename the root config to verify it's no longer loaded, while the subdirectory
+config continues to be loaded.
 
   $ mv dunolint dunolint.config
   $ dunolint lint --dry-run
+  dry-run: Would edit file "subdir-with-config/dune-project":
+  -1,3 +1,3
+    (lang dune 3.17)
+    
+  -|(name subdir_project)
+  +|(name subdir_enforced_name)
   $ mv dunolint.config dunolint

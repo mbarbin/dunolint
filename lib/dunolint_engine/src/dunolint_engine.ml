@@ -26,6 +26,7 @@ let src = Logs.Src.create "dunolint" ~doc:"dunolint"
 
 module File_kind = File_kind
 module Running_mode = Running_mode
+module Config_cache = Config_cache
 module Context = Context
 
 module Edited_file = struct
@@ -41,12 +42,17 @@ end
 
 type t =
   { running_mode : Running_mode.t
+  ; config_cache : Config_cache.t
   ; edited_files : Edited_file.t Hashtbl.M(Relative_path).t
   ; root_configs : Dunolint.Config.t list
   }
 
 let create ?(root_configs = []) ~running_mode () =
-  { running_mode; edited_files = Hashtbl.create (module Relative_path); root_configs }
+  { running_mode
+  ; config_cache = Config_cache.create ()
+  ; edited_files = Hashtbl.create (module Relative_path)
+  ; root_configs
+  }
 ;;
 
 let file_exists ~path =
@@ -364,10 +370,23 @@ module Visitor_decision = struct
     | Skip_subtree
 end
 
-let build_context_from_root_configs ~root_configs =
-  (* Build a context from root_configs. *)
-  List.fold root_configs ~init:Context.empty ~f:(fun context config ->
-    Context.add_config context ~config)
+let build_context (t : t) ~path =
+  (* Build context by first adding root_configs (base defaults), then
+     auto-discovered configs from ancestors. In rule processing order:
+     root_configs, then ancestor configs, then subtree configs (each taking
+     precedence over the previous). *)
+  let initial_context =
+    List.fold t.root_configs ~init:Context.empty ~f:(fun context config ->
+      Context.add_config context ~config ~location:Relative_path.empty)
+  in
+  List.fold
+    (Path_in_workspace.ancestors_autoloading_dirs ~path)
+    ~init:initial_context
+    ~f:(fun context dir ->
+      match Config_cache.load_config_in_dir t.config_cache ~dir with
+      | Absent -> context
+      | Present config -> Context.add_config context ~config ~location:dir
+      | Error e -> raise (Err.E e))
 ;;
 
 module Directory_entries = struct
@@ -412,43 +431,73 @@ module Directory_entries = struct
   ;;
 end
 
-let visit ?below (t : t) ~f =
+let visit ?(autoload_config = true) ?below (t : t) ~f =
   let root_path =
     match below with
     | None -> Relative_path.empty
     | Some below -> Relative_path.to_dir_path below
   in
-  (* Build initial context from root_configs. *)
-  let context = build_context_from_root_configs ~root_configs:t.root_configs in
+  let initial_context =
+    if autoload_config
+    then build_context t ~path:root_path
+    else
+      (* When autoload is disabled, only use root_configs. *)
+      List.fold t.root_configs ~init:Context.empty ~f:(fun context config ->
+        Context.add_config context ~config ~location:Relative_path.empty)
+  in
   let rec visit = function
     | [] -> ()
-    | [] :: tl -> visit tl
-    | (parent_dir :: tl) :: rest ->
+    | (_, []) :: tl -> visit tl
+    | (context, parent_dir :: tl) :: rest ->
       Log.debug ~src (fun () ->
         Pp.O.
           [ Pp.text "Visiting directory " ++ Pp_tty.path (module Relative_path) parent_dir
           ]);
-      let { Directory_entries.subdirectories; files } =
-        Directory_entries.readdir ~parent_dir
+      let subtree_context, skip_directory =
+        if autoload_config
+        then (
+          match Config_cache.load_config_in_dir t.config_cache ~dir:parent_dir with
+          | Absent -> context, false
+          | Present config ->
+            Context.add_config context ~config ~location:parent_dir, false
+          | Error e ->
+            Err.emit e ~level:Error;
+            Log.info ~src (fun () ->
+              Pp.O.
+                [ Pp.text "Skipping directory due to invalid config: "
+                  ++ Pp_tty.path (module Relative_path) parent_dir
+                ]);
+            context, true)
+        else context, false
       in
-      (match (f ~context ~parent_dir ~subdirectories ~files : Visitor_decision.t) with
-       | Break -> () [@coverage off]
-       | Continue ->
-         visit
-           (List.map subdirectories ~f:(fun subdirectory ->
-              Relative_path.extend parent_dir (Fsegment.v subdirectory)
-              |> Relative_path.to_dir_path)
-            :: tl
-            :: rest)
-       | Skip_subtree ->
-         Log.info ~src (fun () ->
-           Pp.O.
-             [ Pp.text "Skipping children of directory "
-               ++ Pp_tty.path (module Relative_path) parent_dir
-             ]);
-         visit (tl :: rest))
+      if skip_directory
+      then visit ((context, tl) :: rest)
+      else (
+        let { Directory_entries.subdirectories; files } =
+          Directory_entries.readdir ~parent_dir
+        in
+        match
+          (f ~context:subtree_context ~parent_dir ~subdirectories ~files
+           : Visitor_decision.t)
+        with
+        | Break -> () [@coverage off]
+        | Continue ->
+          visit
+            (( subtree_context
+             , List.map subdirectories ~f:(fun subdirectory ->
+                 Relative_path.extend parent_dir (Fsegment.v subdirectory)
+                 |> Relative_path.to_dir_path) )
+             :: (context, tl)
+             :: rest)
+        | Skip_subtree ->
+          Log.info ~src (fun () ->
+            Pp.O.
+              [ Pp.text "Skipping directory "
+                ++ Pp_tty.path (module Relative_path) parent_dir
+              ]);
+          visit ((context, tl) :: rest))
   in
-  visit [ [ root_path ] ]
+  visit [ initial_context, [ root_path ] ]
 ;;
 
 let run ?root_configs ~running_mode f =

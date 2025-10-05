@@ -21,29 +21,43 @@
 
 open! Import
 
+let raise_config_not_applicable_err ~(path : Relative_path.t) ~location =
+  (* We only expect code paths in which the path linted are located in the
+     subtree of the configs accumulated during discovery. That should be an
+     internal error that warrants a bug report. *)
+  Err.raise
+    ~loc:(Loc.of_file ~path:(path :> Fpath.t))
+    ~exit_code:Err.Exit_code.internal_error
+    [ Pp.text "Path is not within config location."
+    ; Err.sexp [%sexp { path : Relative_path.t; location : Relative_path.t }]
+    ] [@coverage off]
+;;
+
 let should_skip_subtree ~context ~(path : Relative_path.t) =
-  let paths_to_check_for_skip_predicates =
-    Path_in_workspace.paths_to_check_for_skip_predicates ~path
-  in
-  List.exists (Dunolint_engine.Context.configs context) ~f:(fun config ->
-    match Dunolint.Config.Private.view config with
-    | `v0 v0 ->
-      (match Dunolint.Config.V0.skip_subtree v0 with
-       | None -> false
-       | Some condition ->
-         List.exists paths_to_check_for_skip_predicates ~f:(fun path ->
-           match
-             Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
-               Dunolinter.eval_path ~path ~condition)
-           with
-           | `enforce _ -> .
-           | `return -> false
-           | `skip_subtree -> true))
-    | `v1 v1 ->
-      let skip_paths = Dunolint.Config.V1.skip_paths v1 |> List.concat in
-      List.exists paths_to_check_for_skip_predicates ~f:(fun path ->
-        let path = Relative_path.to_string path in
-        List.exists skip_paths ~f:(fun glob -> Dunolint.Glob.test glob path)))
+  List.exists (Dunolint_engine.Context.configs context) ~f:(fun { config; location } ->
+    match Path_in_workspace.chop_prefix path ~prefix:location with
+    | None -> raise_config_not_applicable_err ~path ~location [@coverage off]
+    | Some path ->
+      (match Dunolint.Config.Private.view config with
+       | `v0 v0 ->
+         (match Dunolint.Config.V0.skip_subtree v0 with
+          | None -> false
+          | Some condition ->
+            Path_in_workspace.paths_to_check_for_skip_predicates ~path
+            |> List.exists ~f:(fun path ->
+              match
+                Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
+                  Dunolinter.eval_path ~path ~condition)
+              with
+              | `enforce _ -> .
+              | `return -> false
+              | `skip_subtree -> true))
+       | `v1 v1 ->
+         let skip_paths = Dunolint.Config.V1.skip_paths v1 |> List.concat in
+         Path_in_workspace.paths_to_check_for_skip_predicates ~path
+         |> List.exists ~f:(fun path ->
+           let path = Relative_path.to_string path in
+           List.exists skip_paths ~f:(fun glob -> Dunolint.Glob.test glob path))))
 ;;
 
 let maybe_autoformat_file ~previous_contents ~new_contents =
@@ -85,14 +99,15 @@ let lint_stanza ~path ~context ~stanza ~(return : _ With_return.return) =
     match Dunolinter.linter stanza with
     | Unhandled -> ()
     | T { eval; enforce } ->
-      (* [Context.configs] returns configs in processing order: shallowest to
-         deepest, so deeper configs can override shallower ones. *)
-      List.iter (Dunolint_engine.Context.configs context) ~f:(fun config ->
-        List.iter (Dunolint.Config.rules config) ~f:(fun rule ->
-          match Dunolint.Rule.eval rule ~f:(fun predicate -> eval ~path ~predicate) with
-          | `return -> ()
-          | `enforce condition -> enforce ~path ~condition
-          | `skip_subtree -> return.return `skip_subtree)))
+      List.iter (Dunolint_engine.Context.configs context) ~f:(fun { config; location } ->
+        match Path_in_workspace.chop_prefix path ~prefix:location with
+        | None -> raise_config_not_applicable_err ~path ~location [@coverage off]
+        | Some path ->
+          List.iter (Dunolint.Config.rules config) ~f:(fun rule ->
+            match Dunolint.Rule.eval rule ~f:(fun predicate -> eval ~path ~predicate) with
+            | `return -> ()
+            | `enforce condition -> enforce ~path ~condition
+            | `skip_subtree -> return.return `skip_subtree)))
 ;;
 
 module Lint_file (Linter : Dunolinter.S) = struct
@@ -133,13 +148,16 @@ module Dune_lint = Lint_file (Dune_linter)
 module Dune_project_lint = Lint_file (Dune_project_linter)
 
 let should_skip_file ~context ~path =
-  List.exists (Dunolint_engine.Context.configs context) ~f:(fun config ->
-    match Dunolint.Config.Private.view config with
-    | `v0 _ -> false
-    | `v1 v1 ->
-      let filename = Relative_path.to_string path in
-      let skip_files = Dunolint.Config.V1.skip_paths v1 |> List.concat in
-      List.exists skip_files ~f:(fun glob -> Dunolint.Glob.test glob filename))
+  List.exists (Dunolint_engine.Context.configs context) ~f:(fun { config; location } ->
+    match Path_in_workspace.chop_prefix path ~prefix:location with
+    | None -> raise_config_not_applicable_err ~path ~location [@coverage off]
+    | Some path ->
+      (match Dunolint.Config.Private.view config with
+       | `v0 _ -> false
+       | `v1 v1 ->
+         let filename = Relative_path.to_string path in
+         let skip_files = Dunolint.Config.V1.skip_paths v1 |> List.concat in
+         List.exists skip_files ~f:(fun glob -> Dunolint.Glob.test glob filename)))
 ;;
 
 let visit_directory ~dunolint_engine ~context ~parent_dir ~files =

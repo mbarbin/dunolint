@@ -21,42 +21,71 @@
 
 module File_kind = File_kind
 module Running_mode = Running_mode
+module Config_cache = Config_cache
 module Context = Context
 
 type t
 
+(** {1 Context building} *)
+
+(** Build a context for a given file path by auto-discovering and loading
+    configs from parent directories, and applying the engine's root configs.
+
+    This is useful for tools that need to lint individual files without
+    performing a full directory traversal via [visit].
+
+    [path] is the relative path to the file for which to build the context.
+
+    The function returns a context containing:
+    - The engine's root configs (specified at engine creation), which serve as
+      base defaults
+    - All configs auto-discovered from the workspace root down to and including
+      the directory containing the file, which take precedence over root
+      configs *)
+val build_context : t -> path:Relative_path.t -> Context.t
+
 (** {1 Execution control}*)
 
 module Visitor_decision : sig
-  (** While we visit the repository, we may decide what to do at each step of the
-      iteration. *)
+  (** While we visit the repository, we may decide what to do at each step of
+      the iteration. *)
 
   type t =
     | Break (** Stops the current execution of [visit]. *)
     | Continue
-    (** Recurse and visit the children of the current sexp if any, or
-        continue with the next directory in the queue. *)
+    (** Recurse and visit the children of the current sexp if any, or continue
+        with the next directory in the queue. *)
     | Skip_subtree
-    (** Do not drill in, skip the current directory and continue
-        with the next directory in the queue. If the current directory
-        does not have subdirectory, this is equivalent to [Continue],
-        which should be preferred by default. *)
+    (** Do not drill in, skip the current directory and continue with the next
+        directory in the queue. If the current directory does not have
+        subdirectory, this is equivalent to [Continue], which should be
+        preferred by default. *)
 end
 
-(** [parent_dir] contains the complete relative path to the [cwd] from which the
-    command originated, which should be assumed is the root of the repository.
+(** Visit the directory tree.
+
+    [parent_dir] contains the complete relative path to the [cwd] from which the
+    command originated, which should be assumed is the dune workspace root.
 
     [subdirectories] and [files] are the base names of the contents of the
     parent directory currently being visited.
 
+    [autoload_config] controls whether to automatically discover and load config
+    files during traversal. Defaults to [true].
+
+    [root_configs] is a list of base default configs applied with lowest
+    precedence, overridden by any auto-discovered configs. Defaults to the empty
+    list.
+
     [context] contains the accumulated configuration context for the current
     directory being visited.
 
-    If you want to visit only a subtree of the repository, you may provide
+    If you want to visit only a subtree of the workspace, you may provide
     [below], which must be a relative path to a subdirectory of the [cwd]
     provided for creating [t]. *)
 val visit
-  :  ?below:Relative_path.t
+  :  ?autoload_config:bool (** defaults to [true] *)
+  -> ?below:Relative_path.t
   -> t
   -> f:
        (context:Context.t
@@ -91,8 +120,8 @@ val lint_file
   -> unit
 
 (** Spawn a [dune format-dune-file] on the new linted contents before
-    materializing into a file. Exposed if you need to write your own linters
-    on files that are supported by the formatter shipped with dune. *)
+    materializing into a file. Exposed if you need to write your own linters on
+    files that are supported by the formatter shipped with dune. *)
 val format_dune_file : new_contents:string -> string
 
 (** This calls [f] once, registers all requests enqueued during the execution of
@@ -128,7 +157,7 @@ val run
     previewed (Dry_run), interactively confirmed (Interactive), or checked
     without modification (Check). *)
 val create
-  :  ?root_configs:Dunolint.Config.t list
+  :  ?root_configs:Dunolint.Config.t list (** defaults to [[]] *)
   -> running_mode:Running_mode.t
   -> unit
   -> t
@@ -142,7 +171,7 @@ module Private : sig
 
   (** Path operations for workspace-relative paths with escaping prevention.
 
-      This module is exported for testing purposes. See
-      {!Path_in_workspace} for documentation. *)
+      This module is exported for testing purposes. See {!Path_in_workspace} for
+      documentation. *)
   module Path_in_workspace = Path_in_workspace
 end

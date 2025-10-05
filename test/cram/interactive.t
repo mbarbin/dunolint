@@ -25,7 +25,7 @@ Where this is nothing to lint, the interactive command exits with no prompt.
 
   $ dunolint lint --interactive --verbose
   dunolint: [INFO] Linting file "dune-project"
-  dunolint: [INFO] Skipping children of directory "_build/"
+  dunolint: [INFO] Skipping directory "_build/"
   dunolint: [INFO] Linting file "lib/foo/dune"
 
 Let's create a config with some rules that are going to apply to the files we
@@ -55,6 +55,21 @@ We run the lint command in dry-run mode to visualize the changes suggested.
 Note it is possible to restrict the run to a subdirectory only.
 
   $ dunolint lint --dry-run --below lib/
+  dry-run: Would edit file "lib/foo/dune":
+  -1,2 +1,2
+    (library
+  -| (name bar))
+  +| (name foo))
+
+Run the same command in debug mode to visualize configs and directories loaded.
+
+  $ dunolint lint --dry-run --below lib/ --log-level=debug
+  dunolint: [INFO] Loaded dunolint config from "dunolint".
+  dunolint: [DEBUG] Visiting directory "lib/"
+  dunolint: [DEBUG] Config file does not exist at "lib/dunolint".
+  dunolint: [DEBUG] Visiting directory "lib/foo/"
+  dunolint: [DEBUG] Config file does not exist at "lib/foo/dunolint".
+  dunolint: [INFO] Linting file "lib/foo/dune"
   dry-run: Would edit file "lib/foo/dune":
   -1,2 +1,2
     (library
