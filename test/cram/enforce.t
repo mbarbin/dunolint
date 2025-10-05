@@ -93,3 +93,85 @@ We hide the output of this one because it contains an unstable file path.
 
   $ dunolint lint --dry-run --enforce '(blah)' 2> /dev/null
   [124]
+
+Test precedence between --config and --enforce flags.
+When both are provided, --enforce should take precedence (be applied last).
+
+First, create a config file that enforces (is_prefix main):
+
+  $ cat > test-config <<EOF
+  > (lang dunolint 1.0)
+  > 
+  > (rule
+  >  (enforce
+  >   (dune_project
+  >    (name (is_prefix main)))))
+  > EOF
+
+With only --config, it should enforce (is_prefix main):
+
+  $ dunolint lint --dry-run --config test-config
+  dry-run: Would edit file "subrepo/dune-project":
+  -1,3 +1,3
+  -|(name subrepo)
+  +|(name mainsubrepo)
+    
+    (generate_opam_files)
+
+Now with both --config and --enforce, --enforce is applied last.
+Both rules apply, but --enforce's (is_prefix sub) is applied after config's (is_prefix main):
+
+  $ dunolint lint --dry-run --config test-config --enforce '(dune_project (name (is_prefix sub)))'
+  dry-run: Would edit file "dune-project":
+  -1,1 +1,1
+  -|(name main)
+  +|(name submain)
+  
+  dry-run: Would edit file "subrepo/dune-project":
+  -1,3 +1,3
+  -|(name subrepo)
+  +|(name submainsubrepo)
+    
+    (generate_opam_files)
+
+Test interaction between auto-loaded configs and --enforce.
+Using --enforce disables autoloading to simplify precedence semantics:
+
+  $ cat > dunolint <<EOF
+  > (lang dunolint 1.0)
+  > 
+  > (rule
+  >  (enforce
+  >   (dune_project
+  >    (name (is_prefix auto)))))
+  > EOF
+
+With auto-loaded config enforcing (is_prefix auto):
+
+  $ dunolint lint --dry-run
+  dry-run: Would edit file "dune-project":
+  -1,1 +1,1
+  -|(name main)
+  +|(name automain)
+  
+  dry-run: Would edit file "subrepo/dune-project":
+  -1,3 +1,3
+  -|(name subrepo)
+  +|(name autosubrepo)
+    
+    (generate_opam_files)
+
+With --enforce, autoloading is disabled so only enforce rules apply:
+
+  $ dunolint lint --dry-run --enforce '(dune_project (name (is_prefix cmd)))'
+  dry-run: Would edit file "dune-project":
+  -1,1 +1,1
+  -|(name main)
+  +|(name cmdmain)
+  
+  dry-run: Would edit file "subrepo/dune-project":
+  -1,3 +1,3
+  -|(name subrepo)
+  +|(name cmdsubrepo)
+    
+    (generate_opam_files)
