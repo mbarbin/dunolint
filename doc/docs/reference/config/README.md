@@ -60,7 +60,7 @@ Here is a quick one that enforces the presence of `instrumentation` in all libra
 
 ### Skipping paths
 
-You can configure *dunolint* to ignore files and/or entire directories and skip them. The stanza used for this is `(skip_paths GLOB)`. These stanzas are evaluated in two different contextes while traversing the tree during linting:
+You can configure *dunolint* to ignore files and/or entire directories and skip them. The stanza used for this is `(skip_paths GLOB)`. These stanzas are evaluated in two different contexts while traversing the tree during linting:
 
 1. Before entering any new nested directory;
 2. Before linting any file.
