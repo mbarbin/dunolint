@@ -26,8 +26,9 @@ let main =
       "This command lints files in a dune project starting from the workspace root.\n\n\
        Dunolint will first locate the workspace root by searching for \
        $(b,dune-workspace) or $(b,dune-project) files in the current directory and its \
-       ancestors, then change to that directory before performing linting operations. \
-       The workspace root can be overridden using the $(b,--root) flag.\n\n\
+       ancestors (using the same logic as Dune), then change to that directory before \
+       performing linting operations. The workspace root can be overridden using the \
+       $(b,--root) flag.\n\n\
        $(b,Config Autoloading:) By default, dunolint will automatically discover and \
        load $(b,dunolint) config files found in the workspace root and any \
        subdirectories during traversal. Configs are accumulated from root down to each \

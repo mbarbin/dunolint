@@ -2,11 +2,13 @@
 
 This document references the constructs and conventions in use in the `dunolint` config files.
 
-If you are looking for a general introduction to the configuration language design and semantics at a higher abstraction level, head over to [this section](../../explanation/config/README.md).
+If you are looking for a general introduction to the configuration language design and semantics at a higher abstraction level, head over to [this section](../../explanation/config/language-design.md).
 
 ## Config Filename
 
-Dunolint config files are expected to be named `dunolint`. At the moment *dunolint* (the executable) will automatically load a config file named `dunolint` if there is one in the root directory from where the executable is run. We have plans for the linter to load automatically any `dunolint` file found dynamically while walking the tree, however this is not implemented yet. See this [discussion](https://github.com/mbarbin/dunolint/discussions/41). We'll update this section when that feature lands.
+Dunolint config files are expected to be named `dunolint`. The linter automatically discovers and loads any `dunolint` files found while traversing the project tree during linting operations. Configs accumulate from the workspace root down to each linted file's directory, with deeper configs taking precedence when rules modify the same fields.
+
+For details on how config autoloading works, see [Config Autoloading](../../explanation/config/autoloading.md).
 
 ## General syntax
 
@@ -60,7 +62,7 @@ Here is a quick one that enforces the presence of `instrumentation` in all libra
 
 ### Skipping paths
 
-You can configure *dunolint* to ignore files and/or entire directories and skip them. The stanza used for this is `(skip_paths GLOB)`. These stanzas are evaluated in two different contextes while traversing the tree during linting:
+You can configure *dunolint* to ignore files and/or entire directories and skip them. The stanza used for this is `(skip_paths GLOB)`. These stanzas are evaluated in two different contexts while traversing the tree during linting:
 
 1. Before entering any new nested directory;
 2. Before linting any file.
