@@ -36,10 +36,14 @@ let load_config_in_dir (t : t) ~dir : Load_result.t =
   let config_path = Relative_path.extend dir (Fsegment.v "dunolint") in
   match Hashtbl.find t config_path with
   | Some result ->
-    (* CR-soon mbarbin: At the moment we haven't exercised in tests execution
-       paths where the cache is useful. This is left as follow-up work. *)
+    (* XCR mbarbin: At the moment we haven't exercised in tests execution
+       paths where the cache is useful. This is left as follow-up work.
+
+       claude: [2025-10-05] Cache behavior is now tested in
+       [lib/dunolint_engine/test/test__config_cache.ml]. The test builds contexts
+       for multiple files in the same directory and verifies that the cached configs
+       are physically equal, proving that the cache is working correctly. *)
     result
-    [@coverage off]
   | None ->
     let result : Load_result.t =
       match
