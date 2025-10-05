@@ -21,9 +21,28 @@
 
 module File_kind = File_kind
 module Running_mode = Running_mode
+module Config_cache = Config_cache
 module Context = Context
 
 type t
+
+(** {1 Context building} *)
+
+(** Build a context for a given file path by auto-discovering and loading
+    configs from parent directories, and applying the engine's root configs.
+
+    This is useful for tools that need to lint individual files without
+    performing a full directory traversal via [visit].
+
+    [path] is the relative path to the file for which to build the context.
+
+    The function returns a context containing:
+    - The engine's root configs (specified at engine creation), which serve as
+      base defaults
+    - All configs auto-discovered from the workspace root down to and including
+      the directory containing the file, which take precedence over root
+      configs *)
+val build_context : t -> path:Relative_path.t -> Context.t
 
 (** {1 Execution control}*)
 
@@ -43,20 +62,30 @@ module Visitor_decision : sig
         which should be preferred by default. *)
 end
 
-(** [parent_dir] contains the complete relative path to the [cwd] from which the
-    command originated, which should be assumed is the root of the repository.
+(** Visit the directory tree.
+
+    [parent_dir] contains the complete relative path to the [cwd] from which the
+    command originated, which should be assumed is the dune workspace root.
 
     [subdirectories] and [files] are the base names of the contents of the
     parent directory currently being visited.
 
+    [autoload_config] controls whether to automatically discover and load config
+    files during traversal. Defaults to [true].
+
+    [root_configs] is a list of base default configs applied with lowest
+    precedence, overridden by any auto-discovered configs. Defaults to the empty
+    list.
+
     [context] contains the accumulated configuration context for the current
     directory being visited.
 
-    If you want to visit only a subtree of the repository, you may provide
+    If you want to visit only a subtree of the workspace, you may provide
     [below], which must be a relative path to a subdirectory of the [cwd]
     provided for creating [t]. *)
 val visit
-  :  ?below:Relative_path.t
+  :  ?autoload_config:bool (** defaults to [true] *)
+  -> ?below:Relative_path.t
   -> t
   -> f:
        (context:Context.t
@@ -128,7 +157,7 @@ val run
     previewed (Dry_run), interactively confirmed (Interactive), or checked
     without modification (Check). *)
 val create
-  :  ?root_configs:Dunolint.Config.t list
+  :  ?root_configs:Dunolint.Config.t list (** defaults to [[]] *)
   -> running_mode:Running_mode.t
   -> unit
   -> t

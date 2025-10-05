@@ -19,34 +19,16 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-(** For use in the rest of the files in this directory. *)
+(** Cache for loaded configs to avoid re-parsing the same file multiple times. *)
 
-val sexpable_param : (module Sexpable.S with type t = 'a) -> 'a Command.Param.t
+module Load_result : sig
+  type t =
+    | Absent
+    | Present of Dunolint.Config.t
+    | Error of Err.t
+end
 
-(** Restrict the scope of a command to a subdirectory only. "Below this path".
-    Accepts both relative and absolute paths. *)
-val below : doc:string -> Fpath.t option Command.Arg.t
+type t
 
-(** A list of defaults directories to skip. *)
-val skip_subtrees : globs:string list -> Dunolint.Glob.t list
-
-(** Create a default config with only skip_paths for common directories. *)
-val default_skip_paths_config : unit -> Dunolint.Config.t
-
-(** Create a config containing only the given enforce rules, or None if the list
-    is empty. *)
-val enforce_rules_config : rules:Dunolint.Config.Rule.t list -> Dunolint.Config.t option
-
-(** Override the workspace root - same as with dune. *)
-val root : Absolute_path.t option Command.Arg.t
-
-(** When supplying path arguments that are aimed to designate paths in
-    workspace, we need to resolve them according to where the [workspace_root]
-    is in relation to the cwd. We interpret relative paths as relative to the
-    [cwd] from which the program started. We use this helper for example to
-    resolve arguments such as [--below _] or [--config _]. *)
-val relativize
-  :  workspace_root:Workspace_root.t
-  -> cwd:Absolute_path.t
-  -> path:Fpath.t
-  -> Relative_path.t
+val create : unit -> t
+val load_config_in_dir : t -> dir:Relative_path.t -> Load_result.t

@@ -39,7 +39,7 @@ its own. See below how the name of the project is not linted:
 
   $ dunolint lint --yes
 
-If the config is supplied, but it is invalid, dunolint will complain.
+If a loaded config is invalid, dunolint will report an error.
 
   $ printf '(blah)\n' > dunolint
 

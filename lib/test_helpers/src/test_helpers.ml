@@ -59,6 +59,7 @@ let run_linter ~config =
   let () =
     Dunolint_engine.visit
       dunolint_engine
+      ~autoload_config:false
       ~f:(fun ~context ~parent_dir ~subdirectories:_ ~files ->
         Dunolint_cli.Private.Linter.visit_directory
           ~dunolint_engine

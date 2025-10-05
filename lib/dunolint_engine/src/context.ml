@@ -19,8 +19,15 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+module Config_with_location = struct
+  type t =
+    { config : Dunolint.Config.t
+    ; location : Relative_path.t
+    }
+end
+
 module Item = struct
-  type t = Config of Dunolint.Config.t
+  type t = Config of Config_with_location.t
 end
 
 type t = Item.t list
@@ -34,4 +41,4 @@ let configs (t : t) =
   List.rev_map t ~f:(function Config config -> config)
 ;;
 
-let add_config t ~config = Item.Config config :: t
+let add_config t ~config ~location = Item.Config { config; location } :: t

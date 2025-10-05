@@ -48,11 +48,21 @@ type t
 (** An empty context. *)
 val empty : t
 
-(** Add a config to the context. *)
-val add_config : t -> config:Dunolint.Config.t -> t
+(** Configuration with its location in the directory tree. *)
+module Config_with_location : sig
+  type t =
+    { config : Dunolint.Config.t
+    ; location : Relative_path.t
+      (** Directory where this config was found
+          relative to the workspace root. *)
+    }
+end
 
-(** Get the list of configs in the context. Returns configs in rule processing
-    order: from least specific (root) to most specific (closest to current
-    location), so that deeper configs can override rules from shallower
-    configs. *)
-val configs : t -> Dunolint.Config.t list
+(** Add a discovered config at the specified location. *)
+val add_config : t -> config:Dunolint.Config.t -> location:Relative_path.t -> t
+
+(** Get the list of discovered configs with their locations.
+    Returns configs in rule processing order: from least specific (root) to
+    most specific (closest to current location), so that deeper configs can
+    override rules from shallower configs. *)
+val configs : t -> Config_with_location.t list

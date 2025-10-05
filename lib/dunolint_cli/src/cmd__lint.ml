@@ -26,24 +26,51 @@ let main =
       "This command lints files in a dune project starting from the workspace root.\n\n\
        Dunolint will first locate the workspace root by searching for \
        $(b,dune-workspace) or $(b,dune-project) files in the current directory and its \
-       ancestors, then change to that directory before performing linting operations.\n\n\
-       The workspace root can be overridden using the $(b,--root) flag. If a \
-       $(b,dunolint) config file exists at the workspace root, it will be loaded \
-       automatically unless $(b,--config) is specified.\n\n\
-       Use $(b,--below) to limit linting to a specific subdirectory while still using \
-       the workspace root's configuration.")
+       ancestors, then change to that directory before performing linting operations. \
+       The workspace root can be overridden using the $(b,--root) flag.\n\n\
+       $(b,Config Autoloading:) By default, dunolint will automatically discover and \
+       load $(b,dunolint) config files found in the workspace root and any \
+       subdirectories during traversal. Configs are accumulated from root down to each \
+       linted file's directory.\n\n\
+       $(b,Config Accumulation and Precedence:) When multiple configs are loaded (e.g., \
+       from root and subdirectories), $(b,all) rules from $(b,all) configs are applied \
+       in sequence. Rules from configs deeper in the tree are applied last and take \
+       precedence when modifying the same fields.\n\n\
+       $(b,Config Autoloading and Manual Override:) Config autoloading is $(b,disabled) \
+       when either $(b,--config) or $(b,--enforce) flags are supplied. The $(b,--config) \
+       flag specifies an explicit config file to use instead of autoloading. The \
+       $(b,--enforce) flag adds specific conditions to enforce. Both flags can be used \
+       together, and both treat paths as if resolved from the workspace root. Note that \
+       default skip paths are $(b,always) applied regardless of which flags are used.\n\n\
+       Use $(b,--below) to limit linting to a specific subdirectory. When using \
+       $(b,--below), configs from ancestor directories (including the workspace root) \
+       are still loaded and applied.")
     (let open Command.Std in
      let+ running_mode = Dunolint_engine.Running_mode.arg
      and+ () = Log_cli.set_config ()
      and+ config =
-       Arg.named_opt [ "config" ] Param.file ~doc:"Path to dunolint config file."
+       Arg.named_opt
+         [ "config" ]
+         Param.file
+         ~doc:
+           "Path to dunolint config file. When specified, config autoloading is disabled \
+            and only this config is used. The config is evaluated as if it were located \
+            at the workspace root (important for path resolution). This flag is \
+            primarily meant for backward compatibility and quick testing; new code and \
+            persistent setups should use dunolint config files directly."
      and+ below = Common_helpers.below ~doc:"Lint only below this path."
      and+ enforce =
        Arg.named_multi
          [ "enforce" ]
          (Common_helpers.sexpable_param (module Dunolint.Condition))
          ~docv:"COND"
-         ~doc:"Add condition to enforce."
+         ~doc:
+           "Add condition to enforce. Can be specified multiple times. $(b,Deprecated): \
+            This flag is primarily for backward compatibility and testing. For \
+            persistent rules, add them to a dunolint config file. For one-off \
+            transitions and quick edits, future dedicated tooling is planned. This flag \
+            can be used alone or combined with $(b,--config). When combined, the config \
+            file is applied first, then enforce rules are applied last."
        >>| List.map ~f:(fun condition -> `enforce condition)
      and+ root = Common_helpers.root in
      let cwd = Unix.getcwd () |> Absolute_path.v in
@@ -63,18 +90,20 @@ let main =
      let root_configs =
        List.concat
          [ [ Common_helpers.default_skip_paths_config () ]
-         ; (match Common_helpers.load_config_opt ~config with
-            | Some config -> [ config ]
-            | None -> [])
+         ; (match config with
+            | None -> []
+            | Some config_path ->
+              [ Dunolinter.Config_handler.load_config_exn ~filename:config_path ])
          ; (match Common_helpers.enforce_rules_config ~rules:enforce with
-            | Some config -> [ config ]
-            | None -> [])
+            | None -> []
+            | Some config -> [ config ])
          ]
      in
      Dunolint_engine.run ~root_configs ~running_mode
      @@ fun dunolint_engine ->
      Dunolint_engine.visit
        dunolint_engine
+       ~autoload_config:(Option.is_none config && List.is_empty enforce)
        ?below
        ~f:(fun ~context ~parent_dir ~subdirectories:_ ~files ->
          Linter.visit_directory ~dunolint_engine ~context ~parent_dir ~files))

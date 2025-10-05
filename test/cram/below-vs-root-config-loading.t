@@ -1,20 +1,19 @@
-Test the critical difference between --below and --root regarding config
-loading.
+Test config autoloading and how --root, --below, and --config flags affect it.
 
 Set up a workspace with a parent project and a subproject, each with their own
-config.
+config to demonstrate config accumulation and precedence.
 
   $ mkdir workspace
   $ cd workspace
   $ touch dune-workspace
 
-Create a parent config that enforces one project name:
+Create a parent config at workspace root:
 
   $ cat > dunolint <<EOF
   > (lang dunolint 1.0)
   > 
   > (rule
-  >  (enforce (dune_project (name (equals parent_enforced_name)))))
+  >  (enforce (dune_project (name (equals root_enforced_name)))))
   > EOF
 
 Create a subproject with its own dune-project and config:
@@ -37,8 +36,9 @@ Create a dune-project file in the subproject that will be linted:
   > (name original_name)
   > EOF
 
-Test 1: Running from subproject WITHOUT any flags. This finds workspace/ as root
-and uses parent config.
+Running from subproject WITHOUT any flags. With config autoloading, both the
+root config and subproject config are discovered and applied. The subproject
+config is applied last, so it takes precedence.
 
   $ cd subproject
   $ dunolint lint --dry-run
@@ -48,10 +48,11 @@ and uses parent config.
     (lang dune 3.17)
     
   -|(name original_name)
-  +|(name parent_enforced_name)
+  +|(name subproject_enforced_name)
 
-Test 2: Running from subproject with --below . This STILL finds workspace/ as
-root and uses parent config, but only lints subproject files.
+Running from subproject with --below . Same behavior: configs are auto-loaded
+from workspace root down to the subproject. The --below flag only limits which
+files are linted, not which configs are discovered.
 
   $ dunolint lint --below . --dry-run
   Entering directory '$TESTCASE_ROOT/workspace'
@@ -60,10 +61,11 @@ root and uses parent config, but only lints subproject files.
     (lang dune 3.17)
     
   -|(name original_name)
-  +|(name parent_enforced_name)
+  +|(name subproject_enforced_name)
 
-Test 3: Running from subproject with --root . This forces subproject/ as root
-and uses subproject config.
+Running from subproject with --root . This forces subproject/ as workspace root,
+so only the subproject config is discovered (parent config is outside the
+workspace).
 
   $ dunolint lint --root . --dry-run
   Entering directory '$TESTCASE_ROOT/workspace/subproject/'
@@ -74,12 +76,12 @@ and uses subproject config.
   -|(name original_name)
   +|(name subproject_enforced_name)
 
-Notice the key differences:
-- Tests 1 and 2 both use "parent_enforced_name" because they load the parent config
-- Test 3 uses "subproject_enforced_name" because --root prevents traversing to the parent
-- The file path also changes: "subproject/dune-project" vs "dune-project"
+Notice the key differences with --root:
+- The workspace root changes from "workspace/" to "workspace/subproject/"
+- Only configs within the new workspace are discovered
+- The file path changes: "subproject/dune-project" vs "dune-project"
 
-Test 4: Verify that --root with an absolute path also works correctly:
+Verify that --root with an absolute path also works correctly:
 
   $ dunolint lint --root $PWD --dry-run
   dry-run: Would edit file "dune-project":
@@ -89,8 +91,8 @@ Test 4: Verify that --root with an absolute path also works correctly:
   -|(name original_name)
   +|(name subproject_enforced_name)
 
-Test 5: Using --below with an absolute path from the parent directory. This
-should use parent config since we're running from the parent.
+Using --below from the parent directory. Config autoloading discovers both
+parent and subproject configs, with subproject config taking precedence.
 
   $ cd ..
   $ dunolint lint --below $PWD/subproject --dry-run
@@ -99,9 +101,22 @@ should use parent config since we're running from the parent.
     (lang dune 3.17)
     
   -|(name original_name)
-  +|(name parent_enforced_name)
+  +|(name subproject_enforced_name)
 
-This test clearly demonstrates that --below and --root can lint the same files
-but apply different configurations based on which directory is used as the
-workspace root.
+Now test that --config disables autoloading. When using --config, only that
+specific config is used, and all auto-discovery is disabled.
 
+  $ dunolint lint --config dunolint --dry-run
+  dry-run: Would edit file "subproject/dune-project":
+  -1,3 +1,3
+    (lang dune 3.17)
+    
+  -|(name original_name)
+  +|(name root_enforced_name)
+
+Key takeaways:
+- By default, configs are auto-discovered from workspace root down through subdirectories
+- Deeper configs are applied last and take precedence
+- --below limits which files are linted but doesn't affect config discovery
+- --root changes the workspace root, limiting which configs can be discovered
+- --config disables autoloading entirely and uses only the specified config

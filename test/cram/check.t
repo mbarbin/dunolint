@@ -31,11 +31,15 @@ Let's do some linting!
 
   $ dunolint lint --check --verbosity=debug
   dunolint: [DEBUG] Visiting directory "./"
+  dunolint: [DEBUG] Config file does not exist at "dunolint".
   dunolint: [INFO] Linting file "dune-project"
   dunolint: [DEBUG] Visiting directory "_build/"
-  dunolint: [INFO] Skipping children of directory "_build/"
+  dunolint: [DEBUG] Config file does not exist at "_build/dunolint".
+  dunolint: [INFO] Skipping directory "_build/"
   dunolint: [DEBUG] Visiting directory "lib/"
+  dunolint: [DEBUG] Config file does not exist at "lib/dunolint".
   dunolint: [DEBUG] Visiting directory "lib/foo/"
+  dunolint: [DEBUG] Config file does not exist at "lib/foo/dunolint".
   dunolint: [INFO] Linting file "lib/foo/dune"
 
 Now let's suppose there are some lints to apply. We'll add manual conditions to
