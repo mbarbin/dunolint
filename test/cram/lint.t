@@ -43,7 +43,17 @@ If a loaded config is invalid, dunolint will report an error.
 
   $ printf '(blah)\n' > dunolint
 
-  $ dunolint lint --yes
+  $ dunolint lint --dry-run -v
+  File "dunolint", line 1, characters 0-6:
+  1 | (blah)
+      ^^^^^^
+  Error: Dunolint config expected to start with (lang dunolint VERSION).
+  dunolint: [INFO] Skipping directory due to invalid config: "./"
+  [123]
+
+This would also apply when loading invalid parent config via discovery.
+
+  $ dunolint lint --dry-run -v --below vendor/
   File "dunolint", line 1, characters 0-6:
   1 | (blah)
       ^^^^^^
