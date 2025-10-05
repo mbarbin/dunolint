@@ -262,6 +262,30 @@ But if the file is not in a default skipped path, we see that it is linted.
    (name mylib)
    (libraries a b c))
 
+Test that configs are auto-discovered based on --filename path when reading from stdin.
+Create a nested directory with a config that enforces a specific library name:
+
+  $ mkdir -p nested/subdir
+  $ cat > nested/dunolint <<EOF
+  > (lang dunolint 1.0)
+  > (rule (enforce (dune (library (name (equals nested_lib))))))
+  > EOF
+
+When reading from stdin with --filename in the nested directory, the nested config
+should be loaded:
+
+  $ printf '(library (name test))' | dunolint tools lint-file --filename=nested/subdir/dune
+  (library
+   (name nested_lib))
+
+But when --filename points to a different directory, the nested config should not apply.
+Note that the root dunolint config still applies (sorting libraries):
+
+  $ printf '(library (name test) (libraries z a))' | dunolint tools lint-file --filename=other/dune
+  (library
+   (name test)
+   (libraries a z))
+
 The lint result may be saved directly to the input file with the flag
 `--in-place`. There are a few corner cases to cover here, such as what happens
 when the filename is overridden. The intention is to target the actual input
@@ -363,3 +387,65 @@ from stdin with filename override:
    (libraries a b c))
   $ cd ${ROOT}
   $ rm -rf ${NO_WORKSPACE}
+
+Test precedence: deeper configs should override shallower configs.
+When a file is affected by multiple configs (root and nested), rules from deeper
+configs should be applied after (and thus override) rules from shallower configs.
+
+Create an isolated test directory to avoid conflicts:
+
+  $ mkdir -p precedence-test-dir/deeper
+  $ cd precedence-test-dir
+
+Create a workspace marker and root config that enforces (is_prefix root):
+
+  $ touch dune-workspace
+  $ cat > dunolint <<EOF
+  > (lang dunolint 1.0)
+  > 
+  > (rule
+  >  (enforce
+  >   (dune_project
+  >    (name (is_prefix root)))))
+  > EOF
+
+Create a nested config that enforces (is_prefix nested):
+
+  $ cat > deeper/dunolint <<EOF
+  > (lang dunolint 1.0)
+  > 
+  > (rule
+  >  (enforce
+  >   (dune_project
+  >    (name (is_prefix nested)))))
+  > EOF
+
+Create a test dune-project file:
+
+  $ cat > test-project <<EOF
+  > (lang dune 3.17)
+  > (name original)
+  > EOF
+
+When linting a file at the root, only the root config applies:
+
+  $ dunolint tools lint-file test-project --filename=dune-project --root .
+  (lang dune 3.17)
+  
+  (name rootoriginal)
+
+When linting a file in the nested directory, both configs apply.
+The root config's (is_prefix root) is applied first, then the nested config's
+(is_prefix nested) is applied, resulting in "nestedrootoriginal":
+
+  $ dunolint tools lint-file test-project --filename=deeper/dune-project --root .
+  (lang dune 3.17)
+  
+  (name nestedrootoriginal)
+
+This demonstrates that:
+1. Both configs are discovered and applied
+2. The deeper config's rules are applied last (nested after root)
+3. Rules compose correctly with deeper configs taking precedence
+
+  $ cd ..
