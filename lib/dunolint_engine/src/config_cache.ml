@@ -35,11 +35,7 @@ let create () : t = Hashtbl.create (module Relative_path)
 let load_config_in_dir (t : t) ~dir : Load_result.t =
   let config_path = Relative_path.extend dir (Fsegment.v "dunolint") in
   match Hashtbl.find t config_path with
-  | Some result ->
-    (* CR-soon mbarbin: At the moment we haven't exercised in tests execution
-       paths where the cache is useful. This is left as follow-up work. *)
-    result
-    [@coverage off]
+  | Some result -> result
   | None ->
     let result : Load_result.t =
       match
