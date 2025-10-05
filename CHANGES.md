@@ -2,11 +2,16 @@
 
 ### Added
 
+- Add test for config cache (#128, @mbarbin).
+- Implement dunolint config files autoloading (#127, @mbarbin).
 - Added 'First Run Through' tutorial (#115, @mbarbin).
 - Added 'Quick Start' tutorial (#106, @mbarbin).
 
 ### Changed
 
+- Always include default skip paths in config (#125, @mbarbin).
+- Refactors to prepare config autoloading (#121, #122, #123, #124, #126, @mbarbin).
+- Make dunolint aware of and use dune workspaces (#113, @mbarbin)
 - Remove support for `--enforce` in lint-file tool (#118, @mbarbin).
 - Update doc for `(lang dunolint 1.0)` (#110, @mbarbin).
 - Upgrade to recent `pplumbing` repackaging (#109, @mbarbin).
