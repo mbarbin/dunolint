@@ -63,6 +63,7 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'explanation/current-state/README', label: 'Current State' },
         { type: 'doc', id: 'explanation/workspace-root', label: 'Workspace Root' },
         { type: 'doc', id: 'explanation/config/README', label: 'Config Language Design' },
+        { type: 'doc', id: 'explanation/config-autoloading', label: 'Config Autoloading' },
         { type: 'doc', id: 'explanation/canonical-ordering', label: 'Canonical Ordering' },
         {
           type: 'category', label: 'Linting Equilibrium',
