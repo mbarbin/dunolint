@@ -29,8 +29,7 @@ type t = Unix.file_kind =
   | S_SOCK
 [@@deriving enumerate]
 
-let to_string t =
-  match t with
+let to_string = function
   | S_REG -> "Regular file"
   | S_DIR -> "Directory"
   | S_CHR -> "Character device"

@@ -57,8 +57,7 @@ let or_ a b =
   | Undefined, False -> Undefined
 ;;
 
-let not_ t =
-  match t with
+let not_ = function
   | True -> False
   | False -> True
   | Undefined -> Undefined

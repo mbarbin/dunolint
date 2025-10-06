@@ -77,14 +77,12 @@ include T
    The evaluation engine is responsible for handing the different versions,
    accessing them using [Private.view]. *)
 
-let to_stanzas (t : t) : Sexp.t list =
-  match t with
+let to_stanzas : t -> Sexp.t list = function
   | `v0 v0 -> [ List [ List [ Atom "version"; Atom "0" ]; V0.sexp_of_t v0 ] ]
   | `v1 v1 -> List [ Atom "lang"; Atom "dunolint"; Atom "1.0" ] :: V1.to_stanzas v1
 ;;
 
-let of_stanzas sexps =
-  match (sexps : Sexp.t list) with
+let of_stanzas : Sexp.t list -> t = function
   | [ List [ List [ Atom "version"; (Atom version as version_sexp) ]; config ] ] ->
     (match version with
      | "0" -> `v0 (V0.t_of_sexp config)
