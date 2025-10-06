@@ -1,7 +1,8 @@
-## 0.0.202510XX (unreleased)
+## 0.0.20251006 (2025-10-06)
 
 ### Added
 
+- Added 'Config Autoloading' documentation page (#129, @mbarbin).
 - Add test for config cache (#128, @mbarbin).
 - Implement dunolint config files autoloading (#127, @mbarbin).
 - Added 'First Run Through' tutorial (#115, @mbarbin).
