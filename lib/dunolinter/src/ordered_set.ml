@@ -72,10 +72,9 @@ let read ~read_element ~sexps_rewriter sexps =
   many [] sexps
 ;;
 
-let make_union ts =
-  match ts with
+let make_union = function
   | [ t ] -> t
-  | [] | _ :: _ :: _ -> Union ts
+  | ([] | _ :: _ :: _) as ts -> Union ts
 ;;
 
 let of_list elts = make_union (List.map elts ~f:(fun e -> Element e))

@@ -102,21 +102,18 @@ end
 
 include T
 
-let eval t ~f =
-  let rec aux_t t =
-    match t with
-    | (`enforce _ | `return | `skip_subtree) as invariant -> invariant
-    | `cond clauses ->
-      (match
-         List.find clauses ~f:(fun (condition, _) ->
-           match Trilang.eval condition ~f with
-           | True -> true
-           | False | Undefined -> false)
-       with
-       | None -> `return
-       | Some (_, t) -> aux_t t)
-  in
-  aux_t t
+let rec eval t ~f =
+  match t with
+  | (`enforce _ | `return | `skip_subtree) as invariant -> invariant
+  | `cond clauses ->
+    (match
+       List.find clauses ~f:(fun (condition, _) ->
+         match Trilang.eval condition ~f with
+         | True -> true
+         | False | Undefined -> false)
+     with
+     | None -> `return
+     | Some (_, t) -> eval t ~f)
 ;;
 
 module Stable = struct

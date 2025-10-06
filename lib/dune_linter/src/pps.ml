@@ -106,8 +106,7 @@ module Mutable_arg = struct
           ]
   ;;
 
-  let to_string t =
-    match t with
+  let to_string = function
     | Pp { pp_name } -> Dune.Pp.Name.to_string pp_name
     | Flag { name; param = None; applies_to = _ } -> name
     | Flag { name; param = Some param; applies_to = _ } -> name ^ "=" ^ param

@@ -152,18 +152,14 @@ let open_via_flags t ~libraries_to_open_via_flags =
   let flags = Flags.flags t.flags in
   let existing_open_via_flags =
     let hset = Hash_set.create (module String) in
-    let rec iter_list flags =
-      let rec aux sexps =
-        match sexps with
-        | [] -> ()
-        | Sexp.Atom "-open" :: Atom module_name :: rest ->
-          Hash_set.add hset module_name;
-          aux rest
-        | hd :: tl ->
-          iter_one hd;
-          aux tl
-      in
-      aux flags
+    let rec iter_list = function
+      | [] -> ()
+      | Sexp.Atom "-open" :: Atom module_name :: rest ->
+        Hash_set.add hset module_name;
+        iter_list rest
+      | hd :: tl ->
+        iter_one hd;
+        iter_list tl
     and iter_one = function
       | Sexp.Atom _ -> ()
       | Sexp.List sexps -> iter_list sexps
