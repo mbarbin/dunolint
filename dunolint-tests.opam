@@ -14,7 +14,7 @@ depends: [
   "cmdlang" {>= "0.0.9"}
   "cmdlang-cmdliner-err-runner" {>= "0.0.16"}
   "cmdlang-stdlib-runner" {>= "0.0.9"}
-  "cmdliner" {< "2.0"}
+  "cmdliner" {>= "1.3.0" & < "2.0"}
   "dunolint" {= version}
   "dunolint-lib" {= version}
   "dunolint-lib-base" {= version}
