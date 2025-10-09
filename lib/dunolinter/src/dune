@@ -12,11 +12,11 @@
   -open
   Fpath_base
   -open
-  Stdio
-  -open
   Pplumbing_pp_tty
   -open
   Pplumbing_err
+  -open
+  Stdio
   -open
   Dunolint.Std)
  (libraries
