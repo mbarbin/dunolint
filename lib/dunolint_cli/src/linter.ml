@@ -35,7 +35,7 @@ let raise_config_not_applicable_err ~(path : Relative_path.t) ~location =
 
 let should_skip_subtree ~context ~(path : Relative_path.t) =
   List.exists (Dunolint_engine.Context.configs context) ~f:(fun { config; location } ->
-    match Path_in_workspace.chop_prefix path ~prefix:location with
+    match Relative_path.chop_prefix path ~prefix:location with
     | None -> raise_config_not_applicable_err ~path ~location [@coverage off]
     | Some path ->
       (match Dunolint.Config.Private.view config with
@@ -100,7 +100,7 @@ let lint_stanza ~path ~context ~stanza ~(return : _ With_return.return) =
     | Unhandled -> ()
     | T { eval; enforce } ->
       List.iter (Dunolint_engine.Context.configs context) ~f:(fun { config; location } ->
-        match Path_in_workspace.chop_prefix path ~prefix:location with
+        match Relative_path.chop_prefix path ~prefix:location with
         | None -> raise_config_not_applicable_err ~path ~location [@coverage off]
         | Some path ->
           List.iter (Dunolint.Config.rules config) ~f:(fun rule ->
@@ -149,7 +149,7 @@ module Dune_project_lint = Lint_file (Dune_project_linter)
 
 let should_skip_file ~context ~path =
   List.exists (Dunolint_engine.Context.configs context) ~f:(fun { config; location } ->
-    match Path_in_workspace.chop_prefix path ~prefix:location with
+    match Relative_path.chop_prefix path ~prefix:location with
     | None -> raise_config_not_applicable_err ~path ~location [@coverage off]
     | Some path ->
       (match Dunolint.Config.Private.view config with

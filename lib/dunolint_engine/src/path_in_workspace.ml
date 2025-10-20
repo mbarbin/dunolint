@@ -21,50 +21,10 @@
 
 type t = Relative_path.t
 
-let is_parent_segment s = String.equal ".." s
-let has_parent_segments segs = List.exists ~f:is_parent_segment segs
-
-let check_escape_path_exn (t : t) =
-  if has_parent_segments (Fpath.segs (t :> Fpath.t))
-  then
-    invalid_arg
-      (Printf.sprintf
-         "Path_in_workspace.check_escape_path_exn: path '%s' escapes upward past \
-          starting point"
-         (Relative_path.to_string t))
-;;
-
-let chop_prefix t ~prefix =
-  if Relative_path.equal prefix Relative_path.empty
-  then Some t
-  else (
-    match Relative_path.chop_prefix t ~prefix with
-    | None -> None
-    | Some t as some ->
-      check_escape_path_exn t;
-      some)
-;;
-
-let parent t =
-  if Relative_path.equal t Relative_path.empty
-  then None
-  else (
-    match Relative_path.parent t with
-    | None ->
-      (* This is the problematic case from upstream, as the function never
-         returns [None]. Pending upgrades and TBD. *)
-      None
-      [@coverage off]
-    | Some t as some ->
-      check_escape_path_exn t;
-      some)
-;;
-
 let ancestors_autoloading_dirs ~path =
   if Relative_path.equal path Relative_path.empty
   then []
   else (
-    check_escape_path_exn path;
     let segs = Fpath.segs (Relative_path.rem_empty_seg path :> Fpath.t) in
     List.init (List.length segs) ~f:(fun i ->
       List.take segs i
@@ -77,7 +37,6 @@ let paths_to_check_for_skip_predicates ~path =
   if Relative_path.equal path Relative_path.empty
   then []
   else (
-    check_escape_path_exn path;
     let segs = Fpath.segs (path :> Fpath.t) in
     let ancestors =
       List.init

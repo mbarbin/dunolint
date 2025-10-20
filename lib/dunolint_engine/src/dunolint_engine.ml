@@ -250,8 +250,10 @@ let rec mkdirs path =
   match is_directory_exn ~path with
   | `Yes -> ()
   | `Absent ->
-    (match Path_in_workspace.parent path with
-     | None -> () [@coverage off]
+    (match Relative_path.parent path with
+     | None ->
+       (* An existing directory will be encountered before reaching the root. *)
+       () [@coverage off]
      | Some path -> mkdirs path);
     Unix.mkdir (Relative_path.to_string path) ~perm:0o755
 ;;
@@ -268,7 +270,7 @@ let materialize t =
     List.iteri edited_files ~f:(fun i { path; original_contents; new_contents } ->
       if i > 0 || Err.had_errors () then print_endline "";
       let should_mkdir =
-        match Path_in_workspace.parent path with
+        match Relative_path.parent path with
         | None -> None [@coverage off]
         | Some parent_dir as some ->
           (match is_directory_exn ~path:parent_dir with
