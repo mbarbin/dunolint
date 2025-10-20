@@ -21,9 +21,9 @@
 
 (** Paths relative to the workspace root, with escaping path prevention.
 
-    This module wraps [Relative_path.t] to provide path operations specific
-    to dunolint's workspace traversal, with additional safety guarantees for
-    escaping paths.
+    This module wraps [Relative_path.t] to provide path operations specific to
+    dunolint's workspace traversal, benefiting from [Relative_path]'s additional
+    safety guarantees for escaping paths.
 
     {1 Purpose}
 
@@ -62,8 +62,8 @@
 
     {1 Relationship to fpath-base}
 
-    This module anticipates upcoming changes to the [Relative_path] module in
-    the fpath-base library (see fpath-base v0.4.0+). The upstream library will:
+    This module builds upon the [Relative_path] module in the fpath-base library
+    (see fpath-base v0.4.0+). The upstream library does:
 
     - Reject escaping paths in [Relative_path.of_fpath], [Relative_path.of_string],
       etc.
@@ -72,84 +72,15 @@
     - Add runtime checks in operations like [Relative_path.extend] to prevent
       creating escaping paths
 
-    For the time being, we implement our own wrapper that provides these
-    guarantees, using [check_escape_path_exn] to validate paths. When the
-    upstream changes are released, this module can be simplified to rely on
-    the upstream guarantees.
+    In this module we rely on the upstream guarantees.
 
     See [fpath-base/doc/docs/explanation/path-normalization.md] for detailed
-    documentation of the upstream approach.
-
-    {1 Migration Note}
-
-    Once fpath-base v0.4.0+ is released with escaping path rejection built-in,
-    the explicit [check_escape_path_exn] calls in this module can be removed,
-    as the upstream [Relative_path] module will guarantee that no escaping
-    paths can be constructed. *)
+    documentation of the upstream approach. *)
 
 type t = Relative_path.t
 
-(** [check_escape_path_exn t] validates that path [t] does not escape upward.
-
-    Raises [Invalid_argument] if [t] contains leading [".."] segments after
-    normalization (i.e., if it is an escaping path).
-
-    This function is used internally to validate results of path operations.
-    It will become unnecessary once fpath-base v0.4.0+ guarantees that
-    [Relative_path.t] values cannot be escaping paths.
-
-    {b Examples:}
-
-    These would raise [Invalid_argument]:
-    {[
-      check_escape_path_exn (Relative_path.v "..");
-      (* escapes upward *)
-      check_escape_path_exn (Relative_path.v "a/../..")
-      (* normalizes to ".." *)
-    ]}
-
-    These are OK:
-    {[
-      check_escape_path_exn (Relative_path.v "a/b");
-      (* descends only *)
-      check_escape_path_exn (Relative_path.v "a/../b")
-      (* normalizes to "b" *)
-    ]} *)
-val check_escape_path_exn : Relative_path.t -> unit
-
-(** [chop_prefix t ~prefix] removes the prefix [prefix] from path [t].
-
-    Returns:
-    - [Some result] where [result] is [t] with [prefix] removed from the start
-    - [Some t] (unchanged) when [prefix] is [empty] - removing nothing returns
-      the original path
-    - [None] if [prefix] is not actually a prefix of [t]
-
-    Note: This operation works on path segments, not string prefixes.
-    For example, ["foo/bar-baz"] does not have prefix ["foo/bar"]. *)
-val chop_prefix : t -> prefix:Relative_path.t -> t option
-
-(** [parent t] returns the parent directory of path [t], or [None] if [t] has
-    no parent.
-
-    Returns [None] when:
-    - [t] is equal to [empty] (the path ["./"])
-
-    Raises [Invalid_argument] if [t] is an escaping path (contains leading [".."]
-    after normalization). This should not occur for paths constructed through
-    this module's API, as escaping paths are rejected during construction.
-
-    {b Note}: This behavior prevents infinite loops that occurred in
-    previous versions where [parent empty] would return ["../"], creating
-    paths that escape unboundedly.
-
-    If you need to navigate upward through parent directories (including
-    above the starting point), use [Absolute_path.parent] or work with
-    [Fpath.t] directly. *)
-val parent : t -> t option
-
-(** [ancestors_autoloading_dirs ~path] returns all ancestor directories of [path],
-    from the workspace root down to the parent of [path].
+(** [ancestors_autoloading_dirs ~path] returns all ancestor directories of
+    [path], from the workspace root down to the parent of [path].
 
     This function is specifically designed for config autoloading: it returns
     the list of directories that should be checked for dunolint configuration
