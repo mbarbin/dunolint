@@ -39,24 +39,27 @@ let%expect_test "check_escape_path_exn - valid paths" =
 ;;
 
 let%expect_test "check_escape_path_exn - escaping paths raise" =
-  (* Escaping paths should raise Invalid_argument *)
+  (* Escaping paths should raise [Invalid_argument]. *)
   let test_raise path_str =
-    let path = Relative_path.v path_str in
-    require_does_raise [%here] (fun () -> Path_in_workspace.check_escape_path_exn path)
+    require_does_raise [%here] (fun () ->
+      Path_in_workspace.check_escape_path_exn (Relative_path.v path_str))
   in
   test_raise "..";
   [%expect
-    {| (Invalid_argument "'../': relative path escapes upward past starting point") |}];
+    {| (Invalid_argument "Relative_path.v: path \"..\" escapes above starting point") |}];
   test_raise "../config";
   [%expect
     {|
     (Invalid_argument
-     "'../config': relative path escapes upward past starting point")
+     "Relative_path.v: path \"../config\" escapes above starting point")
     |}];
   test_raise "a/../..";
   (* Normalizes to ".." *)
   [%expect
-    {| (Invalid_argument "'../': relative path escapes upward past starting point") |}]
+    {|
+    (Invalid_argument
+     "Relative_path.v: path \"a/../..\" escapes above starting point")
+    |}]
 ;;
 
 let%expect_test "parent - basic cases" =
@@ -83,26 +86,23 @@ let%expect_test "parent - basic cases" =
 
 let%expect_test "parent - escaping paths raise" =
   let test path_str =
-    let path = Relative_path.v path_str in
-    require_does_raise [%here] (fun () -> Path_in_workspace.parent path)
+    require_does_raise [%here] (fun () ->
+      Path_in_workspace.parent (Relative_path.v path_str))
   in
   test "..";
   [%expect
-    {|
-    (Invalid_argument
-     "'../../': relative path escapes upward past starting point")
-    |}];
+    {| (Invalid_argument "Relative_path.v: path \"..\" escapes above starting point") |}];
   test "../..";
   [%expect
     {|
     (Invalid_argument
-     "'../../../': relative path escapes upward past starting point")
+     "Relative_path.v: path \"../..\" escapes above starting point")
     |}];
   test "../../config";
   [%expect
     {|
     (Invalid_argument
-     "'../../': relative path escapes upward past starting point")
+     "Relative_path.v: path \"../../config\" escapes above starting point")
     |}]
 ;;
 
@@ -194,18 +194,19 @@ let%expect_test "ancestors_autoloading_dirs - ordering" =
 
 let%expect_test "ancestors_autoloading_dirs - escaping paths raise" =
   let test path_str =
-    let path = Relative_path.v path_str in
     require_does_raise [%here] (fun () ->
-      ignore (Path_in_workspace.ancestors_autoloading_dirs ~path : Relative_path.t list))
+      ignore
+        (Path_in_workspace.ancestors_autoloading_dirs ~path:(Relative_path.v path_str)
+         : Relative_path.t list))
   in
   test "..";
   [%expect
-    {| (Invalid_argument "'../': relative path escapes upward past starting point") |}];
+    {| (Invalid_argument "Relative_path.v: path \"..\" escapes above starting point") |}];
   test "../config/file.ml";
   [%expect
     {|
     (Invalid_argument
-     "'../config/file.ml': relative path escapes upward past starting point")
+     "Relative_path.v: path \"../config/file.ml\" escapes above starting point")
     |}]
 ;;
 
@@ -274,19 +275,19 @@ let%expect_test "paths_to_check_for_skip_predicates - matches CLI behavior" =
 
 let%expect_test "paths_to_check_for_skip_predicates - escaping paths raise" =
   let test path_str =
-    let path = Relative_path.v path_str in
     require_does_raise [%here] (fun () ->
       ignore
-        (Path_in_workspace.paths_to_check_for_skip_predicates ~path
+        (Path_in_workspace.paths_to_check_for_skip_predicates
+           ~path:(Relative_path.v path_str)
          : Relative_path.t list))
   in
   test "..";
   [%expect
-    {| (Invalid_argument "'../': relative path escapes upward past starting point") |}];
+    {| (Invalid_argument "Relative_path.v: path \"..\" escapes above starting point") |}];
   test "../config";
   [%expect
     {|
     (Invalid_argument
-     "'../config': relative path escapes upward past starting point")
+     "Relative_path.v: path \"../config\" escapes above starting point")
     |}]
 ;;

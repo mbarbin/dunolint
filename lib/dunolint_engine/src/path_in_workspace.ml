@@ -29,7 +29,8 @@ let check_escape_path_exn (t : t) =
   then
     invalid_arg
       (Printf.sprintf
-         "'%s': relative path escapes upward past starting point"
+         "Path_in_workspace.check_escape_path_exn: path '%s' escapes upward past \
+          starting point"
          (Relative_path.to_string t))
 ;;
 
