@@ -59,5 +59,6 @@ simulate lint errors.
     (library
   -| (name bar))
   +| (name foo))
+  
   Error: Linting check failed: Exiting with unaddressed linting errors.
   [123]

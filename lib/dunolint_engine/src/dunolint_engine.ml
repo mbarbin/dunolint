@@ -266,7 +266,7 @@ let materialize t =
   let exception Quit in
   try
     List.iteri edited_files ~f:(fun i { path; original_contents; new_contents } ->
-      if i > 0 then print_endline "";
+      if i > 0 || Err.had_errors () then print_endline "";
       let should_mkdir =
         match Path_in_workspace.parent path with
         | None -> None [@coverage off]
@@ -509,9 +509,10 @@ let run ?root_configs ~running_mode f =
     | Dry_run | Force_yes | Interactive -> ()
     | Check ->
       if not (Hashtbl.is_empty t.edited_files)
-      then
+      then (
+        if Err.error_count () = 0 then print_endline "";
         Err.error
-          [ Pp.text "Linting check failed: Exiting with unaddressed linting errors." ]
+          [ Pp.text "Linting check failed: Exiting with unaddressed linting errors." ])
   in
   result
 ;;
