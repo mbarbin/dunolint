@@ -11,7 +11,7 @@ bug-reports: "https://github.com/mbarbin/dunolint/issues"
 depends: [
   "ocaml" {>= "5.3" & < "5.4~"}
   "dune" {>= "3.17" & >= "3.20"}
-  "ocamlformat" {= "0.27.0"}
+  "ocamlformat" {= "0.28.1"}
   "base" {>= "v0.17"}
   "bisect_ppx" {>= "2.8.3"}
   "cmdlang" {>= "0.0.9"}
