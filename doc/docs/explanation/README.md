@@ -1,6 +1,6 @@
 # Explanation
 
-Welcome to the Explanation section of the dunolint documentation. Here, we delve into the details of how dunolint works, its design principles, and our future plans.
+Welcome to the Explanation section of the `dunolint` documentation. This section covers how `dunolint` works, its design principles, and our future plans.
 
 ## Architecture
 
