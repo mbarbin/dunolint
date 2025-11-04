@@ -9,7 +9,7 @@ homepage: "https://github.com/mbarbin/dunolint"
 doc: "https://mbarbin.github.io/dunolint/"
 bug-reports: "https://github.com/mbarbin/dunolint/issues"
 depends: [
-  "ocaml" {>= "5.3" & < "5.4~"}
+  "ocaml" {>= "5.3"}
   "dune" {>= "3.17" & >= "3.20"}
   "ocamlformat" {= "0.28.1"}
   "base" {>= "v0.17"}
