@@ -19,12 +19,18 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-type t =
-  | Dry_run
-  | Check
-  | Force_yes
-  | Interactive
-[@@deriving compare, equal, sexp_of]
+module T = struct
+  [@@@coverage off]
+
+  type t =
+    | Dry_run
+    | Check
+    | Force_yes
+    | Interactive
+  [@@deriving compare, equal, sexp_of]
+end
+
+include T
 
 let default = Interactive
 

@@ -155,9 +155,7 @@
  (synopsis "Tests for dunolint")
  (depends
   (ocaml
-   (and
-    (>= 5.3)
-    (< 5.4~)))
+   (>= 5.3))
   (dune
    (>= 3.20))
   (base
@@ -256,9 +254,7 @@
  (allow_empty) ; The package is attached to stanza in doc/ however dune doesn't see it.
  (depends
   (ocaml
-   (and
-    (>= 5.3)
-    (< 5.4~)))
+   (>= 5.3))
   (dune
    (>= 3.20))
   (ocamlformat
