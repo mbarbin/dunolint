@@ -28,7 +28,7 @@ let%expect_test "lint" =
   Out_channel.write_all
     "dune-project"
     ~data:
-      {|
+      ({|
 (lang dune 3.17)
 
 (name dunolint)
@@ -36,7 +36,8 @@ let%expect_test "lint" =
 (implicit_transitive_deps true)
 
 (generate_opam_files)
-|};
+|}
+       |> String.lstrip);
   (* In this section we exercise some ways dunolint_engine can be used as a library. *)
   Dunolint_engine.lint_dune_project_file
     t
@@ -105,14 +106,13 @@ let%expect_test "lint" =
   [%expect
     {|
     dry-run: Would edit file "dune-project":
-    -1,8 +1,7
+    -1,7 +1,7
+    -|(lang dune 3.17)
     +|(lang dune 3.19)
 
-    -|(lang dune 3.17)
+    -|(name dunolint)
     +|(name a-better-name)
 
-    -|(name dunolint)
-    -|
     -|(implicit_transitive_deps true)
     +|(implicit_transitive_deps false)
 
@@ -241,12 +241,7 @@ let%expect_test "invalid files" =
   Err.For_test.protect (fun () ->
     let t = Dunolint_engine.create ~running_mode:Dry_run () in
     Unix.mkdir "invalid" ~perm:0o755;
-    Out_channel.write_all
-      "dune-project"
-      ~data:
-        {|
-(lang dune 3.17)
-|};
+    Out_channel.write_all "dune-project" ~data:"(lang dune 3.17)\n";
     Out_channel.write_all "invalid/dune" ~data:"(invalid";
     Out_channel.write_all "invalid/dune-project" ~data:"(invalid";
     Dunolint_engine.lint_dune_file
@@ -284,10 +279,22 @@ let%expect_test "invalid files" =
     Dunolint_engine.lint_dune_project_file
       t
       ~path:(Relative_path.v "dune-project")
-      ~f:(ignore : Dune_project_linter.Stanza.t Dunolinter.Stanza.t -> unit);
+      ~f:(fun stanza ->
+        match Dunolinter.match_stanza stanza with
+        | Dune_project_linter.Dune_lang_version stanza ->
+          Dune_project_linter.Dune_lang_version.set_dune_lang_version
+            stanza
+            ~dune_lang_version:(Dune_project.Dune_lang_version.create (3, 20))
+        | _ -> assert false);
     [%expect {||}];
     Dunolint_engine.materialize t;
-    [%expect {| dry-run: Would edit file "dune-project": |}];
+    [%expect
+      {|
+      dry-run: Would edit file "dune-project":
+      -1,1 +1,1
+      -|(lang dune 3.17)
+      +|(lang dune 3.20)
+      |}];
     ());
   [%expect {| [123] |}];
   ()
