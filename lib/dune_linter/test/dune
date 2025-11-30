@@ -24,6 +24,7 @@
   base
   dune_linter
   dunolint-lib-base
+  dunolint_engine
   dunolinter
   expect_test_helpers_core.expect_test_helpers_base
   file-rewriter
