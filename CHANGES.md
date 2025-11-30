@@ -2,7 +2,7 @@
 
 ### Changed
 
-- Improve some format & diff in some internal tests (#PR, @mbarbin).
+- Improve some format & diff in some internal tests (#137, @mbarbin).
 
 ## 0.0.20251006 (2025-10-06)
 
