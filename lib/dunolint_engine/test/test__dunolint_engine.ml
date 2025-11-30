@@ -28,7 +28,7 @@ let%expect_test "lint" =
   Out_channel.write_all
     "dune-project"
     ~data:
-      {|
+      ({|
 (lang dune 3.17)
 
 (name dunolint)
@@ -36,7 +36,8 @@ let%expect_test "lint" =
 (implicit_transitive_deps true)
 
 (generate_opam_files)
-|};
+|}
+       |> String.lstrip);
   (* In this section we exercise some ways dunolint_engine can be used as a library. *)
   Dunolint_engine.lint_dune_project_file
     t
@@ -105,14 +106,13 @@ let%expect_test "lint" =
   [%expect
     {|
     dry-run: Would edit file "dune-project":
-    -1,8 +1,7
+    -1,7 +1,7
+    -|(lang dune 3.17)
     +|(lang dune 3.19)
 
-    -|(lang dune 3.17)
+    -|(name dunolint)
     +|(name a-better-name)
 
-    -|(name dunolint)
-    -|
     -|(implicit_transitive_deps true)
     +|(implicit_transitive_deps false)
 
