@@ -1,3 +1,9 @@
+## 0.0.202XXXXX (unreleased)
+
+### Changed
+
+- Improve some format & diff in some internal tests (#PR, @mbarbin).
+
 ## 0.0.20251006 (2025-10-06)
 
 ### Added
