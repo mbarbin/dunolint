@@ -487,13 +487,15 @@ let enforce (((sexps_rewriter, _), _) as input) conditions =
 let enforce_diff (((sexps_rewriter, _), _) as input) conditions =
   Sexps_rewriter.reset sexps_rewriter;
   let original =
-    Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn
+    Dunolint_engine.format_dune_file
+      ~new_contents:(Sexps_rewriter.contents sexps_rewriter)
   in
   enforce_internal input conditions;
   let changed =
-    Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn
+    Dunolint_engine.format_dune_file
+      ~new_contents:(Sexps_rewriter.contents sexps_rewriter)
   in
-  Expect_test_patdiff.print_patdiff_s original changed
+  Expect_test_patdiff.print_patdiff original changed
 ;;
 
 let%expect_test "enforce" =
@@ -625,11 +627,11 @@ let%expect_test "add_name_via_enforce" =
   test [ name (equals main) ];
   [%expect
     {|
-    -1,1 +1,3
-    -|(library (public_name my-cli))
-    +|(library
-    +|  (public_name my-cli)
-    +|  (name        main))
+    -1,2 +1,3
+      (library
+    -| (public_name my-cli))
+    +| (public_name my-cli)
+    +| (name main))
     |}];
   (* The invariant will be undefined if the field isn't there. *)
   test [ name (is_prefix "hey") ];
@@ -640,11 +642,11 @@ let%expect_test "add_name_via_enforce" =
   test [ name (and_ [ equals main; is_prefix "ma" ]) ];
   [%expect
     {|
-    -1,1 +1,3
-    -|(library (public_name my-cli))
-    +|(library
-    +|  (public_name my-cli)
-    +|  (name        main))
+    -1,2 +1,3
+      (library
+    -| (public_name my-cli))
+    +| (public_name my-cli)
+    +| (name main))
     |}];
   (* Currently the application of invariant is not idempotent. See how, at the
      end of the application of this chain of [and_] the invariant no longer
@@ -653,11 +655,11 @@ let%expect_test "add_name_via_enforce" =
   test [ name (and_ [ equals main; is_prefix "hey_" ]) ];
   [%expect
     {|
-    -1,1 +1,3
-    -|(library (public_name my-cli))
-    +|(library
-    +|  (public_name my-cli)
-    +|  (name        hey_main))
+    -1,2 +1,3
+      (library
+    -| (public_name my-cli))
+    +| (public_name my-cli)
+    +| (name hey_main))
     |}];
   (* When going through other blang constructs, currently we do not pick initial
      values. *)
@@ -677,11 +679,11 @@ let%expect_test "add_name_via_enforce" =
   test [ public_name (equals (Dune.Library.Public_name.v "public_lib")) ];
   [%expect
     {|
-    -1,1 +1,3
-    -|(library (name my_lib))
-    +|(library
-    +|  (name        my_lib)
-    +|  (public_name public_lib))
+    -1,2 +1,3
+      (library
+    -| (name my_lib))
+    +| (name my_lib)
+    +| (public_name public_lib))
     |}];
   test [ public_name (is_prefix "prefix_") ];
   [%expect {||}];
@@ -840,75 +842,87 @@ let%expect_test "remove_fields" =
   test [ not_ (has_field `instrumentation) ];
   [%expect
     {|
-    -1,7 +1,6
+    -1,9 +1,7
       (library
-        (name        my-lib)
-        (public_name my-public-lib)
-        (modes byte native)
-    -|  (instrumentation (backend bisect_ppx))
-        (lint (pps ppx_linter))
-        (preprocess no_preprocessing))
+       (name my-lib)
+       (public_name my-public-lib)
+       (modes byte native)
+    -| (instrumentation
+    -|  (backend bisect_ppx))
+       (lint
+        (pps ppx_linter))
+       (preprocess no_preprocessing))
     |}];
   test [ not_ (has_field `lint) ];
   [%expect
     {|
-    -1,7 +1,6
+    -1,9 +1,7
       (library
-        (name        my-lib)
-        (public_name my-public-lib)
-        (modes byte native)
-        (instrumentation (backend bisect_ppx))
-    -|  (lint            (pps     ppx_linter))
-        (preprocess no_preprocessing))
+       (name my-lib)
+       (public_name my-public-lib)
+       (modes byte native)
+       (instrumentation
+        (backend bisect_ppx))
+    -| (lint
+    -|  (pps ppx_linter))
+       (preprocess no_preprocessing))
     |}];
   test [ not_ (has_field `preprocess) ];
   [%expect
     {|
-    -1,7 +1,6
+    -1,9 +1,8
       (library
-        (name        my-lib)
-        (public_name my-public-lib)
-        (modes byte native)
-        (instrumentation (backend bisect_ppx))
-    -|  (lint            (pps     ppx_linter))
-    -|  (preprocess no_preprocessing))
-    +|  (lint            (pps     ppx_linter)))
+       (name my-lib)
+       (public_name my-public-lib)
+       (modes byte native)
+       (instrumentation
+        (backend bisect_ppx))
+       (lint
+    -|  (pps ppx_linter))
+    -| (preprocess no_preprocessing))
+    +|  (pps ppx_linter)))
     |}];
   test [ not_ (has_field `modes) ];
   [%expect
     {|
-    -1,7 +1,6
+    -1,9 +1,8
       (library
-        (name        my-lib)
-        (public_name my-public-lib)
-    -|  (modes byte native)
-        (instrumentation (backend bisect_ppx))
-        (lint            (pps     ppx_linter))
-        (preprocess no_preprocessing))
+       (name my-lib)
+       (public_name my-public-lib)
+    -| (modes byte native)
+       (instrumentation
+        (backend bisect_ppx))
+       (lint
+        (pps ppx_linter))
+       (preprocess no_preprocessing))
     |}];
   test [ not_ (has_field `name) ];
   [%expect
     {|
-    -1,7 +1,6
+    -1,9 +1,8
       (library
-    -|  (name        my-lib)
-        (public_name my-public-lib)
-        (modes byte native)
-        (instrumentation (backend bisect_ppx))
-        (lint            (pps     ppx_linter))
-        (preprocess no_preprocessing))
+    -| (name my-lib)
+       (public_name my-public-lib)
+       (modes byte native)
+       (instrumentation
+        (backend bisect_ppx))
+       (lint
+        (pps ppx_linter))
+       (preprocess no_preprocessing))
     |}];
   test [ not_ (has_field `public_name) ];
   [%expect
     {|
-    -1,7 +1,6
+    -1,9 +1,8
       (library
-        (name my-lib)
-    -|  (public_name my-public-lib)
-        (modes byte native)
-        (instrumentation (backend bisect_ppx))
-        (lint            (pps     ppx_linter))
-        (preprocess no_preprocessing))
+       (name my-lib)
+    -| (public_name my-public-lib)
+       (modes byte native)
+       (instrumentation
+        (backend bisect_ppx))
+       (lint
+        (pps ppx_linter))
+       (preprocess no_preprocessing))
     |}];
   ()
 ;;
@@ -965,67 +979,78 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
   test [ public_name (equals (Dune.Library.Public_name.v "new.name")) ];
   [%expect
     {|
-    -1,7 +1,7
+    -1,9 +1,9
       (library
-        (name        my-lib)
-    -|  (public_name my-public-lib)
-    +|  (public_name new.name)
-        (modes byte native)
-        (instrumentation (backend bisect_ppx))
-        (lint            (pps     ppx_linter))
-        (preprocess no_preprocessing))
+       (name my-lib)
+    -| (public_name my-public-lib)
+    +| (public_name new.name)
+       (modes byte native)
+       (instrumentation
+        (backend bisect_ppx))
+       (lint
+        (pps ppx_linter))
+       (preprocess no_preprocessing))
     |}];
   test [ public_name (is_prefix "lib."); public_name (is_suffix "-pub") ];
   [%expect
     {|
-    -1,7 +1,7
+    -1,9 +1,9
       (library
-        (name        my-lib)
-    -|  (public_name my-public-lib)
-    +|  (public_name lib.my-public-lib-pub)
-        (modes byte native)
-        (instrumentation (backend bisect_ppx))
-        (lint            (pps     ppx_linter))
-        (preprocess no_preprocessing))
+       (name my-lib)
+    -| (public_name my-public-lib)
+    +| (public_name lib.my-public-lib-pub)
+       (modes byte native)
+       (instrumentation
+        (backend bisect_ppx))
+       (lint
+        (pps ppx_linter))
+       (preprocess no_preprocessing))
     |}];
   test [ instrumentation (backend (Dune.Instrumentation.Backend.Name.v "coverage")) ];
   [%expect
     {|
-    -1,7 +1,7
+    -1,9 +1,9
       (library
-        (name        my-lib)
-        (public_name my-public-lib)
-        (modes byte native)
-    -|  (instrumentation (backend bisect_ppx))
-    +|  (instrumentation (backend coverage))
-        (lint            (pps     ppx_linter))
-        (preprocess no_preprocessing))
+       (name my-lib)
+       (public_name my-public-lib)
+       (modes byte native)
+       (instrumentation
+    -|  (backend bisect_ppx))
+    +|  (backend coverage))
+       (lint
+        (pps ppx_linter))
+       (preprocess no_preprocessing))
     |}];
   test [ lint (pps (pp (Dune.Pp.Name.v "ppx_deriving"))) ];
   [%expect
     {|
-    -1,7 +1,7
+    -1,9 +1,9
       (library
-        (name        my-lib)
-        (public_name my-public-lib)
-        (modes byte native)
-        (instrumentation (backend bisect_ppx))
-    -|  (lint            (pps     ppx_linter))
-    +|  (lint (pps ppx_deriving ppx_linter))
-        (preprocess no_preprocessing))
+       (name my-lib)
+       (public_name my-public-lib)
+       (modes byte native)
+       (instrumentation
+        (backend bisect_ppx))
+       (lint
+    -|  (pps ppx_linter))
+    +|  (pps ppx_deriving ppx_linter))
+       (preprocess no_preprocessing))
     |}];
   test [ preprocess (pps (pp (Dune.Pp.Name.v "ppx_compare"))) ];
   [%expect
     {|
-    -1,7 +1,7
+    -1,9 +1,10
       (library
-        (name        my-lib)
-        (public_name my-public-lib)
-        (modes byte native)
-        (instrumentation (backend bisect_ppx))
-        (lint            (pps     ppx_linter))
-    -|  (preprocess no_preprocessing))
-    +|  (preprocess      (pps     ppx_compare)))
+       (name my-lib)
+       (public_name my-public-lib)
+       (modes byte native)
+       (instrumentation
+        (backend bisect_ppx))
+       (lint
+        (pps ppx_linter))
+    -| (preprocess no_preprocessing))
+    +| (preprocess
+    +|  (pps ppx_compare)))
     |}];
   ()
 ;;
