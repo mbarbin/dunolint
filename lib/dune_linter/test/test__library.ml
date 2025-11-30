@@ -495,7 +495,7 @@ let enforce_diff (((sexps_rewriter, _), _) as input) conditions =
     Dunolint_engine.format_dune_file
       ~new_contents:(Sexps_rewriter.contents sexps_rewriter)
   in
-  Expect_test_patdiff.print_patdiff original changed
+  Expect_test_patdiff.print_patdiff original changed ~context:3
 ;;
 
 let%expect_test "enforce" =
@@ -842,8 +842,7 @@ let%expect_test "remove_fields" =
   test [ not_ (has_field `instrumentation) ];
   [%expect
     {|
-    -1,9 +1,7
-      (library
+    -2,8 +2,6
        (name my-lib)
        (public_name my-public-lib)
        (modes byte native)
@@ -856,10 +855,7 @@ let%expect_test "remove_fields" =
   test [ not_ (has_field `lint) ];
   [%expect
     {|
-    -1,9 +1,7
-      (library
-       (name my-lib)
-       (public_name my-public-lib)
+    -4,6 +4,4
        (modes byte native)
        (instrumentation
         (backend bisect_ppx))
@@ -870,11 +866,7 @@ let%expect_test "remove_fields" =
   test [ not_ (has_field `preprocess) ];
   [%expect
     {|
-    -1,9 +1,8
-      (library
-       (name my-lib)
-       (public_name my-public-lib)
-       (modes byte native)
+    -5,5 +5,4
        (instrumentation
         (backend bisect_ppx))
        (lint
@@ -885,7 +877,7 @@ let%expect_test "remove_fields" =
   test [ not_ (has_field `modes) ];
   [%expect
     {|
-    -1,9 +1,8
+    -1,7 +1,6
       (library
        (name my-lib)
        (public_name my-public-lib)
@@ -893,36 +885,27 @@ let%expect_test "remove_fields" =
        (instrumentation
         (backend bisect_ppx))
        (lint
-        (pps ppx_linter))
-       (preprocess no_preprocessing))
     |}];
   test [ not_ (has_field `name) ];
   [%expect
     {|
-    -1,9 +1,8
+    -1,5 +1,4
       (library
     -| (name my-lib)
        (public_name my-public-lib)
        (modes byte native)
        (instrumentation
-        (backend bisect_ppx))
-       (lint
-        (pps ppx_linter))
-       (preprocess no_preprocessing))
     |}];
   test [ not_ (has_field `public_name) ];
   [%expect
     {|
-    -1,9 +1,8
+    -1,6 +1,5
       (library
        (name my-lib)
     -| (public_name my-public-lib)
        (modes byte native)
        (instrumentation
         (backend bisect_ppx))
-       (lint
-        (pps ppx_linter))
-       (preprocess no_preprocessing))
     |}];
   ()
 ;;
@@ -979,7 +962,7 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
   test [ public_name (equals (Dune.Library.Public_name.v "new.name")) ];
   [%expect
     {|
-    -1,9 +1,9
+    -1,6 +1,6
       (library
        (name my-lib)
     -| (public_name my-public-lib)
@@ -987,14 +970,11 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
        (modes byte native)
        (instrumentation
         (backend bisect_ppx))
-       (lint
-        (pps ppx_linter))
-       (preprocess no_preprocessing))
     |}];
   test [ public_name (is_prefix "lib."); public_name (is_suffix "-pub") ];
   [%expect
     {|
-    -1,9 +1,9
+    -1,6 +1,6
       (library
        (name my-lib)
     -| (public_name my-public-lib)
@@ -1002,16 +982,11 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
        (modes byte native)
        (instrumentation
         (backend bisect_ppx))
-       (lint
-        (pps ppx_linter))
-       (preprocess no_preprocessing))
     |}];
   test [ instrumentation (backend (Dune.Instrumentation.Backend.Name.v "coverage")) ];
   [%expect
     {|
-    -1,9 +1,9
-      (library
-       (name my-lib)
+    -3,7 +3,7
        (public_name my-public-lib)
        (modes byte native)
        (instrumentation
@@ -1024,11 +999,7 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
   test [ lint (pps (pp (Dune.Pp.Name.v "ppx_deriving"))) ];
   [%expect
     {|
-    -1,9 +1,9
-      (library
-       (name my-lib)
-       (public_name my-public-lib)
-       (modes byte native)
+    -5,5 +5,5
        (instrumentation
         (backend bisect_ppx))
        (lint
@@ -1039,12 +1010,7 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
   test [ preprocess (pps (pp (Dune.Pp.Name.v "ppx_compare"))) ];
   [%expect
     {|
-    -1,9 +1,10
-      (library
-       (name my-lib)
-       (public_name my-public-lib)
-       (modes byte native)
-       (instrumentation
+    -6,4 +6,5
         (backend bisect_ppx))
        (lint
         (pps ppx_linter))

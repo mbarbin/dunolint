@@ -310,7 +310,7 @@ let enforce_diff (((sexps_rewriter, _), _) as input) conditions =
     Dunolint_engine.format_dune_file
       ~new_contents:(Sexps_rewriter.contents sexps_rewriter)
   in
-  Expect_test_patdiff.print_patdiff original changed
+  Expect_test_patdiff.print_patdiff original changed ~context:3
 ;;
 
 let%expect_test "enforce" =
@@ -636,9 +636,7 @@ let%expect_test "remove_fields" =
   test [ not_ (has_field `lint) ];
   [%expect
     {|
-    -1,8 +1,6
-      (executable
-       (name my-exe)
+    -3,6 +3,4
        (public_name my-cli)
        (instrumentation
         (backend bisect_ppx))
@@ -649,10 +647,7 @@ let%expect_test "remove_fields" =
   test [ not_ (has_field `preprocess) ];
   [%expect
     {|
-    -1,8 +1,7
-      (executable
-       (name my-exe)
-       (public_name my-cli)
+    -4,5 +4,4
        (instrumentation
         (backend bisect_ppx))
        (lint
@@ -663,28 +658,23 @@ let%expect_test "remove_fields" =
   test [ not_ (has_field `name) ];
   [%expect
     {|
-    -1,8 +1,7
+    -1,5 +1,4
       (executable
     -| (name my-exe)
        (public_name my-cli)
        (instrumentation
         (backend bisect_ppx))
-       (lint
-        (pps ppx_linter))
-       (preprocess no_preprocessing))
     |}];
   test [ not_ (has_field `public_name) ];
   [%expect
     {|
-    -1,8 +1,7
+    -1,6 +1,5
       (executable
        (name my-exe)
     -| (public_name my-cli)
        (instrumentation
         (backend bisect_ppx))
        (lint
-        (pps ppx_linter))
-       (preprocess no_preprocessing))
     |}];
   ()
 ;;
@@ -737,7 +727,7 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
   test [ public_name (equals (Dune.Executable.Public_name.v "new-name")) ];
   [%expect
     {|
-    -1,8 +1,8
+    -1,6 +1,6
       (executable
        (name my-exe)
     -| (public_name my-cli)
@@ -745,13 +735,11 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
        (instrumentation
         (backend bisect_ppx))
        (lint
-        (pps ppx_linter))
-       (preprocess no_preprocessing))
     |}];
   test [ public_name (is_prefix "cli-"); public_name (is_suffix "-pub") ];
   [%expect
     {|
-    -1,8 +1,8
+    -1,6 +1,6
       (executable
        (name my-exe)
     -| (public_name my-cli)
@@ -759,14 +747,11 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
        (instrumentation
         (backend bisect_ppx))
        (lint
-        (pps ppx_linter))
-       (preprocess no_preprocessing))
     |}];
   test [ instrumentation (backend (Dune.Instrumentation.Backend.Name.v "coverage")) ];
   [%expect
     {|
-    -1,8 +1,8
-      (executable
+    -2,7 +2,7
        (name my-exe)
        (public_name my-cli)
        (instrumentation
@@ -779,10 +764,7 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
   test [ lint (pps (pp (Dune.Pp.Name.v "ppx_deriving"))) ];
   [%expect
     {|
-    -1,8 +1,8
-      (executable
-       (name my-exe)
-       (public_name my-cli)
+    -4,5 +4,5
        (instrumentation
         (backend bisect_ppx))
        (lint
@@ -793,11 +775,7 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
   test [ preprocess (pps (pp (Dune.Pp.Name.v "ppx_compare"))) ];
   [%expect
     {|
-    -1,8 +1,9
-      (executable
-       (name my-exe)
-       (public_name my-cli)
-       (instrumentation
+    -5,4 +5,5
         (backend bisect_ppx))
        (lint
         (pps ppx_linter))
