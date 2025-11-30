@@ -34,6 +34,7 @@ let original_contents =
 ;; Atoms are ignored by dunolint (probably doesn't exists in dune).
 atom
 |}
+  |> String.lstrip
 ;;
 
 let print_diff t =
@@ -63,8 +64,7 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -1,5 +1,5
-
+    -1,4 +1,4
     -|(lang dune 3.17)
     +|(lang dune 3.19)
 
@@ -103,8 +103,7 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -1,9 +1,9
-
+    -1,8 +1,8
     -|(lang dune 3.17)
     +|(lang dune 3.20)
 
@@ -143,8 +142,7 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -1,11 +1,10
-
+    -1,10 +1,9
     -|(lang dune 3.17)
     +|(lang dune 3.20)
 
@@ -188,8 +186,7 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -1,7 +1,7
-
+    -1,6 +1,6
       (lang dune 3.17)
 
     -|(name dunolint)
