@@ -298,7 +298,8 @@ let enforce_pp t ~pp_name =
 ;;
 
 let enforce_flag t ~flag:{ Dunolint.Dune.Pps.Predicate.Flag.name; param; applies_to } =
-  With_return.with_return (fun { return : Dunolinter.Enforce_result.t -> unit } ->
+  let exception Enforce_failure in
+  match
     let handled =
       exists_arg t ~f:(function
         | Mutable_arg.Pp { pp_name = _ } -> false
@@ -315,7 +316,7 @@ let enforce_flag t ~flag:{ Dunolint.Dune.Pps.Predicate.Flag.name; param; applies
                  | Some _ -> ()
                  | None ->
                    (* The out-edge of [return] can't be covered. *)
-                   return Fail [@coverage off])
+                   Stdlib.raise_notrace Enforce_failure [@coverage off])
             in
             let () =
               match applies_to with
@@ -330,7 +331,7 @@ let enforce_flag t ~flag:{ Dunolint.Dune.Pps.Predicate.Flag.name; param; applies
       match param with
       | `some ->
         (* The out-edge of [return] can't be covered. *)
-        return Fail [@coverage off]
+        Stdlib.raise_notrace Enforce_failure [@coverage off]
       | (`equals _ | `any | `none) as param ->
         let param =
           match param with
@@ -345,8 +346,10 @@ let enforce_flag t ~flag:{ Dunolint.Dune.Pps.Predicate.Flag.name; param; applies
         append_args
           t
           ~entries:
-            [ { Entry.arg = Flag { name; param; applies_to }; eol_comment = None } ]);
-    Ok)
+            [ { Entry.arg = Flag { name; param; applies_to }; eol_comment = None } ])
+  with
+  | () -> Dunolinter.Enforce_result.Ok
+  | exception Enforce_failure -> Dunolinter.Enforce_result.Fail
 ;;
 
 let enforce =
