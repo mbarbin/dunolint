@@ -1,8 +1,21 @@
 ## 0.0.202XXXXX (unreleased)
 
+### Added
+
+- Enabled OCaml `5.4` in CI (#136, @mbarbin).
+- Added new tests (#132, @mbarbin).
+
 ### Changed
 
 - Improve some format & diff in some internal tests (#137, @mbarbin).
+- Upgrade to and require fixes from `fpath-base.0.4.0` (#133, @mbarbin).
+- Made some internal refactors suggested by the Zanuda linter (#130, @mbarbin).
+
+### Removed
+
+- Removed now unused `fpath` dependency from `dunolint-lib` (#142, @mbarbin).
+- Removed deprecated construct `path.equals` (#142, @mbarbin).
+- Removed support for config version `v0` (#141, @mbarbin).
 
 ## 0.0.20251006 (2025-10-06)
 
