@@ -1,6 +1,6 @@
 (library
  (name dunolint_cli_test)
- (public_name dunolint-tests.dunolint_cli_test)
+ (package dunolint-tests)
  (inline_tests)
  (flags
   :standard

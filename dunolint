@@ -19,11 +19,18 @@
  (enforce (dune_project (dune_lang_version (greater_than_or_equal_to 3.17)))))
 
 (rule
+ (cond ((path (glob test/**/src/*)) return)
+  ((path (glob test/**)) (enforce (dune (library (name (is_suffix _test))))))))
+
+(rule
+ (cond
+  ((path (glob test/**))
+   (enforce (dune (library (not (has_field public_name))))))))
+
+(rule
  (cond
   ((path (glob dunolint-config/**))
    (enforce (dune (library (public_name (is_prefix dunolint-tests.))))))
-  ((path (glob test/**/src/*)) return)
-  ((path (glob test/**)) (enforce (dune (library (name (is_suffix _test))))))
   ((path (glob src/dunolint-lib/**))
    (enforce
     (dune
@@ -63,3 +70,8 @@
          (applies_to (pp ppx_js_style)))
         (flag (name -check-doc-comments) (param none)
          (applies_to (pp ppx_js_style)))))))))))
+
+(rule
+ (cond
+  ((path (glob src/dunolint-lib/dunolint/*))
+   (enforce (dune (preprocess no_preprocessing))))))

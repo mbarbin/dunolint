@@ -1,6 +1,6 @@
 (library
  (name dune_project_linter_test)
- (public_name dunolint-tests.dune_project_linter_test)
+ (package dunolint-tests)
  (inline_tests)
  (flags
   :standard
