@@ -35,10 +35,6 @@
  (depends
   (ocaml
    (>= 4.14))
-  (fpath
-   (>= 0.7.3))
-  (fpath-sexp0
-   (>= 0.4.0))
   (re
    (>= 1.8.0))
   (sexplib0
@@ -54,10 +50,6 @@
    (>= v0.16))
   (dunolint-lib
    (= :version))
-  (fpath
-   (>= 0.7.3))
-  (fpath-base
-   (>= 0.4.0))
   (ppx_compare
    (>= v0.16))
   (ppx_enumerate

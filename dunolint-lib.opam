@@ -10,8 +10,6 @@ bug-reports: "https://github.com/mbarbin/dunolint/issues"
 depends: [
   "dune" {>= "3.17"}
   "ocaml" {>= "4.14"}
-  "fpath" {>= "0.7.3"}
-  "fpath-sexp0" {>= "0.4.0"}
   "re" {>= "1.8.0"}
   "sexplib0" {>= "v0.16"}
   "odoc" {with-doc}

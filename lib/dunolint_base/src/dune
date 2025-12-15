@@ -1,22 +1,12 @@
 (library
  (name dunolint_base)
  (public_name dunolint-lib-base)
- (flags
-  :standard
-  -w
-  +a-4-40-41-42-44-45-48-66
-  -warn-error
-  +a
-  -open
-  Base
-  -open
-  Fpath_base)
+ (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a -open Base)
  (libraries
   base
   dunolint-lib
   dunolint-lib.vendor_blang
   dunolint-lib.vendor_vcs
-  fpath-base
   re)
  (instrumentation
   (backend bisect_ppx))
