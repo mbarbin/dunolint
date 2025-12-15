@@ -97,8 +97,7 @@ Attempting to use the construct results in an error:
   File "dunolint", line 5, characters 33-45:
   5 | (rule (cond ((path (glob bar/*)) skip_subtree)))
                                        ^^^^^^^^^^^^
-  Error: The [skip_subtree] construct is not allowed in version 1 of dunolint
-  config.
+  Error: The [skip_subtree] construct is no longer supported.
   [123]
 
 Next we are going to characterize some behavior of the constructs `skip_subtree`

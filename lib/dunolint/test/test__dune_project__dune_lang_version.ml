@@ -56,9 +56,6 @@ let%expect_test "of_sexp" =
      "Invalid version - expected [MAJOR.MINOR]."
      (invalid_sexp (3 19)))
     |}];
-  Dunolint.Private.Sexp_helpers.when_parsing_config_version_0 ~f:(fun () ->
-    test (List [ Atom "3"; Atom "19" ]));
-  [%expect {| 3.19 |}];
   test (Atom "");
   [%expect
     {| (Of_sexp_error "Invalid version - expected [MAJOR.MINOR]." (invalid_sexp "")) |}];

@@ -21,7 +21,7 @@
 
 open Dunolint.Config.Std
 
-let%expect_test "creat" =
+let%expect_test "create" =
   let t = Dunolint.Config.create () in
   print_s [%sexp (t : Dunolint.Config.t)];
   [%expect {| (stanzas (lang dunolint 1.0)) |}];

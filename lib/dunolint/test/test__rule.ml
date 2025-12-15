@@ -66,13 +66,6 @@ let%expect_test "sexp" =
   [%expect {| (enforce 42) |}];
   test `return;
   [%expect {| return |}];
-  require_does_raise [%here] (fun () -> test `skip_subtree);
-  [%expect
-    {|
-    (Of_sexp_error
-     "The [skip_subtree] construct is not allowed in version 1 of dunolint config."
-     (invalid_sexp skip_subtree))
-    |}];
   test (`cond []);
   [%expect {| (cond) |}];
   test (`cond [ Blang.true_, `enforce 42 ]);
@@ -102,8 +95,6 @@ let%expect_test "eval" =
   [%expect {| (enforce 42) |}];
   test `return;
   [%expect {| return |}];
-  test `skip_subtree;
-  [%expect {| skip_subtree |}];
   test (`cond [ Blang.true_, `enforce 42 ]);
   [%expect {| (enforce 42) |}];
   test (`cond [ Blang.base Trilang.Undefined, `enforce 42 ]);

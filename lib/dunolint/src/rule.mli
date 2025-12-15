@@ -24,13 +24,6 @@ type ('predicate, 'invariant) t =
   | `return
     (** [return] stops the evaluation of the rule without trying to enforce any
         invariant. *)
-  | `skip_subtree
-    (** The construct [skip_subtree] is deprecated and will be removed soon.
-        Using it will cause an error during config loading since version "1.0".
-
-        This causes the linter to finish the linting of the current rule,
-        however any remaining rule will be skipped, and the entire subtree will
-        not be linted. *)
   | `cond of ('predicate Blang.t * ('predicate, 'invariant) t) list
   ]
 
@@ -40,30 +33,10 @@ val equal : ('p -> 'p -> bool) -> ('i -> 'i -> bool) -> ('p, 'i) t -> ('p, 'i) t
 val eval
   :  ('predicate, 'invariant) t
   -> f:('predicate -> Trilang.t)
-  -> [ `enforce of 'invariant | `return | `skip_subtree ]
+  -> [ `enforce of 'invariant | `return ]
 
 module Stable : sig
   module V1 : sig
-    type nonrec ('a, 'b) t = ('a, 'b) t
-
-    val compare
-      :  ('p -> 'p -> int)
-      -> ('i -> 'i -> int)
-      -> ('p, 'i) t
-      -> ('p, 'i) t
-      -> int
-
-    val equal
-      :  ('p -> 'p -> bool)
-      -> ('i -> 'i -> bool)
-      -> ('p, 'i) t
-      -> ('p, 'i) t
-      -> bool
-
-    include Sexpable.S2 with type ('p, 'i) t := ('p, 'i) t
-  end
-
-  module V0 : sig
     type nonrec ('a, 'b) t = ('a, 'b) t
 
     val compare

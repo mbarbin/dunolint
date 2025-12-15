@@ -69,14 +69,7 @@ let maybe_autoformat_file ~previous_contents ~new_contents =
     else new_contents)
 ;;
 
-module Visitor_decision = struct
-  (* A subtype of [Dunolint_engine.Visitor_decision] used by [Lint_file]. *)
-  type t =
-    | Continue
-    | Skip_subtree
-end
-
-let lint_stanza ~path ~context ~stanza ~(return : _ With_return.return) =
+let lint_stanza ~path ~context ~stanza =
   let loc =
     Sexps_rewriter.loc
       (Dunolinter.sexps_rewriter stanza)
@@ -98,14 +91,12 @@ let lint_stanza ~path ~context ~stanza ~(return : _ With_return.return) =
                 Dunolint.Rule.eval rule ~f:(fun predicate -> eval ~path ~predicate)
               with
               | `return -> ()
-              | `enforce condition -> enforce ~path ~condition
-              | `skip_subtree -> return.return `skip_subtree)))
+              | `enforce condition -> enforce ~path ~condition)))
 ;;
 
 module Lint_file (Linter : Dunolinter.S) = struct
   let lint_file ~dunolint_engine ~context ~(path : Relative_path.t) =
     let previous_contents_ref = ref "" in
-    let visitor_decision = ref Visitor_decision.Continue in
     Dunolint_engine.lint_file
       dunolint_engine
       ~path
@@ -117,22 +108,11 @@ module Lint_file (Linter : Dunolinter.S) = struct
           Err.error ~loc [ Pp.textf "%s" message ];
           previous_contents
         | Ok linter ->
-          let result =
-            With_return.with_return (fun return ->
-              Linter.visit linter ~f:(fun stanza ->
-                lint_stanza ~path ~context ~stanza ~return);
-              `continue)
-          in
-          let () =
-            match result with
-            | `continue -> ()
-            | `skip_subtree -> visitor_decision := Visitor_decision.Skip_subtree
-          in
+          Linter.visit linter ~f:(fun stanza -> lint_stanza ~path ~context ~stanza);
           Linter.contents linter)
       ~autoformat_file:(fun ~new_contents ->
         let previous_contents = !previous_contents_ref in
-        maybe_autoformat_file ~previous_contents ~new_contents);
-    !visitor_decision
+        maybe_autoformat_file ~previous_contents ~new_contents)
   ;;
 end
 
@@ -155,24 +135,15 @@ let visit_directory ~dunolint_engine ~context ~parent_dir ~files =
   match should_skip_subtree ~context ~path:parent_dir with
   | true -> Dunolint_engine.Visitor_decision.Skip_subtree
   | false ->
-    let rec loop = function
-      | [] -> Dunolint_engine.Visitor_decision.Continue
-      | file :: files ->
-        (match
-           match Dunolint.Linted_file_kind.of_string file with
-           | Error (`Msg _) -> Visitor_decision.Continue
-           | Ok linted_file_kind ->
-             let path = Relative_path.extend parent_dir (Fsegment.v file) in
-             if should_skip_file ~context ~path
-             then Visitor_decision.Continue
-             else (
-               match linted_file_kind with
-               | `dune -> Dune_lint.lint_file ~dunolint_engine ~context ~path
-               | `dune_project ->
-                 Dune_project_lint.lint_file ~dunolint_engine ~context ~path)
-         with
-         | Continue -> loop files
-         | Skip_subtree -> Dunolint_engine.Visitor_decision.Skip_subtree)
-    in
-    loop files
+    List.iter files ~f:(fun file ->
+      match Dunolint.Linted_file_kind.of_string file with
+      | Error (`Msg _) -> ()
+      | Ok linted_file_kind ->
+        let path = Relative_path.extend parent_dir (Fsegment.v file) in
+        if not (should_skip_file ~context ~path)
+        then (
+          match linted_file_kind with
+          | `dune -> Dune_lint.lint_file ~dunolint_engine ~context ~path
+          | `dune_project -> Dune_project_lint.lint_file ~dunolint_engine ~context ~path));
+    Dunolint_engine.Visitor_decision.Continue
 ;;

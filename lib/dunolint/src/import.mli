@@ -61,8 +61,6 @@ end
 val compare_int : int -> int -> int
 val compare_string : string -> string -> int
 val compare_list : ('a -> 'a -> int) -> 'a list -> 'a list -> int
-val compare_option : ('a -> 'a -> int) -> 'a option -> 'a option -> int
 val equal_int : int -> int -> bool
 val equal_string : string -> string -> bool
 val equal_list : ('a -> 'a -> bool) -> 'a list -> 'a list -> bool
-val equal_option : ('a -> 'a -> bool) -> 'a option -> 'a option -> bool

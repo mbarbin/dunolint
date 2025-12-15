@@ -30,7 +30,6 @@ val lint_stanza
   :  path:Relative_path.t
   -> context:Dunolint_engine.Context.t
   -> stanza:'a Dunolinter.Stanza.t
-  -> return:[> `skip_subtree ] With_return.return
   -> unit
 
 val visit_directory

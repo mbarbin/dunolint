@@ -27,16 +27,6 @@ module type T_of_sexp = sig
   val t_of_sexp : Sexp.t -> t
 end
 
-(** During the transition to support version 0 of the config, we allow wrapped
-    records for older formats. Once we'll be done migrating to version 1, we can
-    retire this. This is [false] by default and requires to be set to [true] to
-    parse version 0. *)
-val parsing_config_version_0 : bool ref
-
-(** Temporarily set [parsing_config_version_0] to true for the execution of [f]
-    (protected). *)
-val when_parsing_config_version_0 : f:(unit -> 'a) -> 'a
-
 (** When a record is embedded by a variant or polymorphic variant we'd like to
     support a syntax with less parens around. For example:
 
