@@ -20,16 +20,12 @@
 (*********************************************************************************)
 
 open! Import
-module V0 = Config_v0
 module V1 = Config_v1
 
 module T = struct
   [@@@coverage off]
 
-  type t =
-    [ `v0 of V0.t
-    | `v1 of V1.t
-    ]
+  type t = [ `v1 of V1.t ]
 
   let compare =
     (fun a__001_ ->
@@ -38,9 +34,7 @@ module T = struct
        then 0
        else (
          match a__001_, b__002_ with
-         | `v0 _left__003_, `v0 _right__004_ -> V0.compare _left__003_ _right__004_
-         | `v1 _left__005_, `v1 _right__006_ -> V1.compare _left__005_ _right__006_
-         | x, y -> Stdlib.compare x y)
+         | `v1 _left__005_, `v1 _right__006_ -> V1.compare _left__005_ _right__006_)
      : t -> t -> int)
   ;;
 
@@ -51,9 +45,7 @@ module T = struct
        then true
        else (
          match a__007_, b__008_ with
-         | `v0 _left__009_, `v0 _right__010_ -> V0.equal _left__009_ _right__010_
-         | `v1 _left__011_, `v1 _right__012_ -> V1.equal _left__011_ _right__012_
-         | x, y -> Stdlib.( = ) x y)
+         | `v1 _left__011_, `v1 _right__012_ -> V1.equal _left__011_ _right__012_)
      : t -> t -> bool)
   ;;
 end
@@ -63,13 +55,11 @@ include T
 (* When breaking changes are introduced, we'd mint new versions such as:
 
    {[
-     module V0 = Config_v0
      module V1 = Config_v1
      module V2 = Config_v2
 
      type t =
-       [ `v0 of V0.t
-       | `v1 of V1.t
+       [ `v1 of V1.t
        | `v2 of V2.t
        ]
    ]}
@@ -78,19 +68,11 @@ include T
    accessing them using [Private.view]. *)
 
 let to_stanzas : t -> Sexp.t list = function
-  | `v0 v0 -> [ List [ List [ Atom "version"; Atom "0" ]; V0.sexp_of_t v0 ] ]
   | `v1 v1 -> List [ Atom "lang"; Atom "dunolint"; Atom "1.0" ] :: V1.to_stanzas v1
 ;;
 
 let of_stanzas : Sexp.t list -> t = function
-  | [ List [ List [ Atom "version"; (Atom version as version_sexp) ]; config ] ] ->
-    (match version with
-     | "0" -> `v0 (V0.t_of_sexp config)
-     | _ ->
-       raise
-         (Sexp.Of_sexp_error
-            ( Failure "The (version _) syntax is only supported with version 0."
-            , version_sexp )))
+  | [] -> `v1 (V1.create [])
   | List [ Atom "lang"; Atom "dunolint"; (Atom version as version_sexp) ] :: sexps ->
     (match version with
      | "1.0" -> `v1 (V1.of_stanzas sexps)
@@ -99,8 +81,6 @@ let of_stanzas : Sexp.t list -> t = function
          (Sexp.Of_sexp_error
             ( Failure (Printf.sprintf "Unsupported dunolint config version [%s]." version)
             , version_sexp )))
-  | [ (List (List _ :: _) as sexp) ] -> `v0 (V0.t_of_sexp sexp)
-  | [] -> `v0 (V0.create ())
   | sexp :: _ ->
     raise
       (Sexp.Of_sexp_error
@@ -108,7 +88,6 @@ let of_stanzas : Sexp.t list -> t = function
 ;;
 
 let sexp_of_t (t : t) : Sexp.t = List (Atom "stanzas" :: to_stanzas t)
-let v0 t = `v0 t
 let v1 t = `v1 t
 
 let to_file_contents t ~generated_by =

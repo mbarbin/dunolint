@@ -28,12 +28,10 @@ val compare : t -> t -> int
     {!val:to_file_contents}. *)
 val sexp_of_t : t -> Sexp.t
 
-module V0 = Config_v0
 module V1 = Config_v1
 
 (** {1 Create} *)
 
-val v0 : V0.t -> t
 val v1 : V1.t -> t
 
 (** {1 Save to file} *)
@@ -57,7 +55,7 @@ module Std = Edsl_std
 (** {1 Private Utils} *)
 
 module Private : sig
-  val view : t -> [ `v0 of V0.t | `v1 of V1.t ]
+  val view : t -> [ `v1 of V1.t ]
 end
 
 (** {1 Compatibility}

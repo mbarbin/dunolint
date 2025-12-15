@@ -17,58 +17,16 @@ Version 0 is no longer supported.
   File "dunolint", line 1, characters 0-13:
   1 | ((version 0))
       ^^^^^^^^^^^^^
-  Error: config.v0.t_of_sexp: extra fields: version.
-  [123]
-
-Higher versions, using the version syntax.
-
-  $ cat > dunolint <<EOF
-  > ((version 1) _)
-  > EOF
-
-  $ dunolint tools config validate dunolint
-  File "dunolint", line 1, characters 10-11:
-  1 | ((version 1) _)
-                ^
-  Error: The (version _) syntax is only supported with version 0.
+  Error: Dunolint config expected to start with (lang dunolint VERSION).
   [123]
 
 An empty config, with no mention of versions.
 
-  $ cat > dunolint <<EOF
-  > ()
-  > EOF
+  $ printf '\n' > dunolint
 
   $ dunolint tools config validate dunolint
-  File "dunolint", line 1, characters 0-2:
-  1 | ()
-      ^^
-  Error: Dunolint config expected to start with (lang dunolint VERSION).
-  [123]
 
-Conditions are wrapped in the version 0 and unwrapped in version 1.
-
-Here is the error if using unwrapped at version 0:
-
-  $ cat > dunolint <<EOF
-  > ((version 0)
-  >  ((skip_subtree (cond (((path (glob .git/*)) skip_subtree))))
-  >   (rules
-  >    ((cond
-  >      ((path (glob vendor/*)) return)
-  >      (true (enforce (dune_project (name (equals foo))))))))))
-  > EOF
-
-  $ dunolint tools config validate dunolint
-  File "dunolint", lines 4-6, characters 4-104:
-  4 |    ((cond
-  5 |      ((path (glob vendor/*)) return)
-  6 |      (true (enforce (dune_project (name (equals foo))))))))))
-  Error: rule.v0.t_of_sexp: polymorphic variant tag "cond" has incorrect number
-  of arguments.
-  [123]
-
-And here is the error if using wrapped at version 1:
+Conditions are unwrapped in version 1 otherwise here is the error:
 
   $ cat > dunolint <<EOF
   > (lang dunolint 1.0)

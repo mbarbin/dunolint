@@ -65,10 +65,19 @@ Unsupported config versions are reported with a located error message.
   $ printf '((version 101101)(blah))\n' > dunolint
 
   $ dunolint lint --yes
-  File "dunolint", line 1, characters 10-16:
+  File "dunolint", line 1, characters 0-24:
   1 | ((version 101101)(blah))
-                ^^^^^^
-  Error: The (version _) syntax is only supported with version 0.
+      ^^^^^^^^^^^^^^^^^^^^^^^^
+  Error: Dunolint config expected to start with (lang dunolint VERSION).
+  [123]
+
+  $ printf '(lang dunolint 101101)\n' > dunolint
+
+  $ dunolint lint --yes
+  File "dunolint", line 1, characters 15-21:
+  1 | (lang dunolint 101101)
+                     ^^^^^^
+  Error: Unsupported dunolint config version [101101].
   [123]
 
 If there are no rules, the linting will succeed but does nothing in this case.

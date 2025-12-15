@@ -39,19 +39,6 @@ let should_skip_subtree ~context ~(path : Relative_path.t) =
     | None -> raise_config_not_applicable_err ~path ~location [@coverage off]
     | Some path ->
       (match Dunolint.Config.Private.view config with
-       | `v0 v0 ->
-         (match Dunolint.Config.V0.skip_subtree v0 with
-          | None -> false
-          | Some condition ->
-            Path_in_workspace.paths_to_check_for_skip_predicates ~path
-            |> List.exists ~f:(fun path ->
-              match
-                Dunolint.Rule.eval condition ~f:(fun (`path condition) ->
-                  Dunolinter.eval_path ~path ~condition)
-              with
-              | `enforce _ -> .
-              | `return -> false
-              | `skip_subtree -> true))
        | `v1 v1 ->
          let skip_paths = Dunolint.Config.V1.skip_paths v1 |> List.concat in
          Path_in_workspace.paths_to_check_for_skip_predicates ~path
@@ -105,7 +92,6 @@ let lint_stanza ~path ~context ~stanza ~(return : _ With_return.return) =
         | Some path ->
           List.iter
             (match Dunolint.Config.Private.view config with
-             | `v0 v0 -> Dunolint.Config.V0.rules v0
              | `v1 v1 -> Dunolint.Config.V1.rules v1)
             ~f:(fun rule ->
               match
@@ -159,7 +145,6 @@ let should_skip_file ~context ~path =
     | None -> raise_config_not_applicable_err ~path ~location [@coverage off]
     | Some path ->
       (match Dunolint.Config.Private.view config with
-       | `v0 _ -> false
        | `v1 v1 ->
          let filename = Relative_path.to_string path in
          let skip_files = Dunolint.Config.V1.skip_paths v1 |> List.concat in
