@@ -21,41 +21,10 @@
 
 open Dunolint.Config.Std
 
-let%expect_test "Skip_subtree.predicate" =
-  let test p = Common.test_predicate (module Dunolint.Config.Skip_subtree.Predicate) p in
-  require_does_raise [%here] (fun () ->
-    test (path (equals (Relative_path.v "path/to/file"))));
-  [%expect
-    {|
-    (Of_sexp_error
-     "The [path.equals] construct is not allowed in version 1 of dunolint config."
-     (invalid_sexp (equals path/to/file)))
-    |}];
-  Dunolint.Private.Sexp_helpers.when_parsing_config_version_0 ~f:(fun () ->
-    test (path (equals (Relative_path.v "path/to/file"))));
-  [%expect {| (path (equals path/to/file)) |}];
-  ()
-;;
-
-let%expect_test "skip_subtree" =
-  let test p = Common.test_roundtrip (module Dunolint.Config.Skip_subtree) p in
-  test return;
-  [%expect {| return |}];
-  test skip_subtree;
-  [%expect {| skip_subtree |}];
-  test (cond [ path (glob ".git/"), skip_subtree ]);
-  [%expect {| (cond (((path (glob .git/)) skip_subtree))) |}];
-  ()
-;;
-
-let%expect_test "empty v0" =
+let%expect_test "creat" =
   let t = Dunolint.Config.create () in
-  print_s [%sexp (Dunolint.Config.skip_subtree t : Dunolint.Config.Skip_subtree.t option)];
-  [%expect {| () |}];
-  print_s [%sexp (Dunolint.Config.rules t : Dunolint.Config.Rule.t list)];
-  [%expect {| () |}];
   print_s [%sexp (t : Dunolint.Config.t)];
-  [%expect {| (stanzas ((version 0) ((rules ())))) |}];
+  [%expect {| (stanzas (lang dunolint 1.0)) |}];
   require_equal [%here] (module Dunolint.Config) t t;
   [%expect {||}];
   ()
@@ -75,34 +44,6 @@ let%expect_test "empty v1" =
   ()
 ;;
 
-let%expect_test "non-empty-v0" =
-  let t =
-    Dunolint.Config.V0.create
-      ~skip_subtree:(cond [ path (glob ".git/"), skip_subtree ])
-      ~rules:[ enforce (dune (has_field `instrumentation)) ]
-      ()
-    |> Dunolint.Config.v0
-  in
-  print_s [%sexp (Dunolint.Config.skip_subtree t : Dunolint.Config.Skip_subtree.t option)];
-  [%expect {| ((cond (((path (glob .git/)) skip_subtree)))) |}];
-  print_s [%sexp (Dunolint.Config.rules t : Dunolint.Config.Rule.t list)];
-  [%expect {| ((enforce (dune (has_field instrumentation)))) |}];
-  print_s [%sexp (t : Dunolint.Config.t)];
-  [%expect
-    {|
-    (stanzas (
-      (version 0)
-      ((skip_subtree (cond (((path (glob .git/)) skip_subtree))))
-       (rules ((enforce (dune (has_field instrumentation))))))))
-    |}];
-  require_equal [%here] (module Dunolint.Config) t t;
-  [%expect {||}];
-  let rules = Dunolint.Config.rules t in
-  let t' = Dunolint.Config.create ~rules () in
-  require_equal [%here] (module Int) 1 (Dunolint.Config.compare t t');
-  ()
-;;
-
 let%expect_test "non-empty-v1" =
   let t =
     Dunolint.Config.V1.create
@@ -111,9 +52,12 @@ let%expect_test "non-empty-v1" =
       ]
     |> Dunolint.Config.v1
   in
-  print_s [%sexp (Dunolint.Config.skip_subtree t : Dunolint.Config.Skip_subtree.t option)];
-  [%expect {| ((cond (((path (glob .git/)) skip_subtree)))) |}];
-  print_s [%sexp (Dunolint.Config.rules t : Dunolint.Config.Rule.t list)];
+  let v1 =
+    match Dunolint.Config.Private.view t with
+    | `v0 _ -> assert false
+    | `v1 v1 -> v1
+  in
+  print_s [%sexp (Dunolint.Config.V1.rules v1 : Dunolint.Config.Rule.t list)];
   [%expect {| ((enforce (dune (has_field instrumentation)))) |}];
   print_s [%sexp (t : Dunolint.Config.t)];
   [%expect
@@ -125,7 +69,7 @@ let%expect_test "non-empty-v1" =
     |}];
   require_equal [%here] (module Dunolint.Config) t t;
   [%expect {||}];
-  let rules = Dunolint.Config.rules t in
+  let rules = Dunolint.Config.V1.rules v1 in
   let t' = Dunolint.Config.create ~rules () in
   require_equal [%here] (module Int) 1 (Dunolint.Config.compare t t');
   ()

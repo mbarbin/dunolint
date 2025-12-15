@@ -119,29 +119,12 @@ let to_file_contents t ~generated_by =
        (if i > 0 then "\n" else "") ^ Sexp.to_string_hum sexp))
 ;;
 
+module Std = Edsl_std
+
 module Private = struct
   let view t = t
 end
 
-module Skip_subtree = Config_v0.Skip_subtree
-module Rule = Config_v0.Rule
-module Std = Config_v0.Std
+module Rule = Config_v1.Rule
 
-let skip_subtree (t : t) =
-  match t with
-  | `v0 v0 -> V0.skip_subtree v0
-  | `v1 v1 ->
-    let open Config_v0.Std in
-    let globs =
-      List.map (V1.skip_paths v1 |> List.concat) ~f:(fun g -> Blang.base (`glob g))
-    in
-    Some (cond [ path (or_ globs), skip_subtree ])
-;;
-
-let rules (t : t) =
-  match t with
-  | `v0 v0 -> V0.rules v0
-  | `v1 v1 -> V1.rules v1
-;;
-
-let create ?skip_subtree ?rules () = `v0 (V0.create ?skip_subtree ?rules ())
+let create ?(rules = []) () = `v1 (V1.create (List.map rules ~f:(fun rule -> `rule rule)))

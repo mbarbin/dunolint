@@ -50,6 +50,10 @@ val to_file_contents : t -> generated_by:string -> string
 val of_stanzas : Sexp.t list -> t
 val to_stanzas : t -> Sexp.t list
 
+(** Helpers. *)
+
+module Std = Edsl_std
+
 (** {1 Private Utils} *)
 
 module Private : sig
@@ -63,10 +67,6 @@ end
     transition. At the moment we offer both APIs to start experimenting with the
     specification of configs using the versioned API. *)
 
-module Skip_subtree = Config_v0.Skip_subtree
-module Rule = Config_v0.Rule
-module Std = Config_v0.Std
+module Rule = Config_v1.Rule
 
-val skip_subtree : t -> Skip_subtree.t option
-val rules : t -> Rule.t list
-val create : ?skip_subtree:Skip_subtree.t -> ?rules:Rule.t list -> unit -> t
+val create : ?rules:Rule.t list -> unit -> t

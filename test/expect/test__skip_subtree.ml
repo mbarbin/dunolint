@@ -44,15 +44,15 @@ let%expect_test "relative_path.extend" =
 
 let%expect_test "path.equals" =
   let config =
-    Dunolint.Config.create
-      ~skip_subtree:(cond [ path (equals (Relative_path.v "foo/")), skip_subtree ])
-      ~rules:
-        [ cond
-            [ path (equals (Relative_path.v "dune-project")), return
-            ; true_, enforce (dune_project (name (equals (Dune_project.Name.v "bar"))))
-            ]
-        ]
-      ()
+    Dunolint.Config.V1.create
+      [ `skip_paths [ Dunolint.Glob.v "foo/" ]
+      ; `rule
+          (cond
+             [ path (equals (Relative_path.v "dune-project")), return
+             ; true_, enforce (dune_project (name (equals (Dune_project.Name.v "bar"))))
+             ])
+      ]
+    |> Dunolint.Config.v1
   in
   Unix.mkdir "foo" 0o755;
   Out_channel.write_all

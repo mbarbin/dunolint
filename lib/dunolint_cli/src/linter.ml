@@ -103,11 +103,17 @@ let lint_stanza ~path ~context ~stanza ~(return : _ With_return.return) =
         match Relative_path.chop_prefix path ~prefix:location with
         | None -> raise_config_not_applicable_err ~path ~location [@coverage off]
         | Some path ->
-          List.iter (Dunolint.Config.rules config) ~f:(fun rule ->
-            match Dunolint.Rule.eval rule ~f:(fun predicate -> eval ~path ~predicate) with
-            | `return -> ()
-            | `enforce condition -> enforce ~path ~condition
-            | `skip_subtree -> return.return `skip_subtree)))
+          List.iter
+            (match Dunolint.Config.Private.view config with
+             | `v0 v0 -> Dunolint.Config.V0.rules v0
+             | `v1 v1 -> Dunolint.Config.V1.rules v1)
+            ~f:(fun rule ->
+              match
+                Dunolint.Rule.eval rule ~f:(fun predicate -> eval ~path ~predicate)
+              with
+              | `return -> ()
+              | `enforce condition -> enforce ~path ~condition
+              | `skip_subtree -> return.return `skip_subtree)))
 ;;
 
 module Lint_file (Linter : Dunolinter.S) = struct
