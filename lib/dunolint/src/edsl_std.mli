@@ -68,10 +68,3 @@ val preprocess : 'a -> [> `preprocess of 'a ] Blang.t
 val public_name : 'a -> [> `public_name of 'a ] Blang.t
 val return : [> `return ]
 val stanza : 'a -> [> `stanza of 'a ] Blang.t
-
-(** {1 Deprecated} *)
-
-(** This construct will only works when using version 0 of the config. It causes
-    serialization errors when using version 1. Do not use in new code. We plan
-    on removing this when we'll drop the support for version 0. *)
-val skip_subtree : [> `skip_subtree ]

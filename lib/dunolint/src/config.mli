@@ -28,12 +28,10 @@ val compare : t -> t -> int
     {!val:to_file_contents}. *)
 val sexp_of_t : t -> Sexp.t
 
-module V0 = Config_v0
 module V1 = Config_v1
 
 (** {1 Create} *)
 
-val v0 : V0.t -> t
 val v1 : V1.t -> t
 
 (** {1 Save to file} *)
@@ -50,10 +48,14 @@ val to_file_contents : t -> generated_by:string -> string
 val of_stanzas : Sexp.t list -> t
 val to_stanzas : t -> Sexp.t list
 
+(** Helpers. *)
+
+module Std = Edsl_std
+
 (** {1 Private Utils} *)
 
 module Private : sig
-  val view : t -> [ `v0 of V0.t | `v1 of V1.t ]
+  val view : t -> [ `v1 of V1.t ]
 end
 
 (** {1 Compatibility}
@@ -63,10 +65,6 @@ end
     transition. At the moment we offer both APIs to start experimenting with the
     specification of configs using the versioned API. *)
 
-module Skip_subtree = Config_v0.Skip_subtree
-module Rule = Config_v0.Rule
-module Std = Config_v0.Std
+module Rule = Config_v1.Rule
 
-val skip_subtree : t -> Skip_subtree.t option
-val rules : t -> Rule.t list
-val create : ?skip_subtree:Skip_subtree.t -> ?rules:Rule.t list -> unit -> t
+val create : ?rules:Rule.t list -> unit -> t

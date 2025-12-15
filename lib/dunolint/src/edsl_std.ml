@@ -58,5 +58,4 @@ let pp_with_flag p = Blang.base (`pp_with_flag p)
 let preprocess p = Blang.base (`preprocess p)
 let public_name p = Blang.base (`public_name p)
 let return = `return
-let skip_subtree = `skip_subtree
 let stanza p = Blang.base (`stanza p)

@@ -23,8 +23,13 @@ open Dunolint.Config.Std
 
 let%expect_test "sexp" =
   let test p = Common.test_roundtrip (module Dunolint.Condition) p in
-  Dunolint.Private.Sexp_helpers.when_parsing_config_version_0 ~f:(fun () ->
+  require_does_raise [%here] (fun () ->
     test (path (equals (Relative_path.v "path/to/file"))));
-  [%expect {| (path (equals path/to/file)) |}];
+  [%expect
+    {|
+    (Of_sexp_error
+     "The [path.equals] construct is not allowed in version 1 of dunolint config."
+     (invalid_sexp (equals path/to/file)))
+    |}];
   ()
 ;;

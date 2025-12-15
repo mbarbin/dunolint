@@ -19,7 +19,7 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-open Dunolint.Config.V0.Std
+open Dunolint.Config.Std
 
 let rules = ref []
 
@@ -40,26 +40,14 @@ let skip_paths (globs : string list) = skip_paths_ref := globs :: !skip_paths_re
 let () = skip_paths [ ".git/*" ]
 
 module Format = struct
-  type t =
-    [ `v0
-    | `v1
-    ]
+  type t = [ `v1 ]
 
-  let all = [ `v0; `v1 ]
+  let all = [ `v1 ]
 
   let to_string = function
-    | `v0 -> "v0"
     | `v1 -> "v1"
   ;;
 end
-
-let config_v0 () =
-  add_rule (cond [ path (glob "_build/*"), skip_subtree ]);
-  let globs = List.rev_map (List.concat !skip_paths_ref) ~f:glob in
-  let skip_subtree = cond [ path (or_ globs), skip_subtree ] in
-  let rules = List.rev !rules in
-  Dunolint.Config.v0 (Dunolint.Config.V0.create ~skip_subtree ~rules ())
-;;
 
 let config_v1 () =
   skip_paths [ "_build/*" ];
@@ -84,7 +72,6 @@ let main =
      in
      let config =
        match format with
-       | `v0 -> config_v0 ()
        | `v1 -> config_v1 ()
      in
      print_endline

@@ -23,9 +23,6 @@ open Dunolint.Config.Std
 
 let%expect_test "predicate" =
   let test p = Common.test_predicate (module Dunolint.Predicate) p in
-  Dunolint.Private.Sexp_helpers.when_parsing_config_version_0 ~f:(fun () ->
-    test (path (equals (Relative_path.v "path/to/file"))));
-  [%expect {| (path (equals path/to/file)) |}];
   test (dune (executable (name (equals (Dune.Executable.Name.v "main")))));
   [%expect {| (dune (executable (name (equals main)))) |}];
   test (dune_project (implicit_transitive_deps (equals `True)));

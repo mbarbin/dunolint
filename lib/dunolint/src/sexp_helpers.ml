@@ -25,17 +25,6 @@ module type T_of_sexp = sig
   val t_of_sexp : Sexp.t -> t
 end
 
-let parsing_config_version_0 = ref false
-
-let when_parsing_config_version_0 ~f =
-  let init = parsing_config_version_0.contents in
-  Fun.protect
-    (fun () ->
-       parsing_config_version_0 := true;
-       f ())
-    ~finally:(fun () -> parsing_config_version_0 := init)
-;;
-
 let parse_inline_record
       (type a)
       (module M : T_of_sexp with type t = a)
@@ -46,15 +35,11 @@ let parse_inline_record
   =
   let arg =
     match (fields : Sexp.t list) with
-    | [ (List (List _ :: _) as list) ] ->
-      if !parsing_config_version_0
-      then list
-      else
-        Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-          error_source
-          tag
-          context [@coverage off]
-        (* out edge bisect_ppx issue. *)
+    | [ List (List _ :: _) ] ->
+      Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
+        error_source
+        tag
+        context [@coverage off] (* out edge bisect_ppx issue. *)
     | list -> Sexp.List list
   in
   match M.t_of_sexp arg with

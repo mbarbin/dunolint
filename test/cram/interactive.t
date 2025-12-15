@@ -32,10 +32,11 @@ Let's create a config with some rules that are going to apply to the files we
 created.
 
   $ cat > dunolint <<EOF
-  > ((rules (
-  >   (enforce (dune (library (name (equals foo)))))
-  >   (enforce (dune_project (name (equals foo))))
-  > )))
+  > (lang dunolint 1.0)
+  > 
+  > (rule (enforce (dune (library (name (equals foo))))))
+  > 
+  > (rule (enforce (dune_project (name (equals foo)))))
   > EOF
 
 We run the lint command in dry-run mode to visualize the changes suggested.

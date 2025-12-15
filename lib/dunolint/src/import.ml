@@ -64,8 +64,6 @@ end
 let compare_int = Int.compare
 let compare_string = String.compare
 let compare_list compare a b = List.compare ~cmp:compare a b
-let compare_option compare a b = Option.compare compare a b
 let equal_int = Int.equal
 let equal_string = String.equal
 let equal_list eq a b = List.equal ~eq a b
-let equal_option eq a b = Option.equal eq a b
