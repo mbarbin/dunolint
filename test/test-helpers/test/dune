@@ -1,6 +1,6 @@
 (library
- (name dunolint_cli_test)
- (public_name dunolint-tests.dunolint_cli_test)
+ (name test_helpers_test)
+ (package dunolint-tests)
  (inline_tests)
  (flags
   :standard
@@ -13,12 +13,25 @@
   -open
   Fpath_base
   -open
+  Pplumbing_err
+  -open
+  Stdio
+  -open
   Expect_test_helpers_base)
  (libraries
   base
-  dunolint_cli
+  dune_linter
+  dune_project_linter
+  dunolint
+  dunolinter
   expect_test_helpers_core.expect_test_helpers_base
-  fpath-base)
+  fpath-base
+  loc
+  pp
+  pplumbing-err
+  sexps-rewriter
+  stdio
+  test_helpers)
  (instrumentation
   (backend bisect_ppx))
  (lint

@@ -10,12 +10,10 @@
   -open
   Base
   -open
-  Fpath_sexp0
-  -open
   Stdio
   -open
   Cmdlang)
- (libraries base cmdlang dunolint fpath-sexp0 stdio)
+ (libraries base cmdlang dunolint stdio)
  (instrumentation
   (backend bisect_ppx))
  (lint

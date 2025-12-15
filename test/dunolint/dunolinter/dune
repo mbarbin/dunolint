@@ -1,6 +1,6 @@
 (library
- (name dunolint_base_test)
- (public_name dunolint-tests.dunolint_base_test)
+ (name dunolinter_test)
+ (package dunolint-tests)
  (inline_tests)
  (flags
   :standard
@@ -11,12 +11,26 @@
   -open
   Base
   -open
-  Expect_test_helpers_base)
+  Fpath_sexp0
+  -open
+  Pplumbing_err
+  -open
+  Expect_test_helpers_base
+  -open
+  Dunolint.Std)
  (libraries
   base
   dunolint
-  dunolint_base
-  expect_test_helpers_core.expect_test_helpers_base)
+  dunolinter
+  expect_test_helpers_core.expect_test_helpers_base
+  file-rewriter
+  fpath-sexp0
+  loc
+  parsexp
+  pp
+  pplumbing-err
+  sexps-rewriter
+  test_helpers)
  (instrumentation
   (backend bisect_ppx))
  (lint

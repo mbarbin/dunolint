@@ -1,6 +1,6 @@
 (library
- (name dunolint_engine_test)
- (public_name dunolint-tests.dunolint_engine_test)
+ (name dune_project_linter_test)
+ (package dunolint-tests)
  (inline_tests)
  (flags
   :standard
@@ -15,25 +15,24 @@
   -open
   Pplumbing_err
   -open
-  Stdio
+  Expect_test_helpers_base
   -open
-  Expect_test_helpers_base)
+  Dunolint.Std)
  (libraries
   base
-  cmdlang
-  cmdlang-stdlib-runner
-  dune_linter
   dune_project_linter
   dunolint
-  dunolint_engine
   dunolinter
   expect_test_helpers_core.expect_test_helpers_base
   file-rewriter
   fpath-sexp0
+  loc
+  parsexp
+  patdiff.expect_test_patdiff
+  pp
   pplumbing-err
   sexps-rewriter
-  stdio
-  unix)
+  test_helpers)
  (instrumentation
   (backend bisect_ppx))
  (lint

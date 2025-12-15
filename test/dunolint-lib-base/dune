@@ -1,6 +1,6 @@
 (library
- (name dunolint_test)
- (public_name dunolint-tests.dunolint_test)
+ (name dunolint_base_test)
+ (package dunolint-tests)
  (inline_tests)
  (flags
   :standard
@@ -11,14 +11,12 @@
   -open
   Base
   -open
-  Expect_test_helpers_base
-  -open
-  Dunolint.Std)
+  Expect_test_helpers_base)
  (libraries
   base
   dunolint
-  expect_test_helpers_core.expect_test_helpers_base
-  parsexp)
+  dunolint_base
+  expect_test_helpers_core.expect_test_helpers_base)
  (instrumentation
   (backend bisect_ppx))
  (lint
