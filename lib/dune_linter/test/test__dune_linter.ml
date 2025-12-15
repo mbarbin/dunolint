@@ -156,7 +156,7 @@ let%expect_test "lint" =
         apply (dune (executable (name (equals (Dune.Executable.Name.v "my-exec")))));
         (* Enforcing unapplicable invariants has no effect. *)
         apply (dune_project (name (equals (Dune_project.Name.v "bar"))));
-        apply (path (equals (Relative_path.v "path/")));
+        apply (path (glob "path/"));
         apply (not_ (dune_project (name (equals (Dune_project.Name.v "bar")))))
       in
       ());

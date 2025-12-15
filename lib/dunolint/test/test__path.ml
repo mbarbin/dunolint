@@ -23,13 +23,6 @@ open Dunolint.Config.Std
 
 let%expect_test "predicate" =
   let test p = Common.test_predicate (module Dunolint.Path.Predicate) p in
-  require_does_raise [%here] (fun () -> test (equals (Relative_path.v "path/to/file")));
-  [%expect
-    {|
-    (Of_sexp_error
-     "The [path.equals] construct is not allowed in version 1 of dunolint config."
-     (invalid_sexp (equals path/to/file)))
-    |}];
   test (glob ".git/*");
   [%expect {| (glob .git/*) |}];
   ()

@@ -26,10 +26,7 @@ module Predicate = struct
 
   let error_source = "path.t"
 
-  type t =
-    [ `equals of Relative_path.t
-    | `glob of Glob.t
-    ]
+  type t = [ `glob of Glob.t ]
 
   let compare =
     (fun a__001_ ->
@@ -38,10 +35,7 @@ module Predicate = struct
        then 0
        else (
          match a__001_, b__002_ with
-         | `equals _left__003_, `equals _right__004_ ->
-           Relative_path.compare _left__003_ _right__004_
-         | `glob _left__005_, `glob _right__006_ -> Glob.compare _left__005_ _right__006_
-         | x, y -> Stdlib.compare x y)
+         | `glob _left__005_, `glob _right__006_ -> Glob.compare _left__005_ _right__006_)
      : t -> t -> int)
   ;;
 
@@ -52,10 +46,7 @@ module Predicate = struct
        then true
        else (
          match a__007_, b__008_ with
-         | `equals _left__009_, `equals _right__010_ ->
-           Relative_path.equal _left__009_ _right__010_
-         | `glob _left__011_, `glob _right__012_ -> Glob.equal _left__011_ _right__012_
-         | x, y -> Stdlib.( = ) x y)
+         | `glob _left__011_, `glob _right__012_ -> Glob.equal _left__011_ _right__012_)
      : t -> t -> bool)
   ;;
 
@@ -73,8 +64,7 @@ module Predicate = struct
           (match sexp_args__017_ with
            | _ :: [] ->
              Sexplib0.Sexp_conv.of_sexp_error
-               "The [path.equals] construct is not allowed in version 1 of dunolint \
-                config."
+               "The [path.equals] construct is no longer supported."
                _sexp__016_
            | _ ->
              Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
@@ -109,8 +99,6 @@ module Predicate = struct
 
   let sexp_of_t =
     (function
-     | `equals v__027_ ->
-       Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "equals"; Relative_path.sexp_of_t v__027_ ]
      | `glob v__028_ ->
        Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "glob"; Glob.sexp_of_t v__028_ ]
      : t -> Sexplib0.Sexp.t)

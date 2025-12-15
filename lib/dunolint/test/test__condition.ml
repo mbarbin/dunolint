@@ -19,16 +19,16 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-open Dunolint.Config.Std
+open! Dunolint.Config.Std
 
 let%expect_test "sexp" =
-  let test p = Common.test_roundtrip (module Dunolint.Condition) p in
   require_does_raise [%here] (fun () ->
-    test (path (equals (Relative_path.v "path/to/file"))));
+    Dunolint.Condition.t_of_sexp
+      (Parsexp.Single.parse_string_exn "(path (equals path/to/file))"));
   [%expect
     {|
     (Of_sexp_error
-     "The [path.equals] construct is not allowed in version 1 of dunolint config."
+     "The [path.equals] construct is no longer supported."
      (invalid_sexp (equals path/to/file)))
     |}];
   ()
