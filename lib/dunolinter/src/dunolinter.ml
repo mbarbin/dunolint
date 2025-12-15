@@ -49,8 +49,8 @@ let sexps_rewriter (t : _ Stanza.t) = t.sexps_rewriter
 let linter (t : _ Stanza.t) = t.linter
 
 let eval_path ~path ~condition =
-  Blang.eval condition (function
-    | `equals value -> Relative_path.equal path value
+  Blang.eval condition (fun predicate ->
+    match (predicate : Dunolint.Path.Predicate.t) with
     | `glob glob -> Dunolint.Glob.test glob (Relative_path.to_string path))
   |> Dunolint.Trilang.const
 ;;
