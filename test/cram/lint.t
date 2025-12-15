@@ -73,7 +73,7 @@ Unsupported config versions are reported with a located error message.
 
 If there are no rules, the linting will succeed but does nothing in this case.
 
-  $ printf '((rules ()))\n' > dunolint
+  $ printf '(lang dunolint 1.0)\n' > dunolint
 
   $ dunolint lint --yes
 

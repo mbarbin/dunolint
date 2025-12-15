@@ -1,13 +1,13 @@
 In this test we monitor certain error messages when loading invalid configs. In
 particular we look for certain regression to make sure errors are located and
-messages are clear, especially for certain situation known to be tricky in the
+messages are clear, especially for certain situations known to be tricky in the
 implementation.
 
 Initialize the project root.
 
   $ touch dune-workspace
 
-Version 0 with no fields.
+Version 0 is no longer supported.
 
   $ cat > dunolint <<EOF
   > ((version 0))

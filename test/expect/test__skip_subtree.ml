@@ -95,8 +95,9 @@ let%expect_test "path.equals" =
 ;;
 
 let%expect_test "config skip_subtree in nested directory" =
-  (* This test shows a difference between v0's skip_subtree and v1's skip_paths
-     semantic, and in particular in a cases that involves the glob "**".
+  (* This test used to show a difference between v0's skip_subtree and v1's
+     skip_paths semantic, and in particular in a cases that involves the glob
+     "**".
 
      As seen in the glob test below "**" does not match the empty relative path.
      With [v0] we are only testing the glob conditions of [skip_subtree] on
@@ -106,7 +107,10 @@ let%expect_test "config skip_subtree in nested directory" =
      [dune-project] in this directory gets skipped.
 
      mbarbin: This case confused me during a debug session, thus I was inclined
-     to keep it as documentation and regression test. *)
+     to keep it as documentation and regression test.
+
+     mbarbin: Edit: as we removed support for v0 entirely, we kept the part of
+     the test that relates to the execution with v1 as reference. *)
   let () =
     let glob = Dunolint.Glob.v "**" in
     let test str = print_s [%sexp { is_match = (Dunolint.Glob.test glob str : bool) }] in
@@ -168,24 +172,5 @@ let%expect_test "config skip_subtree in nested directory" =
 |};
   run_test ();
   [%expect {||}];
-  (* With v0. *)
-  Out_channel.write_all
-    "lib/core/dunolint"
-    ~data:
-      {|((version 0)
- ((skip_subtree (cond (((path (glob **)) skip_subtree))))
-  (rules ((enforce (dune_project (name (equals test))))))))
-|};
-  run_test ();
-  [%expect
-    {|
-    dry-run: Would edit file "lib/core/dune-project":
-    -1,4 +1,4
-
-      (lang dune 3.18)
-
-    -|(name core)
-    +|(name test)
-    |}];
   ()
 ;;

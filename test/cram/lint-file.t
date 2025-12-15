@@ -112,7 +112,7 @@ Next we are going to test the command with config.
 
 The command may be passed a config file.
 
-  $ printf '((rules ()))\n' > dunolint
+  $ printf '(lang dunolint 1.0)\n' > dunolint
 
   $ dunolint tools lint dune --config=dunolint
   (library
@@ -159,7 +159,7 @@ effect is visible in this test (it is changed to "foo"):
 
 However, you may supply a config to use.
 
-  $ printf "((rules()))\n" > empty-config
+  $ printf "(lang dunolint 1.0)\n" > empty-config
   $ dunolint tools lint-file dune-project --config=empty-config
   (lang dune 3.17)
   
