@@ -168,7 +168,7 @@ let%expect_test "lint" =
         apply (dune_project (name (equals (Dune_project.Name.v "foo"))));
         (* Enforcing unapplicable invariants has no effect. *)
         apply (dune (library (name (equals (Dune.Library.Name.v "bar")))));
-        apply (path (equals (Relative_path.v "path/")));
+        apply (path (glob "path/"));
         apply (not_ (dune (library (name (equals (Dune.Library.Name.v "bar"))))))
       in
       (* Enforcing invariant that cannot be auto-corrected triggers an error. *)

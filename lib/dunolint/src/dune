@@ -8,17 +8,10 @@
   -warn-error
   +a
   -open
-  Fpath_sexp0
-  -open
   Sexplib0
   -open
   Sexplib0.Sexp_conv)
- (libraries
-  dunolint-lib.vendor_blang
-  dunolint-lib.vendor_vcs
-  fpath-sexp0
-  re
-  sexplib0)
+ (libraries dunolint-lib.vendor_blang dunolint-lib.vendor_vcs re sexplib0)
  (modules
   (:standard \ stdlib_compat4xx stdlib_compat5xx))
  (instrumentation

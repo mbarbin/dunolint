@@ -11,8 +11,6 @@
   -open
   Base
   -open
-  Fpath_base
-  -open
   Expect_test_helpers_base
   -open
   Dunolint.Std)
@@ -20,7 +18,7 @@
   base
   dunolint
   expect_test_helpers_core.expect_test_helpers_base
-  fpath-base)
+  parsexp)
  (instrumentation
   (backend bisect_ppx))
  (lint
