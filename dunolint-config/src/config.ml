@@ -40,32 +40,25 @@ let () =
     (cond
        [ ( path (glob "dunolint-config/**")
          , enforce (dune (library (public_name (is_prefix "dunolint-tests.")))) )
-       ; ( path (or_ [ glob "lib/test_helpers/src/*"; glob "test/expect/*" ])
-         , enforce (dune (library (public_name (is_prefix "dunolint-tests.")))) )
-       ; ( path (glob "**/test/*")
-         , enforce
-             (dune
-                (library
-                   (and_
-                      [ public_name (is_prefix "dunolint-tests.")
-                      ; name (is_suffix "_test")
-                      ]))) )
-       ; ( path (glob "lib/dunolint_base/src/*")
-         , enforce
-             (dune
-                (library
-                   (public_name (equals (Dune.Library.Public_name.v "dunolint-lib-base")))))
-         )
-       ; ( path (or_ [ glob "lib/**"; glob "vendor/**" ])
+       ; path (glob "test/**/src/*"), return
+       ; path (glob "test/**"), enforce (dune (library (name (is_suffix "_test"))))
+       ; ( path (glob "src/dunolint-lib/**")
          , enforce
              (dune
                 (library
                    (public_name
                       (or_
-                         [ is_prefix "dunolint."
-                         ; is_prefix "dunolint-lib."
+                         [ is_prefix "dunolint-lib."
                          ; equals (Dune.Library.Public_name.v "dunolint-lib")
                          ])))) )
+       ; ( path (glob "src/dunolint-lib-base/**")
+         , enforce
+             (dune
+                (library
+                   (public_name (equals (Dune.Library.Public_name.v "dunolint-lib-base")))))
+         )
+       ; ( path (glob "src/dunolint/**")
+         , enforce (dune (library (public_name (is_prefix "dunolint.")))) )
        ; true_, enforce (dune (library (public_name (is_prefix "dunolint-dev."))))
        ])
 ;;
@@ -91,7 +84,7 @@ let bisect_ppx = Dune.Instrumentation.Backend.Name.v "bisect_ppx"
 let () =
   rule
     (cond
-       [ ( path (or_ [ glob "vendor/**" ])
+       [ ( path (or_ [ glob "**/vendor/**" ])
          , enforce (dune (library (not_ (has_field `instrumentation)))) )
        ; true_, enforce (dune (instrumentation (backend bisect_ppx)))
        ])
@@ -102,7 +95,7 @@ let ppx_js_style = Dune.Pp.Name.v "ppx_js_style"
 let () =
   rule
     (cond
-       [ path (or_ [ glob "vendor/blang/**" ]), return
+       [ path (or_ [ glob "src/dunolint-lib/vendor/blang/**" ]), return
        ; ( true_
          , enforce
              (dune

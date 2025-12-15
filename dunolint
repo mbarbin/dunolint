@@ -22,23 +22,17 @@
  (cond
   ((path (glob dunolint-config/**))
    (enforce (dune (library (public_name (is_prefix dunolint-tests.))))))
-  ((path (or (glob lib/test_helpers/src/*) (glob test/expect/*)))
-   (enforce (dune (library (public_name (is_prefix dunolint-tests.))))))
-  ((path (glob **/test/*))
+  ((path (glob test/**/src/*)) return)
+  ((path (glob test/**)) (enforce (dune (library (name (is_suffix _test))))))
+  ((path (glob src/dunolint-lib/**))
    (enforce
     (dune
      (library
-      (and (public_name (is_prefix dunolint-tests.))
-       (name (is_suffix _test)))))))
-  ((path (glob lib/dunolint_base/src/*))
+      (public_name (or (is_prefix dunolint-lib.) (equals dunolint-lib)))))))
+  ((path (glob src/dunolint-lib-base/**))
    (enforce (dune (library (public_name (equals dunolint-lib-base))))))
-  ((path (or (glob lib/**) (glob vendor/**)))
-   (enforce
-    (dune
-     (library
-      (public_name
-       (or (is_prefix dunolint.) (is_prefix dunolint-lib.)
-        (equals dunolint-lib)))))))
+  ((path (glob src/dunolint/**))
+   (enforce (dune (library (public_name (is_prefix dunolint.))))))
   (true (enforce (dune (library (public_name (is_prefix dunolint-dev.))))))))
 
 (rule
@@ -53,12 +47,12 @@
 
 (rule
  (cond
-  ((path (glob vendor/**))
+  ((path (glob **/vendor/**))
    (enforce (dune (library (not (has_field instrumentation))))))
   (true (enforce (dune (instrumentation (backend bisect_ppx)))))))
 
 (rule
- (cond ((path (glob vendor/blang/**)) return)
+ (cond ((path (glob src/dunolint-lib/vendor/blang/**)) return)
   (true
    (enforce
     (dune

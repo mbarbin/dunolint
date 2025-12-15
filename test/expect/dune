@@ -1,6 +1,6 @@
 (library
- (name dunolint_expect_tests)
- (public_name dunolint-tests.expect-tests)
+ (name dunolint_expect_test)
+ (public_name dunolint-tests.expect-test)
  (inline_tests)
  (flags
   :standard
