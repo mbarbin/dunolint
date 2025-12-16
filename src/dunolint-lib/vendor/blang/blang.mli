@@ -25,6 +25,8 @@
   The original license header was kept with the file, see below.
 
   List of changes:
+
+  - Remove part of the API that is not required by the project.
 *)
 
 (*_ The MIT License
@@ -55,48 +57,6 @@
 (** A blang is a boolean expression built up by applying the usual boolean
     operations to properties that evaluate to true or false in some context.
 
-    {2 Usage}
-
-    For example, imagine writing a config file for an application that filters a
-    stream of integers. Your goal is to keep only those integers that are
-    multiples of either -3 or 5. Using [Blang] for this task, the code might
-    look like:
-
-    {[
-      module Property = struct
-        type t =
-          | Multiple_of of int
-          | Positive
-          | Negative
-        [@@deriving sexp]
-
-        let eval t num =
-          match t with
-          | Multiple_of n -> num % n = 0
-          | Positive      -> num > 0
-          | Negative      -> num < 0
-      end
-
-      type config = {
-        keep : Property.t Blang.t;
-      } [@@deriving sexp]
-
-      let config = {
-        keep =
-          Blang.t_of_sexp
-            Property.t_of_sexp
-            (Sexp.of_string
-               "(or (and negative (multiple_of 3)) (and positive (multiple_of 5)))";
-      }
-
-      let keep config num : bool =
-        Blang.eval config.keep (fun p -> Property.eval p num)
-    ]}
-
-    Note how [positive] and [negative] and [multiple_of] become operators in a
-    small, newly-defined boolean expression language that allows you to write
-    statements like [(and negative (multiple_of 3))].
-
     {2 Blang sexp syntax}
 
     The blang sexp syntax is almost exactly the derived one, except that:
@@ -121,14 +81,11 @@
 
     instead of
 
-    {v (and FOO (and BAR (and BAZ QUX))) v}
-
-    If you want to see the derived sexp, use [Raw.sexp_of_t]. *)
+    {v (and FOO (and BAR (and BAZ QUX))) v} *)
 
 (** Note that the sexps are not directly inferred from the type below -- there
     are lots of fancy shortcuts. Also, the sexps for ['a] must not look anything
-    like blang sexps. Otherwise [t_of_sexp] will fail. The directly inferred
-    sexps are available via [Raw.sexp_of_t]. *)
+    like blang sexps. Otherwise [t_of_sexp] will fail. *)
 type +'a t = private
   | True
   | False

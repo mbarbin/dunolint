@@ -25,6 +25,10 @@
   The original license header was kept with the file, see below.
 
   List of changes:
+
+  - Remove part of the module that is not required by the project.
+
+  - Remove dependency to ppx.
 *)
 
 (* The MIT License
