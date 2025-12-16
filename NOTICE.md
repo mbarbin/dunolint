@@ -15,3 +15,11 @@ This notice file contains more details, as well as document the organization of 
 - **COPYING.LINKING** contains a copy of the [LGPL-3.0-linking-exception](https://spdx.org/licenses/LGPL-3.0-linking-exception.html) notice.
 
 - **NOTICE.md** (this file) documents the project licensing.
+
+## A note about Blang
+
+We vendored the module `Core.Blang` from the [Core](https://github.com/janestreet/core) project. `Core` is released under `MIT`, with minor changes to simplify dependencies.
+
+### Notice
+
+The files we imported are in `src/dunolint-lib/vendor/blang`. We've added a notice in the files and a comment next to the code that was copied and modified, which includes `Core`'s original LICENSE, which is included in this repo at `third-party-license/janestreet/core/LICENSE.md`.

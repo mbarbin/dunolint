@@ -3,6 +3,4 @@
  (public_name dunolint-lib.vendor_blang)
  (wrapped false)
  (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a -open Sexplib0)
- (libraries sexplib0)
- (lint
-  (pps -unused-code-warnings=force ppx_compare)))
+ (libraries sexplib0))
