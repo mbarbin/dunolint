@@ -7,6 +7,9 @@
 
 ### Changed
 
+- Upgrade `actions/checkout` to `v6` (#138, @mbarbin).
+- Improved licensing headers for vendored `blang` (#144, @mbarbin).
+- Refactor pkg directory structure (#143, @mbarbin).
 - Improve some format & diff in some internal tests (#137, @mbarbin).
 - Upgrade to and require fixes from `fpath-base.0.4.0` (#133, @mbarbin).
 - Made some internal refactors suggested by the Zanuda linter (#130, @mbarbin).
