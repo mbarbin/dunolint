@@ -88,11 +88,11 @@ module Predicate = struct
 
   type t =
     [ `eq of version
-    | `neq of version
-    | `gte of version
     | `gt of version
-    | `lte of version
+    | `gte of version
     | `lt of version
+    | `lte of version
+    | `neq of version
     | deprecated_names
     ]
 
@@ -114,11 +114,11 @@ module Predicate = struct
   let ops =
     let opv atom cons : Opv.t = { atom; cons } in
     [ opv "=" (fun v -> `eq v)
-    ; opv "!=" (fun v -> `neq v)
-    ; opv ">=" (fun v -> `gte v)
     ; opv ">" (fun v -> `gt v)
-    ; opv "<=" (fun v -> `lte v)
+    ; opv ">=" (fun v -> `gte v)
     ; opv "<" (fun v -> `lt v)
+    ; opv "<=" (fun v -> `lte v)
+    ; opv "!=" (fun v -> `neq v)
     ; opv "equals" (fun v -> `eq v)
     ; opv "greater_than_or_equal_to" (fun v -> `gte v)
     ; opv "less_than_or_equal_to" (fun v -> `lte v)
@@ -150,11 +150,11 @@ module Predicate = struct
     let op name v = Sexp.List [ Atom name; sexp_of_t v ] in
     match t with
     | `eq v -> op "=" v
-    | `neq v -> op "!=" v
-    | `gte v -> op ">=" v
     | `gt v -> op ">" v
-    | `lte v -> op "<=" v
+    | `gte v -> op ">=" v
     | `lt v -> op "<" v
+    | `lte v -> op "<=" v
+    | `neq v -> op "!=" v
     | `equals v -> op "equals" v
     | `greater_than_or_equal_to v -> op "greater_than_or_equal_to" v
     | `less_than_or_equal_to v -> op "less_than_or_equal_to" v

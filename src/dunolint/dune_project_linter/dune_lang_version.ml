@@ -68,14 +68,14 @@ let eval t ~predicate =
   (match (predicate : predicate) with
    | `eq version | `equals version ->
      Dune_project.Dune_lang_version.equal version t.dune_lang_version
-   | `neq version ->
-     not (Dune_project.Dune_lang_version.equal version t.dune_lang_version)
+   | `gt version -> Dune_project.Dune_lang_version.compare t.dune_lang_version version > 0
    | `gte version | `greater_than_or_equal_to version ->
      Dune_project.Dune_lang_version.compare t.dune_lang_version version >= 0
-   | `gt version -> Dune_project.Dune_lang_version.compare t.dune_lang_version version > 0
+   | `lt version -> Dune_project.Dune_lang_version.compare t.dune_lang_version version < 0
    | `lte version | `less_than_or_equal_to version ->
      Dune_project.Dune_lang_version.compare t.dune_lang_version version <= 0
-   | `lt version -> Dune_project.Dune_lang_version.compare t.dune_lang_version version < 0)
+   | `neq version ->
+     not (Dune_project.Dune_lang_version.equal version t.dune_lang_version))
   |> Dunolint.Trilang.const
 ;;
 
@@ -88,7 +88,7 @@ let enforce =
       | T (`eq version | `equals version) | Not (`neq version) ->
         t.dune_lang_version <- version;
         Ok
-      | T (`neq _) | Not (`eq _ | `equals _) -> Eval
+      | T (`gt _) | Not (`lte _ | `less_than_or_equal_to _) -> Eval
       | T (`gte version | `greater_than_or_equal_to version) | Not (`lt version) ->
         if Dune_project.Dune_lang_version.compare t.dune_lang_version version < 0
         then t.dune_lang_version <- version;
@@ -98,7 +98,7 @@ let enforce =
         if Dune_project.Dune_lang_version.compare t.dune_lang_version version > 0
         then t.dune_lang_version <- version;
         Ok
-      | T (`gt _) | Not (`lte _ | `less_than_or_equal_to _) -> Eval)
+      | T (`neq _) | Not (`eq _ | `equals _) -> Eval)
 ;;
 
 module Top = struct

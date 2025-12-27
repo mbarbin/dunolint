@@ -122,11 +122,11 @@ module Predicate = struct
     constraint
       'a =
       [ `eq of Dune_project.Dune_lang_version.t
-      | `neq of Dune_project.Dune_lang_version.t
-      | `gte of Dune_project.Dune_lang_version.t
       | `gt of Dune_project.Dune_lang_version.t
-      | `lte of Dune_project.Dune_lang_version.t
+      | `gte of Dune_project.Dune_lang_version.t
       | `lt of Dune_project.Dune_lang_version.t
+      | `lte of Dune_project.Dune_lang_version.t
+      | `neq of Dune_project.Dune_lang_version.t
       | `equals of Dune_project.Dune_lang_version.t
       | `greater_than_or_equal_to of Dune_project.Dune_lang_version.t
       | `less_than_or_equal_to of Dune_project.Dune_lang_version.t
