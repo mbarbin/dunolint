@@ -21,34 +21,13 @@
 
 open! Import
 
-module T0 = struct
-  [@@@coverage off]
+type t = int * int
 
-  type t = int * int
+(* Given the actual shape and representation of the values inhabiting this type,
+   polymorphic comparison is adequate here. *)
 
-  let equal =
-    (fun a__001_ ->
-       fun b__002_ ->
-       let t__003_, t__004_ = a__001_ in
-       let t__005_, t__006_ = b__002_ in
-       Stdlib.( && ) (equal_int t__003_ t__005_) (equal_int t__004_ t__006_)
-     : t -> t -> bool)
-  ;;
-
-  let compare =
-    (fun a__007_ ->
-       fun b__008_ ->
-       let t__009_, t__010_ = a__007_ in
-       let t__011_, t__012_ = b__008_ in
-       match compare_int t__009_ t__011_ with
-       | 0 -> compare_int t__010_ t__012_
-       | n -> n
-     : t -> t -> int)
-  ;;
-end
-
-include T0
-
+let compare : t -> t -> int = Stdlib.compare
+let equal : t -> t -> bool = Stdlib.( = )
 let to_string (a, b) = Printf.sprintf "%d.%d" a b
 let sexp_of_t t = Sexp.Atom (to_string t)
 
