@@ -30,4 +30,3 @@ val compare : t -> t -> int
 val equal : t -> t -> bool
 val sexp_of_t : t -> Sexplib0.Sexp.t
 val t_of_sexp : Sexplib0.Sexp.t -> t
-val __t_of_sexp__ : Sexplib0.Sexp.t -> t
