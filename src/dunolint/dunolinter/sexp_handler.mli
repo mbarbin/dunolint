@@ -131,3 +131,7 @@ val read
 
 (** Shared utils to map a Parsexp range to a Loc.t. *)
 val loc_of_parsexp_range : filename:string -> Parsexp.Positions.range -> Loc.t
+
+(** Special logic to render an exception located in a [Of_sexp_error]
+    constructor, with special logic to embed user friendly context. *)
+val render_sexp_error_exn : loc:Loc.t -> exn -> Err.t

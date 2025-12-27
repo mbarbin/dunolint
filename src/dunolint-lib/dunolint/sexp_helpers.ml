@@ -25,6 +25,53 @@ module type T_of_sexp = sig
   val t_of_sexp : Sexp.t -> t
 end
 
+module Error_context = struct
+  module Did_you_mean = struct
+    type t =
+      { var : string
+      ; candidates : string list
+      }
+
+    let sexp_of_t { var; candidates } =
+      Sexp.List
+        [ List [ Atom "var"; Atom var ]
+        ; List (Atom "candidates" :: List.map (fun s -> Sexp.Atom s) candidates)
+        ]
+    ;;
+  end
+
+  type t =
+    { message : string
+    ; did_you_mean : Did_you_mean.t option
+    ; suggestion : string option
+    }
+
+  let sexp_of_t { message; did_you_mean; suggestion } =
+    Sexp.List
+      (List.concat
+         [ [ Sexp.Atom message ]
+         ; (match did_you_mean with
+            | None -> []
+            | Some d -> [ Sexp.List [ Atom "did_you_mean?"; Did_you_mean.sexp_of_t d ] ])
+         ; (match suggestion with
+            | None -> []
+            | Some s -> [ Sexp.List [ Atom "suggestion"; Atom s ] ])
+         ])
+  ;;
+
+  exception E of t
+
+  let () =
+    Sexplib0.Sexp_conv.Exn_converter.add [%extension_constructor E] (function
+      | E t -> List [ Atom "Dunolint.Sexp_helpers.Error_context.E"; sexp_of_t t ]
+      | _ -> assert false)
+  ;;
+
+  let message t = t.message
+  let did_you_mean t = t.did_you_mean
+  let suggestion t = t.suggestion
+end
+
 let parse_inline_record
       (type a)
       (module M : T_of_sexp with type t = a)
@@ -64,35 +111,55 @@ module Variant_spec = struct
     }
 
   type 'a t = 'a case list
+
+  let candidates t = List.map (fun c -> c.atom) t
 end
 
 let parse_variant (type a) (variant_spec : a Variant_spec.t) ~error_source (sexp : Sexp.t)
   : a
   =
   let find_case atom =
-    List.find_opt (fun (c : a Variant_spec.case) -> String.equal c.atom atom) variant_spec
+    match
+      List.find_opt
+        (fun (c : a Variant_spec.case) -> String.equal c.atom atom)
+        variant_spec
+    with
+    | Some case -> case
+    | None ->
+      let context =
+        { Error_context.message = Printf.sprintf "Unknown construct [%s]." atom
+        ; did_you_mean =
+            Some { var = atom; candidates = Variant_spec.candidates variant_spec }
+        ; suggestion = None
+        }
+      in
+      raise (Sexplib0.Sexp_conv.Of_sexp_error (Error_context.E context, sexp))
   in
   match sexp with
   | Atom atom ->
     (match find_case atom with
-     | Some { conv = Nullary value; _ } -> value
-     | Some { conv = Unary_with_context _ | Unary _ | Variadic _; _ } ->
-       Sexplib0.Sexp_conv_error.ptag_takes_args error_source sexp
-     | None -> Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp)
+     | { conv = Nullary value; _ } -> value
+     | { conv = Unary_with_context _ | Unary _ | Variadic _; _ } ->
+       let context =
+         { Error_context.message =
+             Printf.sprintf "The construct [%s] expects one or more arguments." atom
+         ; did_you_mean = None
+         ; suggestion = Some (Printf.sprintf "Replace by: (%s ARG)" atom)
+         }
+       in
+       raise (Sexplib0.Sexp_conv.Of_sexp_error (Error_context.E context, sexp)))
   | List (Atom atom :: args) ->
     (match find_case atom with
-     | None -> Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp
-     | Some { conv = Nullary _; _ } ->
-       Sexplib0.Sexp_conv_error.ptag_no_args error_source sexp
-     | Some { conv = Unary f; _ } ->
+     | { conv = Nullary _; _ } -> Sexplib0.Sexp_conv_error.ptag_no_args error_source sexp
+     | { conv = Unary f; _ } ->
        (match args with
         | [ arg ] -> f arg
         | _ -> Sexplib0.Sexp_conv_error.ptag_incorrect_n_args error_source atom sexp)
-     | Some { conv = Unary_with_context f; _ } ->
+     | { conv = Unary_with_context f; _ } ->
        (match args with
         | [ arg ] -> f ~context:sexp ~arg
         | _ -> Sexplib0.Sexp_conv_error.ptag_incorrect_n_args error_source atom sexp)
-     | Some { conv = Variadic f; _ } -> f ~context:sexp ~fields:args)
+     | { conv = Variadic f; _ } -> f ~context:sexp ~fields:args)
   | List (List _ :: _) ->
     Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp
   | List [] -> Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp

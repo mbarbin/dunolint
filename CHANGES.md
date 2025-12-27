@@ -9,6 +9,7 @@
 
 ### Changed
 
+- Make a few dunolint config parsing errors more friendly (#155, @mbarbin).
 - Refactor sexp parsing - prerequisite for future improvements (#152, @mbarbin).
 - Cleanup implementation of `equal` functions (#151, @mbarbin).
 - Extend lang version compare operators (#145, @mbarbin).

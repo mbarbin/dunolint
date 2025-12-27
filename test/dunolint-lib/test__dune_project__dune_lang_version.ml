@@ -171,7 +171,9 @@ let%expect_test "Predicate.t_of_sexp" =
   [%expect
     {|
     (Of_sexp_error
-     "dune_lang_version.t_of_sexp: polymorphic variant tag takes an argument"
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [=] expects one or more arguments."
+       (suggestion "Replace by: (= ARG)")))
      (invalid_sexp =))
     |}];
   test "(= 3.20 extra)";
@@ -184,7 +186,13 @@ let%expect_test "Predicate.t_of_sexp" =
   test "(unknown 3.20)";
   [%expect
     {|
-    (Of_sexp_error "dune_lang_version.t_of_sexp: no matching variant found"
+    (Of_sexp_error
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("Unknown construct [unknown]."
+       (did_you_mean?
+        ((var unknown)
+         (candidates = > >= < <= != equals greater_than_or_equal_to
+          less_than_or_equal_to)))))
      (invalid_sexp (unknown 3.20)))
     |}];
   ()

@@ -162,33 +162,35 @@ Unknown constructor.
   File "dunolint", line 3, characters 15-60:
   3 | (rule (enforce (duno (instrumentation (backend bisect_ppx)))))
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  Error: predicate.t_of_sexp: no matching variant found.
+  Error: Unknown construct [duno].
+  Hint: did you mean dune?
   [123]
 
   $ cat > dunolint <<EOF
   > (lang dunolint 1.0)
   > 
-  > (rule (enforce (dune (library (modes (has_modes modo))))))
+  > (rule (enforce (dune (library (modes (has_modes native))))))
   > EOF
 
   $ dunolint tools config validate dunolint
-  File "dunolint", line 3, characters 48-52:
-  3 | (rule (enforce (dune (library (modes (has_modes modo))))))
-                                                      ^^^^
+  File "dunolint", line 3, characters 48-54:
+  3 | (rule (enforce (dune (library (modes (has_modes native))))))
+                                                      ^^^^^^
   Error: list_of_sexp: list needed.
   [123]
 
   $ cat > dunolint <<EOF
   > (lang dunolint 1.0)
   > 
-  > (rule (enforce (dune (library (modes (has_mode modo))))))
+  > (rule (enforce (dune (library (modes (has_mode mative))))))
   > EOF
 
   $ dunolint tools config validate dunolint
-  File "dunolint", line 3, characters 47-51:
-  3 | (rule (enforce (dune (library (modes (has_mode modo))))))
-                                                     ^^^^
-  Error: compilation_mode.t_of_sexp: no matching variant found.
+  File "dunolint", line 3, characters 47-53:
+  3 | (rule (enforce (dune (library (modes (has_mode mative))))))
+                                                     ^^^^^^
+  Error: Unknown construct [mative].
+  Hint: did you mean native?
   [123]
 
 There was a short period of time where dune lang versions were allowed to be
@@ -265,3 +267,18 @@ Located errors for invalid stanzas, or stanzas with invalid args.
   Error: config.v1.stanza.t_of_sexp: polymorphic variant tag takes an argument.
   [123]
 
+Missing argument.
+
+  $ cat > dunolint <<EOF
+  > (lang dunolint 1.0)
+  > 
+  > (rule (enforce (dune (instrumentation backend))))
+  > EOF
+
+  $ dunolint tools config validate dunolint
+  File "dunolint", line 3, characters 38-45:
+  3 | (rule (enforce (dune (instrumentation backend))))
+                                            ^^^^^^^
+  Error: The construct [backend] expects one or more arguments.
+  Hint: Replace by: (backend ARG)
+  [123]

@@ -64,28 +64,38 @@ let%expect_test "parse_variant" =
   [%expect
     {|
     (Of_sexp_error
-     "test_predicate_of_sexp: polymorphic variant tag takes an argument"
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [foo] expects one or more arguments."
+       (suggestion "Replace by: (foo ARG)")))
      (invalid_sexp foo))
     |}];
   test "bar";
   [%expect
     {|
     (Of_sexp_error
-     "test_predicate_of_sexp: polymorphic variant tag takes an argument"
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [bar] expects one or more arguments."
+       (suggestion "Replace by: (bar ARG)")))
      (invalid_sexp bar))
     |}];
   (* Error: atom that doesn't match any predicate. *)
   test "unknown";
   [%expect
     {|
-    (Of_sexp_error "test_predicate_of_sexp: no matching variant found"
+    (Of_sexp_error
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("Unknown construct [unknown]."
+       (did_you_mean? ((var unknown) (candidates foo bar nullary ctx variadic)))))
      (invalid_sexp unknown))
     |}];
   (* Error: list with atom that doesn't match. *)
   test "(unknown hello)";
   [%expect
     {|
-    (Of_sexp_error "test_predicate_of_sexp: no matching variant found"
+    (Of_sexp_error
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("Unknown construct [unknown]."
+       (did_you_mean? ((var unknown) (candidates foo bar nullary ctx variadic)))))
      (invalid_sexp (unknown hello)))
     |}];
   (* Error: list with wrong number of arguments (zero). *)
@@ -154,7 +164,9 @@ let%expect_test "parse_variant" =
   [%expect
     {|
     (Of_sexp_error
-     "test_predicate_of_sexp: polymorphic variant tag takes an argument"
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [ctx] expects one or more arguments."
+       (suggestion "Replace by: (ctx ARG)")))
      (invalid_sexp ctx))
     |}];
   (* Success: variadic variant with arguments. *)
@@ -168,7 +180,9 @@ let%expect_test "parse_variant" =
   [%expect
     {|
     (Of_sexp_error
-     "test_predicate_of_sexp: polymorphic variant tag takes an argument"
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [variadic] expects one or more arguments."
+       (suggestion "Replace by: (variadic ARG)")))
      (invalid_sexp variadic))
     |}];
   ()

@@ -231,17 +231,34 @@ let loc_of_parsexp_range ~filename (range : Parsexp.Positions.range) =
   Loc.create (source_code_position range.start_pos, source_code_position range.end_pos)
 ;;
 
+module Error_context = Dunolint.Private.Sexp_helpers.Error_context
+
+let render_sexp_error_exn ~loc exn =
+  match exn with
+  | Err.E err -> err
+  | Failure str ->
+    let message = Pp.text (if String.is_suffix str ~suffix:"." then str else str ^ ".") in
+    Err.create ~loc [ message ]
+  | Error_context.E context ->
+    let hints =
+      List.concat
+        [ (match Error_context.did_you_mean context with
+           | None -> []
+           | Some { var; candidates } -> Err.did_you_mean var ~candidates)
+        ; (match Error_context.suggestion context with
+           | None -> []
+           | Some text -> [ Pp.text text ])
+        ]
+    in
+    Err.create ~loc [ Pp.text (Error_context.message context) ] ~hints
+  | exn -> Err.create ~loc [ Err.exn exn ] [@coverage off]
+;;
+
 let read (type a) (module M : S with type t = a) ~sexps_rewriter ~field =
   match M.read ~sexps_rewriter ~field with
   | ok -> Ok ok
   | exception Err.E err -> Error err
   | exception Sexp.Of_sexp_error (exn, sexp) ->
     let loc = Sexps_rewriter.loc sexps_rewriter sexp in
-    let message =
-      match exn with
-      | Failure str ->
-        Pp.text (if String.is_suffix str ~suffix:"." then str else str ^ ".")
-      | exn -> Err.exn exn [@coverage off]
-    in
-    Error (Err.create ~loc [ message ])
+    Error (render_sexp_error_exn ~loc exn)
 ;;

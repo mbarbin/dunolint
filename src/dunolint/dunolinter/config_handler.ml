@@ -45,11 +45,5 @@ let load_config_exn ~filename =
          | Some range -> Sexp_handler.loc_of_parsexp_range ~filename range
          | None -> Loc.of_file ~path:(Fpath.v filename) [@coverage off]
        in
-       let message =
-         match exn with
-         | Failure str ->
-           Pp.text (if String.is_suffix str ~suffix:"." then str else str ^ ".")
-         | exn -> Err.exn exn [@coverage off]
-       in
-       Err.raise ~loc [ message ])
+       raise (Err.E (Sexp_handler.render_sexp_error_exn ~loc exn)))
 ;;

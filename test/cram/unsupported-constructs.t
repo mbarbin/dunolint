@@ -19,7 +19,7 @@ Create build files.
   $ cat > lib/foo/dune <<EOF
   > (library
   >  (name bar)
-  >  (modes unknown))
+  >  (modes bytes))
   > EOF
 
   $ dunolint lint
@@ -28,8 +28,9 @@ Create build files.
                                 ^^^^^^^
   Error: Unsupported implicit_transitive_deps value [unknown].
   
-  File "lib/foo/dune", line 3, characters 8-15:
-  3 |  (modes unknown))
-              ^^^^^^^
-  Error: compilation_mode.t_of_sexp: no matching variant found.
+  File "lib/foo/dune", line 3, characters 8-13:
+  3 |  (modes bytes))
+              ^^^^^
+  Error: Unknown construct [bytes].
+  Hint: did you mean byte?
   [123]

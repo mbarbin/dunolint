@@ -38,6 +38,42 @@ module type T_of_sexp = sig
   val t_of_sexp : Sexp.t -> t
 end
 
+(** {1 Error handling} *)
+
+module Error_context : sig
+  (** Embed context to make parsing errors more user-friendly.
+
+      We're using a custom exception that allows embedding special context whose
+      purpose is to improve the parsing errors that dunolint prints to the
+      users.
+
+      For example, when we fail to find a match for a particular construct or
+      keyword looked up by name, we give the list of known ones so as to allow
+      messages like: "Did you mean X?".
+
+      The way we integrate this with the raising mecanism of [Sexplib0] is to
+      embed the context into the exception type defined below, and have such
+      exception be the first argument to the [Of_sexp_error (e, _)] error. *)
+
+  type t
+
+  exception E of t
+
+  val message : t -> string
+
+  module Did_you_mean : sig
+    type t =
+      { var : string
+      ; candidates : string list
+      }
+  end
+
+  val did_you_mean : t -> Did_you_mean.t option
+  val suggestion : t -> string option
+end
+
+(** {1 Parsing utils} *)
+
 (** When a record is embedded by a variant or polymorphic variant we'd like to
     support a syntax with less parens around. For example:
 
