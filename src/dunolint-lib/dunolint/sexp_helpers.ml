@@ -50,3 +50,41 @@ let parse_inline_record
        (Sexplib0.Sexp.Of_sexp_error (exn, context))
        bt [@coverage off] (* out edge bisect_ppx issue. *))
 ;;
+
+module Predicate_spec = struct
+  type 'a predicate =
+    { atom : string
+    ; conv : Sexp.t -> 'a
+    }
+
+  type 'a t = 'a predicate list
+end
+
+let parse_poly_variant_predicate
+      (type a)
+      (predicates : a Predicate_spec.t)
+      ~error_source
+      (sexp : Sexp.t)
+  : a
+  =
+  let find_predicate atom =
+    List.find_opt
+      (fun (p : a Predicate_spec.predicate) -> String.equal p.atom atom)
+      predicates
+  in
+  match sexp with
+  | Atom atom ->
+    (match find_predicate atom with
+     | Some _ -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source sexp
+     | None -> Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp)
+  | List (Atom atom :: tail) ->
+    (match find_predicate atom with
+     | None -> Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp
+     | Some predicate ->
+       (match tail with
+        | [ condition ] -> predicate.conv condition
+        | _ -> Sexplib0.Sexp_conv_error.ptag_incorrect_n_args error_source atom sexp))
+  | List (List _ :: _) ->
+    Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp
+  | List [] -> Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp
+;;

@@ -4,6 +4,72 @@ The selector named `(dune_project _)` gives you access to a sub hierarchy of sel
 
 In this document you'll find the list of all selectors and predicates that live inside the `(dune_project _)` hierarchy, along with their meaning and some examples.
 
+## dune_lang_version
+
+`(dune_project (dune_lang_version _))` is a selector for the dune-project lang stanza:
+
+Stanza:
+```dune
+(lang dune <VERSION>)
+```
+
+For example:
+```dune
+(lang dune 3.17)
+```
+
+Its evaluation is *undefined* for all other stanzas.
+
+### Predicates
+
+Predicates take the form `(OP VERSION)` where `OP` is a comparison operator and `VERSION` is a dune lang version (e.g., `3.17`). The predicate compares the version found in the stanza against the specified VERSION:
+
+```
+<stanza-version> OP <VERSION>
+```
+
+For example, with `(lang dune 3.17)` in the file, the predicate `(>= 3.0)` evaluates as `3.17 >= 3.0`, which is *true*.
+
+**Supported operators:**
+
+| S-expression | EDSL | Meaning |
+| ------------ | ---- | ------- |
+| `=` | `eq` | equal to |
+| `>` | `gt` | greater than |
+| `>=` | `gte` | greater than or equal to |
+| `<` | `lt` | less than |
+| `<=` | `lte` | less than or equal to |
+| `!=` | `neq` | not equal to |
+
+### Enforcement
+
+When a predicate is enforced, dunolint may suggest updating the version to satisfy the condition:
+
+- `=` and `!=`: Only `=` supports auto-fix (sets version to the specified value).
+- `>=` and `<`: Only `>=` supports auto-fix (bumps version up if needed).
+- `<=` and `>`: Only `<=` supports auto-fix (bumps version down if needed).
+
+Operators without auto-fix will fail enforcement if the condition is not already satisfied.
+
+### Examples
+
+Given the stanza `(lang dune 3.17)`:
+
+| Predicate | Result |
+| --------- | ------ |
+| `(= 3.17)` | True |
+| `(= 4.0)` | False. Suggestion: set version to 4.0 |
+| `(!= 4.0)` | True |
+| `(!= 3.17)` | False. No suggestion available |
+| `(>= 3.0)` | True |
+| `(>= 4.0)` | False. Suggestion: set version to 4.0 |
+| `(> 3.0)` | True |
+| `(> 4.0)` | False. No suggestion available |
+| `(<= 4.0)` | True |
+| `(<= 3.0)` | False. Suggestion: set version to 3.0 |
+| `(< 4.0)` | True |
+| `(< 3.0)` | False. No suggestion available |
+
 ## generate_opam_files
 
 `(dune_project (generate_opam_files _))` is a selector for the dune-project top level stanza of the same name:

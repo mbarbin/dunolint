@@ -75,7 +75,8 @@ let select_linter ~path =
   | Ok linted_file_kind ->
     (match linted_file_kind with
      | `dune -> (module Dune_linter : Dunolinter.S)
-     | `dune_project -> (module Dune_project_linter : Dunolinter.S))
+     | `dune_project -> (module Dune_project_linter : Dunolinter.S)
+     | `dunolint -> (module Dunolint_linter : Dunolinter.S))
   | Error (`Msg _msg) ->
     Err.raise
       Pp.O.

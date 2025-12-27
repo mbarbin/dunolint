@@ -21,34 +21,13 @@
 
 open! Import
 
-module T0 = struct
-  [@@@coverage off]
+type t = int * int
 
-  type t = int * int
+(* Given the actual shape and representation of the values inhabiting this type,
+   polymorphic comparison is adequate here. *)
 
-  let equal =
-    (fun a__001_ ->
-       fun b__002_ ->
-       let t__003_, t__004_ = a__001_ in
-       let t__005_, t__006_ = b__002_ in
-       Stdlib.( && ) (equal_int t__003_ t__005_) (equal_int t__004_ t__006_)
-     : t -> t -> bool)
-  ;;
-
-  let compare =
-    (fun a__007_ ->
-       fun b__008_ ->
-       let t__009_, t__010_ = a__007_ in
-       let t__011_, t__012_ = b__008_ in
-       match compare_int t__009_ t__011_ with
-       | 0 -> compare_int t__010_ t__012_
-       | n -> n
-     : t -> t -> int)
-  ;;
-end
-
-include T0
-
+let compare : t -> t -> int = Stdlib.compare
+let equal : t -> t -> bool = Stdlib.( = )
 let to_string (a, b) = Printf.sprintf "%d.%d" a b
 let sexp_of_t t = Sexp.Atom (to_string t)
 
@@ -78,113 +57,85 @@ module Predicate = struct
 
   let error_source = "dune_lang_version.t"
 
-  type nonrec t =
-    [ `equals of t
-    | `greater_than_or_equal_to of t
-    | `less_than_or_equal_to of t
+  type version = t
+
+  type deprecated_names =
+    [ `equals of version
+    | `greater_than_or_equal_to of version
+    | `less_than_or_equal_to of version
     ]
 
-  let compare =
-    (fun a__024_ ->
-       fun b__025_ ->
-       if Stdlib.( == ) a__024_ b__025_
-       then 0
-       else (
-         match a__024_, b__025_ with
-         | `equals _left__026_, `equals _right__027_ -> compare _left__026_ _right__027_
-         | `greater_than_or_equal_to _left__028_, `greater_than_or_equal_to _right__029_
-           -> compare _left__028_ _right__029_
-         | `less_than_or_equal_to _left__030_, `less_than_or_equal_to _right__031_ ->
-           compare _left__030_ _right__031_
-         | x, y -> Stdlib.compare x y)
-     : t -> t -> int)
+  type t =
+    [ `eq of version
+    | `gt of version
+    | `gte of version
+    | `lt of version
+    | `lte of version
+    | `neq of version
+    | deprecated_names
+    ]
+
+  (* Given the actual shape and representation of the values inhabiting this
+     type, polymorphic comparison is adequate here. *)
+
+  let compare : t -> t -> int = Stdlib.compare
+  let equal : t -> t -> bool = Stdlib.( = )
+
+  module Opv = struct
+    type predicate = t
+
+    type t =
+      { atom : string
+      ; cons : version -> predicate
+      }
+  end
+
+  let ops =
+    let opv atom cons : Opv.t = { atom; cons } in
+    [ opv "=" (fun v -> `eq v)
+    ; opv ">" (fun v -> `gt v)
+    ; opv ">=" (fun v -> `gte v)
+    ; opv "<" (fun v -> `lt v)
+    ; opv "<=" (fun v -> `lte v)
+    ; opv "!=" (fun v -> `neq v)
+    ; opv "equals" (fun v -> `eq v)
+    ; opv "greater_than_or_equal_to" (fun v -> `gte v)
+    ; opv "less_than_or_equal_to" (fun v -> `lte v)
+    ]
   ;;
 
-  let equal =
-    (fun a__032_ ->
-       fun b__033_ ->
-       if Stdlib.( == ) a__032_ b__033_
-       then true
-       else (
-         match a__032_, b__033_ with
-         | `equals _left__034_, `equals _right__035_ -> equal _left__034_ _right__035_
-         | `greater_than_or_equal_to _left__036_, `greater_than_or_equal_to _right__037_
-           -> equal _left__036_ _right__037_
-         | `less_than_or_equal_to _left__038_, `less_than_or_equal_to _right__039_ ->
-           equal _left__038_ _right__039_
-         | x, y -> Stdlib.( = ) x y)
-     : t -> t -> bool)
+  let t_of_sexp (sexp : Sexp.t) : t =
+    let find_op atom =
+      List.find_opt ops ~f:(fun (op : Opv.t) -> String.equal op.atom atom)
+    in
+    match sexp with
+    | Atom atom ->
+      (match find_op atom with
+       | Some _ -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source sexp
+       | None -> Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp)
+    | List (Atom atom :: tail) ->
+      (match find_op atom with
+       | None -> Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp
+       | Some op ->
+         (match tail with
+          | [ version_sexp ] -> op.cons (t_of_sexp version_sexp)
+          | _ -> Sexplib0.Sexp_conv_error.ptag_incorrect_n_args error_source atom sexp))
+    | List (List _ :: _) ->
+      Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp
+    | List [] -> Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp
   ;;
 
-  let __t_of_sexp__ =
-    (function
-     | Sexplib0.Sexp.Atom atom__041_ as _sexp__043_ ->
-       (match atom__041_ with
-        | "equals" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__043_
-        | "greater_than_or_equal_to" ->
-          Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__043_
-        | "less_than_or_equal_to" ->
-          Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__043_
-        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-     | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__041_ :: sexp_args__044_) as
-       _sexp__043_ ->
-       (match atom__041_ with
-        | "equals" as _tag__052_ ->
-          (match sexp_args__044_ with
-           | arg0__053_ :: [] ->
-             let res0__054_ = t_of_sexp arg0__053_ in
-             `equals res0__054_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__052_
-               _sexp__043_)
-        | "greater_than_or_equal_to" as _tag__049_ ->
-          (match sexp_args__044_ with
-           | arg0__050_ :: [] ->
-             let res0__051_ = t_of_sexp arg0__050_ in
-             `greater_than_or_equal_to res0__051_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__049_
-               _sexp__043_)
-        | "less_than_or_equal_to" as _tag__045_ ->
-          (match sexp_args__044_ with
-           | arg0__046_ :: [] ->
-             let res0__047_ = t_of_sexp arg0__046_ in
-             `less_than_or_equal_to res0__047_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__045_
-               _sexp__043_)
-        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-     | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__042_ ->
-       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__042_
-     | Sexplib0.Sexp.List [] as sexp__042_ ->
-       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__042_
-     : Sexplib0.Sexp.t -> t)
-  ;;
-
-  let t_of_sexp =
-    (fun sexp__055_ ->
-       try __t_of_sexp__ sexp__055_ with
-       | Sexplib0.Sexp_conv_error.No_variant_match ->
-         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__055_
-     : Sexplib0.Sexp.t -> t)
-  ;;
-
-  let sexp_of_t =
-    (function
-     | `equals v__057_ ->
-       Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "equals"; sexp_of_t v__057_ ]
-     | `greater_than_or_equal_to v__058_ ->
-       Sexplib0.Sexp.List
-         [ Sexplib0.Sexp.Atom "greater_than_or_equal_to"; sexp_of_t v__058_ ]
-     | `less_than_or_equal_to v__059_ ->
-       Sexplib0.Sexp.List
-         [ Sexplib0.Sexp.Atom "less_than_or_equal_to"; sexp_of_t v__059_ ]
-     : t -> Sexplib0.Sexp.t)
+  let sexp_of_t (t : t) : Sexp.t =
+    let op name v = Sexp.List [ Atom name; sexp_of_t v ] in
+    match t with
+    | `eq v -> op "=" v
+    | `gt v -> op ">" v
+    | `gte v -> op ">=" v
+    | `lt v -> op "<" v
+    | `lte v -> op "<=" v
+    | `neq v -> op "!=" v
+    | `equals v -> op "equals" v
+    | `greater_than_or_equal_to v -> op "greater_than_or_equal_to" v
+    | `less_than_or_equal_to v -> op "less_than_or_equal_to" v
   ;;
 end

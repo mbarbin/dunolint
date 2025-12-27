@@ -34,5 +34,9 @@ let%expect_test "predicate" =
     (dune_project (
       implicit_transitive_deps (equals false-if-hidden-includes-supported)))
     |}];
+  test
+    (dunolint
+       (dunolint_lang_version (gte (Dunolint0.Dunolint_lang_version.create (1, 0)))));
+  [%expect {| (dunolint (dunolint_lang_version (>= 1.0))) |}];
   ()
 ;;

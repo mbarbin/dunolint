@@ -31,8 +31,14 @@ let () =
   rule
     (enforce
        (dune_project
-          (dune_lang_version
-             (greater_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 17))))))
+          (dune_lang_version (gte (Dune_project.Dune_lang_version.create (3, 17))))))
+;;
+
+let () =
+  rule
+    (enforce
+       (dunolint
+          (dunolint_lang_version (eq (Dunolint0.Dunolint_lang_version.create (1, 0))))))
 ;;
 
 let () =

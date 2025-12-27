@@ -29,6 +29,7 @@ let%expect_test "all" =
     {|
     dune
     dune_project
+    dunolint
     |}];
   ()
 ;;
@@ -47,6 +48,7 @@ let%expect_test "to_string/of_string" =
     {|
     dune
     dune-project
+    dunolint
     |}];
   let () =
     match Dunolint.Linted_file_kind.of_string "invalid" with

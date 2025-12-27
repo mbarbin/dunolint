@@ -22,6 +22,7 @@
 module Blang = Blang
 module Dune = Dune
 module Dune_project = Dune_project
+module Dunolint0 = Dunolint0
 include Blang.O
 
 let backend p = Blang.base (`backend p)
@@ -29,13 +30,17 @@ let cond clauses = `cond clauses
 let dune p = Blang.base (`dune p)
 let dune_lang_version p = Blang.base (`dune_lang_version p)
 let dune_project p = Blang.base (`dune_project p)
+let dunolint p = Blang.base (`dunolint p)
+let dunolint_lang_version p = Blang.base (`dunolint_lang_version p)
 let enforce p = `enforce p
+let eq p = Blang.base (`eq p)
 let equals p = Blang.base (`equals p)
 let executable p = Blang.base (`executable p)
 let flag p = Blang.base (`flag p)
 let generate_opam_files p = Blang.base (`generate_opam_files p)
 let glob p = Blang.base (`glob (Glob.v p))
-let greater_than_or_equal_to p = Blang.base (`greater_than_or_equal_to p)
+let gt p = Blang.base (`gt p)
+let gte p = Blang.base (`gte p)
 let has_field p = Blang.base (`has_field p)
 let has_mode p = Blang.base (`has_mode p)
 let has_modes p = Blang.base (`has_modes p)
@@ -45,11 +50,13 @@ let instrumentation p = Blang.base (`instrumentation p)
 let is_prefix p = Blang.base (`is_prefix p)
 let is_present = Blang.base `is_present
 let is_suffix p = Blang.base (`is_suffix p)
-let less_than_or_equal_to p = Blang.base (`less_than_or_equal_to p)
 let library p = Blang.base (`library p)
 let lint p = Blang.base (`lint p)
+let lt p = Blang.base (`lt p)
+let lte p = Blang.base (`lte p)
 let modes p = Blang.base (`modes p)
 let name p = Blang.base (`name p)
+let neq p = Blang.base (`neq p)
 let no_preprocessing = Blang.base `no_preprocessing
 let path p = Blang.base (`path p)
 let pp p = Blang.base (`pp p)
@@ -59,3 +66,8 @@ let preprocess p = Blang.base (`preprocess p)
 let public_name p = Blang.base (`public_name p)
 let return = `return
 let stanza p = Blang.base (`stanza p)
+
+(* Deprecated aliases *)
+
+let greater_than_or_equal_to p = Blang.base (`greater_than_or_equal_to p)
+let less_than_or_equal_to p = Blang.base (`less_than_or_equal_to p)

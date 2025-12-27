@@ -32,6 +32,7 @@
   dunolint.dune_linter
   dunolint.dune_project_linter
   dunolint.dunolint_engine
+  dunolint.dunolint_linter
   dunolint.dunolinter
   fpath
   fpath-base

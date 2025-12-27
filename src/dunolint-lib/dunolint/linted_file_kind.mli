@@ -22,6 +22,7 @@
 type t =
   [ `dune
   | `dune_project
+  | `dunolint
   ]
 
 val all : t list
