@@ -99,6 +99,100 @@ let%expect_test "predicate less_than_or_equal_to" =
   [%expect {| (less_than_or_equal_to 4.0) |}]
 ;;
 
+let%expect_test "predicate eq" =
+  let version = Dune_project.Dune_lang_version.create (3, 20) in
+  let predicate = `eq version in
+  print_s [%sexp (predicate : Dune_project.Dune_lang_version.Predicate.t)];
+  [%expect {| (= 3.20) |}]
+;;
+
+let%expect_test "predicate neq" =
+  let version = Dune_project.Dune_lang_version.create (3, 20) in
+  let predicate = `neq version in
+  print_s [%sexp (predicate : Dune_project.Dune_lang_version.Predicate.t)];
+  [%expect {| (!= 3.20) |}]
+;;
+
+let%expect_test "predicate geq" =
+  let version = Dune_project.Dune_lang_version.create (3, 18) in
+  let predicate = `geq version in
+  print_s [%sexp (predicate : Dune_project.Dune_lang_version.Predicate.t)];
+  [%expect {| (>= 3.18) |}]
+;;
+
+let%expect_test "predicate gt" =
+  let version = Dune_project.Dune_lang_version.create (3, 18) in
+  let predicate = `gt version in
+  print_s [%sexp (predicate : Dune_project.Dune_lang_version.Predicate.t)];
+  [%expect {| (> 3.18) |}]
+;;
+
+let%expect_test "predicate leq" =
+  let version = Dune_project.Dune_lang_version.create (4, 0) in
+  let predicate = `leq version in
+  print_s [%sexp (predicate : Dune_project.Dune_lang_version.Predicate.t)];
+  [%expect {| (<= 4.0) |}]
+;;
+
+let%expect_test "predicate lt" =
+  let version = Dune_project.Dune_lang_version.create (4, 0) in
+  let predicate = `lt version in
+  print_s [%sexp (predicate : Dune_project.Dune_lang_version.Predicate.t)];
+  [%expect {| (< 4.0) |}]
+;;
+
+let%expect_test "Predicate.t_of_sexp" =
+  let test str =
+    let sexp = Parsexp.Single.parse_string_exn str in
+    match Dune_project.Dune_lang_version.Predicate.t_of_sexp sexp with
+    | predicate ->
+      print_s [%sexp (predicate : Dune_project.Dune_lang_version.Predicate.t)]
+    | exception exn -> print_s [%sexp (exn : Exn.t)]
+  in
+  test "(= 3.20)";
+  [%expect {| (= 3.20) |}];
+  test "(!= 3.20)";
+  [%expect {| (!= 3.20) |}];
+  test "(>= 3.18)";
+  [%expect {| (>= 3.18) |}];
+  test "(> 3.18)";
+  [%expect {| (> 3.18) |}];
+  test "(<= 4.0)";
+  [%expect {| (<= 4.0) |}];
+  test "(< 4.0)";
+  [%expect {| (< 4.0) |}];
+  (* Deprecated operators - parsed and normalized to new operators. *)
+  test "(equals 3.20)";
+  [%expect {| (= 3.20) |}];
+  test "(greater_than_or_equal_to 3.18)";
+  [%expect {| (>= 3.18) |}];
+  test "(less_than_or_equal_to 4.0)";
+  [%expect {| (<= 4.0) |}];
+  (* Error cases. *)
+  test "=";
+  [%expect
+    {|
+    (Of_sexp_error
+     "dune_lang_version.t_of_sexp: polymorphic variant tag takes an argument"
+     (invalid_sexp =))
+    |}];
+  test "(= 3.20 extra)";
+  [%expect
+    {|
+    (Of_sexp_error
+     "dune_lang_version.t_of_sexp: polymorphic variant tag \"=\" has incorrect number of arguments"
+     (invalid_sexp (= 3.20 extra)))
+    |}];
+  test "(unknown 3.20)";
+  [%expect
+    {|
+    (Of_sexp_error
+     "dune_lang_version.t_of_sexp: no matching variant found"
+     (invalid_sexp (unknown 3.20)))
+    |}];
+  ()
+;;
+
 let%expect_test "equal comparison" =
   let v1 = Dune_project.Dune_lang_version.create (3, 20) in
   let v2 = Dune_project.Dune_lang_version.create (3, 20) in

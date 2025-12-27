@@ -46,10 +46,22 @@ val to_string : t -> string
 module Predicate : sig
   type version := t
 
-  type t =
+  (** These longer names are deprecated and will be removed by a future upgrade.
+      Do not use in new code and migrate at your earliest convenience. *)
+  type deprecated_names =
     [ `equals of version
     | `greater_than_or_equal_to of version
     | `less_than_or_equal_to of version
+    ]
+
+  type t =
+    [ `eq of version
+    | `neq of version
+    | `geq of version
+    | `gt of version
+    | `leq of version
+    | `lt of version
+    | deprecated_names
     ]
 
   val equal : t -> t -> bool

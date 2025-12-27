@@ -35,12 +35,14 @@ val dune : 'a -> [> `dune of 'a ] Blang.t
 val dune_lang_version : 'a -> [> `dune_lang_version of 'a ] Blang.t
 val dune_project : 'a -> [> `dune_project of 'a ] Blang.t
 val enforce : 'a -> [> `enforce of 'a ]
+val eq : 'a -> [> `eq of 'a ] Blang.t
 val equals : 'a -> [> `equals of 'a ] Blang.t
 val executable : 'a -> [> `executable of 'a ] Blang.t
 val flag : Dune.Pps.Predicate.Flag.t -> [> `flag of Dune.Pps.Predicate.Flag.t ] Blang.t
 val generate_opam_files : 'a -> [> `generate_opam_files of 'a ] Blang.t
+val geq : 'a -> [> `geq of 'a ] Blang.t
 val glob : string -> [> `glob of Glob.t ] Blang.t
-val greater_than_or_equal_to : 'a -> [> `greater_than_or_equal_to of 'a ] Blang.t
+val gt : 'a -> [> `gt of 'a ] Blang.t
 val has_field : 'a -> [> `has_field of 'a ] Blang.t
 val has_mode : 'a -> [> `has_mode of 'a ] Blang.t
 val has_modes : 'a -> [> `has_modes of 'a ] Blang.t
@@ -50,11 +52,13 @@ val instrumentation : 'a -> [> `instrumentation of 'a ] Blang.t
 val is_prefix : string -> [> `is_prefix of string ] Blang.t
 val is_present : [> `is_present ] Blang.t
 val is_suffix : string -> [> `is_suffix of string ] Blang.t
-val less_than_or_equal_to : 'a -> [> `less_than_or_equal_to of 'a ] Blang.t
+val leq : 'a -> [> `leq of 'a ] Blang.t
 val library : 'a -> [> `library of 'a ] Blang.t
 val lint : 'a -> [> `lint of 'a ] Blang.t
+val lt : 'a -> [> `lt of 'a ] Blang.t
 val modes : 'a -> [> `modes of 'a ] Blang.t
 val name : 'a -> [> `name of 'a ] Blang.t
+val neq : 'a -> [> `neq of 'a ] Blang.t
 val no_preprocessing : [> `no_preprocessing ] Blang.t
 val path : 'a -> [> `path of 'a ] Blang.t
 val pp : Dune.Pp.Name.t -> [> `pp of Dune.Pp.Name.t ] Blang.t
@@ -68,3 +72,13 @@ val preprocess : 'a -> [> `preprocess of 'a ] Blang.t
 val public_name : 'a -> [> `public_name of 'a ] Blang.t
 val return : [> `return ]
 val stanza : 'a -> [> `stanza of 'a ] Blang.t
+
+(** {1 Deprecated aliases} *)
+
+val greater_than_or_equal_to : 'a -> [> `greater_than_or_equal_to of 'a ] Blang.t
+[@@ocaml.deprecated "[since 2025-12] Use [geq]. Hint: Run [ocamlmig migrate]"]
+[@@migrate { repl = Rel.geq }]
+
+val less_than_or_equal_to : 'a -> [> `less_than_or_equal_to of 'a ] Blang.t
+[@@ocaml.deprecated "[since 2025-12] Use [leq]. Hint: Run [ocamlmig migrate]"]
+[@@migrate { repl = Rel.leq }]
