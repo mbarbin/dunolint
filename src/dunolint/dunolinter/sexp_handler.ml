@@ -234,6 +234,7 @@ let loc_of_parsexp_range ~filename (range : Parsexp.Positions.range) =
 let read (type a) (module M : S with type t = a) ~sexps_rewriter ~field =
   match M.read ~sexps_rewriter ~field with
   | ok -> Ok ok
+  | exception Err.E err -> Error err
   | exception Sexp.Of_sexp_error (exn, sexp) ->
     let loc = Sexps_rewriter.loc sexps_rewriter sexp in
     let message =
