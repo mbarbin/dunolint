@@ -32,14 +32,14 @@ For example, with `(lang dune 3.17)` in the file, the predicate `(>= 3.0)` evalu
 
 **Supported operators:**
 
-| Operator | Meaning |
-| -------- | ------- |
-| `=` | equal to |
-| `!=` | not equal to |
-| `>=` | greater than or equal to |
-| `>` | greater than |
-| `<=` | less than or equal to |
-| `<` | less than |
+| S-expression | EDSL | Meaning |
+| ------------ | ---- | ------- |
+| `=` | `eq` | equal to |
+| `>` | `gt` | greater than |
+| `>=` | `gte` | greater than or equal to |
+| `<` | `lt` | less than |
+| `<=` | `lte` | less than or equal to |
+| `!=` | `neq` | not equal to |
 
 ### Enforcement
 

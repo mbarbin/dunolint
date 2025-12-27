@@ -131,6 +131,7 @@ Head over to the next pages for selectors dedicated to a certain type of files:
 
 - [dune](./dune.md)
 - [dune-project](./dune-project.md)
+- [dunolint](./dunolint.md)
 
 In addition to them, the following selectors are common to all fragments:
 

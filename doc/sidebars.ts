@@ -48,6 +48,7 @@ const sidebars: SidebarsConfig = {
           items: [
             { type: 'doc', id: 'reference/config/dune', label: 'dune' },
             { type: 'doc', id: 'reference/config/dune-project', label: 'dune-project' },
+            { type: 'doc', id: 'reference/config/dunolint', label: 'dunolint' },
           ]
         },
       ],
