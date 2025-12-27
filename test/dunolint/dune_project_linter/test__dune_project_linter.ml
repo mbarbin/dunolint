@@ -168,8 +168,16 @@ let%expect_test "lint" =
         apply (dune_project (name (equals (Dune_project.Name.v "foo"))));
         (* Enforcing unapplicable invariants has no effect. *)
         apply (dune (library (name (equals (Dune.Library.Name.v "bar")))));
+        apply
+          (dunolint
+             (dunolint_lang_version (eq (Dunolint0.Dunolint_lang_version.create (1, 0)))));
         apply (path (glob "path/"));
-        apply (not_ (dune (library (name (equals (Dune.Library.Name.v "bar"))))))
+        apply (not_ (dune (library (name (equals (Dune.Library.Name.v "bar"))))));
+        apply
+          (not_
+             (dunolint
+                (dunolint_lang_version
+                   (eq (Dunolint0.Dunolint_lang_version.create (1, 0))))))
       in
       (* Enforcing invariant that cannot be auto-corrected triggers an error. *)
       (match Dunolinter.match_stanza stanza with

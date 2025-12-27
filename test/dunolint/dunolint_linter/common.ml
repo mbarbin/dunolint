@@ -19,24 +19,6 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-open Dunolint.Config.Std
-
-let%expect_test "predicate" =
-  let test p = Common.test_predicate (module Dunolint.Predicate) p in
-  test (dune (executable (name (equals (Dune.Executable.Name.v "main")))));
-  [%expect {| (dune (executable (name (equals main)))) |}];
-  test (dune_project (implicit_transitive_deps (equals `True)));
-  [%expect {| (dune_project (implicit_transitive_deps (equals true))) |}];
-  test
-    (dune_project (implicit_transitive_deps (equals `False_if_hidden_includes_supported)));
-  [%expect
-    {|
-    (dune_project (
-      implicit_transitive_deps (equals false-if-hidden-includes-supported)))
-    |}];
-  test
-    (dunolint
-       (dunolint_lang_version (gte (Dunolint0.Dunolint_lang_version.create (1, 0)))));
-  [%expect {| (dunolint (dunolint_lang_version (>= 1.0))) |}];
-  ()
+let read original_contents =
+  Test_helpers.read_sexp_field ~path:(Fpath.v "dunolint") original_contents
 ;;
