@@ -36,6 +36,13 @@ let () =
 
 let () =
   rule
+    (enforce
+       (dunolint
+          (dunolint_lang_version (eq (Dunolint0.Dunolint_lang_version.create (1, 0))))))
+;;
+
+let () =
+  rule
     (cond
        [ path (glob "test/**/src/*"), return
        ; path (glob "test/**"), enforce (dune (library (name (is_suffix "_test"))))

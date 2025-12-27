@@ -17,6 +17,8 @@
 
 (rule (enforce (dune_project (dune_lang_version (>= 3.17)))))
 
+(rule (enforce (dunolint (dunolint_lang_version (= 1.0)))))
+
 (rule
  (cond ((path (glob test/**/src/*)) return)
   ((path (glob test/**)) (enforce (dune (library (name (is_suffix _test))))))))
