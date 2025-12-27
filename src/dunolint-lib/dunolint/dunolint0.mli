@@ -19,28 +19,10 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-module Blang = Blang
-module Condition = Condition
-module Config = Config
-module Dune = Dune
-module Dune_project = Dune_project
-module Dunolint0 = Dunolint0
-module Glob = Glob
-module Linted_file_kind = Linted_file_kind
-module Path = Path
-module Predicate = Predicate
-module Rule = Rule
-module Trilang = Trilang
+(** Types and selectors for linting [dunolint] configuration files.
 
-module Std : sig
-  (** [Std] is meant to be open to access common modules from the root path. *)
+    This module is named [Dunolint0] rather than [Dunolint] to avoid name
+    collision with the library module itself. *)
 
-  module Blang = Blang
-  module Dune = Dune
-  module Dune_project = Dune_project
-  module Dunolint0 = Dunolint0
-end
-
-module Private : sig
-  module Sexp_helpers = Sexp_helpers
-end
+module Dunolint_lang_version = Dunolint1.Dunolint_lang_version
+module Predicate = Dunolint1.Predicate

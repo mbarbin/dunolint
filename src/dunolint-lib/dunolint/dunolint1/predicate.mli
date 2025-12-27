@@ -19,28 +19,9 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-module Blang = Blang
-module Condition = Condition
-module Config = Config
-module Dune = Dune
-module Dune_project = Dune_project
-module Dunolint0 = Dunolint0
-module Glob = Glob
-module Linted_file_kind = Linted_file_kind
-module Path = Path
-module Predicate = Predicate
-module Rule = Rule
-module Trilang = Trilang
+type t = [ `dunolint_lang_version of Dunolint_lang_version.Predicate.t Blang.t ]
 
-module Std : sig
-  (** [Std] is meant to be open to access common modules from the root path. *)
-
-  module Blang = Blang
-  module Dune = Dune
-  module Dune_project = Dune_project
-  module Dunolint0 = Dunolint0
-end
-
-module Private : sig
-  module Sexp_helpers = Sexp_helpers
-end
+val compare : t -> t -> int
+val equal : t -> t -> bool
+val sexp_of_t : t -> Sexplib0.Sexp.t
+val t_of_sexp : Sexplib0.Sexp.t -> t

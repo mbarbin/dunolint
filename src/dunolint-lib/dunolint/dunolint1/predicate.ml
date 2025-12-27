@@ -19,26 +19,40 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Blang = Blang
-module Condition = Condition
-module Config = Config
-module Dune = Dune
-module Dune_project = Dune_project
-module Dunolint0 = Dunolint0
-module Glob = Glob
-module Linted_file_kind = Linted_file_kind
-module Path = Path
-module Predicate = Predicate
-module Rule = Rule
-module Trilang = Trilang
+let error_source = "predicate.t"
 
-module Std = struct
-  module Blang = Blang
-  module Dune = Dune
-  module Dune_project = Dune_project
-  module Dunolint0 = Dunolint0
-end
+type t = [ `dunolint_lang_version of Dunolint_lang_version.Predicate.t Blang.t ]
 
-module Private = struct
-  module Sexp_helpers = Sexp_helpers
-end
+let compare (a : t) (b : t) =
+  if Stdlib.( == ) a b
+  then 0
+  else (
+    match a, b with
+    | `dunolint_lang_version va, `dunolint_lang_version vb ->
+      Blang.compare Dunolint_lang_version.Predicate.compare va vb)
+;;
+
+let equal a b = 0 = compare a b
+
+let predicates : t Sexp_helpers.Predicate_spec.t =
+  [ { atom = "dunolint_lang_version"
+    ; conv =
+        (fun sexp ->
+          `dunolint_lang_version
+            (Blang.t_of_sexp Dunolint_lang_version.Predicate.t_of_sexp sexp))
+    }
+  ]
+;;
+
+let t_of_sexp (sexp : Sexp.t) : t =
+  Sexp_helpers.parse_poly_variant_predicate predicates ~error_source sexp
+;;
+
+let sexp_of_t (t : t) : Sexp.t =
+  match t with
+  | `dunolint_lang_version v ->
+    List
+      [ Atom "dunolint_lang_version"
+      ; Blang.sexp_of_t Dunolint_lang_version.Predicate.sexp_of_t v
+      ]
+;;

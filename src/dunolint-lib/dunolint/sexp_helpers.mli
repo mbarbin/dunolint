@@ -19,7 +19,18 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-(** Some helpers used by sexp serializers. *)
+(** Some helpers used by sexp serializers.
+
+    Originally the sexp reader in this directory were implemented using ppx meta
+    programming via [ppx_sexp_conv] however we are in the process of migrating
+    the logic to custom helpers in order to:
+
+    1. remove dependencies
+    2. allow customization (e.g. less parens required for variants like in dune)
+    3. improve error handling and reporting
+
+    This module captures some common patterns which we are gradually introducing
+    to the code to handle to sexp handling. *)
 
 module type T_of_sexp = sig
   type t
@@ -65,4 +76,24 @@ val parse_inline_record
   -> context:Sexp.t
   -> tag:string
   -> fields:Sexp.t list
+  -> 'a
+
+module Predicate_spec : sig
+  (** Helper to read polymorphic variants encoding a predicate. The goal
+      overtime is to extend the capability of the mini interpreter that uses
+      that spec to parse a sexp, by improving behaviors such as error reporting,
+      user-friendly hints, etc. This is left as future work. *)
+
+  type 'a predicate =
+    { atom : string
+    ; conv : Sexp.t -> 'a
+    }
+
+  type 'a t = 'a predicate list
+end
+
+val parse_poly_variant_predicate
+  :  'a Predicate_spec.t
+  -> error_source:string
+  -> Sexp.t
   -> 'a

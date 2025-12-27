@@ -19,28 +19,43 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-module Blang = Blang
-module Condition = Condition
-module Config = Config
-module Dune = Dune
-module Dune_project = Dune_project
-module Dunolint0 = Dunolint0
-module Glob = Glob
-module Linted_file_kind = Linted_file_kind
-module Path = Path
-module Predicate = Predicate
-module Rule = Rule
-module Trilang = Trilang
+(** The format of the syntax used in a dunolint config file.
 
-module Std : sig
-  (** [Std] is meant to be open to access common modules from the root path. *)
+    This is specified as the first stanza. For example:
 
-  module Blang = Blang
-  module Dune = Dune
-  module Dune_project = Dune_project
-  module Dunolint0 = Dunolint0
-end
+    {v
+      (lang dunolint 1.0)
+    v} *)
 
-module Private : sig
-  module Sexp_helpers = Sexp_helpers
+(** Representing the two integers that are separated by the dot. For example,
+    the representation of ["1.0"] is [(1, 0)]. *)
+type t
+
+val equal : t -> t -> bool
+val compare : t -> t -> int
+
+include Sexpable.S with type t := t
+
+val create : int * int -> t
+
+(** Returns the string that can be used as atom in the dunolint configuration
+    file. *)
+val to_string : t -> string
+
+module Predicate : sig
+  type version := t
+
+  type t =
+    [ `eq of version
+    | `gt of version
+    | `gte of version
+    | `lt of version
+    | `lte of version
+    | `neq of version
+    ]
+
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+
+  include Sexpable.S with type t := t
 end
