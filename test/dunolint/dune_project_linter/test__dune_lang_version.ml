@@ -121,7 +121,13 @@ module Predicate = struct
   type t = Dune_project.Dune_lang_version.Predicate.t as 'a
     constraint
       'a =
-      [ `equals of Dune_project.Dune_lang_version.t
+      [ `eq of Dune_project.Dune_lang_version.t
+      | `gt of Dune_project.Dune_lang_version.t
+      | `gte of Dune_project.Dune_lang_version.t
+      | `lt of Dune_project.Dune_lang_version.t
+      | `lte of Dune_project.Dune_lang_version.t
+      | `neq of Dune_project.Dune_lang_version.t
+      | `equals of Dune_project.Dune_lang_version.t
       | `greater_than_or_equal_to of Dune_project.Dune_lang_version.t
       | `less_than_or_equal_to of Dune_project.Dune_lang_version.t
       ]
@@ -135,45 +141,82 @@ let%expect_test "eval" =
   Test_helpers.is_true
     (Dune_project_linter.Dune_lang_version.eval
        t
-       ~predicate:(`equals (Dune_project.Dune_lang_version.create (3, 20))));
+       ~predicate:(`eq (Dune_project.Dune_lang_version.create (3, 20))));
   [%expect {||}];
   Test_helpers.is_false
     (Dune_project_linter.Dune_lang_version.eval
        t
-       ~predicate:(`equals (Dune_project.Dune_lang_version.create (4, 5))));
+       ~predicate:(`eq (Dune_project.Dune_lang_version.create (4, 5))));
   [%expect {||}];
   Test_helpers.is_true
     (Dune_project_linter.Dune_lang_version.eval
        t
-       ~predicate:
-         (`greater_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 20))));
-  [%expect {||}];
-  Test_helpers.is_true
-    (Dune_project_linter.Dune_lang_version.eval
-       t
-       ~predicate:
-         (`greater_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 15))));
+       ~predicate:(`neq (Dune_project.Dune_lang_version.create (4, 5))));
   [%expect {||}];
   Test_helpers.is_false
     (Dune_project_linter.Dune_lang_version.eval
        t
-       ~predicate:
-         (`greater_than_or_equal_to (Dune_project.Dune_lang_version.create (4, 5))));
+       ~predicate:(`neq (Dune_project.Dune_lang_version.create (3, 20))));
   [%expect {||}];
   Test_helpers.is_true
     (Dune_project_linter.Dune_lang_version.eval
        t
-       ~predicate:(`less_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 20))));
+       ~predicate:(`gte (Dune_project.Dune_lang_version.create (3, 20))));
   [%expect {||}];
   Test_helpers.is_true
     (Dune_project_linter.Dune_lang_version.eval
        t
-       ~predicate:(`less_than_or_equal_to (Dune_project.Dune_lang_version.create (4, 5))));
+       ~predicate:(`gte (Dune_project.Dune_lang_version.create (3, 15))));
   [%expect {||}];
   Test_helpers.is_false
     (Dune_project_linter.Dune_lang_version.eval
        t
-       ~predicate:(`less_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 15))));
+       ~predicate:(`gte (Dune_project.Dune_lang_version.create (4, 5))));
+  [%expect {||}];
+  Test_helpers.is_true
+    (Dune_project_linter.Dune_lang_version.eval
+       t
+       ~predicate:(`gt (Dune_project.Dune_lang_version.create (3, 15))));
+  [%expect {||}];
+  Test_helpers.is_false
+    (Dune_project_linter.Dune_lang_version.eval
+       t
+       ~predicate:(`gt (Dune_project.Dune_lang_version.create (3, 20))));
+  [%expect {||}];
+  Test_helpers.is_false
+    (Dune_project_linter.Dune_lang_version.eval
+       t
+       ~predicate:(`gt (Dune_project.Dune_lang_version.create (4, 5))));
+  [%expect {||}];
+  Test_helpers.is_true
+    (Dune_project_linter.Dune_lang_version.eval
+       t
+       ~predicate:(`lte (Dune_project.Dune_lang_version.create (3, 20))));
+  [%expect {||}];
+  Test_helpers.is_true
+    (Dune_project_linter.Dune_lang_version.eval
+       t
+       ~predicate:(`lte (Dune_project.Dune_lang_version.create (4, 5))));
+  [%expect {||}];
+  Test_helpers.is_false
+    (Dune_project_linter.Dune_lang_version.eval
+       t
+       ~predicate:(`lte (Dune_project.Dune_lang_version.create (3, 15))));
+  [%expect {||}];
+  Test_helpers.is_true
+    (Dune_project_linter.Dune_lang_version.eval
+       t
+       ~predicate:(`lt (Dune_project.Dune_lang_version.create (4, 5))));
+  [%expect {||}];
+  Test_helpers.is_false
+    (Dune_project_linter.Dune_lang_version.eval
+       t
+       ~predicate:(`lt (Dune_project.Dune_lang_version.create (3, 20))));
+  [%expect {||}];
+  Test_helpers.is_false
+    (Dune_project_linter.Dune_lang_version.eval
+       t
+       ~predicate:(`lt (Dune_project.Dune_lang_version.create (3, 15))));
   [%expect {||}];
   ()
 ;;
@@ -241,29 +284,116 @@ let%expect_test "enforce" =
   let t = parse {| (lang dune 2.8) |} in
   enforce t [ invariant ];
   [%expect {| (lang dune 3.20) |}];
-  (* Test [greater_than_or_equal_to] enforcement. *)
   let t = parse {| (lang dune 3.17) |} in
-  enforce t [ greater_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 18)) ];
+  enforce t [ gte (Dune_project.Dune_lang_version.create (3, 18)) ];
   [%expect {| (lang dune 3.18) |}];
   let t = parse {| (lang dune 3.20) |} in
-  enforce t [ greater_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 18)) ];
+  enforce t [ gte (Dune_project.Dune_lang_version.create (3, 18)) ];
+  [%expect {| (lang dune 3.20) |}];
+  let t = parse {| (lang dune 3.17) |} in
+  enforce t [ not_ (gte (Dune_project.Dune_lang_version.create (3, 18))) ];
+  [%expect {| (lang dune 3.17) |}];
+  let t = parse {| (lang dune 3.22) |} in
+  enforce t [ lte (Dune_project.Dune_lang_version.create (3, 20)) ];
+  [%expect {| (lang dune 3.20) |}];
+  let t = parse {| (lang dune 3.18) |} in
+  enforce t [ lte (Dune_project.Dune_lang_version.create (3, 20)) ];
+  [%expect {| (lang dune 3.18) |}];
+  let t = parse {| (lang dune 3.22) |} in
+  enforce t [ not_ (lte (Dune_project.Dune_lang_version.create (3, 20))) ];
+  [%expect {| (lang dune 3.22) |}];
+  let t = parse {| (lang dune 3.20) |} in
+  enforce t [ eq (Dune_project.Dune_lang_version.create (4, 5)) ];
+  [%expect {| (lang dune 4.5) |}];
+  let t = parse {| (lang dune 3.20) |} in
+  enforce t [ not_ (neq (Dune_project.Dune_lang_version.create (4, 5))) ];
+  [%expect {| (lang dune 4.5) |}];
+  let t = parse {| (lang dune 3.17) |} in
+  enforce t [ gte (Dune_project.Dune_lang_version.create (3, 18)) ];
+  [%expect {| (lang dune 3.18) |}];
+  let t = parse {| (lang dune 3.20) |} in
+  enforce t [ gte (Dune_project.Dune_lang_version.create (3, 18)) ];
+  [%expect {| (lang dune 3.20) |}];
+  let t = parse {| (lang dune 3.17) |} in
+  enforce t [ not_ (lt (Dune_project.Dune_lang_version.create (3, 18))) ];
+  [%expect {| (lang dune 3.18) |}];
+  let t = parse {| (lang dune 3.22) |} in
+  enforce t [ lte (Dune_project.Dune_lang_version.create (3, 20)) ];
+  [%expect {| (lang dune 3.20) |}];
+  let t = parse {| (lang dune 3.18) |} in
+  enforce t [ lte (Dune_project.Dune_lang_version.create (3, 20)) ];
+  [%expect {| (lang dune 3.18) |}];
+  let t = parse {| (lang dune 3.18) |} in
+  enforce t [ not_ (gt (Dune_project.Dune_lang_version.create (3, 20))) ];
+  [%expect {| (lang dune 3.18) |}];
+  let t = parse {| (lang dune 3.20) |} in
+  require_does_raise [%here] (fun () ->
+    enforce t [ neq (Dune_project.Dune_lang_version.create (3, 20)) ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (!= 3.20))) |}];
+  let t = parse {| (lang dune 3.20) |} in
+  require_does_raise [%here] (fun () ->
+    enforce t [ not_ (eq (Dune_project.Dune_lang_version.create (3, 20))) ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (= 3.20)))) |}];
+  let t = parse {| (lang dune 3.20) |} in
+  require_does_raise [%here] (fun () ->
+    enforce t [ lt (Dune_project.Dune_lang_version.create (3, 18)) ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (< 3.18))) |}];
+  let t = parse {| (lang dune 3.20) |} in
+  require_does_raise [%here] (fun () ->
+    enforce t [ not_ (gte (Dune_project.Dune_lang_version.create (3, 18))) ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (>= 3.18)))) |}];
+  let t = parse {| (lang dune 3.18) |} in
+  require_does_raise [%here] (fun () ->
+    enforce t [ gt (Dune_project.Dune_lang_version.create (3, 20)) ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (> 3.20))) |}];
+  let t = parse {| (lang dune 3.18) |} in
+  require_does_raise [%here] (fun () ->
+    enforce t [ not_ (lte (Dune_project.Dune_lang_version.create (3, 20))) ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (<= 3.20)))) |}];
+  (* Deprecated operators - testing for coverage. *)
+  let t = parse {| (lang dune 3.17) |} in
+  enforce
+    t
+    [ (greater_than_or_equal_to [@alert "-deprecated"])
+        (Dune_project.Dune_lang_version.create (3, 18))
+    ];
+  [%expect {| (lang dune 3.18) |}];
+  let t = parse {| (lang dune 3.20) |} in
+  enforce
+    t
+    [ (greater_than_or_equal_to [@alert "-deprecated"])
+        (Dune_project.Dune_lang_version.create (3, 18))
+    ];
   [%expect {| (lang dune 3.20) |}];
   let t = parse {| (lang dune 3.17) |} in
   enforce
     t
-    [ not_ (greater_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 18))) ];
+    [ not_
+        ((greater_than_or_equal_to [@alert "-deprecated"])
+           (Dune_project.Dune_lang_version.create (3, 18)))
+    ];
   [%expect {| (lang dune 3.17) |}];
-  (* Test [less_than_or_equal_to] enforcement. *)
   let t = parse {| (lang dune 3.22) |} in
-  enforce t [ less_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 20)) ];
+  enforce
+    t
+    [ (less_than_or_equal_to [@alert "-deprecated"])
+        (Dune_project.Dune_lang_version.create (3, 20))
+    ];
   [%expect {| (lang dune 3.20) |}];
   let t = parse {| (lang dune 3.18) |} in
-  enforce t [ less_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 20)) ];
+  enforce
+    t
+    [ (less_than_or_equal_to [@alert "-deprecated"])
+        (Dune_project.Dune_lang_version.create (3, 20))
+    ];
   [%expect {| (lang dune 3.18) |}];
   let t = parse {| (lang dune 3.22) |} in
   enforce
     t
-    [ not_ (less_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 20))) ];
+    [ not_
+        ((less_than_or_equal_to [@alert "-deprecated"])
+           (Dune_project.Dune_lang_version.create (3, 20)))
+    ];
   [%expect {| (lang dune 3.22) |}];
   ()
 ;;
@@ -282,35 +412,62 @@ let%expect_test "Linter.eval" =
        ~predicate:
          (`dune_lang_version (equals (Dune_project.Dune_lang_version.create (4, 5)))));
   [%expect {||}];
-  (* Test greater_than_or_equal_to *)
+  Test_helpers.is_true
+    (Dune_project_linter.Dune_lang_version.Linter.eval
+       t
+       ~predicate:
+         (`dune_lang_version (gte (Dune_project.Dune_lang_version.create (3, 15)))));
+  [%expect {||}];
+  Test_helpers.is_false
+    (Dune_project_linter.Dune_lang_version.Linter.eval
+       t
+       ~predicate:
+         (`dune_lang_version (gte (Dune_project.Dune_lang_version.create (4, 5)))));
+  [%expect {||}];
+  Test_helpers.is_true
+    (Dune_project_linter.Dune_lang_version.Linter.eval
+       t
+       ~predicate:
+         (`dune_lang_version (lte (Dune_project.Dune_lang_version.create (4, 5)))));
+  [%expect {||}];
+  Test_helpers.is_false
+    (Dune_project_linter.Dune_lang_version.Linter.eval
+       t
+       ~predicate:
+         (`dune_lang_version (lte (Dune_project.Dune_lang_version.create (3, 15)))));
+  [%expect {||}];
+  (* Deprecated operators - testing for coverage. *)
   Test_helpers.is_true
     (Dune_project_linter.Dune_lang_version.Linter.eval
        t
        ~predicate:
          (`dune_lang_version
-             (greater_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 15)))));
+             ((greater_than_or_equal_to [@alert "-deprecated"])
+                (Dune_project.Dune_lang_version.create (3, 15)))));
   [%expect {||}];
   Test_helpers.is_false
     (Dune_project_linter.Dune_lang_version.Linter.eval
        t
        ~predicate:
          (`dune_lang_version
-             (greater_than_or_equal_to (Dune_project.Dune_lang_version.create (4, 5)))));
+             ((greater_than_or_equal_to [@alert "-deprecated"])
+                (Dune_project.Dune_lang_version.create (4, 5)))));
   [%expect {||}];
-  (* Test less_than_or_equal_to *)
   Test_helpers.is_true
     (Dune_project_linter.Dune_lang_version.Linter.eval
        t
        ~predicate:
          (`dune_lang_version
-             (less_than_or_equal_to (Dune_project.Dune_lang_version.create (4, 5)))));
+             ((less_than_or_equal_to [@alert "-deprecated"])
+                (Dune_project.Dune_lang_version.create (4, 5)))));
   [%expect {||}];
   Test_helpers.is_false
     (Dune_project_linter.Dune_lang_version.Linter.eval
        t
        ~predicate:
          (`dune_lang_version
-             (less_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 15)))));
+             ((less_than_or_equal_to [@alert "-deprecated"])
+                (Dune_project.Dune_lang_version.create (3, 15)))));
   [%expect {||}];
   Test_helpers.is_undefined
     (Dune_project_linter.Dune_lang_version.Linter.eval
@@ -385,48 +542,77 @@ let%expect_test "Linter.enforce" =
         (dune_lang_version (equals (Dune_project.Dune_lang_version.create (4, 5))))
     ];
   [%expect {| (lang dune 3.20) |}];
-  (* Test greater_than_or_equal_to enforcement *)
+  let t = parse {| (lang dune 3.17) |} in
+  enforce t [ dune_lang_version (gte (Dune_project.Dune_lang_version.create (3, 18))) ];
+  [%expect {| (lang dune 3.18) |}];
+  let t = parse {| (lang dune 3.20) |} in
+  enforce t [ dune_lang_version (gte (Dune_project.Dune_lang_version.create (3, 18))) ];
+  [%expect {| (lang dune 3.20) |}];
+  let t = parse {| (lang dune 3.17) |} in
+  enforce
+    t
+    [ dune_lang_version (not_ (gte (Dune_project.Dune_lang_version.create (3, 18)))) ];
+  [%expect {| (lang dune 3.17) |}];
+  let t = parse {| (lang dune 3.22) |} in
+  enforce t [ dune_lang_version (lte (Dune_project.Dune_lang_version.create (3, 20))) ];
+  [%expect {| (lang dune 3.20) |}];
+  let t = parse {| (lang dune 3.18) |} in
+  enforce t [ dune_lang_version (lte (Dune_project.Dune_lang_version.create (3, 20))) ];
+  [%expect {| (lang dune 3.18) |}];
+  let t = parse {| (lang dune 3.22) |} in
+  enforce
+    t
+    [ dune_lang_version (not_ (lte (Dune_project.Dune_lang_version.create (3, 20)))) ];
+  [%expect {| (lang dune 3.22) |}];
+  (* Deprecated operators - testing for coverage. *)
   let t = parse {| (lang dune 3.17) |} in
   enforce
     t
     [ dune_lang_version
-        (greater_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 18)))
+        ((greater_than_or_equal_to [@alert "-deprecated"])
+           (Dune_project.Dune_lang_version.create (3, 18)))
     ];
   [%expect {| (lang dune 3.18) |}];
   let t = parse {| (lang dune 3.20) |} in
   enforce
     t
     [ dune_lang_version
-        (greater_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 18)))
+        ((greater_than_or_equal_to [@alert "-deprecated"])
+           (Dune_project.Dune_lang_version.create (3, 18)))
     ];
   [%expect {| (lang dune 3.20) |}];
   let t = parse {| (lang dune 3.17) |} in
   enforce
     t
     [ dune_lang_version
-        (not_ (greater_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 18))))
+        (not_
+           ((greater_than_or_equal_to [@alert "-deprecated"])
+              (Dune_project.Dune_lang_version.create (3, 18))))
     ];
   [%expect {| (lang dune 3.17) |}];
-  (* Test less_than_or_equal_to enforcement *)
   let t = parse {| (lang dune 3.22) |} in
   enforce
     t
     [ dune_lang_version
-        (less_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 20)))
+        ((less_than_or_equal_to [@alert "-deprecated"])
+           (Dune_project.Dune_lang_version.create (3, 20)))
     ];
   [%expect {| (lang dune 3.20) |}];
   let t = parse {| (lang dune 3.18) |} in
   enforce
     t
     [ dune_lang_version
-        (less_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 20)))
+        ((less_than_or_equal_to [@alert "-deprecated"])
+           (Dune_project.Dune_lang_version.create (3, 20)))
     ];
   [%expect {| (lang dune 3.18) |}];
   let t = parse {| (lang dune 3.22) |} in
   enforce
     t
     [ dune_lang_version
-        (not_ (less_than_or_equal_to (Dune_project.Dune_lang_version.create (3, 20))))
+        (not_
+           ((less_than_or_equal_to [@alert "-deprecated"])
+              (Dune_project.Dune_lang_version.create (3, 20))))
     ];
   [%expect {| (lang dune 3.22) |}];
   ()
