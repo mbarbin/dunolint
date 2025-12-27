@@ -19,14 +19,25 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-type t =
-  [ `dune
-  | `dune_project
-  | `dunolint
-  ]
+type t
 
-val all : t list
-val to_string : t -> string
-val of_string : string -> (t, [ `Msg of string ]) Result.t
+val create : dunolint_lang_version:Dunolint0.Dunolint_lang_version.t -> t
 
-include Container_key.S with type t := t
+include
+  Dunolinter.Stanza_linter.S
+  with type t := t
+   and type predicate = Dunolint0.Dunolint_lang_version.Predicate.t
+
+module Linter :
+  Dunolinter.Linter.S with type t = t and type predicate = Dunolint0.Predicate.t
+
+(** {1 Getters} *)
+
+val dunolint_lang_version : t -> Dunolint0.Dunolint_lang_version.t
+
+(** {1 Setters} *)
+
+val set_dunolint_lang_version
+  :  t
+  -> dunolint_lang_version:Dunolint0.Dunolint_lang_version.t
+  -> unit

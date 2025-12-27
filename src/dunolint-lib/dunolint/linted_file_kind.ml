@@ -27,9 +27,10 @@ module T = struct
   type t =
     [ `dune
     | `dune_project
+    | `dunolint
     ]
 
-  let all = ([ `dune; `dune_project ] : t list)
+  let all = ([ `dune; `dune_project; `dunolint ] : t list)
 
   let __t_of_sexp__ =
     (function
@@ -37,11 +38,13 @@ module T = struct
        (match atom__002_ with
         | "dune" -> `dune
         | "dune_project" -> `dune_project
+        | "dunolint" -> `dunolint
         | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
      | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__002_ :: _) as _sexp__004_ ->
        (match atom__002_ with
         | "dune" -> Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__004_
         | "dune_project" -> Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__004_
+        | "dunolint" -> Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__004_
         | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
      | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__003_ ->
        Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__003_
@@ -62,6 +65,7 @@ module T = struct
     (function
      | `dune -> Sexplib0.Sexp.Atom "dune"
      | `dune_project -> Sexplib0.Sexp.Atom "dune_project"
+     | `dunolint -> Sexplib0.Sexp.Atom "dunolint"
      : t -> Sexplib0.Sexp.t)
   ;;
 end
@@ -71,17 +75,20 @@ include T
 let to_string = function
   | `dune -> "dune"
   | `dune_project -> "dune-project"
+  | `dunolint -> "dunolint"
 ;;
 
 let of_string = function
   | "dune" -> Ok `dune
   | "dune-project" -> Ok `dune_project
+  | "dunolint" -> Ok `dunolint
   | str -> Error (`Msg (Printf.sprintf "Invalid linted file kind: %S" str))
 ;;
 
 let to_comparable_int = function
   | `dune -> 0
   | `dune_project -> 1
+  | `dunolint -> 2
 ;;
 
 let compare a b = Int.compare (to_comparable_int a) (to_comparable_int b)

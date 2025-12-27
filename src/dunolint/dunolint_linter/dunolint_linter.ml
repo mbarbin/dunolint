@@ -19,15 +19,7 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Executable = Executable
-module Flags = Flags
-module Include_subdirs = Include_subdirs
-module Instrumentation = Instrumentation
-module Library = Library
-module Libraries = Libraries
-module Lint = Lint
-module Pps = Pps
-module Preprocess = Preprocess
+module Dunolint_lang_version = Dunolint_lang_version
 
 type t =
   { path : Relative_path.t
@@ -50,18 +42,14 @@ module Stanza = struct
   type t = ..
 end
 
-type Stanza.t +=
-  | Include_subdirs of Include_subdirs.t
-  | Library of Library.t
-  | Executable of Executable.t
-  | Unhandled
+type Stanza.t += Dunolint_lang_version of Dunolint_lang_version.t | Unhandled
 
 module Linter = struct
   let of_stanza
         (type m)
         (module M : Dunolinter.Linter.S
           with type t = m
-           and type predicate = Dune.Predicate.t)
+           and type predicate = Dunolint0.Predicate.t)
         ~(inner_stanza : m)
         ~(stanza : Stanza.t)
         ~path
@@ -71,9 +59,8 @@ module Linter = struct
     let eval (t : m) ~path ~predicate =
       match (predicate : Dunolint.Predicate.t) with
       | `path condition -> Dunolinter.eval_path ~path ~condition
-      | `dune_project _ -> Dunolint.Trilang.Undefined
-      | `dunolint _ -> Dunolint.Trilang.Undefined
-      | `dune condition ->
+      | `dune _ | `dune_project _ -> Dunolint.Trilang.Undefined
+      | `dunolint condition ->
         Dunolint.Trilang.eval condition ~f:(fun predicate -> M.eval t ~predicate)
     in
     let enforce (m : m) ~path ~condition =
@@ -83,8 +70,8 @@ module Linter = struct
         ~enforce:(fun t predicate ->
           match predicate with
           | Not _ -> Eval
-          | T (`dune_project _ | `dunolint _ | `path _) -> Unapplicable
-          | T (`dune condition) ->
+          | T (`dune _ | `dune_project _ | `path _) -> Unapplicable
+          | T (`dunolint condition) ->
             M.enforce t ~condition;
             Ok)
         m
@@ -102,7 +89,7 @@ module Linter = struct
     include Dunolinter.Stanza_linter.S with type t := t
 
     module Linter :
-      Dunolinter.Linter.S with type t = t and type predicate = Dune.Predicate.t
+      Dunolinter.Linter.S with type t = t and type predicate = Dunolint0.Predicate.t
   end
 
   type t =
@@ -117,9 +104,10 @@ end
 
 let linters =
   Linter.
-    [ T { impl = (module Include_subdirs); wrap = (fun a -> Include_subdirs a) }
-    ; T { impl = (module Library); wrap = (fun a -> Library a) }
-    ; T { impl = (module Executable); wrap = (fun a -> Executable a) }
+    [ T
+        { impl = (module Dunolint_lang_version)
+        ; wrap = (fun a -> Dunolint_lang_version a)
+        }
     ]
   |> Dunolinter.Linters.create ~field_name:Linter.field_name
 ;;

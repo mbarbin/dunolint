@@ -62,15 +62,18 @@ Running from root with no root config discovers subdirectory configs:
   dunolint: [INFO] Linting file "dune-project"
   dunolint: [INFO] Loaded dunolint config from "src/dunolint".
   dunolint: [INFO] Linting file "src/dune"
+  dunolint: [INFO] Linting file "src/dunolint"
   dunolint: [INFO] Linting file "src/public/dune"
   dunolint: [INFO] Loaded dunolint config from "tests/dunolint".
   dunolint: [INFO] Linting file "tests/dune"
+  dunolint: [INFO] Linting file "tests/dunolint"
 
 Linting only src/ directory uses src/dunolint config:
 
   $ dunolint lint --dry-run --below src -v 2>&1
   dunolint: [INFO] Loaded dunolint config from "src/dunolint".
   dunolint: [INFO] Linting file "src/dune"
+  dunolint: [INFO] Linting file "src/dunolint"
   dunolint: [INFO] Linting file "src/public/dune"
 
 Linting only tests/ directory uses tests/dunolint config:
@@ -78,6 +81,7 @@ Linting only tests/ directory uses tests/dunolint config:
   $ dunolint lint --dry-run --below tests -v 2>&1
   dunolint: [INFO] Loaded dunolint config from "tests/dunolint".
   dunolint: [INFO] Linting file "tests/dune"
+  dunolint: [INFO] Linting file "tests/dunolint"
 
 Verify configs accumulate (child configs don't replace parent):
 

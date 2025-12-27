@@ -23,6 +23,7 @@ type t =
   [ `path of Path.Predicate.t Blang.t
   | `dune of Dune.Predicate.t Blang.t
   | `dune_project of Dune_project.Predicate.t Blang.t
+  | `dunolint of Dunolint0.Predicate.t Blang.t
   ]
 
 val equal : t -> t -> bool

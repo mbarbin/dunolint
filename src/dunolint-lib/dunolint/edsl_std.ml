@@ -22,6 +22,7 @@
 module Blang = Blang
 module Dune = Dune
 module Dune_project = Dune_project
+module Dunolint0 = Dunolint0
 include Blang.O
 
 let backend p = Blang.base (`backend p)
@@ -29,6 +30,8 @@ let cond clauses = `cond clauses
 let dune p = Blang.base (`dune p)
 let dune_lang_version p = Blang.base (`dune_lang_version p)
 let dune_project p = Blang.base (`dune_project p)
+let dunolint p = Blang.base (`dunolint p)
+let dunolint_lang_version p = Blang.base (`dunolint_lang_version p)
 let enforce p = `enforce p
 let eq p = Blang.base (`eq p)
 let equals p = Blang.base (`equals p)
