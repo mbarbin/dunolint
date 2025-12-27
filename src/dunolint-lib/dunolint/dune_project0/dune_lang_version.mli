@@ -57,9 +57,9 @@ module Predicate : sig
   type t =
     [ `eq of version
     | `neq of version
-    | `geq of version
+    | `gte of version
     | `gt of version
-    | `leq of version
+    | `lte of version
     | `lt of version
     | deprecated_names
     ]

@@ -89,9 +89,9 @@ module Predicate = struct
   type t =
     [ `eq of version
     | `neq of version
-    | `geq of version
+    | `gte of version
     | `gt of version
-    | `leq of version
+    | `lte of version
     | `lt of version
     | deprecated_names
     ]
@@ -115,13 +115,13 @@ module Predicate = struct
     let opv atom cons : Opv.t = { atom; cons } in
     [ opv "=" (fun v -> `eq v)
     ; opv "!=" (fun v -> `neq v)
-    ; opv ">=" (fun v -> `geq v)
+    ; opv ">=" (fun v -> `gte v)
     ; opv ">" (fun v -> `gt v)
-    ; opv "<=" (fun v -> `leq v)
+    ; opv "<=" (fun v -> `lte v)
     ; opv "<" (fun v -> `lt v)
     ; opv "equals" (fun v -> `eq v)
-    ; opv "greater_than_or_equal_to" (fun v -> `geq v)
-    ; opv "less_than_or_equal_to" (fun v -> `leq v)
+    ; opv "greater_than_or_equal_to" (fun v -> `gte v)
+    ; opv "less_than_or_equal_to" (fun v -> `lte v)
     ]
   ;;
 
@@ -151,9 +151,9 @@ module Predicate = struct
     match t with
     | `eq v -> op "=" v
     | `neq v -> op "!=" v
-    | `geq v -> op ">=" v
+    | `gte v -> op ">=" v
     | `gt v -> op ">" v
-    | `leq v -> op "<=" v
+    | `lte v -> op "<=" v
     | `lt v -> op "<" v
     | `equals v -> op "equals" v
     | `greater_than_or_equal_to v -> op "greater_than_or_equal_to" v

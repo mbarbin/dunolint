@@ -113,9 +113,9 @@ let%expect_test "predicate neq" =
   [%expect {| (!= 3.20) |}]
 ;;
 
-let%expect_test "predicate geq" =
+let%expect_test "predicate gte" =
   let version = Dune_project.Dune_lang_version.create (3, 18) in
-  let predicate = `geq version in
+  let predicate = `gte version in
   print_s [%sexp (predicate : Dune_project.Dune_lang_version.Predicate.t)];
   [%expect {| (>= 3.18) |}]
 ;;
@@ -127,9 +127,9 @@ let%expect_test "predicate gt" =
   [%expect {| (> 3.18) |}]
 ;;
 
-let%expect_test "predicate leq" =
+let%expect_test "predicate lte" =
   let version = Dune_project.Dune_lang_version.create (4, 0) in
-  let predicate = `leq version in
+  let predicate = `lte version in
   print_s [%sexp (predicate : Dune_project.Dune_lang_version.Predicate.t)];
   [%expect {| (<= 4.0) |}]
 ;;

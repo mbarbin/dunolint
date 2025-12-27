@@ -31,7 +31,7 @@ let () =
   rule
     (enforce
        (dune_project
-          (dune_lang_version (geq (Dune_project.Dune_lang_version.create (3, 17))))))
+          (dune_lang_version (gte (Dune_project.Dune_lang_version.create (3, 17))))))
 ;;
 
 let () =
