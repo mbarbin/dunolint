@@ -28,7 +28,7 @@ Predicates take the form `(OP VERSION)` where `OP` is a comparison operator and 
 <stanza-version> OP <VERSION>
 ```
 
-For example, with `(lang dunolint 1.0)` in the file, the predicate `(>= 1.0)` evaluates as `1.0 >= 1.0`, which is *true*.
+For example, with `(lang dunolint 1.0)` in the file, the predicate `(< 1.2)` evaluates as `1.0 < 1.2`, which is *true*.
 
 **Supported operators:**
 
@@ -49,23 +49,23 @@ When a predicate is enforced, dunolint may suggest updating the version to satis
 - `>=` and `<`: Only `>=` supports auto-fix (bumps version up if needed).
 - `<=` and `>`: Only `<=` supports auto-fix (bumps version down if needed).
 
-Operators without auto-fix will fail enforcement if the condition is not already satisfied.
+Operators without auto-fix will fail enforcement if the condition is not already satisfied, letting the user know that a manual edit is required.
 
 ### Examples
 
-Given the stanza `(lang dunolint 1.0)`:
+Given the stanza `(lang dunolint 1.1)`:
 
 | Predicate | Result |
 | --------- | ------ |
-| `(= 1.0)` | True |
-| `(= 2.0)` | False. Suggestion: set version to 2.0 |
-| `(!= 2.0)` | True |
-| `(!= 1.0)` | False. No suggestion available |
+| `(= 1.1)` | True |
+| `(= 1.0)` | False. Suggestion: set version to 1.0 |
+| `(!= 1.0)` | True |
+| `(!= 1.1)` | False. No suggestion available |
 | `(>= 1.0)` | True |
 | `(>= 2.0)` | False. Suggestion: set version to 2.0 |
-| `(> 1.0)` | False. No suggestion available |
+| `(> 1.0)` | True |
 | `(> 2.0)` | False. No suggestion available |
-| `(<= 1.0)` | True |
-| `(<= 2.0)` | True |
-| `(< 1.0)` | False. No suggestion available |
+| `(<= 1.5)` | True |
+| `(<= 1.0)` | False. Suggestion: set version to 1.0 |
 | `(< 2.0)` | True |
+| `(< 1.0)` | False. No suggestion available |

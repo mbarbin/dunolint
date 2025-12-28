@@ -49,7 +49,7 @@ When a predicate is enforced, dunolint may suggest updating the version to satis
 - `>=` and `<`: Only `>=` supports auto-fix (bumps version up if needed).
 - `<=` and `>`: Only `<=` supports auto-fix (bumps version down if needed).
 
-Operators without auto-fix will fail enforcement if the condition is not already satisfied.
+Operators without auto-fix will fail enforcement if the condition is not already satisfied, letting the user know that a manual edit is required.
 
 ### Examples
 
