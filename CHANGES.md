@@ -2,11 +2,13 @@
 
 ### Added
 
+- Add initial support for linting `dunolint` files (#146, @mbarbin).
 - Enabled OCaml `5.4` in CI (#136, @mbarbin).
 - Added new tests (#132, @mbarbin).
 
 ### Changed
 
+- Extend lang version compare operators (#145, @mbarbin).
 - Upgrade `actions/checkout` to `v6` (#138, @mbarbin).
 - Improved licensing headers for vendored `blang` (#144, @mbarbin).
 - Refactor pkg directory structure (#143, @mbarbin).
