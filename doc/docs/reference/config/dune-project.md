@@ -45,11 +45,15 @@ For example, with `(lang dune 3.17)` in the file, the predicate `(>= 3.0)` evalu
 
 When a predicate is enforced, dunolint may suggest updating the version to satisfy the condition:
 
-- `=` and `!=`: Only `=` supports auto-fix (sets version to the specified value).
-- `>=` and `<`: Only `>=` supports auto-fix (bumps version up if needed).
-- `<=` and `>`: Only `<=` supports auto-fix (bumps version down if needed).
+**Operators with auto-fix:**
 
-Operators without auto-fix will fail enforcement if the condition is not already satisfied, letting the user know that a manual edit is required.
+- `=`: Sets version to the specified value.
+- `>=`: Bumps version up if needed.
+- `<=`: Bumps version down if needed.
+
+**Operators without auto-fix:**
+
+- `!=`, `<`, `>`: Enforcement fails if the condition is not already satisfied, letting the user know that a manual edit is required.
 
 ### Examples
 
