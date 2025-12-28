@@ -148,29 +148,7 @@ let () =
        ])
 ;;
 
-let skip_paths_ref = ref []
-
-let skip_paths paths =
-  skip_paths_ref := `skip_paths (List.map paths ~f:Dunolint.Glob.v) :: !skip_paths_ref
-;;
-
-let () =
-  List.iter
-    ~f:(fun pat -> skip_paths [ "**/" ^ pat; pat ])
-    [ ".git/"
-    ; "_build/"
-    ; "_opam/"
-    ; "_coverage/"
-    ; "node_modules/"
-    ; "doc/build/"
-    ; ".docusaurus/"
-    ]
-;;
-
-let config () =
-  Dunolint.Config.v1
-    (Dunolint.Config.V1.create (List.rev !skip_paths_ref @ List.rev !rules))
-;;
+let config () = Dunolint.Config.v1 (Dunolint.Config.V1.create (List.rev !rules))
 
 let main =
   Command.make
