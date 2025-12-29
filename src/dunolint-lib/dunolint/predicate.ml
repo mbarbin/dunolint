@@ -31,25 +31,6 @@ module T = struct
     | `dunolint of Dunolint0.Predicate.t Blang.t
     ]
 
-  let compare =
-    (fun a__001_ ->
-       fun b__002_ ->
-       if Stdlib.( == ) a__001_ b__002_
-       then 0
-       else (
-         match a__001_, b__002_ with
-         | `path _left__003_, `path _right__004_ ->
-           Blang.compare Path.Predicate.compare _left__003_ _right__004_
-         | `dune _left__007_, `dune _right__008_ ->
-           Blang.compare Dune.Predicate.compare _left__007_ _right__008_
-         | `dune_project _left__011_, `dune_project _right__012_ ->
-           Blang.compare Dune_project.Predicate.compare _left__011_ _right__012_
-         | `dunolint _left__013_, `dunolint _right__014_ ->
-           Blang.compare Dunolint0.Predicate.compare _left__013_ _right__014_
-         | x, y -> Stdlib.compare x y)
-     : t -> t -> int)
-  ;;
-
   let equal =
     (fun a__015_ ->
        fun b__016_ ->

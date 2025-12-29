@@ -31,21 +31,6 @@ module Predicate = struct
     | `has_modes of Compilation_mode.t list
     ]
 
-  let compare =
-    (fun a__001_ ->
-       fun b__002_ ->
-       if Stdlib.( == ) a__001_ b__002_
-       then 0
-       else (
-         match a__001_, b__002_ with
-         | `has_mode _left__003_, `has_mode _right__004_ ->
-           Compilation_mode.compare _left__003_ _right__004_
-         | `has_modes _left__005_, `has_modes _right__006_ ->
-           compare_list Compilation_mode.compare _left__005_ _right__006_
-         | x, y -> Stdlib.compare x y)
-     : t -> t -> int)
-  ;;
-
   let equal =
     (fun a__009_ ->
        fun b__010_ ->

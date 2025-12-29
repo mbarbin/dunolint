@@ -24,11 +24,6 @@ module T = struct
 
   type t = Predicate.t Blang.t
 
-  let compare =
-    (fun a__001_ -> fun b__002_ -> Blang.compare Predicate.compare a__001_ b__002_
-     : t -> t -> int)
-  ;;
-
   let equal =
     (fun a__005_ -> fun b__006_ -> Blang.equal Predicate.equal a__005_ b__006_
      : t -> t -> bool)

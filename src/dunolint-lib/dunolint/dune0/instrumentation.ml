@@ -45,18 +45,6 @@ module Predicate = struct
 
   type t = [ `backend of Backend.Name.t ]
 
-  let compare =
-    (fun a__001_ ->
-       fun b__002_ ->
-       if Stdlib.( == ) a__001_ b__002_
-       then 0
-       else (
-         match a__001_, b__002_ with
-         | `backend _left__003_, `backend _right__004_ ->
-           Backend.Name.compare _left__003_ _right__004_)
-     : t -> t -> int)
-  ;;
-
   let equal =
     (fun a__005_ ->
        fun b__006_ ->

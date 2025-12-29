@@ -23,16 +23,14 @@ let error_source = "predicate.t"
 
 type t = [ `dunolint_lang_version of Dunolint_lang_version.Predicate.t Blang.t ]
 
-let compare (a : t) (b : t) =
+let equal (a : t) (b : t) =
   if Stdlib.( == ) a b
-  then 0
+  then true
   else (
     match a, b with
     | `dunolint_lang_version va, `dunolint_lang_version vb ->
-      Blang.compare Dunolint_lang_version.Predicate.compare va vb)
+      Blang.equal Dunolint_lang_version.Predicate.equal va vb)
 ;;
-
-let equal a b = 0 = compare a b
 
 let predicates : t Sexp_helpers.Predicate_spec.t =
   [ { atom = "dunolint_lang_version"

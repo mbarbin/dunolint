@@ -28,18 +28,6 @@ module Predicate = struct
 
   type t = [ `equals of Value.t ]
 
-  let compare =
-    (fun a__001_ ->
-       fun b__002_ ->
-       if Stdlib.( == ) a__001_ b__002_
-       then 0
-       else (
-         match a__001_, b__002_ with
-         | `equals _left__003_, `equals _right__004_ ->
-           Value.compare _left__003_ _right__004_)
-     : t -> t -> int)
-  ;;
-
   let equal =
     (fun a__005_ ->
        fun b__006_ ->

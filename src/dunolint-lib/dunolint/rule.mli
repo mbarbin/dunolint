@@ -27,7 +27,6 @@ type ('predicate, 'invariant) t =
   | `cond of ('predicate Blang.t * ('predicate, 'invariant) t) list
   ]
 
-val compare : ('p -> 'p -> int) -> ('i -> 'i -> int) -> ('p, 'i) t -> ('p, 'i) t -> int
 val equal : ('p -> 'p -> bool) -> ('i -> 'i -> bool) -> ('p, 'i) t -> ('p, 'i) t -> bool
 
 val eval
@@ -38,13 +37,6 @@ val eval
 module Stable : sig
   module V1 : sig
     type nonrec ('a, 'b) t = ('a, 'b) t
-
-    val compare
-      :  ('p -> 'p -> int)
-      -> ('i -> 'i -> int)
-      -> ('p, 'i) t
-      -> ('p, 'i) t
-      -> int
 
     val equal
       :  ('p -> 'p -> bool)

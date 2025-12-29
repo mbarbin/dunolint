@@ -28,17 +28,6 @@ module Predicate = struct
 
   type t = [ `glob of Glob.t ]
 
-  let compare =
-    (fun a__001_ ->
-       fun b__002_ ->
-       if Stdlib.( == ) a__001_ b__002_
-       then 0
-       else (
-         match a__001_, b__002_ with
-         | `glob _left__005_, `glob _right__006_ -> Glob.compare _left__005_ _right__006_)
-     : t -> t -> int)
-  ;;
-
   let equal =
     (fun a__007_ ->
        fun b__008_ ->

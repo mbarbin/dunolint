@@ -36,38 +36,6 @@ module Predicate = struct
     | `public_name of Public_name.Predicate.t Blang.t
     ]
 
-  let compare =
-    (fun a__001_ ->
-       fun b__002_ ->
-       if Stdlib.( == ) a__001_ b__002_
-       then 0
-       else (
-         match a__001_, b__002_ with
-         | `has_field _left__003_, `has_field _right__004_ ->
-           if Stdlib.( == ) _left__003_ _right__004_
-           then 0
-           else (
-             match _left__003_, _right__004_ with
-             | `instrumentation, `instrumentation -> 0
-             | `lint, `lint -> 0
-             | `name, `name -> 0
-             | `preprocess, `preprocess -> 0
-             | `public_name, `public_name -> 0
-             | x, y -> Stdlib.compare x y)
-         | `instrumentation _left__005_, `instrumentation _right__006_ ->
-           Blang.compare Instrumentation.Predicate.compare _left__005_ _right__006_
-         | `lint _left__009_, `lint _right__010_ ->
-           Blang.compare Lint.Predicate.compare _left__009_ _right__010_
-         | `name _left__013_, `name _right__014_ ->
-           Blang.compare Name.Predicate.compare _left__013_ _right__014_
-         | `preprocess _left__017_, `preprocess _right__018_ ->
-           Blang.compare Preprocess.Predicate.compare _left__017_ _right__018_
-         | `public_name _left__021_, `public_name _right__022_ ->
-           Blang.compare Public_name.Predicate.compare _left__021_ _right__022_
-         | x, y -> Stdlib.compare x y)
-     : t -> t -> int)
-  ;;
-
   let equal =
     (fun a__025_ ->
        fun b__026_ ->

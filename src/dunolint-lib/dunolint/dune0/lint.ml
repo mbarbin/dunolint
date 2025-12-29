@@ -26,18 +26,6 @@ module Predicate = struct
 
   type t = [ `pps of Pps.Predicate.t Blang.t ]
 
-  let compare =
-    (fun a__001_ ->
-       fun b__002_ ->
-       if Stdlib.( == ) a__001_ b__002_
-       then 0
-       else (
-         match a__001_, b__002_ with
-         | `pps _left__003_, `pps _right__004_ ->
-           Blang.compare Pps.Predicate.compare _left__003_ _right__004_)
-     : t -> t -> int)
-  ;;
-
   let equal =
     (fun a__007_ ->
        fun b__008_ ->

@@ -20,7 +20,7 @@
 (*********************************************************************************)
 
 module type Roundtripable = sig
-  type t [@@deriving compare, equal, sexp]
+  type t [@@deriving equal, sexp]
 end
 
 let test_roundtrip (type a) (module M : Roundtripable with type t = a) (a : a) =
@@ -32,12 +32,12 @@ let test_roundtrip (type a) (module M : Roundtripable with type t = a) (a : a) =
 ;;
 
 module type Predicate = sig
-  type t [@@deriving compare, equal, sexp]
+  type t [@@deriving equal, sexp]
 end
 
 let test_predicate (type a) (module M : Predicate with type t = a) predicate =
   let module B = struct
-    type t = M.t Blang.t [@@deriving compare, equal, sexp]
+    type t = M.t Blang.t [@@deriving equal, sexp]
   end
   in
   test_roundtrip (module B) predicate;

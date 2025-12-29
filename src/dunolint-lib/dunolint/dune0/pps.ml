@@ -34,22 +34,6 @@ module Predicate = struct
       | `equals of string
       ]
 
-    let compare =
-      (fun a__001_ ->
-         fun b__002_ ->
-         if Stdlib.( == ) a__001_ b__002_
-         then 0
-         else (
-           match a__001_, b__002_ with
-           | `any, `any -> 0
-           | `none, `none -> 0
-           | `some, `some -> 0
-           | `equals _left__003_, `equals _right__004_ ->
-             compare_string _left__003_ _right__004_
-           | x, y -> Stdlib.compare x y)
-       : t -> t -> int)
-    ;;
-
     let equal =
       (fun a__005_ ->
          fun b__006_ ->
@@ -128,21 +112,6 @@ module Predicate = struct
         | `pp of Pp.Name.t
         ]
 
-      let compare =
-        (fun a__021_ ->
-           fun b__022_ ->
-           if Stdlib.( == ) a__021_ b__022_
-           then 0
-           else (
-             match a__021_, b__022_ with
-             | `any, `any -> 0
-             | `driver, `driver -> 0
-             | `pp _left__023_, `pp _right__024_ ->
-               Pp.Name.compare _left__023_ _right__024_
-             | x, y -> Stdlib.compare x y)
-         : t -> t -> int)
-      ;;
-
       let equal =
         (fun a__025_ ->
            fun b__026_ ->
@@ -213,21 +182,6 @@ module Predicate = struct
       ; param : Param.t
       ; applies_to : Applies_to.t
       }
-
-    let compare =
-      (fun a__041_ ->
-         fun b__042_ ->
-         if Stdlib.( == ) a__041_ b__042_
-         then 0
-         else (
-           match compare_string a__041_.name b__042_.name with
-           | 0 ->
-             (match Param.compare a__041_.param b__042_.param with
-              | 0 -> Applies_to.compare a__041_.applies_to b__042_.applies_to
-              | n -> n)
-           | n -> n)
-       : t -> t -> int)
-    ;;
 
     let equal =
       (fun a__043_ ->
@@ -311,21 +265,6 @@ module Predicate = struct
       ; param : Param.t
       }
 
-    let compare =
-      (fun a__055_ ->
-         fun b__056_ ->
-         if Stdlib.( == ) a__055_ b__056_
-         then 0
-         else (
-           match Pp.Name.compare a__055_.pp b__056_.pp with
-           | 0 ->
-             (match compare_string a__055_.flag b__056_.flag with
-              | 0 -> Param.compare a__055_.param b__056_.param
-              | n -> n)
-           | n -> n)
-       : t -> t -> int)
-    ;;
-
     let equal =
       (fun a__057_ ->
          fun b__058_ ->
@@ -404,21 +343,6 @@ module Predicate = struct
     | `flag of Flag.t
     | `pp_with_flag of Pp_with_flag.t
     ]
-
-  let compare =
-    (fun a__069_ ->
-       fun b__070_ ->
-       if Stdlib.( == ) a__069_ b__070_
-       then 0
-       else (
-         match a__069_, b__070_ with
-         | `pp _left__071_, `pp _right__072_ -> Pp.Name.compare _left__071_ _right__072_
-         | `flag _left__073_, `flag _right__074_ -> Flag.compare _left__073_ _right__074_
-         | `pp_with_flag _left__075_, `pp_with_flag _right__076_ ->
-           Pp_with_flag.compare _left__075_ _right__076_
-         | x, y -> Stdlib.compare x y)
-     : t -> t -> int)
-  ;;
 
   let equal =
     (fun a__077_ ->

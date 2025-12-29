@@ -31,6 +31,5 @@ type t =
   ]
 
 val equal : t -> t -> bool
-val compare : t -> t -> int
 
 include Sexpable.S with type t := t

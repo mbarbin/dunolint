@@ -27,7 +27,7 @@ module Trilang = struct
       | True
       | False
       | Undefined
-    [@@deriving compare, sexp]
+    [@@deriving equal, sexp]
   end
 
   include T0
@@ -50,9 +50,9 @@ module Trilang = struct
 end
 
 module T = struct
-  type t = (Trilang.t, int) Dunolint.Rule.Stable.V1.t [@@deriving compare, sexp]
+  type t = (Trilang.t, int) Dunolint.Rule.Stable.V1.t [@@deriving sexp]
 
-  let equal t1 t2 = 0 = compare t1 t2
+  let equal t1 t2 = Dunolint.Rule.Stable.V1.equal Trilang.equal Int.equal t1 t2
 end
 
 let%expect_test "sexp" =

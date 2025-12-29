@@ -30,39 +30,6 @@ module T = struct
     | `cond of ('predicate Blang.t * ('predicate, 'invariant) t) list
     ]
 
-  let rec compare
-    :  'predicate 'invariant.
-       ('predicate -> 'predicate -> int)
-    -> ('invariant -> 'invariant -> int)
-    -> ('predicate, 'invariant) t
-    -> ('predicate, 'invariant) t
-    -> int
-    =
-    fun _cmp__predicate ->
-    fun _cmp__invariant ->
-    fun a__001_ ->
-    fun b__002_ ->
-    if Stdlib.( == ) a__001_ b__002_
-    then 0
-    else (
-      match a__001_, b__002_ with
-      | `enforce _left__003_, `enforce _right__004_ ->
-        _cmp__invariant _left__003_ _right__004_
-      | `return, `return -> 0
-      | `cond _left__005_, `cond _right__006_ ->
-        compare_list
-          (fun a__007_ ->
-             fun b__008_ ->
-             let t__009_, t__010_ = a__007_ in
-             let t__011_, t__012_ = b__008_ in
-             match Blang.compare _cmp__predicate t__009_ t__011_ with
-             | 0 -> compare _cmp__predicate _cmp__invariant t__010_ t__012_
-             | n -> n)
-          _left__005_
-          _right__006_
-      | x, y -> Stdlib.compare x y)
-  ;;
-
   let rec equal
     :  'predicate 'invariant.
        ('predicate -> 'predicate -> bool)
@@ -221,7 +188,6 @@ module Stable = struct
                Sexplib0.Sexp.List [ res0__100_; res1__101_ ]))
     ;;
 
-    let compare = compare
     let equal = equal
   end
 end

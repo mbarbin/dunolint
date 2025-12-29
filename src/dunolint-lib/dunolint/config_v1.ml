@@ -26,13 +26,6 @@ module Rule = struct
 
   type t = (Predicate.t, Condition.t) Rule.Stable.V1.t
 
-  let compare =
-    (fun a__001_ ->
-       fun b__002_ ->
-       Rule.Stable.V1.compare Predicate.compare Condition.compare a__001_ b__002_
-     : t -> t -> int)
-  ;;
-
   let equal =
     (fun a__007_ ->
        fun b__008_ -> Rule.Stable.V1.equal Predicate.equal Condition.equal a__007_ b__008_
@@ -61,20 +54,6 @@ module Stanza = struct
     [ `skip_paths of Glob.t list
     | `rule of Rule.t
     ]
-
-  let compare =
-    (fun a__001_ ->
-       fun b__002_ ->
-       if Stdlib.( == ) a__001_ b__002_
-       then 0
-       else (
-         match a__001_, b__002_ with
-         | `skip_paths _left__003_, `skip_paths _right__004_ ->
-           compare_list Glob.compare _left__003_ _right__004_
-         | `rule _left__007_, `rule _right__008_ -> Rule.compare _left__007_ _right__008_
-         | x, y -> Stdlib.compare x y)
-     : t -> t -> int)
-  ;;
 
   let equal =
     (fun a__009_ ->
@@ -143,15 +122,6 @@ module T0 = struct
   [@@@coverage off]
 
   type t = { stanzas : Stanza.t list }
-
-  let compare =
-    (fun a__001_ ->
-       fun b__002_ ->
-       if Stdlib.( == ) a__001_ b__002_
-       then 0
-       else compare_list Stanza.compare a__001_.stanzas b__002_.stanzas
-     : t -> t -> int)
-  ;;
 
   let equal =
     (fun a__005_ ->

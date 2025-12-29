@@ -22,7 +22,6 @@
 type t
 
 val equal : t -> t -> bool
-val compare : t -> t -> int
 
 (** This is used by tests for quick debug. To print the config into a file, see
     {!val:to_file_contents}. *)

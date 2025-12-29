@@ -30,25 +30,6 @@ type t =
   | `name of Name.Predicate.t Blang.t
   ]
 
-let compare =
-  (fun a__001_ ->
-     fun b__002_ ->
-     if Stdlib.( == ) a__001_ b__002_
-     then 0
-     else (
-       match a__001_, b__002_ with
-       | `dune_lang_version _left__003_, `dune_lang_version _right__004_ ->
-         Blang.compare Dune_lang_version.Predicate.compare _left__003_ _right__004_
-       | `generate_opam_files _left__007_, `generate_opam_files _right__008_ ->
-         Blang.compare Generate_opam_files.Predicate.compare _left__007_ _right__008_
-       | `implicit_transitive_deps _left__011_, `implicit_transitive_deps _right__012_ ->
-         Blang.compare Implicit_transitive_deps.Predicate.compare _left__011_ _right__012_
-       | `name _left__015_, `name _right__016_ ->
-         Blang.compare Name.Predicate.compare _left__015_ _right__016_
-       | x, y -> Stdlib.compare x y)
-   : t -> t -> int)
-;;
-
 let equal =
   (fun a__019_ ->
      fun b__020_ ->

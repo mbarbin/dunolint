@@ -78,7 +78,6 @@ module Predicate = struct
   (* Given the actual shape and representation of the values inhabiting this
      type, polymorphic comparison is adequate here. *)
 
-  let compare : t -> t -> int = Stdlib.compare
   let equal : t -> t -> bool = Stdlib.( = )
 
   module Opv = struct

@@ -21,7 +21,6 @@
 
 type t = [ `dunolint_lang_version of Dunolint_lang_version.Predicate.t Blang.t ]
 
-val compare : t -> t -> int
 val equal : t -> t -> bool
 val sexp_of_t : t -> Sexplib0.Sexp.t
 val t_of_sexp : Sexplib0.Sexp.t -> t

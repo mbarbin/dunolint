@@ -30,20 +30,6 @@ module Mode = struct
     | `qualified
     ]
 
-  let compare =
-    (fun a__001_ ->
-       fun b__002_ ->
-       if Stdlib.( == ) a__001_ b__002_
-       then 0
-       else (
-         match a__001_, b__002_ with
-         | `no, `no -> 0
-         | `unqualified, `unqualified -> 0
-         | `qualified, `qualified -> 0
-         | x, y -> Stdlib.compare x y)
-     : t -> t -> int)
-  ;;
-
   let equal =
     (fun a__003_ ->
        fun b__004_ ->
@@ -102,18 +88,6 @@ module Predicate = struct
   let error_source = "include_subdirs.t"
 
   type t = [ `equals of Mode.t ]
-
-  let compare =
-    (fun a__013_ ->
-       fun b__014_ ->
-       if Stdlib.( == ) a__013_ b__014_
-       then 0
-       else (
-         match a__013_, b__014_ with
-         | `equals _left__015_, `equals _right__016_ ->
-           Mode.compare _left__015_ _right__016_)
-     : t -> t -> int)
-  ;;
 
   let equal =
     (fun a__017_ ->

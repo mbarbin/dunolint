@@ -25,7 +25,6 @@ module Predicate : sig
   type t = [ `equals of Value.t ]
 
   val equal : t -> t -> bool
-  val compare : t -> t -> int
 
   include Sexpable.S with type t := t
 end

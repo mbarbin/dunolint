@@ -31,21 +31,6 @@ module Predicate = struct
     | `executables
     ]
 
-  let compare =
-    (fun a__001_ ->
-       fun b__002_ ->
-       if Stdlib.( == ) a__001_ b__002_
-       then 0
-       else (
-         match a__001_, b__002_ with
-         | `include_subdirs, `include_subdirs -> 0
-         | `library, `library -> 0
-         | `executable, `executable -> 0
-         | `executables, `executables -> 0
-         | x, y -> Stdlib.compare x y)
-     : t -> t -> int)
-  ;;
-
   let equal =
     (fun a__003_ ->
        fun b__004_ ->

@@ -40,7 +40,6 @@ module Predicate = struct
 
   type name = t
 
-  let compare_name = (compare : name -> name -> int)
   let equal_name = (equal : name -> name -> bool)
   let name_of_sexp = (t_of_sexp : Sexplib0.Sexp.t -> name)
   let sexp_of_name = (sexp_of_t : name -> Sexplib0.Sexp.t)
@@ -50,23 +49,6 @@ module Predicate = struct
     | `is_prefix of string
     | `is_suffix of string
     ]
-
-  let compare =
-    (fun a__006_ ->
-       fun b__007_ ->
-       if Stdlib.( == ) a__006_ b__007_
-       then 0
-       else (
-         match a__006_, b__007_ with
-         | `equals _left__008_, `equals _right__009_ ->
-           compare_name _left__008_ _right__009_
-         | `is_prefix _left__010_, `is_prefix _right__011_ ->
-           compare_string _left__010_ _right__011_
-         | `is_suffix _left__012_, `is_suffix _right__013_ ->
-           compare_string _left__012_ _right__013_
-         | x, y -> Stdlib.compare x y)
-     : t -> t -> int)
-  ;;
 
   let equal =
     (fun a__014_ ->

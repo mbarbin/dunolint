@@ -26,17 +26,6 @@ module Predicate = struct
 
   type t = [ `is_present ]
 
-  let compare =
-    (fun a__001_ ->
-       fun b__002_ ->
-       if Stdlib.( == ) a__001_ b__002_
-       then 0
-       else (
-         match a__001_, b__002_ with
-         | `is_present, `is_present -> 0)
-     : t -> t -> int)
-  ;;
-
   let equal =
     (fun a__003_ ->
        fun b__004_ ->

@@ -70,7 +70,9 @@ let%expect_test "non-empty-v1" =
   [%expect {||}];
   let rules = Dunolint.Config.V1.rules v1 in
   let t' = Dunolint.Config.create ~rules () in
-  require_equal [%here] (module Int) 1 (Dunolint.Config.compare t t');
+  (* t and t' are different because t includes skip_paths. *)
+  print_s [%sexp (Dunolint.Config.equal t t' : bool)];
+  [%expect {| false |}];
   ()
 ;;
 

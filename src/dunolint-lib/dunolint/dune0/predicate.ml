@@ -34,42 +34,6 @@ type t =
   | `stanza of Stanza.Predicate.t Blang.t
   ]
 
-let compare =
-  (fun a__001_ ->
-     fun b__002_ ->
-     if Stdlib.( == ) a__001_ b__002_
-     then 0
-     else (
-       match a__001_, b__002_ with
-       | `executable _left__003_, `executable _right__004_ ->
-         Blang.compare Executable.Predicate.compare _left__003_ _right__004_
-       | `has_field _left__007_, `has_field _right__008_ ->
-         if Stdlib.( == ) _left__007_ _right__008_
-         then 0
-         else (
-           match _left__007_, _right__008_ with
-           | `instrumentation, `instrumentation -> 0
-           | `lint, `lint -> 0
-           | `name, `name -> 0
-           | `preprocess, `preprocess -> 0
-           | `public_name, `public_name -> 0
-           | x, y -> Stdlib.compare x y)
-       | `include_subdirs _left__009_, `include_subdirs _right__010_ ->
-         Blang.compare Include_subdirs.Predicate.compare _left__009_ _right__010_
-       | `instrumentation _left__013_, `instrumentation _right__014_ ->
-         Blang.compare Instrumentation.Predicate.compare _left__013_ _right__014_
-       | `library _left__017_, `library _right__018_ ->
-         Blang.compare Library.Predicate.compare _left__017_ _right__018_
-       | `lint _left__021_, `lint _right__022_ ->
-         Blang.compare Lint.Predicate.compare _left__021_ _right__022_
-       | `preprocess _left__025_, `preprocess _right__026_ ->
-         Blang.compare Preprocess.Predicate.compare _left__025_ _right__026_
-       | `stanza _left__029_, `stanza _right__030_ ->
-         Blang.compare Stanza.Predicate.compare _left__029_ _right__030_
-       | x, y -> Stdlib.compare x y)
-   : t -> t -> int)
-;;
-
 let equal =
   (fun a__033_ ->
      fun b__034_ ->
