@@ -36,57 +36,25 @@ module Predicate = struct
       | `glob va, `glob vb -> Glob.equal va vb)
   ;;
 
-  let __t_of_sexp__ =
-    (function
-     | Sexplib0.Sexp.Atom atom__014_ as _sexp__016_ ->
-       (match atom__014_ with
-        | "equals" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__016_
-        | "glob" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__016_
-        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-     | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__014_ :: sexp_args__017_) as
-       _sexp__016_ ->
-       (match atom__014_ with
-        | "equals" as _tag__022_ ->
-          (match sexp_args__017_ with
-           | _ :: [] ->
-             Sexplib0.Sexp_conv.of_sexp_error
-               "The [path.equals] construct is no longer supported."
-               _sexp__016_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__022_
-               _sexp__016_)
-        | "glob" as _tag__018_ ->
-          (match sexp_args__017_ with
-           | arg0__019_ :: [] ->
-             let res0__020_ = Glob.t_of_sexp arg0__019_ in
-             `glob res0__020_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__018_
-               _sexp__016_)
-        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-     | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__015_ ->
-       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__015_
-     | Sexplib0.Sexp.List [] as sexp__015_ ->
-       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__015_
-     : Sexplib0.Sexp.t -> t)
+  let variant_spec : t Sexp_helpers.Variant_spec.t =
+    [ { atom = "glob"; conv = Unary (fun sexp -> `glob (Glob.t_of_sexp sexp)) }
+    ; { atom = "equals"
+      ; conv =
+          Unary_with_context
+            (fun ~context ~arg:_ ->
+              raise
+                (Sexp.Of_sexp_error
+                   (Failure "The [path.equals] construct is no longer supported.", context)))
+      }
+    ]
   ;;
 
-  let t_of_sexp =
-    (fun sexp__025_ ->
-       try __t_of_sexp__ sexp__025_ with
-       | Sexplib0.Sexp_conv_error.No_variant_match ->
-         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__025_
-     : Sexplib0.Sexp.t -> t)
+  let t_of_sexp (sexp : Sexp.t) : t =
+    Sexp_helpers.parse_variant variant_spec ~error_source sexp
   ;;
 
-  let sexp_of_t =
-    (function
-     | `glob v__028_ ->
-       Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "glob"; Glob.sexp_of_t v__028_ ]
-     : t -> Sexplib0.Sexp.t)
+  let sexp_of_t (t : t) : Sexp.t =
+    match t with
+    | `glob v -> List [ Atom "glob"; Glob.sexp_of_t v ]
   ;;
 end

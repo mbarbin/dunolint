@@ -33,44 +33,25 @@ module T = struct
 
   let all = ([ `byte; `native; `best; `melange ] : t list)
 
-  let __t_of_sexp__ =
-    (function
-     | Sexplib0.Sexp.Atom atom__002_ as _sexp__004_ ->
-       (match atom__002_ with
-        | "byte" -> `byte
-        | "native" -> `native
-        | "best" -> `best
-        | "melange" -> `melange
-        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-     | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__002_ :: _) as _sexp__004_ ->
-       (match atom__002_ with
-        | "byte" -> Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__004_
-        | "native" -> Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__004_
-        | "best" -> Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__004_
-        | "melange" -> Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__004_
-        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-     | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__003_ ->
-       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__003_
-     | Sexplib0.Sexp.List [] as sexp__003_ ->
-       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__003_
-     : Sexplib0.Sexp.t -> t)
+  let variant_spec : t Sexp_helpers.Variant_spec.t =
+    [ { atom = "byte"; conv = Nullary `byte }
+    ; { atom = "native"; conv = Nullary `native }
+    ; { atom = "best"; conv = Nullary `best }
+    ; { atom = "melange"; conv = Nullary `melange }
+    ]
   ;;
 
-  let t_of_sexp =
-    (fun sexp__007_ ->
-       try __t_of_sexp__ sexp__007_ with
-       | Sexplib0.Sexp_conv_error.No_variant_match ->
-         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__007_
-     : Sexplib0.Sexp.t -> t)
+  let t_of_sexp (sexp : Sexp.t) : t =
+    Sexp_helpers.parse_variant variant_spec ~error_source sexp
   ;;
 
-  let sexp_of_t =
-    (function
-     | `byte -> Sexplib0.Sexp.Atom "byte"
-     | `native -> Sexplib0.Sexp.Atom "native"
-     | `best -> Sexplib0.Sexp.Atom "best"
-     | `melange -> Sexplib0.Sexp.Atom "melange"
-     : t -> Sexplib0.Sexp.t)
+  let sexp_of_t (t : t) : Sexp.t =
+    Atom
+      (match t with
+       | `byte -> "byte"
+       | `native -> "native"
+       | `best -> "best"
+       | `melange -> "melange")
   ;;
 end
 

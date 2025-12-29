@@ -21,27 +21,24 @@
 
 module Sexp_helpers = Dunolint.Private.Sexp_helpers
 
-(* A simple test type to exercise parse_poly_variant_predicate. *)
+(* A simple test type to exercise parse_variant. *)
 type test_predicate =
   [ `foo of string
   | `bar of int
   ]
 [@@deriving sexp_of]
 
-let test_predicates : test_predicate Sexp_helpers.Predicate_spec.t =
-  [ { atom = "foo"; conv = (fun sexp -> `foo (string_of_sexp sexp)) }
-  ; { atom = "bar"; conv = (fun sexp -> `bar (int_of_sexp sexp)) }
+let test_variant_spec : test_predicate Sexp_helpers.Variant_spec.t =
+  [ { atom = "foo"; conv = Unary (fun sexp -> `foo (string_of_sexp sexp)) }
+  ; { atom = "bar"; conv = Unary (fun sexp -> `bar (int_of_sexp sexp)) }
   ]
 ;;
 
-let%expect_test "parse_poly_variant_predicate" =
+let%expect_test "parse_variant" =
   let test str =
     let sexp = Parsexp.Single.parse_string_exn str in
     match
-      Sexp_helpers.parse_poly_variant_predicate
-        test_predicates
-        ~error_source:"test_predicate"
-        sexp
+      Sexp_helpers.parse_variant test_variant_spec ~error_source:"test_predicate" sexp
     with
     | predicate -> print_s [%sexp (predicate : test_predicate)]
     | exception exn -> print_s [%sexp (exn : Exn.t)]

@@ -61,71 +61,21 @@ module Predicate = struct
       | (`equals _ | `is_prefix _ | `is_suffix _), _ -> false)
   ;;
 
-  let __t_of_sexp__ =
-    (function
-     | Sexplib0.Sexp.Atom atom__023_ as _sexp__025_ ->
-       (match atom__023_ with
-        | "equals" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__025_
-        | "is_prefix" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__025_
-        | "is_suffix" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__025_
-        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-     | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__023_ :: sexp_args__026_) as
-       _sexp__025_ ->
-       (match atom__023_ with
-        | "equals" as _tag__034_ ->
-          (match sexp_args__026_ with
-           | arg0__035_ :: [] ->
-             let res0__036_ = name_of_sexp arg0__035_ in
-             `equals res0__036_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__034_
-               _sexp__025_)
-        | "is_prefix" as _tag__031_ ->
-          (match sexp_args__026_ with
-           | arg0__032_ :: [] ->
-             let res0__033_ = string_of_sexp arg0__032_ in
-             `is_prefix res0__033_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__031_
-               _sexp__025_)
-        | "is_suffix" as _tag__027_ ->
-          (match sexp_args__026_ with
-           | arg0__028_ :: [] ->
-             let res0__029_ = string_of_sexp arg0__028_ in
-             `is_suffix res0__029_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__027_
-               _sexp__025_)
-        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-     | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__024_ ->
-       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__024_
-     | Sexplib0.Sexp.List [] as sexp__024_ ->
-       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__024_
-     : Sexplib0.Sexp.t -> t)
+  let variant_spec : t Sexp_helpers.Variant_spec.t =
+    [ { atom = "equals"; conv = Unary (fun sexp -> `equals (name_of_sexp sexp)) }
+    ; { atom = "is_prefix"; conv = Unary (fun sexp -> `is_prefix (string_of_sexp sexp)) }
+    ; { atom = "is_suffix"; conv = Unary (fun sexp -> `is_suffix (string_of_sexp sexp)) }
+    ]
   ;;
 
-  let t_of_sexp =
-    (fun sexp__037_ ->
-       try __t_of_sexp__ sexp__037_ with
-       | Sexplib0.Sexp_conv_error.No_variant_match ->
-         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__037_
-     : Sexplib0.Sexp.t -> t)
+  let t_of_sexp (sexp : Sexp.t) : t =
+    Sexp_helpers.parse_variant variant_spec ~error_source sexp
   ;;
 
-  let sexp_of_t =
-    (function
-     | `equals v__039_ ->
-       Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "equals"; sexp_of_name v__039_ ]
-     | `is_prefix v__040_ ->
-       Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "is_prefix"; sexp_of_string v__040_ ]
-     | `is_suffix v__041_ ->
-       Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "is_suffix"; sexp_of_string v__041_ ]
-     : t -> Sexplib0.Sexp.t)
+  let sexp_of_t (t : t) : Sexp.t =
+    match t with
+    | `equals v -> List [ Atom "equals"; sexp_of_name v ]
+    | `is_prefix v -> List [ Atom "is_prefix"; sexp_of_string v ]
+    | `is_suffix v -> List [ Atom "is_suffix"; sexp_of_string v ]
   ;;
 end

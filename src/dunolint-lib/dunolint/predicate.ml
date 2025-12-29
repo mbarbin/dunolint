@@ -44,96 +44,39 @@ module T = struct
       | (`path _ | `dune _ | `dune_project _ | `dunolint _), _ -> false)
   ;;
 
-  let __t_of_sexp__ =
-    (function
-     | Sexplib0.Sexp.Atom atom__030_ as _sexp__032_ ->
-       (match atom__030_ with
-        | "path" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__032_
-        | "dune" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__032_
-        | "dune_project" ->
-          Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__032_
-        | "dunolint" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__032_
-        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-     | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__030_ :: sexp_args__033_) as
-       _sexp__032_ ->
-       (match atom__030_ with
-        | "path" as _tag__041_ ->
-          (match sexp_args__033_ with
-           | arg0__042_ :: [] ->
-             let res0__043_ = Blang.t_of_sexp Path.Predicate.t_of_sexp arg0__042_ in
-             `path res0__043_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__041_
-               _sexp__032_)
-        | "dune" as _tag__038_ ->
-          (match sexp_args__033_ with
-           | arg0__039_ :: [] ->
-             let res0__040_ = Blang.t_of_sexp Dune.Predicate.t_of_sexp arg0__039_ in
-             `dune res0__040_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__038_
-               _sexp__032_)
-        | "dune_project" as _tag__034_ ->
-          (match sexp_args__033_ with
-           | arg0__035_ :: [] ->
-             let res0__036_ =
-               Blang.t_of_sexp Dune_project.Predicate.t_of_sexp arg0__035_
-             in
-             `dune_project res0__036_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__034_
-               _sexp__032_)
-        | "dunolint" as _tag__045_ ->
-          (match sexp_args__033_ with
-           | arg0__046_ :: [] ->
-             let res0__047_ = Blang.t_of_sexp Dunolint0.Predicate.t_of_sexp arg0__046_ in
-             `dunolint res0__047_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__045_
-               _sexp__032_)
-        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-     | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__031_ ->
-       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__031_
-     | Sexplib0.Sexp.List [] as sexp__031_ ->
-       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__031_
-     : Sexplib0.Sexp.t -> t)
+  let variant_spec : t Sexp_helpers.Variant_spec.t =
+    [ { atom = "path"
+      ; conv = Unary (fun sexp -> `path (Blang.t_of_sexp Path.Predicate.t_of_sexp sexp))
+      }
+    ; { atom = "dune"
+      ; conv = Unary (fun sexp -> `dune (Blang.t_of_sexp Dune.Predicate.t_of_sexp sexp))
+      }
+    ; { atom = "dune_project"
+      ; conv =
+          Unary
+            (fun sexp ->
+              `dune_project (Blang.t_of_sexp Dune_project.Predicate.t_of_sexp sexp))
+      }
+    ; { atom = "dunolint"
+      ; conv =
+          Unary
+            (fun sexp -> `dunolint (Blang.t_of_sexp Dunolint0.Predicate.t_of_sexp sexp))
+      }
+    ]
   ;;
 
-  let t_of_sexp =
-    (fun sexp__044_ ->
-       try __t_of_sexp__ sexp__044_ with
-       | Sexplib0.Sexp_conv_error.No_variant_match ->
-         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__044_
-     : Sexplib0.Sexp.t -> t)
+  let t_of_sexp (sexp : Sexp.t) : t =
+    Sexp_helpers.parse_variant variant_spec ~error_source sexp
   ;;
 
-  let sexp_of_t =
-    (function
-     | `path v__046_ ->
-       Sexplib0.Sexp.List
-         [ Sexplib0.Sexp.Atom "path"; Blang.sexp_of_t Path.Predicate.sexp_of_t v__046_ ]
-     | `dune v__047_ ->
-       Sexplib0.Sexp.List
-         [ Sexplib0.Sexp.Atom "dune"; Blang.sexp_of_t Dune.Predicate.sexp_of_t v__047_ ]
-     | `dune_project v__048_ ->
-       Sexplib0.Sexp.List
-         [ Sexplib0.Sexp.Atom "dune_project"
-         ; Blang.sexp_of_t Dune_project.Predicate.sexp_of_t v__048_
-         ]
-     | `dunolint v__049_ ->
-       Sexplib0.Sexp.List
-         [ Sexplib0.Sexp.Atom "dunolint"
-         ; Blang.sexp_of_t Dunolint0.Predicate.sexp_of_t v__049_
-         ]
-     : t -> Sexplib0.Sexp.t)
+  let sexp_of_t (t : t) : Sexp.t =
+    match t with
+    | `path v -> List [ Atom "path"; Blang.sexp_of_t Path.Predicate.sexp_of_t v ]
+    | `dune v -> List [ Atom "dune"; Blang.sexp_of_t Dune.Predicate.sexp_of_t v ]
+    | `dune_project v ->
+      List [ Atom "dune_project"; Blang.sexp_of_t Dune_project.Predicate.sexp_of_t v ]
+    | `dunolint v ->
+      List [ Atom "dunolint"; Blang.sexp_of_t Dunolint0.Predicate.sexp_of_t v ]
   ;;
 end
 

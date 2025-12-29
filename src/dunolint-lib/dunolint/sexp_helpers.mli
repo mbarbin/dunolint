@@ -78,22 +78,28 @@ val parse_inline_record
   -> fields:Sexp.t list
   -> 'a
 
-module Predicate_spec : sig
-  (** Helper to read polymorphic variants encoding a predicate. The goal
-      overtime is to extend the capability of the mini interpreter that uses
-      that spec to parse a sexp, by improving behaviors such as error reporting,
-      user-friendly hints, etc. This is left as future work. *)
+module Variant_spec : sig
+  (** Helper to read variants from s-expressions. Supports nullary, unary, and
+      variadic variants with proper error messages for each case.
 
-  type 'a predicate =
+      The goal overtime is to extend the capability of this mini interpreter by
+      improving behaviors such as error reporting, user-friendly hints, etc.
+      This is left as future work. *)
+
+  type 'a conv =
+    | Nullary of 'a (** Variant with no argument, e.g., [`return] *)
+    | Unary_with_context of (context:Sexp.t -> arg:Sexp.t -> 'a)
+    (** Variant with one argument, e.g., [`equals of string] *)
+    | Unary of (Sexp.t -> 'a) (** For Unary when context is not needed (most of them). *)
+    | Variadic of (context:Sexp.t -> fields:Sexp.t list -> 'a)
+    (** Variant with multiple arguments, e.g., [`skip_paths of Glob.t list] *)
+
+  type 'a case =
     { atom : string
-    ; conv : Sexp.t -> 'a
+    ; conv : 'a conv
     }
 
-  type 'a t = 'a predicate list
+  type 'a t = 'a case list
 end
 
-val parse_poly_variant_predicate
-  :  'a Predicate_spec.t
-  -> error_source:string
-  -> Sexp.t
-  -> 'a
+val parse_variant : 'a Variant_spec.t -> error_source:string -> Sexp.t -> 'a

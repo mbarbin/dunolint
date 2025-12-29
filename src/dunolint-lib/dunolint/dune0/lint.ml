@@ -34,45 +34,19 @@ module Predicate = struct
       | `pps va, `pps vb -> Blang.equal Pps.Predicate.equal va vb)
   ;;
 
-  let __t_of_sexp__ =
-    (function
-     | Sexplib0.Sexp.Atom atom__014_ as _sexp__016_ ->
-       (match atom__014_ with
-        | "pps" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__016_
-        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-     | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__014_ :: sexp_args__017_) as
-       _sexp__016_ ->
-       (match atom__014_ with
-        | "pps" as _tag__018_ ->
-          (match sexp_args__017_ with
-           | arg0__019_ :: [] ->
-             let res0__020_ = Blang.t_of_sexp Pps.Predicate.t_of_sexp arg0__019_ in
-             `pps res0__020_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__018_
-               _sexp__016_)
-        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-     | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__015_ ->
-       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__015_
-     | Sexplib0.Sexp.List [] as sexp__015_ ->
-       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__015_
-     : Sexplib0.Sexp.t -> t)
+  let variant_spec : t Sexp_helpers.Variant_spec.t =
+    [ { atom = "pps"
+      ; conv = Unary (fun sexp -> `pps (Blang.t_of_sexp Pps.Predicate.t_of_sexp sexp))
+      }
+    ]
   ;;
 
-  let t_of_sexp =
-    (fun sexp__022_ ->
-       try __t_of_sexp__ sexp__022_ with
-       | Sexplib0.Sexp_conv_error.No_variant_match ->
-         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__022_
-     : Sexplib0.Sexp.t -> t)
+  let t_of_sexp (sexp : Sexp.t) : t =
+    Sexp_helpers.parse_variant variant_spec ~error_source sexp
   ;;
 
-  let sexp_of_t =
-    (fun (`pps v__024_) ->
-       Sexplib0.Sexp.List
-         [ Sexplib0.Sexp.Atom "pps"; Blang.sexp_of_t Pps.Predicate.sexp_of_t v__024_ ]
-     : t -> Sexplib0.Sexp.t)
+  let sexp_of_t (t : t) : Sexp.t =
+    match t with
+    | `pps v -> List [ Atom "pps"; Blang.sexp_of_t Pps.Predicate.sexp_of_t v ]
   ;;
 end

@@ -51,39 +51,48 @@ let parse_inline_record
        bt [@coverage off] (* out edge bisect_ppx issue. *))
 ;;
 
-module Predicate_spec = struct
-  type 'a predicate =
+module Variant_spec = struct
+  type 'a conv =
+    | Nullary of 'a
+    | Unary_with_context of (context:Sexp.t -> arg:Sexp.t -> 'a)
+    | Unary of (Sexp.t -> 'a)
+    | Variadic of (context:Sexp.t -> fields:Sexp.t list -> 'a)
+
+  type 'a case =
     { atom : string
-    ; conv : Sexp.t -> 'a
+    ; conv : 'a conv
     }
 
-  type 'a t = 'a predicate list
+  type 'a t = 'a case list
 end
 
-let parse_poly_variant_predicate
-      (type a)
-      (predicates : a Predicate_spec.t)
-      ~error_source
-      (sexp : Sexp.t)
+let parse_variant (type a) (variant_spec : a Variant_spec.t) ~error_source (sexp : Sexp.t)
   : a
   =
-  let find_predicate atom =
-    List.find_opt
-      (fun (p : a Predicate_spec.predicate) -> String.equal p.atom atom)
-      predicates
+  let find_case atom =
+    List.find_opt (fun (c : a Variant_spec.case) -> String.equal c.atom atom) variant_spec
   in
   match sexp with
   | Atom atom ->
-    (match find_predicate atom with
-     | Some _ -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source sexp
+    (match find_case atom with
+     | Some { conv = Nullary value; _ } -> value
+     | Some { conv = Unary_with_context _ | Unary _ | Variadic _; _ } ->
+       Sexplib0.Sexp_conv_error.ptag_takes_args error_source sexp
      | None -> Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp)
-  | List (Atom atom :: tail) ->
-    (match find_predicate atom with
+  | List (Atom atom :: args) ->
+    (match find_case atom with
      | None -> Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp
-     | Some predicate ->
-       (match tail with
-        | [ condition ] -> predicate.conv condition
-        | _ -> Sexplib0.Sexp_conv_error.ptag_incorrect_n_args error_source atom sexp))
+     | Some { conv = Nullary _; _ } ->
+       Sexplib0.Sexp_conv_error.ptag_no_args error_source sexp
+     | Some { conv = Unary f; _ } ->
+       (match args with
+        | [ arg ] -> f arg
+        | _ -> Sexplib0.Sexp_conv_error.ptag_incorrect_n_args error_source atom sexp)
+     | Some { conv = Unary_with_context f; _ } ->
+       (match args with
+        | [ arg ] -> f ~context:sexp ~arg
+        | _ -> Sexplib0.Sexp_conv_error.ptag_incorrect_n_args error_source atom sexp)
+     | Some { conv = Variadic f; _ } -> f ~context:sexp ~fields:args)
   | List (List _ :: _) ->
     Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp
   | List [] -> Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp

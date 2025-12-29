@@ -91,45 +91,21 @@ module Predicate = struct
 
   let equal : t -> t -> bool = Stdlib.( = )
 
-  module Opv = struct
-    type predicate = t
-
-    type t =
-      { atom : string
-      ; cons : version -> predicate
-      }
-  end
-
-  let ops =
-    let opv atom cons : Opv.t = { atom; cons } in
-    [ opv "=" (fun v -> `eq v)
-    ; opv ">" (fun v -> `gt v)
-    ; opv ">=" (fun v -> `gte v)
-    ; opv "<" (fun v -> `lt v)
-    ; opv "<=" (fun v -> `lte v)
-    ; opv "!=" (fun v -> `neq v)
+  let variant_spec : t Sexp_helpers.Variant_spec.t =
+    let pred atom cons : t Sexp_helpers.Variant_spec.case =
+      { atom; conv = Unary (fun sexp -> cons (t_of_sexp sexp)) }
+    in
+    [ pred "=" (fun v -> `eq v)
+    ; pred ">" (fun v -> `gt v)
+    ; pred ">=" (fun v -> `gte v)
+    ; pred "<" (fun v -> `lt v)
+    ; pred "<=" (fun v -> `lte v)
+    ; pred "!=" (fun v -> `neq v)
     ]
   ;;
 
   let t_of_sexp (sexp : Sexp.t) : t =
-    let find_op atom =
-      List.find_opt ops ~f:(fun (op : Opv.t) -> String.equal op.atom atom)
-    in
-    match sexp with
-    | Atom atom ->
-      (match find_op atom with
-       | Some _ -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source sexp
-       | None -> Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp)
-    | List (Atom atom :: tail) ->
-      (match find_op atom with
-       | None -> Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp
-       | Some op ->
-         (match tail with
-          | [ version_sexp ] -> op.cons (t_of_sexp version_sexp)
-          | _ -> Sexplib0.Sexp_conv_error.ptag_incorrect_n_args error_source atom sexp))
-    | List (List _ :: _) ->
-      Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp
-    | List [] -> Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp
+    Sexp_helpers.parse_variant variant_spec ~error_source sexp
   ;;
 
   let sexp_of_t (t : t) : Sexp.t =

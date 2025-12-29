@@ -32,18 +32,19 @@ let equal (a : t) (b : t) =
       Blang.equal Dunolint_lang_version.Predicate.equal va vb)
 ;;
 
-let predicates : t Sexp_helpers.Predicate_spec.t =
+let variant_spec : t Sexp_helpers.Variant_spec.t =
   [ { atom = "dunolint_lang_version"
     ; conv =
-        (fun sexp ->
-          `dunolint_lang_version
-            (Blang.t_of_sexp Dunolint_lang_version.Predicate.t_of_sexp sexp))
+        Unary
+          (fun sexp ->
+            `dunolint_lang_version
+              (Blang.t_of_sexp Dunolint_lang_version.Predicate.t_of_sexp sexp))
     }
   ]
 ;;
 
 let t_of_sexp (sexp : Sexp.t) : t =
-  Sexp_helpers.parse_poly_variant_predicate predicates ~error_source sexp
+  Sexp_helpers.parse_variant variant_spec ~error_source sexp
 ;;
 
 let sexp_of_t (t : t) : Sexp.t =

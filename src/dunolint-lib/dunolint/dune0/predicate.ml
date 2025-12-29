@@ -33,6 +33,29 @@ module Has_field = struct
     ]
 
   let equal = (Stdlib.( = ) : t -> t -> bool)
+
+  let variant_spec : t Sexp_helpers.Variant_spec.t =
+    [ { atom = "instrumentation"; conv = Nullary `instrumentation }
+    ; { atom = "lint"; conv = Nullary `lint }
+    ; { atom = "name"; conv = Nullary `name }
+    ; { atom = "preprocess"; conv = Nullary `preprocess }
+    ; { atom = "public_name"; conv = Nullary `public_name }
+    ]
+  ;;
+
+  let t_of_sexp (sexp : Sexp.t) : t =
+    Sexp_helpers.parse_variant variant_spec ~error_source sexp
+  ;;
+
+  let sexp_of_t (t : t) : Sexp.t =
+    Atom
+      (match t with
+       | `instrumentation -> "instrumentation"
+       | `lint -> "lint"
+       | `name -> "name"
+       | `preprocess -> "preprocess"
+       | `public_name -> "public_name")
+  ;;
 end
 
 type t =
@@ -72,202 +95,61 @@ let equal (a : t) (b : t) =
       , _ ) -> false)
 ;;
 
-let __t_of_sexp__ =
-  (function
-   | Sexplib0.Sexp.Atom atom__066_ as _sexp__068_ ->
-     (match atom__066_ with
-      | "executable" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__068_
-      | "has_field" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__068_
-      | "include_subdirs" ->
-        Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__068_
-      | "instrumentation" ->
-        Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__068_
-      | "library" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__068_
-      | "lint" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__068_
-      | "preprocess" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__068_
-      | "stanza" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__068_
-      | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-   | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__066_ :: sexp_args__069_) as _sexp__068_
-     ->
-     (match atom__066_ with
-      | "executable" as _tag__098_ ->
-        (match sexp_args__069_ with
-         | arg0__099_ :: [] ->
-           let res0__100_ = Blang.t_of_sexp Executable.Predicate.t_of_sexp arg0__099_ in
-           `executable res0__100_
-         | _ ->
-           Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source
-             _tag__098_
-             _sexp__068_)
-      | "has_field" as _tag__089_ ->
-        (match sexp_args__069_ with
-         | arg0__096_ :: [] ->
-           let res0__097_ =
-             let sexp__095_ = arg0__096_ in
-             try
-               match sexp__095_ with
-               | Sexplib0.Sexp.Atom atom__091_ as _sexp__093_ ->
-                 (match atom__091_ with
-                  | "instrumentation" -> `instrumentation
-                  | "lint" -> `lint
-                  | "name" -> `name
-                  | "preprocess" -> `preprocess
-                  | "public_name" -> `public_name
-                  | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-               | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__091_ :: _) as _sexp__093_ ->
-                 (match atom__091_ with
-                  | "instrumentation" ->
-                    Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__093_
-                  | "lint" ->
-                    Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__093_
-                  | "name" ->
-                    Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__093_
-                  | "preprocess" ->
-                    Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__093_
-                  | "public_name" ->
-                    Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__093_
-                  | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-               | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__092_ ->
-                 Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var
-                   error_source
-                   sexp__092_
-               | Sexplib0.Sexp.List [] as sexp__092_ ->
-                 Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var
-                   error_source
-                   sexp__092_
-             with
-             | Sexplib0.Sexp_conv_error.No_variant_match ->
-               Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__095_
-           in
-           `has_field res0__097_
-         | _ ->
-           Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source
-             _tag__089_
-             _sexp__068_)
-      | "include_subdirs" as _tag__086_ ->
-        (match sexp_args__069_ with
-         | arg0__087_ :: [] ->
-           let res0__088_ =
-             Blang.t_of_sexp Include_subdirs.Predicate.t_of_sexp arg0__087_
-           in
-           `include_subdirs res0__088_
-         | _ ->
-           Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source
-             _tag__086_
-             _sexp__068_)
-      | "instrumentation" as _tag__083_ ->
-        (match sexp_args__069_ with
-         | arg0__084_ :: [] ->
-           let res0__085_ =
-             Blang.t_of_sexp Instrumentation.Predicate.t_of_sexp arg0__084_
-           in
-           `instrumentation res0__085_
-         | _ ->
-           Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source
-             _tag__083_
-             _sexp__068_)
-      | "library" as _tag__080_ ->
-        (match sexp_args__069_ with
-         | arg0__081_ :: [] ->
-           let res0__082_ = Blang.t_of_sexp Library.Predicate.t_of_sexp arg0__081_ in
-           `library res0__082_
-         | _ ->
-           Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source
-             _tag__080_
-             _sexp__068_)
-      | "lint" as _tag__077_ ->
-        (match sexp_args__069_ with
-         | arg0__078_ :: [] ->
-           let res0__079_ = Blang.t_of_sexp Lint.Predicate.t_of_sexp arg0__078_ in
-           `lint res0__079_
-         | _ ->
-           Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source
-             _tag__077_
-             _sexp__068_)
-      | "preprocess" as _tag__074_ ->
-        (match sexp_args__069_ with
-         | arg0__075_ :: [] ->
-           let res0__076_ = Blang.t_of_sexp Preprocess.Predicate.t_of_sexp arg0__075_ in
-           `preprocess res0__076_
-         | _ ->
-           Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source
-             _tag__074_
-             _sexp__068_)
-      | "stanza" as _tag__070_ ->
-        (match sexp_args__069_ with
-         | arg0__071_ :: [] ->
-           let res0__072_ = Blang.t_of_sexp Stanza.Predicate.t_of_sexp arg0__071_ in
-           `stanza res0__072_
-         | _ ->
-           Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-             error_source
-             _tag__070_
-             _sexp__068_)
-      | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-   | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__067_ ->
-     Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__067_
-   | Sexplib0.Sexp.List [] as sexp__067_ ->
-     Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__067_
-   : Sexplib0.Sexp.t -> t)
+let variant_spec : t Sexp_helpers.Variant_spec.t =
+  [ { atom = "executable"
+    ; conv =
+        Unary
+          (fun sexp -> `executable (Blang.t_of_sexp Executable.Predicate.t_of_sexp sexp))
+    }
+  ; { atom = "has_field"
+    ; conv = Unary (fun sexp -> `has_field (Has_field.t_of_sexp sexp))
+    }
+  ; { atom = "include_subdirs"
+    ; conv =
+        Unary
+          (fun sexp ->
+            `include_subdirs (Blang.t_of_sexp Include_subdirs.Predicate.t_of_sexp sexp))
+    }
+  ; { atom = "instrumentation"
+    ; conv =
+        Unary
+          (fun sexp ->
+            `instrumentation (Blang.t_of_sexp Instrumentation.Predicate.t_of_sexp sexp))
+    }
+  ; { atom = "library"
+    ; conv =
+        Unary (fun sexp -> `library (Blang.t_of_sexp Library.Predicate.t_of_sexp sexp))
+    }
+  ; { atom = "lint"
+    ; conv = Unary (fun sexp -> `lint (Blang.t_of_sexp Lint.Predicate.t_of_sexp sexp))
+    }
+  ; { atom = "preprocess"
+    ; conv =
+        Unary
+          (fun sexp -> `preprocess (Blang.t_of_sexp Preprocess.Predicate.t_of_sexp sexp))
+    }
+  ; { atom = "stanza"
+    ; conv = Unary (fun sexp -> `stanza (Blang.t_of_sexp Stanza.Predicate.t_of_sexp sexp))
+    }
+  ]
 ;;
 
-let t_of_sexp =
-  (fun sexp__101_ ->
-     try __t_of_sexp__ sexp__101_ with
-     | Sexplib0.Sexp_conv_error.No_variant_match ->
-       Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__101_
-   : Sexplib0.Sexp.t -> t)
+let t_of_sexp (sexp : Sexp.t) : t =
+  Sexp_helpers.parse_variant variant_spec ~error_source sexp
 ;;
 
-let sexp_of_t =
-  (function
-   | `executable v__103_ ->
-     Sexplib0.Sexp.List
-       [ Sexplib0.Sexp.Atom "executable"
-       ; Blang.sexp_of_t Executable.Predicate.sexp_of_t v__103_
-       ]
-   | `has_field v__104_ ->
-     Sexplib0.Sexp.List
-       [ Sexplib0.Sexp.Atom "has_field"
-       ; (match v__104_ with
-          | `instrumentation -> Sexplib0.Sexp.Atom "instrumentation"
-          | `lint -> Sexplib0.Sexp.Atom "lint"
-          | `name -> Sexplib0.Sexp.Atom "name"
-          | `preprocess -> Sexplib0.Sexp.Atom "preprocess"
-          | `public_name -> Sexplib0.Sexp.Atom "public_name")
-       ]
-   | `include_subdirs v__105_ ->
-     Sexplib0.Sexp.List
-       [ Sexplib0.Sexp.Atom "include_subdirs"
-       ; Blang.sexp_of_t Include_subdirs.Predicate.sexp_of_t v__105_
-       ]
-   | `instrumentation v__106_ ->
-     Sexplib0.Sexp.List
-       [ Sexplib0.Sexp.Atom "instrumentation"
-       ; Blang.sexp_of_t Instrumentation.Predicate.sexp_of_t v__106_
-       ]
-   | `library v__107_ ->
-     Sexplib0.Sexp.List
-       [ Sexplib0.Sexp.Atom "library"
-       ; Blang.sexp_of_t Library.Predicate.sexp_of_t v__107_
-       ]
-   | `lint v__108_ ->
-     Sexplib0.Sexp.List
-       [ Sexplib0.Sexp.Atom "lint"; Blang.sexp_of_t Lint.Predicate.sexp_of_t v__108_ ]
-   | `preprocess v__109_ ->
-     Sexplib0.Sexp.List
-       [ Sexplib0.Sexp.Atom "preprocess"
-       ; Blang.sexp_of_t Preprocess.Predicate.sexp_of_t v__109_
-       ]
-   | `stanza v__110_ ->
-     Sexplib0.Sexp.List
-       [ Sexplib0.Sexp.Atom "stanza"; Blang.sexp_of_t Stanza.Predicate.sexp_of_t v__110_ ]
-   : t -> Sexplib0.Sexp.t)
+let sexp_of_t (t : t) : Sexp.t =
+  match t with
+  | `executable v ->
+    List [ Atom "executable"; Blang.sexp_of_t Executable.Predicate.sexp_of_t v ]
+  | `has_field v -> List [ Atom "has_field"; Has_field.sexp_of_t v ]
+  | `include_subdirs v ->
+    List [ Atom "include_subdirs"; Blang.sexp_of_t Include_subdirs.Predicate.sexp_of_t v ]
+  | `instrumentation v ->
+    List [ Atom "instrumentation"; Blang.sexp_of_t Instrumentation.Predicate.sexp_of_t v ]
+  | `library v -> List [ Atom "library"; Blang.sexp_of_t Library.Predicate.sexp_of_t v ]
+  | `lint v -> List [ Atom "lint"; Blang.sexp_of_t Lint.Predicate.sexp_of_t v ]
+  | `preprocess v ->
+    List [ Atom "preprocess"; Blang.sexp_of_t Preprocess.Predicate.sexp_of_t v ]
+  | `stanza v -> List [ Atom "stanza"; Blang.sexp_of_t Stanza.Predicate.sexp_of_t v ]
 ;;

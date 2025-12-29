@@ -37,6 +37,29 @@ module Predicate = struct
       ]
 
     let equal = (Stdlib.( = ) : t -> t -> bool)
+
+    let variant_spec : t Sexp_helpers.Variant_spec.t =
+      [ { atom = "instrumentation"; conv = Nullary `instrumentation }
+      ; { atom = "lint"; conv = Nullary `lint }
+      ; { atom = "name"; conv = Nullary `name }
+      ; { atom = "preprocess"; conv = Nullary `preprocess }
+      ; { atom = "public_name"; conv = Nullary `public_name }
+      ]
+    ;;
+
+    let t_of_sexp (sexp : Sexp.t) : t =
+      Sexp_helpers.parse_variant variant_spec ~error_source sexp
+    ;;
+
+    let sexp_of_t (t : t) : Sexp.t =
+      Atom
+        (match t with
+         | `instrumentation -> "instrumentation"
+         | `lint -> "lint"
+         | `name -> "name"
+         | `preprocess -> "preprocess"
+         | `public_name -> "public_name")
+    ;;
   end
 
   type t =
@@ -69,175 +92,52 @@ module Predicate = struct
         , _ ) -> false)
   ;;
 
-  let __t_of_sexp__ =
-    (function
-     | Sexplib0.Sexp.Atom atom__050_ as _sexp__052_ ->
-       (match atom__050_ with
-        | "has_field" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__052_
-        | "instrumentation" ->
-          Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__052_
-        | "lint" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__052_
-        | "name" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__052_
-        | "preprocess" ->
-          Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__052_
-        | "public_name" ->
-          Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__052_
-        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-     | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__050_ :: sexp_args__053_) as
-       _sexp__052_ ->
-       (match atom__050_ with
-        | "has_field" as _tag__070_ ->
-          (match sexp_args__053_ with
-           | arg0__077_ :: [] ->
-             let res0__078_ =
-               let sexp__076_ = arg0__077_ in
-               try
-                 match sexp__076_ with
-                 | Sexplib0.Sexp.Atom atom__072_ as _sexp__074_ ->
-                   (match atom__072_ with
-                    | "instrumentation" -> `instrumentation
-                    | "lint" -> `lint
-                    | "name" -> `name
-                    | "preprocess" -> `preprocess
-                    | "public_name" -> `public_name
-                    | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-                 | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__072_ :: _) as _sexp__074_
-                   ->
-                   (match atom__072_ with
-                    | "instrumentation" ->
-                      Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__074_
-                    | "lint" ->
-                      Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__074_
-                    | "name" ->
-                      Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__074_
-                    | "preprocess" ->
-                      Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__074_
-                    | "public_name" ->
-                      Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__074_
-                    | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-                 | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__073_ ->
-                   Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var
-                     error_source
-                     sexp__073_
-                 | Sexplib0.Sexp.List [] as sexp__073_ ->
-                   Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var
-                     error_source
-                     sexp__073_
-               with
-               | Sexplib0.Sexp_conv_error.No_variant_match ->
-                 Sexplib0.Sexp_conv_error.no_matching_variant_found
-                   error_source
-                   sexp__076_
-             in
-             `has_field res0__078_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__070_
-               _sexp__052_)
-        | "instrumentation" as _tag__067_ ->
-          (match sexp_args__053_ with
-           | arg0__068_ :: [] ->
-             let res0__069_ =
-               Blang.t_of_sexp Instrumentation.Predicate.t_of_sexp arg0__068_
-             in
-             `instrumentation res0__069_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__067_
-               _sexp__052_)
-        | "lint" as _tag__064_ ->
-          (match sexp_args__053_ with
-           | arg0__065_ :: [] ->
-             let res0__066_ = Blang.t_of_sexp Lint.Predicate.t_of_sexp arg0__065_ in
-             `lint res0__066_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__064_
-               _sexp__052_)
-        | "name" as _tag__061_ ->
-          (match sexp_args__053_ with
-           | arg0__062_ :: [] ->
-             let res0__063_ = Blang.t_of_sexp Name.Predicate.t_of_sexp arg0__062_ in
-             `name res0__063_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__061_
-               _sexp__052_)
-        | "preprocess" as _tag__058_ ->
-          (match sexp_args__053_ with
-           | arg0__059_ :: [] ->
-             let res0__060_ = Blang.t_of_sexp Preprocess.Predicate.t_of_sexp arg0__059_ in
-             `preprocess res0__060_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__058_
-               _sexp__052_)
-        | "public_name" as _tag__054_ ->
-          (match sexp_args__053_ with
-           | arg0__055_ :: [] ->
-             let res0__056_ =
-               Blang.t_of_sexp Public_name.Predicate.t_of_sexp arg0__055_
-             in
-             `public_name res0__056_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__054_
-               _sexp__052_)
-        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-     | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__051_ ->
-       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__051_
-     | Sexplib0.Sexp.List [] as sexp__051_ ->
-       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__051_
-     : Sexplib0.Sexp.t -> t)
+  let variant_spec : t Sexp_helpers.Variant_spec.t =
+    [ { atom = "has_field"
+      ; conv = Unary (fun sexp -> `has_field (Has_field.t_of_sexp sexp))
+      }
+    ; { atom = "instrumentation"
+      ; conv =
+          Unary
+            (fun sexp ->
+              `instrumentation (Blang.t_of_sexp Instrumentation.Predicate.t_of_sexp sexp))
+      }
+    ; { atom = "lint"
+      ; conv = Unary (fun sexp -> `lint (Blang.t_of_sexp Lint.Predicate.t_of_sexp sexp))
+      }
+    ; { atom = "name"
+      ; conv = Unary (fun sexp -> `name (Blang.t_of_sexp Name.Predicate.t_of_sexp sexp))
+      }
+    ; { atom = "preprocess"
+      ; conv =
+          Unary
+            (fun sexp ->
+              `preprocess (Blang.t_of_sexp Preprocess.Predicate.t_of_sexp sexp))
+      }
+    ; { atom = "public_name"
+      ; conv =
+          Unary
+            (fun sexp ->
+              `public_name (Blang.t_of_sexp Public_name.Predicate.t_of_sexp sexp))
+      }
+    ]
   ;;
 
-  let t_of_sexp =
-    (fun sexp__079_ ->
-       try __t_of_sexp__ sexp__079_ with
-       | Sexplib0.Sexp_conv_error.No_variant_match ->
-         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__079_
-     : Sexplib0.Sexp.t -> t)
+  let t_of_sexp (sexp : Sexp.t) : t =
+    Sexp_helpers.parse_variant variant_spec ~error_source sexp
   ;;
 
-  let sexp_of_t =
-    (function
-     | `has_field v__081_ ->
-       Sexplib0.Sexp.List
-         [ Sexplib0.Sexp.Atom "has_field"
-         ; (match v__081_ with
-            | `instrumentation -> Sexplib0.Sexp.Atom "instrumentation"
-            | `lint -> Sexplib0.Sexp.Atom "lint"
-            | `name -> Sexplib0.Sexp.Atom "name"
-            | `preprocess -> Sexplib0.Sexp.Atom "preprocess"
-            | `public_name -> Sexplib0.Sexp.Atom "public_name")
-         ]
-     | `instrumentation v__082_ ->
-       Sexplib0.Sexp.List
-         [ Sexplib0.Sexp.Atom "instrumentation"
-         ; Blang.sexp_of_t Instrumentation.Predicate.sexp_of_t v__082_
-         ]
-     | `lint v__083_ ->
-       Sexplib0.Sexp.List
-         [ Sexplib0.Sexp.Atom "lint"; Blang.sexp_of_t Lint.Predicate.sexp_of_t v__083_ ]
-     | `name v__084_ ->
-       Sexplib0.Sexp.List
-         [ Sexplib0.Sexp.Atom "name"; Blang.sexp_of_t Name.Predicate.sexp_of_t v__084_ ]
-     | `preprocess v__085_ ->
-       Sexplib0.Sexp.List
-         [ Sexplib0.Sexp.Atom "preprocess"
-         ; Blang.sexp_of_t Preprocess.Predicate.sexp_of_t v__085_
-         ]
-     | `public_name v__086_ ->
-       Sexplib0.Sexp.List
-         [ Sexplib0.Sexp.Atom "public_name"
-         ; Blang.sexp_of_t Public_name.Predicate.sexp_of_t v__086_
-         ]
-     : t -> Sexplib0.Sexp.t)
+  let sexp_of_t (t : t) : Sexp.t =
+    match t with
+    | `has_field v -> List [ Atom "has_field"; Has_field.sexp_of_t v ]
+    | `instrumentation v ->
+      List
+        [ Atom "instrumentation"; Blang.sexp_of_t Instrumentation.Predicate.sexp_of_t v ]
+    | `lint v -> List [ Atom "lint"; Blang.sexp_of_t Lint.Predicate.sexp_of_t v ]
+    | `name v -> List [ Atom "name"; Blang.sexp_of_t Name.Predicate.sexp_of_t v ]
+    | `preprocess v ->
+      List [ Atom "preprocess"; Blang.sexp_of_t Preprocess.Predicate.sexp_of_t v ]
+    | `public_name v ->
+      List [ Atom "public_name"; Blang.sexp_of_t Public_name.Predicate.sexp_of_t v ]
   ;;
 end

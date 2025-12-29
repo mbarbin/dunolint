@@ -46,55 +46,24 @@ module Predicate = struct
         | (`any | `none | `some | `equals _), _ -> false)
     ;;
 
-    let __t_of_sexp__ =
-      (function
-       | Sexplib0.Sexp.Atom atom__010_ as _sexp__012_ ->
-         (match atom__010_ with
-          | "any" -> `any
-          | "none" -> `none
-          | "some" -> `some
-          | "equals" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__012_
-          | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-       | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__010_ :: sexp_args__013_) as
-         _sexp__012_ ->
-         (match atom__010_ with
-          | "equals" as _tag__015_ ->
-            (match sexp_args__013_ with
-             | arg0__016_ :: [] ->
-               let res0__017_ = string_of_sexp arg0__016_ in
-               `equals res0__017_
-             | _ ->
-               Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-                 error_source
-                 _tag__015_
-                 _sexp__012_)
-          | "any" -> Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__012_
-          | "none" -> Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__012_
-          | "some" -> Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__012_
-          | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-       | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__011_ ->
-         Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__011_
-       | Sexplib0.Sexp.List [] as sexp__011_ ->
-         Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__011_
-       : Sexplib0.Sexp.t -> t)
+    let variant_spec : t Sexp_helpers.Variant_spec.t =
+      [ { atom = "any"; conv = Nullary `any }
+      ; { atom = "none"; conv = Nullary `none }
+      ; { atom = "some"; conv = Nullary `some }
+      ; { atom = "equals"; conv = Unary (fun sexp -> `equals (string_of_sexp sexp)) }
+      ]
     ;;
 
-    let t_of_sexp =
-      (fun sexp__018_ ->
-         try __t_of_sexp__ sexp__018_ with
-         | Sexplib0.Sexp_conv_error.No_variant_match ->
-           Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__018_
-       : Sexplib0.Sexp.t -> t)
+    let t_of_sexp (sexp : Sexp.t) : t =
+      Sexp_helpers.parse_variant variant_spec ~error_source sexp
     ;;
 
-    let sexp_of_t =
-      (function
-       | `any -> Sexplib0.Sexp.Atom "any"
-       | `none -> Sexplib0.Sexp.Atom "none"
-       | `some -> Sexplib0.Sexp.Atom "some"
-       | `equals v__020_ ->
-         Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "equals"; sexp_of_string v__020_ ]
-       : t -> Sexplib0.Sexp.t)
+    let sexp_of_t (t : t) : Sexp.t =
+      match t with
+      | `any -> Atom "any"
+      | `none -> Atom "none"
+      | `some -> Atom "some"
+      | `equals v -> List [ Atom "equals"; sexp_of_string v ]
     ;;
   end
 
@@ -119,52 +88,22 @@ module Predicate = struct
           | (`any | `driver | `pp _), _ -> false)
       ;;
 
-      let __t_of_sexp__ =
-        (function
-         | Sexplib0.Sexp.Atom atom__030_ as _sexp__032_ ->
-           (match atom__030_ with
-            | "any" -> `any
-            | "driver" -> `driver
-            | "pp" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__032_
-            | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-         | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__030_ :: sexp_args__033_) as
-           _sexp__032_ ->
-           (match atom__030_ with
-            | "pp" as _tag__035_ ->
-              (match sexp_args__033_ with
-               | arg0__036_ :: [] ->
-                 let res0__037_ = Pp.Name.t_of_sexp arg0__036_ in
-                 `pp res0__037_
-               | _ ->
-                 Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-                   error_source
-                   _tag__035_
-                   _sexp__032_)
-            | "any" -> Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__032_
-            | "driver" -> Sexplib0.Sexp_conv_error.ptag_no_args error_source _sexp__032_
-            | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-         | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__031_ ->
-           Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__031_
-         | Sexplib0.Sexp.List [] as sexp__031_ ->
-           Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__031_
-         : Sexplib0.Sexp.t -> t)
+      let variant_spec : t Sexp_helpers.Variant_spec.t =
+        [ { atom = "any"; conv = Nullary `any }
+        ; { atom = "driver"; conv = Nullary `driver }
+        ; { atom = "pp"; conv = Unary (fun sexp -> `pp (Pp.Name.t_of_sexp sexp)) }
+        ]
       ;;
 
-      let t_of_sexp =
-        (fun sexp__038_ ->
-           try __t_of_sexp__ sexp__038_ with
-           | Sexplib0.Sexp_conv_error.No_variant_match ->
-             Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__038_
-         : Sexplib0.Sexp.t -> t)
+      let t_of_sexp (sexp : Sexp.t) : t =
+        Sexp_helpers.parse_variant variant_spec ~error_source sexp
       ;;
 
-      let sexp_of_t =
-        (function
-         | `any -> Sexplib0.Sexp.Atom "any"
-         | `driver -> Sexplib0.Sexp.Atom "driver"
-         | `pp v__040_ ->
-           Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "pp"; Pp.Name.sexp_of_t v__040_ ]
-         : t -> Sexplib0.Sexp.t)
+      let sexp_of_t (t : t) : Sexp.t =
+        match t with
+        | `any -> Atom "any"
+        | `driver -> Atom "driver"
+        | `pp v -> List [ Atom "pp"; Pp.Name.sexp_of_t v ]
       ;;
     end
 
@@ -338,78 +277,55 @@ module Predicate = struct
       | (`pp _ | `flag _ | `pp_with_flag _), _ -> false)
   ;;
 
-  let __t_of_sexp__ =
-    (function
-     | Sexplib0.Sexp.Atom atom__086_ as _sexp__088_ ->
-       (match atom__086_ with
-        | "pp" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__088_
-        | "flag" -> Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__088_
-        | "pp_with_flag" ->
-          Sexplib0.Sexp_conv_error.ptag_takes_args error_source _sexp__088_
-        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-     | Sexplib0.Sexp.List (Sexplib0.Sexp.Atom atom__086_ :: sexp_args__089_) as
-       _sexp__088_ ->
-       (match atom__086_ with
-        | "pp" as _tag__097_ ->
-          (match sexp_args__089_ with
-           | arg0__098_ :: [] ->
-             let res0__099_ = Pp.Name.t_of_sexp arg0__098_ in
-             `pp res0__099_
-           | _ ->
-             Sexplib0.Sexp_conv_error.ptag_incorrect_n_args
-               error_source
-               _tag__097_
-               _sexp__088_)
-        | "flag" as tag ->
-          `flag
-            (Sexp_helpers.parse_inline_record
-               (module Flag)
-               ~error_source
-               ~context:_sexp__088_
-               ~tag
-               ~fields:sexp_args__089_)
-        | "pp_with_flag" as tag ->
-          `pp_with_flag
-            (Sexp_helpers.parse_inline_record
-               (module Pp_with_flag)
-               ~error_source
-               ~context:_sexp__088_
-               ~tag
-               ~fields:sexp_args__089_)
-        | _ -> Sexplib0.Sexp_conv_error.no_variant_match ())
-     | Sexplib0.Sexp.List (Sexplib0.Sexp.List _ :: _) as sexp__087_ ->
-       Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp__087_
-     | Sexplib0.Sexp.List [] as sexp__087_ ->
-       Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp__087_
-     : Sexplib0.Sexp.t -> t)
+  let variant_spec : t Sexp_helpers.Variant_spec.t =
+    [ { atom = "pp"; conv = Unary (fun sexp -> `pp (Pp.Name.t_of_sexp sexp)) }
+    ; { atom = "flag"
+      ; conv =
+          Variadic
+            (fun ~context ~fields ->
+              `flag
+                (Sexp_helpers.parse_inline_record
+                   (module Flag)
+                   ~error_source
+                   ~context
+                   ~tag:"flag"
+                   ~fields))
+      }
+    ; { atom = "pp_with_flag"
+      ; conv =
+          Variadic
+            (fun ~context ~fields ->
+              `pp_with_flag
+                (Sexp_helpers.parse_inline_record
+                   (module Pp_with_flag)
+                   ~error_source
+                   ~context
+                   ~tag:"pp_with_flag"
+                   ~fields))
+      }
+    ]
   ;;
 
-  let t_of_sexp =
-    (fun sexp__100_ ->
-       try __t_of_sexp__ sexp__100_ with
-       | Sexplib0.Sexp_conv_error.No_variant_match ->
-         Sexplib0.Sexp_conv_error.no_matching_variant_found error_source sexp__100_
-     : Sexplib0.Sexp.t -> t)
+  let t_of_sexp (sexp : Sexp.t) : t =
+    Sexp_helpers.parse_variant variant_spec ~error_source sexp
   ;;
 
-  let sexp_of_t =
-    (function
-     | `pp v__102_ ->
-       Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "pp"; Pp.Name.sexp_of_t v__102_ ]
-     | `flag v__103_ ->
-       let sexps =
-         match Flag.sexp_of_t v__103_ with
-         | List sexps -> sexps
-         | Atom _ -> assert false
-       in
-       Sexplib0.Sexp.List (Sexplib0.Sexp.Atom "flag" :: sexps)
-     | `pp_with_flag v__104_ ->
-       let sexps =
-         match Pp_with_flag.sexp_of_t v__104_ with
-         | List sexps -> sexps
-         | Atom _ -> assert false
-       in
-       Sexplib0.Sexp.List (Sexplib0.Sexp.Atom "pp_with_flag" :: sexps)
-     : t -> Sexplib0.Sexp.t)
+  let sexp_of_t (t : t) : Sexp.t =
+    match t with
+    | `pp v -> List [ Atom "pp"; Pp.Name.sexp_of_t v ]
+    | `flag v ->
+      let sexps =
+        match Flag.sexp_of_t v with
+        | List sexps -> sexps
+        | Atom _ -> assert false
+      in
+      List (Atom "flag" :: sexps)
+    | `pp_with_flag v ->
+      let sexps =
+        match Pp_with_flag.sexp_of_t v with
+        | List sexps -> sexps
+        | Atom _ -> assert false
+      in
+      List (Atom "pp_with_flag" :: sexps)
   ;;
 end
