@@ -8,6 +8,8 @@
 
 ### Changed
 
+- Refactor sexp parsing - prerequisite for future improvements (#152, @mbarbin).
+- Cleanup implementation of `equal` functions (#151, @mbarbin).
 - Extend lang version compare operators (#145, @mbarbin).
 - Upgrade `actions/checkout` to `v6` (#138, @mbarbin).
 - Improved licensing headers for vendored `blang` (#144, @mbarbin).
@@ -18,6 +20,8 @@
 
 ### Removed
 
+- Removed unused `compare` functions on rules & predicates (#150, @mbarbin).
+- Removed redundant `skip_paths` constructs from dunolint config (#149, @mbarbin).
 - Removed now unused `fpath` dependency from `dunolint-lib` (#142, @mbarbin).
 - Removed deprecated construct `path.equals` (#142, @mbarbin).
 - Removed support for config version `v0` (#141, @mbarbin).
