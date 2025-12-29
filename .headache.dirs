@@ -24,6 +24,7 @@ src/dunolint-lib/vendor/blang
 test/cram/bin
 test/dunolint/dune_linter
 test/dunolint/dune_project_linter
+test/dunolint/dune_workspace_linter
 test/dunolint/dunolint_cli
 test/dunolint/dunolint_engine
 test/dunolint/dunolint_linter
