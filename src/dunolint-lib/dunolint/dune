@@ -17,16 +17,7 @@
  (instrumentation
   (backend bisect_ppx))
  (lint
-  (pps
-   -unused-code-warnings=force
-   ;; Actual linters
-   ppx_js_style
-   -allow-let-operators
-   -check-doc-comments
-   ;; Ppx used with deriving_inline
-   ppx_compare
-   ppx_enumerate
-   ppx_sexp_conv))
+  (pps ppx_js_style -allow-let-operators -check-doc-comments))
  (preprocess no_preprocessing))
 
 (include_subdirs qualified)
