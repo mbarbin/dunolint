@@ -30,6 +30,7 @@ test/dunolint/dunolint_cli
 test/dunolint/dunolint_engine
 test/dunolint/dunolint_linter
 test/dunolint/dunolinter
+test/dunolint/stdlib
 test/dunolint-lib
 test/expect
 test/test-helpers/src

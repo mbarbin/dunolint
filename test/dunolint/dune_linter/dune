@@ -22,10 +22,10 @@
   Dunolint.Std)
  (libraries
   base
-  dunolint_stdlib
   dune_linter
   dunolint-lib-base
   dunolint_engine
+  dunolint_stdlib
   dunolinter
   file-rewriter
   fpath-sexp0

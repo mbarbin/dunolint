@@ -96,7 +96,14 @@ let () =
 let () =
   rule
     (cond
-       [ ( dune (preprocess (pps true_))
+       [ ( dune
+             (preprocess
+                (pps
+                   (or_
+                      [ pp (Dune.Pp.Name.v "ppx_compare")
+                      ; pp (Dune.Pp.Name.v "ppx_enumerate")
+                      ; pp (Dune.Pp.Name.v "ppx_sexp_conv")
+                      ])))
          , enforce
              (dune
                 (preprocess
