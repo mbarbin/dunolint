@@ -43,6 +43,13 @@ let () =
 
 let () =
   rule
+    (enforce
+       (dune_workspace
+          (dune_lang_version (gte (Dune_workspace.Dune_lang_version.create (3, 20))))))
+;;
+
+let () =
+  rule
     (cond
        [ path (glob "test/**/src/*"), return
        ; path (glob "test/**"), enforce (dune (library (name (is_suffix "_test"))))

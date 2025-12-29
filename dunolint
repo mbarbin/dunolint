@@ -5,6 +5,8 @@
 
 (rule (enforce (dunolint (dunolint_lang_version (= 1.0)))))
 
+(rule (enforce (dune_workspace (dune_lang_version (>= 3.20)))))
+
 (rule
  (cond ((path (glob test/**/src/*)) return)
   ((path (glob test/**)) (enforce (dune (library (name (is_suffix _test))))))))
