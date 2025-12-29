@@ -34,7 +34,10 @@ let%expect_test "of_string" =
   [%expect {| (Ok bisect_ppx) |}];
   test "backend-dash";
   [%expect
-    {| (Error (Msg "\"backend-dash\": invalid Dunolint.Instrumentation.Backend.Name")) |}];
+    {|
+    (Error
+     (Msg "\"backend-dash\": invalid Dunolint.Instrumentation.Backend.Name"))
+    |}];
   test "backend_underscore";
   [%expect {| (Ok backend_underscore) |}];
   test "backend.dot";
@@ -42,8 +45,8 @@ let%expect_test "of_string" =
   test "backend#sharp";
   [%expect
     {|
-    (Error (
-      Msg "\"backend#sharp\": invalid Dunolint.Instrumentation.Backend.Name"))
+    (Error
+     (Msg "\"backend#sharp\": invalid Dunolint.Instrumentation.Backend.Name"))
     |}];
   test "backend@at";
   [%expect

@@ -87,22 +87,22 @@ let%expect_test "write" =
   [%expect {| (1 :standard) |}];
   (* Diff: (1 2 3) \ 2 *)
   test (Diff (Ordered_set.of_list [ 1; 2; 3 ], Element 2));
-  [%expect {| ((1 2 3) \ 2) |}];
+  [%expect {| ((1 2 3) "\\" 2) |}];
   (* Diff: empty set on left *)
   test (Diff (Ordered_set.of_list [], Element 1));
-  [%expect {| (() \ 1) |}];
+  [%expect {| (() "\\" 1) |}];
   (* Diff: empty set on right *)
   test (Diff (Element 1, Ordered_set.of_list []));
-  [%expect {| (1 \ ()) |}];
+  [%expect {| (1 "\\" ()) |}];
   (* Diff: both sides empty *)
   test (Diff (Ordered_set.of_list [], Ordered_set.of_list []));
-  [%expect {| (() \ ()) |}];
+  [%expect {| (() "\\" ()) |}];
   (* Nested constructs: Diff (Union [...], Standard) *)
   test (Diff (Union [ Element 1; Element 2 ], Standard));
-  [%expect {| ((1 2) \ :standard) |}];
+  [%expect {| ((1 2) "\\" :standard) |}];
   (* Nested constructs: Union with Diff *)
   test (Union [ Diff (Element 1, Element 2); Element 3 ]);
-  [%expect {| (1 \ 2 3) |}];
+  [%expect {| (1 "\\" 2 3) |}];
   (* Insert and remove edge cases *)
   let s = Ordered_set.of_list [ 1; 2 ] in
   let s_insert = Ordered_set.insert (module Int) s 3 in
@@ -282,7 +282,7 @@ let%expect_test "insert and remove" =
   show (insert (Include "foo") 1);
   [%expect {| (:include foo 1) |}];
   show (insert (Diff (Element 2, Element 1)) 3);
-  [%expect {| ((2 3) \ 1) |}];
+  [%expect {| ((2 3) "\\" 1) |}];
   show (insert (Union [ Element 2; Element 4 ]) 3);
   [%expect {| (2 3 4) |}];
   (* Insert into Union containing Standard, Include, Diff, Union *)
@@ -291,7 +291,7 @@ let%expect_test "insert and remove" =
   show (insert (Union [ Include "foo"; Element 2 ]) 1);
   [%expect {| (:include foo 1 2) |}];
   show (insert (Union [ Diff (Element 2, Element 1); Element 3 ]) 4);
-  [%expect {| (2 \ 1 3 4) |}];
+  [%expect {| (2 "\\" 1 3 4) |}];
   show (insert (Union [ Union [ Element 1; Element 2 ]; Element 3 ]) 4);
   [%expect {| (1 2 4 3) |}];
   (* Remove from empty set *)
@@ -331,7 +331,7 @@ let%expect_test "insert and remove" =
   show (remove (Include "foo") 1);
   [%expect {| (:include foo) |}];
   show (remove (Diff (Element 2, Element 1)) 2);
-  [%expect {| (() \ 1) |}];
+  [%expect {| (() "\\" 1) |}];
   show (remove (Union [ Element 2; Element 4 ]) 2);
   [%expect {| (4) |}];
   (* Remove from Union containing Standard, Include, Diff, Union *)
@@ -340,24 +340,24 @@ let%expect_test "insert and remove" =
   show (remove (Union [ Include "foo"; Element 2 ]) 2);
   [%expect {| (:include foo) |}];
   show (remove (Union [ Diff (Element 2, Element 1); Element 3 ]) 3);
-  [%expect {| (2 \ 1) |}];
+  [%expect {| (2 "\\" 1) |}];
   show (remove (Union [ Union [ Element 1; Element 2 ]; Element 3 ]) 2);
   [%expect {| (1 3) |}];
   (* Remove from Diff containing Union, Standard, Include, Diff *)
   show (remove (Diff (Union [ Element 1; Element 2 ], Element 2)) 1);
-  [%expect {| (2 \ 2) |}];
+  [%expect {| (2 "\\" 2) |}];
   show (remove (Diff (Standard, Element 1)) 1);
-  [%expect {| (:standard \ 1) |}];
+  [%expect {| (:standard "\\" 1) |}];
   show (remove (Diff (Include "foo", Element 1)) 1);
-  [%expect {| ((:include foo) \ 1) |}];
+  [%expect {| ((:include foo) "\\" 1) |}];
   show (remove (Diff (Diff (Element 2, Element 1), Element 3)) 2);
-  [%expect {| ((() \ 1) \ 3) |}];
+  [%expect {| ((() "\\" 1) "\\" 3) |}];
   (* Remove from nested Union and Diff *)
   let t = Ordered_set.Union [ Element 1; Union [ Element 2; Element 3 ] ] in
   show (remove t 2);
   [%expect {| (1 3) |}];
   let t = Ordered_set.Diff (Union [ Element 1; Element 2 ], Element 2) in
   show (remove t 1);
-  [%expect {| (2 \ 2) |}];
+  [%expect {| (2 "\\" 2) |}];
   ()
 ;;

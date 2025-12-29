@@ -9,28 +9,22 @@
   -warn-error
   +a
   -open
-  Base
-  -open
-  Fpath_base
+  Fpath_sexp0
   -open
   Pplumbing_err
   -open
-  Stdio
-  -open
-  Expect_test_helpers_base)
+  Dunolint_stdlib)
  (libraries
-  base
   dune_linter
   dune_project_linter
   dunolint
+  dunolint_stdlib
   dunolinter
-  expect_test_helpers_core.expect_test_helpers_base
-  fpath-base
+  fpath-sexp0
   loc
   pp
   pplumbing-err
   sexps-rewriter
-  stdio
   test_helpers)
  (instrumentation
   (backend bisect_ppx))

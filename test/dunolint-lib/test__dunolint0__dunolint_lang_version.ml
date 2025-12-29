@@ -52,8 +52,7 @@ let%expect_test "of_sexp" =
   test (List [ Atom "1"; Atom "0" ]);
   [%expect
     {|
-    (Of_sexp_error
-     "Invalid version - expected [MAJOR.MINOR]."
+    (Of_sexp_error "Invalid version - expected [MAJOR.MINOR]."
      (invalid_sexp (1 0)))
     |}];
   test (Atom "");
@@ -71,8 +70,7 @@ let%expect_test "of_sexp" =
   test (Atom "1.0.1");
   [%expect
     {|
-    (Of_sexp_error
-     "Invalid version - expected [MAJOR.MINOR]."
+    (Of_sexp_error "Invalid version - expected [MAJOR.MINOR]."
      (invalid_sexp 1.0.1))
     |}];
   ()
@@ -158,8 +156,7 @@ let%expect_test "Predicate.t_of_sexp" =
   test "(unknown 1.0)";
   [%expect
     {|
-    (Of_sexp_error
-     "dunolint_lang_version.t_of_sexp: no matching variant found"
+    (Of_sexp_error "dunolint_lang_version.t_of_sexp: no matching variant found"
      (invalid_sexp (unknown 1.0)))
     |}];
   ()

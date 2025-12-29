@@ -45,11 +45,7 @@ let%expect_test "read/write" =
   test {| (modes byte native) |};
   [%expect
     {|
-    ((t ((
-       modes (
-         Union (
-           (Element byte)
-           (Element native))))))
+    ((t ((modes (Union ((Element byte) (Element native))))))
      (field (modes byte native)))
     |}];
   test {| (modes (best)) |};
@@ -73,7 +69,7 @@ let%expect_test "read/write" =
   [%expect
     {|
     ((t ((modes (Diff Standard (Element byte)))))
-     (field (modes :standard \ byte)))
+     (field (modes :standard "\\" byte)))
     |}];
   test {| (modes :standard melange) |};
   [%expect
@@ -90,14 +86,11 @@ let%expect_test "read/write" =
   test {| (modes :standard melange \ byte native) |};
   [%expect
     {|
-    ((t ((
-       modes (
-         Diff
-         (Union (Standard (Element melange)))
-         (Union (
-           (Element byte)
-           (Element native)))))))
-     (field (modes (:standard melange) \ (byte native))))
+    ((t
+      ((modes
+        (Diff (Union (Standard (Element melange)))
+         (Union ((Element byte) (Element native)))))))
+     (field (modes (:standard melange) "\\" (byte native))))
     |}];
   ()
 ;;
@@ -105,14 +98,7 @@ let%expect_test "read/write" =
 let%expect_test "sexp_of" =
   let _, t = parse {| (modes byte native) |} in
   print_s [%sexp (t : Dune_linter.Library.Modes.t)];
-  [%expect
-    {|
-    ((
-      modes (
-        Union (
-          (Element byte)
-          (Element native)))))
-    |}];
+  [%expect {| ((modes (Union ((Element byte) (Element native))))) |}];
   ()
 ;;
 
@@ -139,12 +125,7 @@ let%expect_test "rewrite" =
     [%expect {| (modes byte native) |}];
     let modes = Dune_linter.Library.Modes.modes t in
     print_s [%sexp (modes : Dune_linter.Library.Modes.Ordered_set.t)];
-    [%expect
-      {|
-      (Union (
-        (Element byte)
-        (Element native)))
-      |}];
+    [%expect {| (Union ((Element byte) (Element native))) |}];
     ());
   [%expect {| (modes byte native) |}];
   ()
@@ -247,29 +228,19 @@ let%expect_test "enforce" =
   let t = parse {| (modes native) |} in
   enforce t [ true_ ];
   [%expect {| (modes native) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
   enforce t [ and_ [ has_mode `byte; not_ (has_mode `native) ] ];
   [%expect {| (modes byte) |}];
   (* [or] does not have an enforcement strategy when its invariant is
      not satisfied. *)
   enforce t [ or_ [ has_mode `byte; has_mode `native ] ];
   [%expect {| (modes byte) |}];
-  require_does_raise [%here] (fun () ->
-    enforce t [ or_ [ has_mode `best; has_mode `native ] ]);
+  require_does_raise (fun () -> enforce t [ or_ [ has_mode `best; has_mode `native ] ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (
-        or
-        (has_mode best)
-        (has_mode native))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (or (has_mode best) (has_mode native))))
     |}];
   (* When defined, [if] enforces the clause that applies. *)
   let invariant =

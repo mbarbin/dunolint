@@ -74,19 +74,14 @@ let%expect_test "sexp_of" =
 |};
   [%expect
     {|
-    ((
-      sections (((
-        entries (
-          (Library
-            (name   foo)
-            (source "foo ;; this is a comment for foo."))
-          (Library   (name bar) (source bar))
+    ((sections
+      (((entries
+         ((Library (name foo) (source "foo ;; this is a comment for foo."))
+          (Library (name bar) (source bar))
           (Re_export (name baz) (source "(re_export baz)"))
-          (Library   (name sna) (source sna))
-          (Unhandled
-            (original_index 4)
-            (sexp (invalid sexp))
-            (source "(invalid sexp)"))))))))
+          (Library (name sna) (source sna))
+          (Unhandled (original_index 4) (sexp (invalid sexp))
+           (source "(invalid sexp)"))))))))
     |}];
   (* Entries separated by more than one line are treated as belonging to
      different sections. *)
@@ -101,18 +96,13 @@ let%expect_test "sexp_of" =
 |};
   [%expect
     {|
-    ((
-      sections (
-        ((
-          entries ((
-            Library
-            (name   foo)
-            (source "foo ;; this is a comment for foo.")))))
-        ((
-          entries (
-            (Library   (name bar) (source bar))
-            (Re_export (name baz) (source "(re_export baz)"))
-            (Library   (name sna) (source sna))))))))
+    ((sections
+      (((entries
+         ((Library (name foo) (source "foo ;; this is a comment for foo.")))))
+       ((entries
+         ((Library (name bar) (source bar))
+          (Re_export (name baz) (source "(re_export baz)"))
+          (Library (name sna) (source sna))))))))
     |}];
   (* In particular this can be achieved with a style where sections are
      separated by comments. *)
@@ -131,20 +121,13 @@ let%expect_test "sexp_of" =
 |};
   [%expect
     {|
-    ((
-      sections (
-        ((
-          entries (
-            (Library (name jj) (source jj))
-            (Library (name ii) (source ii)))))
-        ((
-          entries (
-            (Library (name bb) (source bb))
-            (Library (name aa) (source aa)))))
-        ((
-          entries (
-            (Library (name dd) (source dd))
-            (Library (name cc) (source cc))))))))
+    ((sections
+      (((entries
+         ((Library (name jj) (source jj)) (Library (name ii) (source ii)))))
+       ((entries
+         ((Library (name bb) (source bb)) (Library (name aa) (source aa)))))
+       ((entries
+         ((Library (name dd) (source dd)) (Library (name cc) (source cc))))))))
     |}];
   ()
 ;;
@@ -179,16 +162,12 @@ let%expect_test "rewrite" =
       print_s [%sexp (entries : Dune_linter.Libraries.Entry.t list)];
       [%expect
         {|
-        ((Library
-           (name   foo)
-           (source "foo ;; this is a comment for foo."))
-         (Library   (name bar) (source bar))
+        ((Library (name foo) (source "foo ;; this is a comment for foo."))
+         (Library (name bar) (source bar))
          (Re_export (name baz) (source "(re_export baz)"))
-         (Library   (name sna) (source sna))
-         (Unhandled
-           (original_index 4)
-           (sexp (invalid sexp))
-           (source "(invalid sexp)")))
+         (Library (name sna) (source sna))
+         (Unhandled (original_index 4) (sexp (invalid sexp))
+          (source "(invalid sexp)")))
         |}];
       let library_names =
         List.filter_map entries ~f:Dune_linter.Libraries.Entry.library_name
@@ -197,12 +176,12 @@ let%expect_test "rewrite" =
       print_s [%sexp { library_names : Set.M(Dune.Library.Name).t }];
       [%expect {| ((library_names (bar baz foo sna))) |}];
       let mem name = Dune_linter.Libraries.mem t ~library:(Dune.Library.Name.v name) in
-      require [%here] (mem "foo");
+      require (mem "foo");
       [%expect {||}];
-      require [%here] (not (mem "not-here"));
+      require (not (mem "not-here"));
       [%expect {||}];
       (* Re-exported libraries are recognized as members. *)
-      require [%here] (mem "baz");
+      require (mem "baz");
       [%expect {||}];
       ());
   [%expect
@@ -517,13 +496,8 @@ let%expect_test "enforce" =
   (* Blang. *)
   enforce t [ true_ ];
   [%expect {| (libraries foo bar) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
   ()
 ;;
 
@@ -534,27 +508,17 @@ let%expect_test "entries" =
     match Dune_linter.Libraries.Entry.library_name entry with
     | None -> assert false
     | Some library_name ->
-      require_equal [%here] (module Dune.Library.Name) library_name my_lib;
+      require_equal (module Dune.Library.Name) library_name my_lib;
       print_s
         [%sexp
           { entry : Dune_linter.Libraries.Entry.t; library_name : Dune.Library.Name.t }]
   in
   library_name (Dune_linter.Libraries.Entry.library my_lib);
-  [%expect
-    {|
-    ((entry (
-       Library
-       (name   my_lib)
-       (source my_lib)))
-     (library_name my_lib))
-    |}];
+  [%expect {| ((entry (Library (name my_lib) (source my_lib))) (library_name my_lib)) |}];
   library_name (Dune_linter.Libraries.Entry.re_export my_lib);
   [%expect
     {|
-    ((entry (
-       Re_export
-       (name   my_lib)
-       (source "(re_export my_lib)")))
+    ((entry (Re_export (name my_lib) (source "(re_export my_lib)")))
      (library_name my_lib))
     |}];
   ()

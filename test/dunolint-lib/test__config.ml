@@ -25,7 +25,7 @@ let%expect_test "create" =
   let t = Dunolint.Config.create () in
   print_s [%sexp (t : Dunolint.Config.t)];
   [%expect {| (stanzas (lang dunolint 1.0)) |}];
-  require_equal [%here] (module Dunolint.Config) t t;
+  require_equal (module Dunolint.Config) t t;
   [%expect {||}];
   ()
 ;;
@@ -39,7 +39,7 @@ let%expect_test "empty v1" =
   let t = Dunolint.Config.v1 t in
   print_s [%sexp (t : Dunolint.Config.t)];
   [%expect {| (stanzas (lang dunolint 1.0)) |}];
-  require_equal [%here] (module Dunolint.Config) t t;
+  require_equal (module Dunolint.Config) t t;
   [%expect {||}];
   ()
 ;;
@@ -61,12 +61,10 @@ let%expect_test "non-empty-v1" =
   print_s [%sexp (t : Dunolint.Config.t)];
   [%expect
     {|
-    (stanzas
-      (lang dunolint 1.0)
-      (skip_paths .git/)
-      (rule (enforce (dune (has_field instrumentation)))))
+    (stanzas (lang dunolint 1.0) (skip_paths .git/)
+     (rule (enforce (dune (has_field instrumentation)))))
     |}];
-  require_equal [%here] (module Dunolint.Config) t t;
+  require_equal (module Dunolint.Config) t t;
   [%expect {||}];
   let rules = Dunolint.Config.V1.rules v1 in
   let t' = Dunolint.Config.create ~rules () in
@@ -79,7 +77,7 @@ let%expect_test "non-empty-v1" =
 let test_roundtrip c =
   let sexps = Dunolint.Config.to_stanzas c in
   let c' = Dunolint.Config.of_stanzas sexps in
-  require_equal [%here] (module Dunolint.Config) c c';
+  require_equal (module Dunolint.Config) c c';
   List.iter sexps ~f:print_s;
   ()
 ;;
@@ -97,7 +95,7 @@ let%expect_test "versioned_sexp v1" =
     |}];
   let () =
     match Dunolint.Config.Private.view t with
-    | `v1 v1' -> require_equal [%here] (module Dunolint.Config.V1) v1 v1'
+    | `v1 v1' -> require_equal (module Dunolint.Config.V1) v1 v1'
   in
   [%expect {| |}];
   ()
@@ -105,8 +103,7 @@ let%expect_test "versioned_sexp v1" =
 
 let%expect_test "unsupported version" =
   let sexp = Sexp.List [ List [ Atom "version"; Atom "unknown" ]; List [] ] in
-  require_does_raise [%here] (fun () ->
-    (Dunolint.Config.of_stanzas [ sexp ] : Dunolint.Config.t));
+  require_does_raise (fun () -> (Dunolint.Config.of_stanzas [ sexp ] : Dunolint.Config.t));
   [%expect
     {|
     (Of_sexp_error
@@ -114,12 +111,10 @@ let%expect_test "unsupported version" =
      (invalid_sexp ((version unknown) ())))
     |}];
   let sexp = Sexp.List [ Atom "lang"; Atom "dunolint"; Atom "unknown" ] in
-  require_does_raise [%here] (fun () ->
-    (Dunolint.Config.of_stanzas [ sexp ] : Dunolint.Config.t));
+  require_does_raise (fun () -> (Dunolint.Config.of_stanzas [ sexp ] : Dunolint.Config.t));
   [%expect
     {|
-    (Of_sexp_error
-     "Unsupported dunolint config version [unknown]."
+    (Of_sexp_error "Unsupported dunolint config version [unknown]."
      (invalid_sexp unknown))
     |}];
   ()

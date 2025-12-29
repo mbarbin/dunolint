@@ -31,8 +31,8 @@ let%expect_test "predicate" =
     (dune_project (implicit_transitive_deps (equals `False_if_hidden_includes_supported)));
   [%expect
     {|
-    (dune_project (
-      implicit_transitive_deps (equals false-if-hidden-includes-supported)))
+    (dune_project
+     (implicit_transitive_deps (equals false-if-hidden-includes-supported)))
     |}];
   test
     (dunolint

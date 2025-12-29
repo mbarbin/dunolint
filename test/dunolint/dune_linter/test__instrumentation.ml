@@ -108,12 +108,7 @@ let%expect_test "create_then_rewrite" =
   [%expect {| (instrumentation (other field)) |}];
   (* As long as the targeted field is present, it is rewritten. *)
   test t {| (instrumentation (other field) (backend other_backend)) |};
-  [%expect
-    {|
-    (instrumentation
-      (other   field)
-      (backend bisect_ppx))
-    |}];
+  [%expect {| (instrumentation (other field) (backend bisect_ppx)) |}];
   ()
 ;;
 
@@ -167,25 +162,19 @@ let%expect_test "enforce" =
   (* Enforcing the negation of a current equality triggers an error.
      Dunolint is not going to automatically invent a new setting, this
      requires the user's intervention. *)
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ not_ (backend (Dune.Instrumentation.Backend.Name.v "other_backend")) ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (not (backend other_backend))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (backend other_backend))))
     |}];
   (* Blang. *)
   let t = parse {| (instrumentation (backend bisect_ppx)) |} in
   enforce t [ true_ ];
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
   enforce
     t
     [ and_
@@ -204,7 +193,7 @@ let%expect_test "enforce" =
         ]
     ];
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce
       t
       [ or_
@@ -214,12 +203,8 @@ let%expect_test "enforce" =
       ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (
-        or
-        (backend qualified)
-        (backend no))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (or (backend qualified) (backend no))))
     |}];
   (* When defined, [if] enforces the clause that applies. *)
   let invariant =

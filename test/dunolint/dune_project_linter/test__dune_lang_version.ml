@@ -248,13 +248,8 @@ let%expect_test "enforce" =
   let t = parse {| (lang dune 3.20) |} in
   enforce t [ true_ ];
   [%expect {| (lang dune 3.20) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
   enforce
     t
     [ and_
@@ -327,27 +322,27 @@ let%expect_test "enforce" =
   enforce t [ not_ (gt (Dune_project.Dune_lang_version.create (3, 20))) ];
   [%expect {| (lang dune 3.18) |}];
   let t = parse {| (lang dune 3.20) |} in
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ neq (Dune_project.Dune_lang_version.create (3, 20)) ]);
   [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (!= 3.20))) |}];
   let t = parse {| (lang dune 3.20) |} in
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ not_ (eq (Dune_project.Dune_lang_version.create (3, 20))) ]);
   [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (= 3.20)))) |}];
   let t = parse {| (lang dune 3.20) |} in
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ lt (Dune_project.Dune_lang_version.create (3, 18)) ]);
   [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (< 3.18))) |}];
   let t = parse {| (lang dune 3.20) |} in
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ not_ (gte (Dune_project.Dune_lang_version.create (3, 18))) ]);
   [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (>= 3.18)))) |}];
   let t = parse {| (lang dune 3.18) |} in
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ gt (Dune_project.Dune_lang_version.create (3, 20)) ]);
   [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (> 3.20))) |}];
   let t = parse {| (lang dune 3.18) |} in
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ not_ (lte (Dune_project.Dune_lang_version.create (3, 20))) ]);
   [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (<= 3.20)))) |}];
   (* Deprecated operators - testing for coverage. *)
@@ -507,13 +502,8 @@ let%expect_test "Linter.enforce" =
   (* Blang. *)
   enforce t [ true_ ];
   [%expect {| (lang dune 4.5) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
   enforce
     t
     [ dune_lang_version (not_ (equals (Dune_project.Dune_lang_version.create (3, 20)))) ];

@@ -80,7 +80,7 @@ let%expect_test "config cache" =
     [%expect {| 2 |}];
     (* Verify that the configs are physically the same (from cache). *)
     List.iter2_exn configs1 configs2 ~f:(fun c1 c2 ->
-      require [%here] (phys_equal c1.config c2.config));
+      require (phys_equal c1.config c2.config));
     (* Build context for a third file in the same directory. *)
     let ctx3 =
       Dunolint_engine.build_context
@@ -92,7 +92,7 @@ let%expect_test "config cache" =
     [%expect {| 2 |}];
     (* Verify that configs from ctx3 are also physically the same as ctx1. *)
     List.iter2_exn configs1 configs3 ~f:(fun c1 c3 ->
-      require [%here] (phys_equal c1.config c3.config));
+      require (phys_equal c1.config c3.config));
     (* Build context for a file directly in lib (not in subdir).
        This should also have 2 configs (root and lib). *)
     let ctx4 =
@@ -103,7 +103,7 @@ let%expect_test "config cache" =
     [%expect {| 2 |}];
     (* Verify that configs from ctx4 are also physically the same as ctx1. *)
     List.iter2_exn configs1 configs4 ~f:(fun c1 c4 ->
-      require [%here] (phys_equal c1.config c4.config));
+      require (phys_equal c1.config c4.config));
     (* Build context for a file at the root level.
        This should only have 1 config (from root). *)
     let ctx5 =
@@ -121,7 +121,7 @@ let%expect_test "config cache" =
        first config from ctx1 (both are the root config from the cache). *)
     let ctx1_prefix = List.take configs1 (List.length configs5) in
     List.iter2_exn configs5 ctx1_prefix ~f:(fun c5 c1 ->
-      require [%here] (phys_equal c5.config c1.config));
+      require (phys_equal c5.config c1.config));
     ());
   [%expect {||}];
   ()

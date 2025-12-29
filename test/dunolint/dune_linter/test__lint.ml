@@ -55,10 +55,9 @@ let%expect_test "sexp_of" =
   print_s [%sexp (t : Dune_linter.Lint.t)];
   [%expect
     {|
-    ((
-      pps ((
-        sections (((
-          entries (((arg (Pp (pp_name ppx_js_style))) (eol_comment ()))))))))))
+    ((pps
+      ((sections
+        (((entries (((arg (Pp (pp_name ppx_js_style))) (eol_comment ()))))))))))
     |}];
   ()
 ;;
@@ -107,7 +106,7 @@ let%expect_test "create_then_rewrite" =
   test t {| (lint (pps ppx_js_style -check-doc-comments)) |};
   [%expect {| (lint (pps)) |}];
   (* When dunolint doesn't understand the expression to rewrite, this triggers an error. *)
-  require_does_raise [%here] (fun () -> test t {| (lint (unexpected args)) |});
+  require_does_raise (fun () -> test t {| (lint (unexpected args)) |});
   [%expect {| "Unexpected [lint] field value." |}];
   ()
 ;;
@@ -161,25 +160,19 @@ let%expect_test "enforce" =
   (* Enforcing the negation of a current equality triggers an error.
      Dunolint is not going to automatically invent a new setting, this
      requires the user's intervention. *)
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ not_ (pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_other")))) ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (not (pps (pp ppx_other)))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (pps (pp ppx_other)))))
     |}];
   (* Blang. *)
   let t = parse {| (lint (pps ppx_js_style)) |} in
   enforce t [ true_ ];
   [%expect {| (lint (pps ppx_js_style)) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
   enforce
     t
     [ and_
@@ -198,7 +191,7 @@ let%expect_test "enforce" =
         ]
     ];
   [%expect {| (lint (pps ppx_js_style)) |}];
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce
       t
       [ or_
@@ -208,12 +201,8 @@ let%expect_test "enforce" =
       ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (
-        or
-        (pps (pp qualified))
-        (pps (pp no)))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (or (pps (pp qualified)) (pps (pp no)))))
     |}];
   (* When defined, [if] enforces the clause that applies. *)
   let invariant =

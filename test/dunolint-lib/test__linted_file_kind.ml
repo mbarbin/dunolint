@@ -23,7 +23,7 @@ let%expect_test "all" =
   List.iter Dunolint.Linted_file_kind.all ~f:(fun linted_file_kind ->
     let sexp = [%sexp (linted_file_kind : Dunolint.Linted_file_kind.t)] in
     let t = Dunolint.Linted_file_kind.t_of_sexp sexp in
-    require_equal [%here] (module Dunolint.Linted_file_kind) linted_file_kind t;
+    require_equal (module Dunolint.Linted_file_kind) linted_file_kind t;
     print_s sexp);
   [%expect
     {|
@@ -43,7 +43,7 @@ let%expect_test "to_string/of_string" =
       | Ok v -> v
       | Error (`Msg _) -> assert false
     in
-    require_equal [%here] (module Dunolint.Linted_file_kind) linted_file_kind t;
+    require_equal (module Dunolint.Linted_file_kind) linted_file_kind t;
     print_endline str);
   [%expect
     {|
@@ -68,7 +68,6 @@ let%expect_test "sort" =
   test [ `dune_project; `dune ];
   [%expect {| (dune dune_project) |}];
   require
-    [%here]
     (List.equal
        Dunolint.Linted_file_kind.equal
        Dunolint.Linted_file_kind.all

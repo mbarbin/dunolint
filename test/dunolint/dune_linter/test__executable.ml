@@ -55,13 +55,10 @@ let%expect_test "read/write" =
 |};
   [%expect
     {|
-    (executable
-      (name        main)
-      (public_name my-cli)
-      (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a)
-      (instrumentation (backend bisect_ppx))
-      (lint (pps ppx_linter -lint-flag))
-      (preprocess no_preprocessing))
+    (executable (name main) (public_name my-cli)
+     (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a)
+     (instrumentation (backend bisect_ppx)) (lint (pps ppx_linter -lint-flag))
+     (preprocess no_preprocessing))
     |}];
   test {| (executable (name (invalid field))) |};
   [%expect
@@ -78,13 +75,8 @@ let%expect_test "sexp_of" =
   print_s [%sexp (t : Dune_linter.Executable.t)];
   [%expect
     {|
-    ((name (((name main))))
-     (public_name ())
-     (flags     ((flags    ())))
-     (libraries ((sections ())))
-     (instrumentation    ())
-     (lint               ())
-     (preprocess         ())
+    ((name (((name main)))) (public_name ()) (flags ((flags ())))
+     (libraries ((sections ()))) (instrumentation ()) (lint ()) (preprocess ())
      (marked_for_removal ()))
     |}];
   ()
@@ -172,13 +164,7 @@ let%expect_test "create_then_rewrite" =
       ()
   in
   test t {| (executable (name main)) |};
-  [%expect
-    {|
-    (executable
-      (name        main)
-      (public_name my-cli)
-      (libraries bar foo))
-    |}];
+  [%expect {| (executable (name main) (public_name my-cli) (libraries bar foo)) |}];
   ()
 ;;
 
@@ -335,7 +321,7 @@ let%expect_test "enforce" =
   (* Enforcing the negation of a current equality triggers an error.
      Dunolint is not going to automatically invent a new name, this
      requires the user's intervention. *)
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ name (not_ (equals (Dune.Executable.Name.v "main"))) ]);
   [%expect
     {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (equals main)))) |}];
@@ -343,12 +329,7 @@ let%expect_test "enforce" =
      in dunolint adding a new public_name field. *)
   let t = parse {| (executable (name main)) |} in
   enforce t [ public_name (equals (Dune.Executable.Public_name.v "my-cli")) ];
-  [%expect
-    {|
-    (executable
-      (name        main)
-      (public_name my-cli))
-    |}];
+  [%expect {| (executable (name main) (public_name my-cli)) |}];
   let t = parse {| (executable (name main)) |} in
   (* When the required invariant is negated, and there is no public_name,
      dunolint simply does nothing and considers it an undefined invariants. *)
@@ -394,21 +375,9 @@ let%expect_test "load_existing_libraries" =
      or absent, but another library that is not directly involved with said
      invariant is untouched when the invariant is enforced (not removed). *)
   test t spec ~load_existing_libraries:false;
-  [%expect
-    {|
-    (executable
-      (name        main)
-      (public_name my-cli)
-      (libraries bar foo))
-    |}];
+  [%expect {| (executable (name main) (public_name my-cli) (libraries bar foo)) |}];
   test t spec ~load_existing_libraries:true;
-  [%expect
-    {|
-    (executable
-      (name        main)
-      (public_name my-cli)
-      (libraries bar baz foo))
-    |}];
+  [%expect {| (executable (name main) (public_name my-cli) (libraries bar baz foo)) |}];
   ()
 ;;
 
@@ -483,15 +452,14 @@ let%expect_test "enforce_failures" =
   in
   (* Certain fields don't have heuristics in place for initializing a value if
      it isn't there. *)
-  require_does_raise [%here] (fun () -> test [ has_field `name ]);
+  require_does_raise (fun () -> test [ has_field `name ]);
   [%expect
     {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (has_field name))) |}];
-  require_does_raise [%here] (fun () -> test [ has_field `public_name ]);
+  require_does_raise (fun () -> test [ has_field `public_name ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (has_field public_name)))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (has_field public_name)))
     |}];
   let init = {| (executable (name my_exe)) |} in
   let test cond =
@@ -534,12 +502,7 @@ let%expect_test "undefined conditions" =
      evaluated. Arguably this is quite surprising, and maybe the semantic of
      [And] shall be revisited. Left as characterization test for future work. *)
   test [ if_ (name (is_prefix "hey")) (name (equals main)) false_ ];
-  [%expect
-    {|
-    (executable
-      (public_name my-cli)
-      (name        main))
-    |}];
+  [%expect {| (executable (public_name my-cli) (name main)) |}];
   ()
 ;;
 
@@ -570,12 +533,7 @@ let%expect_test "has_field_auto_initialize" =
   (* [preprocess] field can be auto-initialized. *)
   let t = parse init in
   enforce t [ has_field `preprocess ];
-  [%expect
-    {|
-    (executable
-      (name       my-exe)
-      (preprocess no_preprocessing))
-    |}];
+  [%expect {| (executable (name my-exe) (preprocess no_preprocessing)) |}];
   ()
 ;;
 
@@ -595,12 +553,7 @@ let%expect_test "field_conditions" =
   (* [preprocess] condition auto-creates field. *)
   let t = parse init in
   enforce t [ preprocess no_preprocessing ];
-  [%expect
-    {|
-    (executable
-      (name       my-exe)
-      (preprocess no_preprocessing))
-    |}];
+  [%expect {| (executable (name my-exe) (preprocess no_preprocessing)) |}];
   ()
 ;;
 

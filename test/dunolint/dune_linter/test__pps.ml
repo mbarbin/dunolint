@@ -56,15 +56,15 @@ let%expect_test "sexp_of" =
   test {| (pps --driver ppx_deriving --flag --opt=param) |};
   [%expect
     {|
-    ((
-      sections (((
-        entries (
-          ((arg (Flag (name --driver) (param ()) (applies_to driver)))
+    ((sections
+      (((entries
+         (((arg (Flag (name --driver) (param ()) (applies_to driver)))
            (eol_comment ()))
           ((arg (Pp (pp_name ppx_deriving))) (eol_comment ()))
           ((arg (Flag (name --flag) (param ()) (applies_to (pp ppx_deriving))))
            (eol_comment ()))
-          ((arg (Flag (name --opt) (param (param)) (applies_to (pp ppx_deriving))))
+          ((arg
+            (Flag (name --opt) (param (param)) (applies_to (pp ppx_deriving))))
            (eol_comment ()))))))))
     |}];
   (* Entries separated by more than one line are treated as belonging to
@@ -80,21 +80,18 @@ let%expect_test "sexp_of" =
  ppx_deriving --flag --opt=param) |};
   [%expect
     {|
-    ((
-      sections (
-        ((
-          entries ((
-            (arg (Flag (name --driver) (param ()) (applies_to driver)))
-            (eol_comment (";; that's a flag for the driver"))))))
-        ((entries (((arg (Pp (pp_name ppx_one))) (eol_comment ())))))
-        ((
-          entries (
-            ((arg (Pp (pp_name ppx_deriving))) (eol_comment ()))
-            ((arg (Flag (name --flag) (param ()) (applies_to (pp ppx_deriving))))
-             (eol_comment ()))
-            ((arg (
-               Flag (name --opt) (param (param)) (applies_to (pp ppx_deriving))))
-             (eol_comment ()))))))))
+    ((sections
+      (((entries
+         (((arg (Flag (name --driver) (param ()) (applies_to driver)))
+           (eol_comment (";; that's a flag for the driver"))))))
+       ((entries (((arg (Pp (pp_name ppx_one))) (eol_comment ())))))
+       ((entries
+         (((arg (Pp (pp_name ppx_deriving))) (eol_comment ()))
+          ((arg (Flag (name --flag) (param ()) (applies_to (pp ppx_deriving))))
+           (eol_comment ()))
+          ((arg
+            (Flag (name --opt) (param (param)) (applies_to (pp ppx_deriving))))
+           (eol_comment ()))))))))
     |}];
   (* Note a flag may be attached to the latest argument of a previous section. *)
   test
@@ -106,19 +103,16 @@ let%expect_test "sexp_of" =
    -c)|};
   [%expect
     {|
-    ((
-      sections (
-        ((
-          entries (
-            ((arg (Pp (pp_name a))) (eol_comment ()))
-            ((arg (Flag (name -b) (param ()) (applies_to (pp a))))
-             (eol_comment ()))
-            ((arg (Flag (name -a) (param ()) (applies_to (pp a))))
-             (eol_comment ())))))
-        ((
-          entries ((
-            (arg (Flag (name -c) (param ()) (applies_to (pp a))))
-            (eol_comment ()))))))))
+    ((sections
+      (((entries
+         (((arg (Pp (pp_name a))) (eol_comment ()))
+          ((arg (Flag (name -b) (param ()) (applies_to (pp a))))
+           (eol_comment ()))
+          ((arg (Flag (name -a) (param ()) (applies_to (pp a))))
+           (eol_comment ())))))
+       ((entries
+         (((arg (Flag (name -c) (param ()) (applies_to (pp a))))
+           (eol_comment ()))))))))
     |}];
   test "(pps)";
   [%expect {| ((sections ())) |}];
@@ -133,18 +127,18 @@ let%expect_test "parse" =
   test [ "--driver"; "ppx_deriving"; "--flag"; "--opt=param" ];
   [%expect
     {|
-    ((
-      sections (((
-        entries (
-          ((arg (Flag (name --driver) (param ()) (applies_to driver)))
+    ((sections
+      (((entries
+         (((arg (Flag (name --driver) (param ()) (applies_to driver)))
            (eol_comment ()))
           ((arg (Pp (pp_name ppx_deriving))) (eol_comment ()))
           ((arg (Flag (name --flag) (param ()) (applies_to (pp ppx_deriving))))
            (eol_comment ()))
-          ((arg (Flag (name --opt) (param (param)) (applies_to (pp ppx_deriving))))
+          ((arg
+            (Flag (name --opt) (param (param)) (applies_to (pp ppx_deriving))))
            (eol_comment ()))))))))
     |}];
-  require_does_raise [%here] (fun () -> test [ "" ]);
+  require_does_raise (fun () -> test [ "" ]);
   [%expect {| "Invalid empty pp." |}];
   test [];
   [%expect {| ((sections ())) |}];
@@ -221,7 +215,7 @@ let%expect_test "create_then_rewrite" =
   test t {| (pps -flag ppx_deriving -flag) |};
   [%expect {| (pps --hello-driver ppx_deriving) |}];
   (* When dunolint doesn't understand the expression to rewrite, this triggers an error. *)
-  require_does_raise [%here] (fun () -> test t {| (other_field (unexpected args)) |});
+  require_does_raise (fun () -> test t {| (other_field (unexpected args)) |});
   [%expect {| "Unexpected [pps] field." |}];
   (* However if the field is [pps] the existing arguments are replaced. *)
   test t {| (pps (unexpected args)) |};
@@ -466,29 +460,15 @@ let%expect_test "enforce" =
     ];
   [%expect
     {|
-    (pps
-     --flag-for-the-ppx-driver
-     --hello-driver=p
-     ppx_alice
-     --with-flag=param
-     ppx_eve
-     ppx_jane
-     --flag-for-jane=new
-     ppx_john
-     --flag-for-john=value)
+    (pps --flag-for-the-ppx-driver --hello-driver=p ppx_alice --with-flag=param
+     ppx_eve ppx_jane --flag-for-jane=new ppx_john --flag-for-john=value)
     |}];
   (* Removing a pp removes its flags too. *)
   enforce t [ not_ (pp (Dune.Pp.Name.v "ppx_jane")) ];
   [%expect
     {|
-    (pps
-     --flag-for-the-ppx-driver
-     --hello-driver=p
-     ppx_alice
-     --with-flag=param
-     ppx_eve
-     ppx_john
-     --flag-for-john=value)
+    (pps --flag-for-the-ppx-driver --hello-driver=p ppx_alice --with-flag=param
+     ppx_eve ppx_john --flag-for-john=value)
     |}];
   (* Specific params may be removed. *)
   enforce
@@ -501,14 +481,8 @@ let%expect_test "enforce" =
     ];
   [%expect
     {|
-    (pps
-     --flag-for-the-ppx-driver
-     --hello-driver=p
-     ppx_alice
-     --with-flag
-     ppx_eve
-     ppx_john
-     --flag-for-john=value)
+    (pps --flag-for-the-ppx-driver --hello-driver=p ppx_alice --with-flag ppx_eve
+     ppx_john --flag-for-john=value)
     |}];
   (* Flags may be re-assigned to different pp or driver. *)
   enforce
@@ -521,26 +495,15 @@ let%expect_test "enforce" =
     ];
   [%expect
     {|
-    (pps
-     --flag-for-the-ppx-driver
-     ppx_alice
-     --with-flag
-     ppx_eve
-     --hello-driver=p
-     ppx_john
-     --flag-for-john=value)
+    (pps --flag-for-the-ppx-driver ppx_alice --with-flag ppx_eve --hello-driver=p
+     ppx_john --flag-for-john=value)
     |}];
   (* Blang. *)
   let t = parse {| (pps ppx_deriving) |} in
   enforce t [ true_ ];
   [%expect {| (pps ppx_deriving) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
   enforce
     t
     [ and_ [ not_ (pp (Dune.Pp.Name.v "ppx_other")); pp (Dune.Pp.Name.v "ppx_deriving") ]
@@ -552,16 +515,12 @@ let%expect_test "enforce" =
     t
     [ or_ [ pp (Dune.Pp.Name.v "ppx_deriving"); pp (Dune.Pp.Name.v "ppx_other") ] ];
   [%expect {| (pps ppx_deriving) |}];
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ or_ [ pp (Dune.Pp.Name.v "qualified"); pp (Dune.Pp.Name.v "no") ] ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (
-        or
-        (pp qualified)
-        (pp no))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (or (pp qualified) (pp no))))
     |}];
   (* When defined, [if] enforces the clause that applies. *)
   let invariant =
@@ -612,17 +571,12 @@ let%expect_test "enforce" =
     ];
   [%expect {| (pps ppx_jane --flag-for-jane=new) |}];
   let t = parse {| (pps --driver) |} in
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ flag { name = "--driver"; param = `some; applies_to = `driver } ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (
-        flag
-        (name       --driver)
-        (param      some)
-        (applies_to driver))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (flag (name --driver) (param some) (applies_to driver))))
     |}];
   let t = parse {| (pps --driver=screw) |} in
   enforce t [ flag { name = "--driver"; param = `some; applies_to = `any } ];
@@ -631,17 +585,12 @@ let%expect_test "enforce" =
   enforce t [ flag { name = "--driver"; param = `some; applies_to = `driver } ];
   [%expect {| (pps --driver=screw hey) |}];
   let t = parse {| (pps) |} in
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ flag { name = "--driver"; param = `some; applies_to = `driver } ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (
-        flag
-        (name       --driver)
-        (param      some)
-        (applies_to driver))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (flag (name --driver) (param some) (applies_to driver))))
     |}];
   let t = parse {| (pps) |} in
   enforce t [ flag { name = "--driver"; param = `any; applies_to = `any } ];

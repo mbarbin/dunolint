@@ -15,18 +15,18 @@
   -open
   Pplumbing_err
   -open
-  Expect_test_helpers_base
-  -open
   Dunolint_base
+  -open
+  Dunolint_stdlib
   -open
   Dunolint.Std)
  (libraries
   base
+  dunolint_stdlib
   dune_linter
   dunolint-lib-base
   dunolint_engine
   dunolinter
-  expect_test_helpers_core.expect_test_helpers_base
   file-rewriter
   fpath-sexp0
   loc

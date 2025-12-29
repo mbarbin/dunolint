@@ -22,13 +22,12 @@
 open! Dunolint.Config.Std
 
 let%expect_test "sexp" =
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     Dunolint.Condition.t_of_sexp
       (Parsexp.Single.parse_string_exn "(path (equals path/to/file))"));
   [%expect
     {|
-    (Of_sexp_error
-     "The [path.equals] construct is no longer supported."
+    (Of_sexp_error "The [path.equals] construct is no longer supported."
      (invalid_sexp (equals path/to/file)))
     |}];
   ()

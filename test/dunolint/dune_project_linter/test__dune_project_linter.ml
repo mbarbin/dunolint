@@ -197,7 +197,7 @@ let%expect_test "lint" =
       (match Dunolinter.match_stanza stanza with
        | Dune_project_linter.Name _ ->
          let open Dunolint.Config.Std in
-         require_does_raise [%here] (fun () ->
+         require_does_raise (fun () ->
            Dunolinter.Handler.raise ~f:(fun () ->
              apply (dune_project (name (not_ (equals (Dune_project.Name.v "foo")))))));
          [%expect

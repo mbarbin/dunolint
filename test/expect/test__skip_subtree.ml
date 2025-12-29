@@ -37,7 +37,7 @@ let%expect_test "relative_path.extend" =
   let p = Relative_path.extend Relative_path.empty (Fsegment.v "dune-project") in
   print_endline (Relative_path.to_string p);
   [%expect {| dune-project |}];
-  require_equal [%here] (module Relative_path) p file;
+  require_equal (module Relative_path) p file;
   [%expect {||}];
   ()
 ;;

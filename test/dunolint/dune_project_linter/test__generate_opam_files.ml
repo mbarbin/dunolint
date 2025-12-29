@@ -120,14 +120,9 @@ let%expect_test "enforce" =
   (* Blang. *)
   enforce t [ true_ ];
   [%expect {| (generate_opam_files) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
-  require_does_raise [%here] (fun () -> enforce t [ not_ is_present ]);
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
+  require_does_raise (fun () -> enforce t [ not_ is_present ]);
   [%expect
     {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not is_present))) |}];
   enforce t [ and_ [ is_present; is_present ] ];
@@ -183,15 +178,9 @@ let%expect_test "Linter.enforce" =
   (* Blang. *)
   enforce t [ true_ ];
   [%expect {| (generate_opam_files) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
-  require_does_raise [%here] (fun () ->
-    enforce t [ generate_opam_files (not_ is_present) ]);
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
+  require_does_raise (fun () -> enforce t [ generate_opam_files (not_ is_present) ]);
   [%expect
     {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not is_present))) |}];
   enforce t [ and_ [ generate_opam_files is_present; generate_opam_files is_present ] ];

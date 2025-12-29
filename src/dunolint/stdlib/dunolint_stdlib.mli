@@ -22,3 +22,18 @@
 (** Extending [Stdlib] for use in the project. *)
 
 module Sexp = Sexplib0.Sexp
+
+module With_equal_and_sexp : sig
+  module type S = sig
+    type t
+
+    val equal : t -> t -> bool
+    val sexp_of_t : t -> Sexp.t
+  end
+end
+
+val require : bool -> unit
+val require_equal : (module With_equal_and_sexp.S with type t = 'a) -> 'a -> 'a -> unit
+val require_does_raise : (unit -> 'a) -> unit
+val print_s : Sexp.t -> unit
+val print_endline : string -> unit

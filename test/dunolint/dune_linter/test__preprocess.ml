@@ -64,11 +64,10 @@ let%expect_test "sexp_of" =
   print_s [%sexp (t : Dune_linter.Preprocess.t)];
   [%expect
     {|
-    ((
-      state (
-        Pps ((
-          sections (((
-            entries (((arg (Pp (pp_name ppx_sexp_conv))) (eol_comment ())))))))))))
+    ((state
+      (Pps
+       ((sections
+         (((entries (((arg (Pp (pp_name ppx_sexp_conv))) (eol_comment ())))))))))))
     |}];
   let _, t = parse {| (preprocess (something else)) |} in
   print_s [%sexp (t : Dune_linter.Preprocess.t)];
@@ -90,7 +89,7 @@ let%expect_test "rewrite" =
   [%expect {| (preprocess (pps ppx_sexp_conv)) |}];
   rewrite {| (preprocess (something else)) |};
   [%expect {| (preprocess (something else)) |}];
-  require_does_raise [%here] (fun () -> rewrite {| (preprocess something else) |});
+  require_does_raise (fun () -> rewrite {| (preprocess something else) |});
   [%expect {| "Unexpected [preprocess] field value." |}];
   rewrite {| (preprocess (pps ppx_sexp_conv)) |} ~f:(fun t ->
     let open Dunolint.Config.Std in
@@ -113,8 +112,7 @@ let%expect_test "unhandled_rewrite" =
     Test_helpers.read_sexp_field ~path:(Fpath.v "a/dune") "(preprocess something else)"
   in
   let t = Dune_linter.Preprocess.create () in
-  require_does_raise [%here] (fun () ->
-    Dune_linter.Preprocess.rewrite t ~sexps_rewriter ~field);
+  require_does_raise (fun () -> Dune_linter.Preprocess.rewrite t ~sexps_rewriter ~field);
   [%expect {| "Unexpected [preprocess] field value." |}];
   ()
 ;;
@@ -204,13 +202,12 @@ let%expect_test "enforce" =
   enforce t [ pps (pp (Dune.Pp.Name.v "ppx_sexp_conv")) ];
   [%expect {| (preprocess (pps ppx_sexp_conv)) |}];
   (* Enforcing its negation triggers an error. *)
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ not_ (pps (pp (Dune.Pp.Name.v "ppx_sexp_conv"))) ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (not (pps (pp ppx_sexp_conv)))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (pps (pp ppx_sexp_conv)))))
     |}];
   (* Enforcing the presence of a new pp adds it. *)
   enforce t [ pps (pp (Dune.Pp.Name.v "ppx_other")) ];
@@ -227,12 +224,11 @@ let%expect_test "enforce" =
   enforce t [ no_preprocessing ];
   [%expect {| (preprocess no_preprocessing) |}];
   (* Enforcing the negation of [no_preprocessing] triggers an error. *)
-  require_does_raise [%here] (fun () -> enforce t [ not_ no_preprocessing ]);
+  require_does_raise (fun () -> enforce t [ not_ no_preprocessing ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (not no_preprocessing)))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not no_preprocessing)))
     |}];
   (* Enforcing the presence of a present pp adds a pps section with it. *)
   let t = parse {| (preprocess no_preprocessing) |} in
@@ -246,13 +242,8 @@ let%expect_test "enforce" =
   let t = parse {| (preprocess (pps ppx_sexp_conv)) |} in
   enforce t [ true_ ];
   [%expect {| (preprocess (pps ppx_sexp_conv)) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
   enforce
     t
     [ pps
@@ -264,13 +255,12 @@ let%expect_test "enforce" =
      satisfied. *)
   enforce t [ or_ [ pps (pp (Dune.Pp.Name.v "ppx_other")); no_preprocessing ] ];
   [%expect {| (preprocess (pps ppx_other)) |}];
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ or_ [ pps (pp (Dune.Pp.Name.v "ppx_absent")); no_preprocessing ] ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (or (pps (pp ppx_absent)) no_preprocessing)))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (or (pps (pp ppx_absent)) no_preprocessing)))
     |}];
   (* When defined, [if] enforces the clause that applies. *)
   let invariant =

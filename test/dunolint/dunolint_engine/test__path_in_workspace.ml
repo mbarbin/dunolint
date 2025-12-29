@@ -40,11 +40,14 @@ let%expect_test "check_escape_path_exn - valid paths" =
 let%expect_test "check_escape_path_exn - escaping paths raise" =
   (* Escaping paths should raise [Invalid_argument]. *)
   let test_raise path_str =
-    require_does_raise [%here] (fun () : Relative_path.t -> Relative_path.v path_str)
+    require_does_raise (fun () : Relative_path.t -> Relative_path.v path_str)
   in
   test_raise "..";
   [%expect
-    {| (Invalid_argument "Relative_path.v: path \"..\" escapes above starting point") |}];
+    {|
+    (Invalid_argument
+     "Relative_path.v: path \"..\" escapes above starting point")
+    |}];
   test_raise "../config";
   [%expect
     {|
@@ -82,12 +85,15 @@ let%expect_test "parent - basic cases" =
 
 let%expect_test "parent - escaping paths raise" =
   let test path_str =
-    require_does_raise [%here] (fun () : Relative_path.t option ->
+    require_does_raise (fun () : Relative_path.t option ->
       (Relative_path.parent (Relative_path.v path_str) [@coverage off]))
   in
   test "..";
   [%expect
-    {| (Invalid_argument "Relative_path.v: path \"..\" escapes above starting point") |}];
+    {|
+    (Invalid_argument
+     "Relative_path.v: path \"..\" escapes above starting point")
+    |}];
   test "../..";
   [%expect
     {|
@@ -188,13 +194,16 @@ let%expect_test "ancestors_autoloading_dirs - ordering" =
 
 let%expect_test "ancestors_autoloading_dirs - escaping paths raise" =
   let test path_str =
-    require_does_raise [%here] (fun () : Relative_path.t list ->
+    require_does_raise (fun () : Relative_path.t list ->
       (Path_in_workspace.ancestors_autoloading_dirs
          ~path:(Relative_path.v path_str) [@coverage off]))
   in
   test "..";
   [%expect
-    {| (Invalid_argument "Relative_path.v: path \"..\" escapes above starting point") |}];
+    {|
+    (Invalid_argument
+     "Relative_path.v: path \"..\" escapes above starting point")
+    |}];
   test "../config/file.ml";
   [%expect
     {|
@@ -268,13 +277,16 @@ let%expect_test "paths_to_check_for_skip_predicates - matches CLI behavior" =
 
 let%expect_test "paths_to_check_for_skip_predicates - escaping paths raise" =
   let test path_str =
-    require_does_raise [%here] (fun () : Relative_path.t list ->
+    require_does_raise (fun () : Relative_path.t list ->
       (Path_in_workspace.paths_to_check_for_skip_predicates
          ~path:(Relative_path.v path_str) [@coverage off]))
   in
   test "..";
   [%expect
-    {| (Invalid_argument "Relative_path.v: path \"..\" escapes above starting point") |}];
+    {|
+    (Invalid_argument
+     "Relative_path.v: path \"..\" escapes above starting point")
+    |}];
   test "../config";
   [%expect
     {|

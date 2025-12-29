@@ -172,13 +172,8 @@ let%expect_test "enforce" =
   (* Blang. *)
   enforce t [ true_ ];
   [%expect {| (flags :standard -open Foo) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
   ()
 ;;
 

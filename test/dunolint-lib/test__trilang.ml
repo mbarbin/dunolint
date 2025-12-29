@@ -34,9 +34,9 @@ let%expect_test "all" =
 
 let%expect_test "const" =
   let t = Trilang.const true in
-  require_equal [%here] (module Trilang) t True;
+  require_equal (module Trilang) t True;
   let t = Trilang.const false in
-  require_equal [%here] (module Trilang) t False;
+  require_equal (module Trilang) t False;
   ()
 ;;
 
@@ -61,7 +61,7 @@ let%expect_test "eval" =
   List.iter and_table ~f:(fun (a, b, expr) ->
     let result = Trilang.eval expr ~f:Fn.id in
     let and_ = Trilang.Private.and_ a b in
-    require_equal [%here] (module Trilang) result and_;
+    require_equal (module Trilang) result and_;
     print_s [%sexp { expr : Trilang.t Blang.t; eval = (result : Trilang.t) }]);
   [%expect
     {|
@@ -84,7 +84,7 @@ let%expect_test "eval" =
   List.iter or_table ~f:(fun (a, b, expr) ->
     let result = Trilang.eval expr ~f:Fn.id in
     let or_ = Trilang.Private.or_ a b in
-    require_equal [%here] (module Trilang) result or_;
+    require_equal (module Trilang) result or_;
     print_s [%sexp { expr : Trilang.t Blang.t; eval = (result : Trilang.t) }]);
   [%expect
     {|

@@ -59,7 +59,7 @@ let%expect_test "sexp" =
   let test t =
     let sexp = T.sexp_of_t t in
     let t' = T.t_of_sexp sexp in
-    require_equal [%here] (module T) t t';
+    require_equal (module T) t t';
     print_s sexp
   in
   test (`enforce 42);
@@ -78,10 +78,8 @@ let%expect_test "sexp" =
         ]);
   [%expect
     {|
-    (cond
-      ((T False)     (enforce 1))
-      ((T Undefined) (enforce 2))
-      ((T True)      (enforce 3)))
+    (cond ((T False) (enforce 1)) ((T Undefined) (enforce 2))
+     ((T True) (enforce 3)))
     |}];
   ()
 ;;

@@ -2,20 +2,8 @@
  (name dunolint_dunolint_config_test)
  (public_name dunolint-tests.dunolint_dunolint_config_test)
  (inline_tests)
- (flags
-  :standard
-  -w
-  +a-4-40-41-42-44-45-48-66
-  -warn-error
-  +a
-  -open
-  Base
-  -open
-  Expect_test_helpers_base)
- (libraries
-  base
-  dunolint_dunolint_config
-  expect_test_helpers_core.expect_test_helpers_base)
+ (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a)
+ (libraries dunolint_dunolint_config)
  (instrumentation
   (backend bisect_ppx))
  (lint

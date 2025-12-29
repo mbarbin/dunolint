@@ -17,7 +17,7 @@
   -open
   Stdio
   -open
-  Expect_test_helpers_base)
+  Dunolint_stdlib)
  (libraries
   base
   cmdlang
@@ -26,8 +26,8 @@
   dune_project_linter
   dunolint
   dunolint_engine
+  dunolint_stdlib
   dunolinter
-  expect_test_helpers_core.expect_test_helpers_base
   file-rewriter
   fpath-sexp0
   pplumbing-err

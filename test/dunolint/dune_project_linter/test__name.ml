@@ -150,13 +150,12 @@ let%expect_test "enforce" =
   (* Enforcing the negation of a current equality triggers an error.
      Dunolint is not going to automatically invent a new setting, this
      requires the user's intervention. *)
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ not_ (equals (Dune_project.Name.v "other_project")) ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (not (equals other_project))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (equals other_project))))
     |}];
   let t = parse {| (name prefix_name_suffix) |} in
   let invariant = and_ [ not_ (is_prefix "prefix_"); not_ (is_suffix "_suffix") ] in
@@ -175,13 +174,8 @@ let%expect_test "enforce" =
   let t = parse {| (name my_project) |} in
   enforce t [ true_ ];
   [%expect {| (name my_project) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
   enforce
     t
     [ and_
@@ -200,7 +194,7 @@ let%expect_test "enforce" =
         ]
     ];
   [%expect {| (name my_project) |}];
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce
       t
       [ or_
@@ -210,12 +204,8 @@ let%expect_test "enforce" =
       ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (
-        or
-        (equals other_project)
-        (equals other_project))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (or (equals other_project) (equals other_project))))
     |}];
   (* When defined, [if] enforces the clause that applies. *)
   let invariant =
@@ -277,14 +267,9 @@ let%expect_test "Linter.enforce" =
   (* Blang. *)
   enforce t [ true_ ];
   [%expect {| (name bar) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
+  require_does_raise (fun () ->
     enforce t [ name (not_ (equals (Dune_project.Name.v "bar"))) ]);
   [%expect
     {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (equals bar)))) |}];

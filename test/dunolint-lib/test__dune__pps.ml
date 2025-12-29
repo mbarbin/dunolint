@@ -26,36 +26,21 @@ let%expect_test "predicate" =
   test (pp (Dune.Pp.Name.v "ppx_compare"));
   [%expect {| (pp ppx_compare) |}];
   test (flag { name = "-a"; param = `any; applies_to = `any });
-  [%expect
-    {|
-    (flag
-      (name       -a)
-      (param      any)
-      (applies_to any))
-    |}];
+  [%expect {| (flag (name -a) (param any) (applies_to any)) |}];
   test (flag { name = "-a"; param = `none; applies_to = `driver });
-  [%expect
-    {|
-    (flag
-      (name       -a)
-      (param      none)
-      (applies_to driver))
-    |}];
+  [%expect {| (flag (name -a) (param none) (applies_to driver)) |}];
   test
     (flag
        { name = "-a"; param = `some; applies_to = `pp (Dune.Pp.Name.v "ppx_js_style") });
-  [%expect
-    {|
-    (flag
-      (name  -a)
-      (param some)
-      (applies_to (pp ppx_js_style)))
-    |}];
+  [%expect {| (flag (name -a) (param some) (applies_to (pp ppx_js_style))) |}];
   test
     (flag
        { name = "-unused-code-warnings"; param = `equals "force"; applies_to = `driver });
   [%expect
-    {| (flag (name -unused-code-warnings) (param (equals force)) (applies_to driver)) |}];
+    {|
+    (flag (name -unused-code-warnings) (param (equals force))
+     (applies_to driver))
+    |}];
   test
     (pp_with_flag
        { pp = Dune.Pp.Name.v "ppx_js_style"
@@ -63,11 +48,6 @@ let%expect_test "predicate" =
        ; param = `none
        });
   [%expect
-    {|
-    (pp_with_flag
-      (pp    ppx_js_style)
-      (flag  -allow-let-operators)
-      (param none))
-    |}];
+    {| (pp_with_flag (pp ppx_js_style) (flag -allow-let-operators) (param none)) |}];
   ()
 ;;

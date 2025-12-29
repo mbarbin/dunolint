@@ -16,7 +16,7 @@
   -open
   Stdio
   -open
-  Expect_test_helpers_base)
+  Dunolint_stdlib)
  (libraries
   base
   dune_linter
@@ -24,8 +24,8 @@
   dunolint
   dunolint_cli
   dunolint_engine
+  dunolint_stdlib
   dunolinter
-  expect_test_helpers_core.expect_test_helpers_base
   fpath-base
   loc
   pp

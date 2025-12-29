@@ -140,40 +140,29 @@ let%expect_test "enforce" =
   (* Enforcing the negation of a current equality triggers an error.
      Dunolint is not going to automatically invent a new setting, this
      requires the user's intervention. *)
-  require_does_raise [%here] (fun () -> enforce t [ not_ (equals `qualified) ]);
+  require_does_raise (fun () -> enforce t [ not_ (equals `qualified) ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (not (equals qualified))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (equals qualified))))
     |}];
   (* Blang. *)
   let t = parse {| (include_subdirs no) |} in
   enforce t [ true_ ];
   [%expect {| (include_subdirs no) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
   enforce t [ and_ [ not_ (equals `qualified); equals `unqualified ] ];
   [%expect {| (include_subdirs unqualified) |}];
   (* [or] does not have an enforcement strategy when its invariant is
      not satisfied. *)
   enforce t [ or_ [ equals `no; equals `unqualified ] ];
   [%expect {| (include_subdirs unqualified) |}];
-  require_does_raise [%here] (fun () ->
-    enforce t [ or_ [ equals `qualified; equals `no ] ]);
+  require_does_raise (fun () -> enforce t [ or_ [ equals `qualified; equals `no ] ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (
-        or
-        (equals qualified)
-        (equals no))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (or (equals qualified) (equals no))))
     |}];
   (* When defined, [if] enforces the clause that applies. *)
   let invariant = if_ (equals `no) (equals `qualified) (equals `unqualified) in
@@ -221,21 +210,17 @@ let%expect_test "Linter.enforce" =
   [%expect {| (include_subdirs unqualified) |}];
   enforce t (include_subdirs (equals `qualified));
   [%expect {| (include_subdirs qualified) |}];
-  require_does_raise [%here] (fun () ->
-    enforce t (include_subdirs (not_ (equals `qualified))));
+  require_does_raise (fun () -> enforce t (include_subdirs (not_ (equals `qualified))));
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (not (equals qualified))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (equals qualified))))
     |}];
-  require_does_raise [%here] (fun () ->
-    enforce t (not_ (include_subdirs (equals `qualified))));
+  require_does_raise (fun () -> enforce t (not_ (include_subdirs (equals `qualified))));
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (not (include_subdirs (equals qualified)))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (include_subdirs (equals qualified)))))
     |}];
   enforce t (not_ (library true_));
   [%expect {| (include_subdirs qualified) |}];

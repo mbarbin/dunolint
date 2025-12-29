@@ -20,3 +20,73 @@
 (*********************************************************************************)
 
 module Sexp = Sexplib0.Sexp
+
+module With_equal_and_sexp = struct
+  module type S = sig
+    type t
+
+    val equal : t -> t -> bool
+    val sexp_of_t : t -> Sexp.t
+  end
+end
+
+module Code_error = struct
+  type t =
+    { message : string
+    ; data : (string * Sexp.t) list
+    }
+
+  exception E of t
+
+  let raise message data = raise (E { message; data })
+
+  let sexp_of_t { message; data } =
+    Sexp.List
+      (Atom message :: List.map (fun (field, sexp) -> Sexp.List [ Atom field; sexp ]) data)
+  ;;
+
+  let () =
+    Printexc.register_printer (function
+      | E t -> Some (Sexp.to_string_hum (sexp_of_t t))
+      | _ -> None [@coverage off])
+  ;;
+end
+
+let print_s sexp = print_endline (Sexp.to_string_hum sexp)
+
+let require_does_raise f =
+  match f () with
+  | _ -> failwith "Did not raise."
+  | exception e -> print_s (Sexplib0.Sexp_conv.sexp_of_exn e)
+;;
+
+let require bool = if not bool then failwith "Required condition does not hold."
+
+let require_equal
+      (type a)
+      (module M : With_equal_and_sexp.S with type t = a)
+      (v1 : a)
+      (v2 : a)
+  =
+  if not (M.equal v1 v2)
+  then
+    Code_error.raise
+      "Values are not equal."
+      [ "v1", v1 |> M.sexp_of_t; "v2", v2 |> M.sexp_of_t ]
+;;
+
+let print_endline = print_endline
+
+let () =
+  Sexplib0.Sexp_conv.Exn_converter.add
+    [%extension_constructor Sexplib0.Sexp_conv.Of_sexp_error]
+    (function
+    | Of_sexp_error (exn, sexp) ->
+      let exn =
+        match exn with
+        | Failure msg -> Sexp.Atom msg
+        | _ -> Sexplib0.Sexp_conv.sexp_of_exn exn
+      in
+      List [ Atom "Of_sexp_error"; exn; List [ Atom "invalid_sexp"; sexp ] ]
+    | _ -> assert false)
+;;

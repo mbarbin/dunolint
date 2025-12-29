@@ -108,13 +108,12 @@ let%expect_test "enforce" =
   let t = parse {| (name exe_name) |} in
   enforce t [ not_ (equals (Dune.Executable.Name.v "not_equal")) ];
   [%expect {| (name exe_name) |}];
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ not_ (equals (Dune.Executable.Name.v "exe_name")) ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (not (equals exe_name))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (equals exe_name))))
     |}];
   (* Setting a prefix to an existing prefix has no effect. *)
   let t = parse {| (name pre_hello_suf) |} in
@@ -152,13 +151,8 @@ let%expect_test "enforce" =
   let t = parse {| (name pre_hello_suf) |} in
   enforce t [ true_ ];
   [%expect {| (name pre_hello_suf) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
   enforce t [ and_ [ not_ (is_prefix "pre_"); not_ (is_suffix "_suf") ] ];
   [%expect {| (name hello) |}];
   (* [or] does not have an enforcement strategy when its invariant is not
@@ -166,16 +160,12 @@ let%expect_test "enforce" =
   let t = parse {| (name pre_hello_suf) |} in
   enforce t [ or_ [ is_prefix "pre_"; equals (Dune.Executable.Name.v "not_equal") ] ];
   [%expect {| (name pre_hello_suf) |}];
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ or_ [ is_prefix "prefix_"; equals (Dune.Executable.Name.v "not_equal") ] ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (
-        or
-        (is_prefix prefix_)
-        (equals    not_equal))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (or (is_prefix prefix_) (equals not_equal))))
     |}];
   (* When defined, [if] enforces the clause that applies. *)
   enforce

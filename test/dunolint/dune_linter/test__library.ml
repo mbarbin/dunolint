@@ -71,15 +71,13 @@ let%expect_test "read/write" =
 |};
   [%expect
     {|
-    (library
-      (name        dune_linter)
-      (public_name dunolint.dune_linter)
-      (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a -open Base)
-      (libraries base dunolint-lib dunolinter etc)
-      (instrumentation (backend bisect_ppx))
-      (lint (pps ppx_js_style -allow-let-operators -check-doc-comments))
-      (preprocess (
-        pps -unused-code-warnings=force ppx_compare ppx_enumerate and_more)))
+    (library (name dune_linter) (public_name dunolint.dune_linter)
+     (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a -open Base)
+     (libraries base dunolint-lib dunolinter etc)
+     (instrumentation (backend bisect_ppx))
+     (lint (pps ppx_js_style -allow-let-operators -check-doc-comments))
+     (preprocess
+      (pps -unused-code-warnings=force ppx_compare ppx_enumerate and_more)))
     |}];
   ()
 ;;
@@ -89,17 +87,10 @@ let%expect_test "sexp_of" =
   print_s [%sexp (t : Dune_linter.Library.t)];
   [%expect
     {|
-    ((name (((name mylib))))
-     (public_name  ())
-     (inline_tests ())
-     (modes        ())
-     (flags     ((flags    ())))
-     (libraries ((sections ())))
-     (libraries_to_open_via_flags ())
-     (instrumentation             ())
-     (lint                        ())
-     (preprocess                  ())
-     (marked_for_removal          ()))
+    ((name (((name mylib)))) (public_name ()) (inline_tests ()) (modes ())
+     (flags ((flags ()))) (libraries ((sections ())))
+     (libraries_to_open_via_flags ()) (instrumentation ()) (lint ())
+     (preprocess ()) (marked_for_removal ()))
     |}];
   ()
 ;;
@@ -205,12 +196,8 @@ let%expect_test "create_then_rewrite" =
   test t {| (library (name main)) |};
   [%expect
     {|
-    (library
-      (name        main)
-      (public_name my-lib)
-      (modes     byte  native)
-      (flags     -open My_dep)
-      (libraries foo   my-dep))
+    (library (name main) (public_name my-lib) (modes byte native)
+     (flags -open My_dep) (libraries foo my-dep))
     |}];
   (* Inline tests is optional, when not specified the current value is
      ignored. *)
@@ -328,10 +315,8 @@ let%expect_test "libraries_to_open_via_flags" =
     |};
   [%expect
     {|
-    (library
-      (name main)
-      (flags -hey -open A -open Other -open B -open C)
-      (libraries a b c))
+    (library (name main) (flags -hey -open A -open Other -open B -open C)
+     (libraries a b c))
     |}];
   ()
 ;;
@@ -520,7 +505,7 @@ let%expect_test "enforce" =
   (* Enforcing the negation of a current equality triggers an error.
      Dunolint is not going to automatically invent a new name, this
      requires the user's intervention. *)
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ name (not_ (equals (Dune.Library.Name.v "mylib"))) ]);
   [%expect
     {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (equals mylib)))) |}];
@@ -528,12 +513,7 @@ let%expect_test "enforce" =
      in dunolint adding a new public_name field. *)
   let t = parse {| (library (name mylib)) |} in
   enforce t [ public_name (equals (Dune.Library.Public_name.v "my-public-lib")) ];
-  [%expect
-    {|
-    (library
-      (name        mylib)
-      (public_name my-public-lib))
-    |}];
+  [%expect {| (library (name mylib) (public_name my-public-lib)) |}];
   let t = parse {| (library (name mylib)) |} in
   (* When the required invariant is negated, and there is no public_name,
      dunolint simply does nothing and considers it an undefined invariants. *)
@@ -543,20 +523,14 @@ let%expect_test "enforce" =
      dunolint creating a new field. *)
   let t = parse {| (library (name mylib)) |} in
   enforce t [ modes (has_mode `native) ];
-  [%expect
-    {|
-    (library
-      (name  mylib)
-      (modes native))
-    |}];
+  [%expect {| (library (name mylib) (modes native)) |}];
   (* Otherwise the mode is edited in place. *)
   let t = parse {| (library (name mylib) (modes byte)) |} in
   enforce t [ modes (has_mode `native) ];
   [%expect {| (library (name mylib) (modes byte native)) |}];
   (* Currently adding a field is only possible if some are already present. *)
   let t = parse {| (library) |} in
-  require_does_raise [%here] (fun () ->
-    enforce t [ name (equals (Dune.Library.Name.v "mylib")) ]);
+  require_does_raise (fun () -> enforce t [ name (equals (Dune.Library.Name.v "mylib")) ]);
   [%expect {| "Existing stanza in dune file expected to have at least one field." |}];
   ()
 ;;
@@ -594,21 +568,9 @@ let%expect_test "load_existing_libraries" =
      or absent, but another library that is not directly involved with said
      invariant is untouched when the invariant is enforced (not removed). *)
   test t spec ~load_existing_libraries:false;
-  [%expect
-    {|
-    (library
-      (name        main)
-      (public_name my-cli)
-      (libraries bar foo))
-    |}];
+  [%expect {| (library (name main) (public_name my-cli) (libraries bar foo)) |}];
   test t spec ~load_existing_libraries:true;
-  [%expect
-    {|
-    (library
-      (name        main)
-      (public_name my-cli)
-      (libraries bar baz foo))
-    |}];
+  [%expect {| (library (name main) (public_name my-cli) (libraries bar baz foo)) |}];
   ()
 ;;
 
@@ -701,15 +663,14 @@ let%expect_test "enforce_failures" =
   in
   (* Certain fields don't have heuristics in place for initializing a value if
      it isn't there. *)
-  require_does_raise [%here] (fun () -> test [ has_field `name ]);
+  require_does_raise (fun () -> test [ has_field `name ]);
   [%expect
     {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (has_field name))) |}];
-  require_does_raise [%here] (fun () -> test [ has_field `public_name ]);
+  require_does_raise (fun () -> test [ has_field `public_name ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (has_field public_name)))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (has_field public_name)))
     |}];
   ()
 ;;
@@ -734,12 +695,7 @@ let%expect_test "undefined conditions" =
      evaluated. Arguably this is quite surprising, and maybe the semantic of
      [And] shall be revisited. Left as characterization test for future work. *)
   test [ if_ (name (is_prefix "hey")) (name (equals main)) false_ ];
-  [%expect
-    {|
-    (library
-      (public_name my-cli)
-      (name        main))
-    |}];
+  [%expect {| (library (public_name my-cli) (name main)) |}];
   ()
 ;;
 
@@ -770,21 +726,11 @@ let%expect_test "has_field_auto_initialize" =
   (* [preprocess] field can be auto-initialized. *)
   let t = parse init in
   enforce t [ has_field `preprocess ];
-  [%expect
-    {|
-    (library
-      (name       my-lib)
-      (preprocess no_preprocessing))
-    |}];
+  [%expect {| (library (name my-lib) (preprocess no_preprocessing)) |}];
   (* [modes] field can be auto-initialized. *)
   let t = parse init in
   enforce t [ has_field `modes ];
-  [%expect
-    {|
-    (library
-      (name  my-lib)
-      (modes best))
-    |}];
+  [%expect {| (library (name my-lib) (modes best)) |}];
   ()
 ;;
 
@@ -804,21 +750,11 @@ let%expect_test "field_conditions" =
   (* [preprocess] condition auto-creates field. *)
   let t = parse init in
   enforce t [ preprocess no_preprocessing ];
-  [%expect
-    {|
-    (library
-      (name       my-lib)
-      (preprocess no_preprocessing))
-    |}];
+  [%expect {| (library (name my-lib) (preprocess no_preprocessing)) |}];
   (* [modes] condition auto-creates field. *)
   let t = parse init in
   enforce t [ modes (has_mode `byte) ];
-  [%expect
-    {|
-    (library
-      (name  my-lib)
-      (modes byte))
-    |}];
+  [%expect {| (library (name my-lib) (modes byte)) |}];
   ()
 ;;
 

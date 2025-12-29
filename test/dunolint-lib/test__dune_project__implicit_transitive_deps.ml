@@ -37,25 +37,22 @@ let%expect_test "of_sexp" =
   let test sexp =
     let t = [%of_sexp: Dune_project.Implicit_transitive_deps.Value.t] sexp in
     let s = [%sexp (t : Dune_project.Implicit_transitive_deps.Value.t)] in
-    require_equal [%here] (module Sexp) sexp s
+    require_equal (module Sexp) sexp s
   in
   test (Atom "true");
   test (Atom "false");
   test (Atom "false-if-hidden-includes-supported");
   [%expect {||}];
-  require_does_raise [%here] (fun () -> test (Atom "something else"));
+  require_does_raise (fun () -> test (Atom "something else"));
   [%expect
     {|
-    (Of_sexp_error
-     "Unsupported implicit_transitive_deps value [something else]."
+    (Of_sexp_error "Unsupported implicit_transitive_deps value [something else]."
      (invalid_sexp "something else"))
     |}];
-  require_does_raise [%here] (fun () ->
-    test (List [ Atom "not"; Atom "an"; Atom "atom" ]));
+  require_does_raise (fun () -> test (List [ Atom "not"; Atom "an"; Atom "atom" ]));
   [%expect
     {|
-    (Of_sexp_error
-     "Expected atom for implicit_transitive_deps value."
+    (Of_sexp_error "Expected atom for implicit_transitive_deps value."
      (invalid_sexp (not an atom)))
     |}];
   ()
@@ -84,7 +81,6 @@ let%expect_test "sort" =
   test [ `False; `True; `False_if_hidden_includes_supported ];
   [%expect {| (true false false-if-hidden-includes-supported) |}];
   require
-    [%here]
     (List.equal
        Dune_project.Implicit_transitive_deps.Value.equal
        Dune_project.Implicit_transitive_deps.Value.all

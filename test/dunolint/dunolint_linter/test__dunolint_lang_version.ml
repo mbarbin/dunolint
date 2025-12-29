@@ -241,13 +241,8 @@ let%expect_test "enforce" =
   let t = parse {| (lang dunolint 1.5) |} in
   enforce t [ true_ ];
   [%expect {| (lang dunolint 1.5) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
   enforce
     t
     [ and_
@@ -320,27 +315,27 @@ let%expect_test "enforce" =
   enforce t [ not_ (gt (Dunolint0.Dunolint_lang_version.create (1, 5))) ];
   [%expect {| (lang dunolint 1.3) |}];
   let t = parse {| (lang dunolint 1.5) |} in
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ neq (Dunolint0.Dunolint_lang_version.create (1, 5)) ]);
   [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (!= 1.5))) |}];
   let t = parse {| (lang dunolint 1.5) |} in
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ not_ (eq (Dunolint0.Dunolint_lang_version.create (1, 5))) ]);
   [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (= 1.5)))) |}];
   let t = parse {| (lang dunolint 1.5) |} in
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ lt (Dunolint0.Dunolint_lang_version.create (1, 3)) ]);
   [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (< 1.3))) |}];
   let t = parse {| (lang dunolint 1.5) |} in
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ not_ (gte (Dunolint0.Dunolint_lang_version.create (1, 3))) ]);
   [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (>= 1.3)))) |}];
   let t = parse {| (lang dunolint 1.3) |} in
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ gt (Dunolint0.Dunolint_lang_version.create (1, 5)) ]);
   [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (> 1.5))) |}];
   let t = parse {| (lang dunolint 1.3) |} in
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce t [ not_ (lte (Dunolint0.Dunolint_lang_version.create (1, 5))) ]);
   [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (<= 1.5)))) |}];
   ()
@@ -409,27 +404,21 @@ let%expect_test "Linter.enforce" =
     t
     [ not_ (dunolint_lang_version (eq (Dunolint0.Dunolint_lang_version.create (1, 5)))) ];
   [%expect {| (lang dunolint 2.3) |}];
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     enforce
       t
       [ not_ (dunolint_lang_version (eq (Dunolint0.Dunolint_lang_version.create (2, 3))))
       ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc _)
-      (condition (not (dunolint_lang_version (= 2.3)))))
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (dunolint_lang_version (= 2.3)))))
     |}];
   (* Blang. *)
   enforce t [ true_ ];
   [%expect {| (lang dunolint 2.3) |}];
-  require_does_raise [%here] (fun () -> enforce t [ false_ ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure
-      (loc       _)
-      (condition false))
-    |}];
+  require_does_raise (fun () -> enforce t [ false_ ]);
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
   enforce
     t
     [ dunolint_lang_version (not_ (eq (Dunolint0.Dunolint_lang_version.create (1, 5)))) ];

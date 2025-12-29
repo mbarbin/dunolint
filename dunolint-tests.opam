@@ -18,7 +18,6 @@ depends: [
   "dunolint" {= version}
   "dunolint-lib" {= version}
   "dunolint-lib-base" {= version}
-  "expect_test_helpers_core" {>= "v0.17"}
   "file-rewriter" {>= "0.0.3"}
   "fpath" {>= "0.7.3"}
   "fpath-base" {>= "0.4.0"}

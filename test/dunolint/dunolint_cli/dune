@@ -11,14 +11,8 @@
   -open
   Base
   -open
-  Fpath_base
-  -open
-  Expect_test_helpers_base)
- (libraries
-  base
-  dunolint_cli
-  expect_test_helpers_core.expect_test_helpers_base
-  fpath-base)
+  Fpath_sexp0)
+ (libraries base dunolint_cli fpath-sexp0)
  (instrumentation
   (backend bisect_ppx))
  (lint

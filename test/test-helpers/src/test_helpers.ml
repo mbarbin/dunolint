@@ -48,9 +48,9 @@ let parse
   (sexps_rewriter, field), t
 ;;
 
-let is_true b = require_equal [%here] (module Dunolint.Trilang) b True
-let is_false b = require_equal [%here] (module Dunolint.Trilang) b False
-let is_undefined b = require_equal [%here] (module Dunolint.Trilang) b Undefined
+let is_true b = require_equal (module Dunolint.Trilang) b True
+let is_false b = require_equal (module Dunolint.Trilang) b False
+let is_undefined b = require_equal (module Dunolint.Trilang) b Undefined
 
 let run_linter ~config =
   let dunolint_engine =

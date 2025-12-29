@@ -78,16 +78,14 @@ let%expect_test "parse_variant" =
   test "unknown";
   [%expect
     {|
-    (Of_sexp_error
-     "test_predicate_of_sexp: no matching variant found"
+    (Of_sexp_error "test_predicate_of_sexp: no matching variant found"
      (invalid_sexp unknown))
     |}];
   (* Error: list with atom that doesn't match. *)
   test "(unknown hello)";
   [%expect
     {|
-    (Of_sexp_error
-     "test_predicate_of_sexp: no matching variant found"
+    (Of_sexp_error "test_predicate_of_sexp: no matching variant found"
      (invalid_sexp (unknown hello)))
     |}];
   (* Error: list with wrong number of arguments (zero). *)
@@ -235,18 +233,10 @@ let%expect_test "parse_inline_record" =
   in
   (* Success case: inline record fields (no extra parens). *)
   test "(cons (name hello) (value 42))";
-  [%expect
-    {|
-    ((name  hello)
-     (value 42))
-    |}];
+  [%expect {| ((name hello) (value 42)) |}];
   (* Success case: single field. *)
   test "(cons (name foo) (value 1))";
-  [%expect
-    {|
-    ((name  foo)
-     (value 1))
-    |}];
+  [%expect {| ((name foo) (value 1)) |}];
   (* Error: missing field. *)
   test "(cons (name hello))";
   [%expect
@@ -259,24 +249,15 @@ let%expect_test "parse_inline_record" =
   test "(cons (name hello) (value 42) (extra field))";
   [%expect
     {|
-    (Of_sexp_error
-     "test_record.t_of_sexp: extra fields: extra"
-     (invalid_sexp (
-       cons
-       (name  hello)
-       (value 42)
-       (extra field))))
+    (Of_sexp_error "test_record.t_of_sexp: extra fields: extra"
+     (invalid_sexp (cons (name hello) (value 42) (extra field))))
     |}];
   (* Error: wrong field type. *)
   test "(cons (name hello) (value not_an_int))";
   [%expect
     {|
-    (Of_sexp_error
-     "int_of_sexp: (Failure int_of_string)"
-     (invalid_sexp (
-       cons
-       (name  hello)
-       (value not_an_int))))
+    (Of_sexp_error "int_of_sexp: (Failure int_of_string)"
+     (invalid_sexp (cons (name hello) (value not_an_int))))
     |}];
   ()
 ;;
