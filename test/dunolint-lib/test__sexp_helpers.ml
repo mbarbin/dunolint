@@ -127,7 +127,34 @@ module Test_record = struct
     { name : string
     ; value : int
     }
-  [@@deriving sexp]
+
+  let t_of_sexp sexp =
+    let error_source = "test_record.t" in
+    Sexplib0.Sexp_conv_record.record_of_sexp
+      ~caller:error_source
+      ~fields:
+        (Field
+           { name = "name"
+           ; kind = Required
+           ; conv = string_of_sexp
+           ; rest =
+               Field { name = "value"; kind = Required; conv = int_of_sexp; rest = Empty }
+           })
+      ~index_of_field:(function
+        | "name" -> 0
+        | "value" -> 1
+        | _ -> -1)
+      ~allow_extra_fields:false
+      ~create:(fun (name, (value, ())) -> ({ name; value } : t))
+      sexp
+  ;;
+
+  let sexp_of_t { name; value } : Sexp.t =
+    List
+      [ List [ Atom "name"; sexp_of_string name ]
+      ; List [ Atom "value"; sexp_of_int value ]
+      ]
+  ;;
 end
 
 let%expect_test "parse_inline_record" =
@@ -168,7 +195,7 @@ let%expect_test "parse_inline_record" =
   [%expect
     {|
     (Of_sexp_error
-     "test/dunolint-lib/test__sexp_helpers.ml.Test_record.t_of_sexp: the following record elements were undefined: value"
+     "test_record.t_of_sexp: the following record elements were undefined: value"
      (invalid_sexp (cons (name hello))))
     |}];
   (* Error: unknown field. *)
@@ -176,7 +203,7 @@ let%expect_test "parse_inline_record" =
   [%expect
     {|
     (Of_sexp_error
-     "test/dunolint-lib/test__sexp_helpers.ml.Test_record.t_of_sexp: extra fields: extra"
+     "test_record.t_of_sexp: extra fields: extra"
      (invalid_sexp (
        cons
        (name  hello)
