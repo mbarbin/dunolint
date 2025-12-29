@@ -25,8 +25,6 @@ let original_contents =
   {|
 (lang dunolint 1.0)
 
-(skip_paths .git/)
-
 (rule (enforce (dune (has_field instrumentation))))
 
 ;; Atoms are ignored by dunolint (probably doesn't exists in dunolint).
@@ -77,7 +75,7 @@ let%expect_test "lint" =
     -|(lang dunolint 1.0)
     +|(lang dunolint 1.1)
 
-      (skip_paths .git/)
+      (rule (enforce (dune (has_field instrumentation))))
     |}];
   (* You can also mix and match the typed API with the predicate language. *)
   let sexps_rewriter = Dunolint_linter.sexps_rewriter t in
@@ -135,7 +133,7 @@ let%expect_test "lint" =
     -|(lang dunolint 1.0)
     +|(lang dunolint 1.5)
 
-      (skip_paths .git/)
+      (rule (enforce (dune (has_field instrumentation))))
     |}];
   ()
 ;;
@@ -146,7 +144,7 @@ let%expect_test "visit with invalid stanza" =
     {|
 (lang dunolint INVALID)
 
-(skip_paths .git/)
+(rule (enforce (dune (has_field instrumentation))))
 |}
     |> String.lstrip
   in
