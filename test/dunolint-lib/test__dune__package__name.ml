@@ -33,7 +33,7 @@ let%expect_test "of_string" =
   test "pkg";
   [%expect {| (Ok pkg) |}];
   test "pkg-dash";
-  [%expect {| (Error (Msg "\"pkg-dash\": invalid Package_name")) |}];
+  [%expect {| (Ok pkg-dash) |}];
   test "pkg_underscore";
   [%expect {| (Ok pkg_underscore) |}];
   test "pkg_UPPERCASE";

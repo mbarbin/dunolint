@@ -24,7 +24,8 @@ include String_container_key
 
 let invariant t =
   (not (String.is_empty t))
-  && String.for_all t ~f:(fun c -> Char.is_alphanum c || Char.equal c '_')
+  && String.for_all t ~f:(fun c ->
+    Char.is_alphanum c || Char.equal c '_' || Char.equal c '-')
 ;;
 
 include Validated_string.Make (struct
