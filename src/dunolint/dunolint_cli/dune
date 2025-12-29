@@ -22,6 +22,8 @@
   -open
   Stdio
   -open
+  Dunolint_stdlib
+  -open
   Cmdlang
   -open
   Dunolint.Std)
@@ -35,6 +37,7 @@
   dunolint.dunolint_engine
   dunolint.dunolint_linter
   dunolint.dunolinter
+  dunolint_stdlib
   fpath
   fpath-base
   loc

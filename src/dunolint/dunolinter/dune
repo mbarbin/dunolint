@@ -18,10 +18,13 @@
   -open
   Stdio
   -open
+  Dunolint_stdlib
+  -open
   Dunolint.Std)
  (libraries
   base
   dunolint-lib
+  dunolint_stdlib
   file-rewriter
   fpath
   fpath-base

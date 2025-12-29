@@ -20,6 +20,8 @@
   -open
   Stdio
   -open
+  Dunolint_stdlib
+  -open
   Cmdlang
   -open
   Sexplib0
@@ -33,6 +35,7 @@
   dunolint.dune_project_linter
   dunolint.dunolinter
   dunolint.vendor_prompt
+  dunolint_stdlib
   file-rewriter
   fpath
   fpath-base

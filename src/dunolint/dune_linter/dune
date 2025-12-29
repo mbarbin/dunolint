@@ -18,12 +18,15 @@
   -open
   Sexplib0
   -open
+  Dunolint_stdlib
+  -open
   Dunolint_base
   -open
   Dunolint.Std)
  (libraries
   base
   dunolint-lib-base
+  dunolint_stdlib
   dunolinter
   file-rewriter
   fpath

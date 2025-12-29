@@ -16,12 +16,15 @@
   -open
   Pplumbing_err
   -open
+  Dunolint_stdlib
+  -open
   Sexplib0
   -open
   Dunolint.Std)
  (libraries
   base
   dunolint
+  dunolint_stdlib
   dunolinter
   file-rewriter
   fpath

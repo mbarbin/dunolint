@@ -10,6 +10,7 @@ src/dunolint/dunolint_cli
 src/dunolint/dunolint_engine
 src/dunolint/dunolint_linter
 src/dunolint/dunolinter
+src/dunolint/stdlib
 src/dunolint-lib-base
 src/dunolint-lib-base/dune0
 src/dunolint-lib-base/dune_project0

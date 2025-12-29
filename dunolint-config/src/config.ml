@@ -87,7 +87,7 @@ let () =
                 (library
                    (public_name (equals (Dune.Library.Public_name.v "dunolint-lib-base")))))
          )
-       ; ( path (glob "src/dunolint/**")
+       ; ( path (or_ [ glob "src/dunolint/**"; glob "src/stdlib/**" ])
          , enforce (dune (library (public_name (is_prefix "dunolint.")))) )
        ; true_, enforce (dune (library (public_name (is_prefix "dunolint-dev."))))
        ])

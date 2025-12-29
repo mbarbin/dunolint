@@ -27,7 +27,7 @@
       (public_name (or (is_prefix dunolint-lib.) (equals dunolint-lib)))))))
   ((path (glob src/dunolint-lib-base/**))
    (enforce (dune (library (public_name (equals dunolint-lib-base))))))
-  ((path (glob src/dunolint/**))
+  ((path (or (glob src/dunolint/**) (glob src/stdlib/**)))
    (enforce (dune (library (public_name (is_prefix dunolint.))))))
   (true (enforce (dune (library (public_name (is_prefix dunolint-dev.))))))))
 
