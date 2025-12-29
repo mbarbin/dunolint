@@ -23,9 +23,21 @@
 
 let error_source = "predicate.t"
 
+module Has_field = struct
+  type t =
+    [ `instrumentation
+    | `lint
+    | `name
+    | `preprocess
+    | `public_name
+    ]
+
+  let equal = (Stdlib.( = ) : t -> t -> bool)
+end
+
 type t =
   [ `executable of Executable.Predicate.t Blang.t
-  | `has_field of [ `instrumentation | `lint | `name | `preprocess | `public_name ]
+  | `has_field of Has_field.t
   | `include_subdirs of Include_subdirs.Predicate.t Blang.t
   | `instrumentation of Instrumentation.Predicate.t Blang.t
   | `library of Library.Predicate.t Blang.t
@@ -34,29 +46,13 @@ type t =
   | `stanza of Stanza.Predicate.t Blang.t
   ]
 
-let equal_has_field
-      (va : [ `instrumentation | `lint | `name | `preprocess | `public_name ])
-      (vb : [ `instrumentation | `lint | `name | `preprocess | `public_name ])
-  =
-  if Stdlib.( == ) va vb
-  then true
-  else (
-    match va, vb with
-    | `instrumentation, `instrumentation -> true
-    | `lint, `lint -> true
-    | `name, `name -> true
-    | `preprocess, `preprocess -> true
-    | `public_name, `public_name -> true
-    | (`instrumentation | `lint | `name | `preprocess | `public_name), _ -> false)
-;;
-
 let equal (a : t) (b : t) =
   if Stdlib.( == ) a b
   then true
   else (
     match a, b with
     | `executable va, `executable vb -> Blang.equal Executable.Predicate.equal va vb
-    | `has_field va, `has_field vb -> equal_has_field va vb
+    | `has_field va, `has_field vb -> Has_field.equal va vb
     | `include_subdirs va, `include_subdirs vb ->
       Blang.equal Include_subdirs.Predicate.equal va vb
     | `instrumentation va, `instrumentation vb ->

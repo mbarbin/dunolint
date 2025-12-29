@@ -28,9 +28,21 @@ module Predicate = struct
 
   let error_source = "library.t"
 
+  module Has_field = struct
+    type t =
+      [ `instrumentation
+      | `lint
+      | `modes
+      | `name
+      | `preprocess
+      | `public_name
+      ]
+
+    let equal = (Stdlib.( = ) : t -> t -> bool)
+  end
+
   type t =
-    [ `has_field of
-        [ `instrumentation | `lint | `modes | `name | `preprocess | `public_name ]
+    [ `has_field of Has_field.t
     | `instrumentation of Instrumentation.Predicate.t Blang.t
     | `lint of Lint.Predicate.t Blang.t
     | `modes of Modes.Predicate.t Blang.t
@@ -39,30 +51,12 @@ module Predicate = struct
     | `public_name of Public_name.Predicate.t Blang.t
     ]
 
-  let equal_has_field
-        (va : [ `instrumentation | `lint | `modes | `name | `preprocess | `public_name ])
-        (vb : [ `instrumentation | `lint | `modes | `name | `preprocess | `public_name ])
-    =
-    if Stdlib.( == ) va vb
-    then true
-    else (
-      match va, vb with
-      | `instrumentation, `instrumentation -> true
-      | `lint, `lint -> true
-      | `modes, `modes -> true
-      | `name, `name -> true
-      | `preprocess, `preprocess -> true
-      | `public_name, `public_name -> true
-      | (`instrumentation | `lint | `modes | `name | `preprocess | `public_name), _ ->
-        false)
-  ;;
-
   let equal (a : t) (b : t) =
     if Stdlib.( == ) a b
     then true
     else (
       match a, b with
-      | `has_field va, `has_field vb -> equal_has_field va vb
+      | `has_field va, `has_field vb -> Has_field.equal va vb
       | `instrumentation va, `instrumentation vb ->
         Blang.equal Instrumentation.Predicate.equal va vb
       | `lint va, `lint vb -> Blang.equal Lint.Predicate.equal va vb

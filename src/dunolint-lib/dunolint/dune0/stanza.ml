@@ -31,17 +31,7 @@ module Predicate = struct
     | `executables
     ]
 
-  let equal (a : t) (b : t) =
-    if Stdlib.( == ) a b
-    then true
-    else (
-      match a, b with
-      | `include_subdirs, `include_subdirs -> true
-      | `library, `library -> true
-      | `executable, `executable -> true
-      | `executables, `executables -> true
-      | (`include_subdirs | `library | `executable | `executables), _ -> false)
-  ;;
+  let equal = (Stdlib.( = ) : t -> t -> bool)
 
   let __t_of_sexp__ =
     (function
