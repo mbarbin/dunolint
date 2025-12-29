@@ -19,28 +19,39 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Blang = Blang
-module Condition = Condition
-module Config = Config
-module Dune = Dune
-module Dune_project = Dune_project
-module Dune_workspace = Dune_workspace
-module Dunolint0 = Dunolint0
-module Glob = Glob
-module Linted_file_kind = Linted_file_kind
-module Path = Path
-module Predicate = Predicate
-module Rule = Rule
-module Trilang = Trilang
+let error_source = "predicate.t"
 
-module Std = struct
-  module Blang = Blang
-  module Dune = Dune
-  module Dune_project = Dune_project
-  module Dune_workspace = Dune_workspace
-  module Dunolint0 = Dunolint0
-end
+type t = [ `dune_lang_version of Dune_lang_version.Predicate.t Blang.t ]
 
-module Private = struct
-  module Sexp_helpers = Sexp_helpers
-end
+let equal (a : t) (b : t) =
+  if Stdlib.( == ) a b
+  then true
+  else (
+    match a, b with
+    | `dune_lang_version va, `dune_lang_version vb ->
+      Blang.equal Dune_lang_version.Predicate.equal va vb)
+;;
+
+let variant_spec : t Sexp_helpers.Variant_spec.t =
+  [ { atom = "dune_lang_version"
+    ; conv =
+        Unary
+          (fun sexp ->
+            `dune_lang_version
+              (Blang.t_of_sexp Dune_lang_version.Predicate.t_of_sexp sexp))
+    }
+  ]
+;;
+
+let t_of_sexp (sexp : Sexp.t) : t =
+  Sexp_helpers.parse_variant variant_spec ~error_source sexp
+;;
+
+let sexp_of_t (t : t) : Sexp.t =
+  match t with
+  | `dune_lang_version v ->
+    List
+      [ Atom "dune_lang_version"
+      ; Blang.sexp_of_t Dune_lang_version.Predicate.sexp_of_t v
+      ]
+;;

@@ -19,15 +19,5 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-type t =
-  [ `dune
-  | `dune_project
-  | `dune_workspace
-  | `dunolint
-  ]
-
-val all : t list
-val to_string : t -> string
-val of_string : string -> (t, [ `Msg of string ]) Result.t
-
-include Container_key.S with type t := t
+module Dune_lang_version = Dune_workspace0.Dune_lang_version
+module Predicate = Dune_workspace0.Predicate

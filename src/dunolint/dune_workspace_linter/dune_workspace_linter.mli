@@ -19,15 +19,10 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-type t =
-  [ `dune
-  | `dune_project
-  | `dune_workspace
-  | `dunolint
-  ]
+module Dune_lang_version = Dune_lang_version
 
-val all : t list
-val to_string : t -> string
-val of_string : string -> (t, [ `Msg of string ]) Result.t
+type t
 
-include Container_key.S with type t := t
+include Dunolinter.S with type t := t
+
+type Stanza.t += Dune_lang_version of Dune_lang_version.t

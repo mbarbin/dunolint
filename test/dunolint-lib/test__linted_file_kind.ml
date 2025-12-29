@@ -29,6 +29,7 @@ let%expect_test "all" =
     {|
     dune
     dune_project
+    dune_workspace
     dunolint
     |}];
   ()
@@ -48,6 +49,7 @@ let%expect_test "to_string/of_string" =
     {|
     dune
     dune-project
+    dune-workspace
     dunolint
     |}];
   let () =

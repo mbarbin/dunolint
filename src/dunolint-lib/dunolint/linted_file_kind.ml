@@ -27,14 +27,16 @@ module T = struct
   type t =
     [ `dune
     | `dune_project
+    | `dune_workspace
     | `dunolint
     ]
 
-  let all = ([ `dune; `dune_project; `dunolint ] : t list)
+  let all = ([ `dune; `dune_project; `dune_workspace; `dunolint ] : t list)
 
   let variant_spec : t Sexp_helpers.Variant_spec.t =
     [ { atom = "dune"; conv = Nullary `dune }
     ; { atom = "dune_project"; conv = Nullary `dune_project }
+    ; { atom = "dune_workspace"; conv = Nullary `dune_workspace }
     ; { atom = "dunolint"; conv = Nullary `dunolint }
     ]
   ;;
@@ -47,6 +49,7 @@ module T = struct
     match t with
     | `dune -> Atom "dune"
     | `dune_project -> Atom "dune_project"
+    | `dune_workspace -> Atom "dune_workspace"
     | `dunolint -> Atom "dunolint"
   ;;
 end
@@ -56,12 +59,14 @@ include T
 let to_string = function
   | `dune -> "dune"
   | `dune_project -> "dune-project"
+  | `dune_workspace -> "dune-workspace"
   | `dunolint -> "dunolint"
 ;;
 
 let of_string = function
   | "dune" -> Ok `dune
   | "dune-project" -> Ok `dune_project
+  | "dune-workspace" -> Ok `dune_workspace
   | "dunolint" -> Ok `dunolint
   | str -> Error (`Msg (Printf.sprintf "Invalid linted file kind: %S" str))
 ;;
@@ -69,7 +74,8 @@ let of_string = function
 let to_comparable_int = function
   | `dune -> 0
   | `dune_project -> 1
-  | `dunolint -> 2
+  | `dune_workspace -> 2
+  | `dunolint -> 3
 ;;
 
 let compare a b = Int.compare (to_comparable_int a) (to_comparable_int b)

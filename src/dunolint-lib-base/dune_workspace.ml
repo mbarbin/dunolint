@@ -19,28 +19,5 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Blang = Blang
-module Condition = Condition
-module Config = Config
-module Dune = Dune
-module Dune_project = Dune_project
-module Dune_workspace = Dune_workspace
-module Dunolint0 = Dunolint0
-module Glob = Glob
-module Linted_file_kind = Linted_file_kind
-module Path = Path
-module Predicate = Predicate
-module Rule = Rule
-module Trilang = Trilang
-
-module Std = struct
-  module Blang = Blang
-  module Dune = Dune
-  module Dune_project = Dune_project
-  module Dune_workspace = Dune_workspace
-  module Dunolint0 = Dunolint0
-end
-
-module Private = struct
-  module Sexp_helpers = Sexp_helpers
-end
+module Dune_lang_version = Dune_workspace0.Dune_lang_version
+module Predicate = Dunolint.Dune_workspace.Predicate

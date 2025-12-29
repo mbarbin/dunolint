@@ -25,6 +25,7 @@ Where this is nothing to lint, the interactive command exits with no prompt.
 
   $ dunolint lint --interactive --verbose
   dunolint: [INFO] Linting file "dune-project"
+  dunolint: [INFO] Linting file "dune-workspace"
   dunolint: [INFO] Skipping directory "_build/"
   dunolint: [INFO] Linting file "lib/foo/dune"
 

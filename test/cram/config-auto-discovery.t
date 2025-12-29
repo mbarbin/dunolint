@@ -60,6 +60,7 @@ Running from root with no root config discovers subdirectory configs:
   $ dunolint lint --dry-run -v 2>&1
   dunolint: [INFO] Linting file "dune"
   dunolint: [INFO] Linting file "dune-project"
+  dunolint: [INFO] Linting file "dune-workspace"
   dunolint: [INFO] Loaded dunolint config from "src/dunolint".
   dunolint: [INFO] Linting file "src/dune"
   dunolint: [INFO] Linting file "src/dunolint"

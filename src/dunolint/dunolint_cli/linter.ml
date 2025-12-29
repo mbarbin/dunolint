@@ -118,6 +118,7 @@ end
 
 module Dune_lint = Lint_file (Dune_linter)
 module Dune_project_lint = Lint_file (Dune_project_linter)
+module Dune_workspace_lint = Lint_file (Dune_workspace_linter)
 module Dunolint_lint = Lint_file (Dunolint_linter)
 
 let should_skip_file ~context ~path =
@@ -146,6 +147,8 @@ let visit_directory ~dunolint_engine ~context ~parent_dir ~files =
           match linted_file_kind with
           | `dune -> Dune_lint.lint_file ~dunolint_engine ~context ~path
           | `dune_project -> Dune_project_lint.lint_file ~dunolint_engine ~context ~path
+          | `dune_workspace ->
+            Dune_workspace_lint.lint_file ~dunolint_engine ~context ~path
           | `dunolint -> Dunolint_lint.lint_file ~dunolint_engine ~context ~path));
     Dunolint_engine.Visitor_decision.Continue
 ;;

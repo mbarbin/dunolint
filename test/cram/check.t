@@ -33,6 +33,7 @@ Let's do some linting!
   dunolint: [DEBUG] Visiting directory "./"
   dunolint: [DEBUG] Config file does not exist at "dunolint".
   dunolint: [INFO] Linting file "dune-project"
+  dunolint: [INFO] Linting file "dune-workspace"
   dunolint: [DEBUG] Visiting directory "_build/"
   dunolint: [DEBUG] Config file does not exist at "_build/dunolint".
   dunolint: [INFO] Skipping directory "_build/"

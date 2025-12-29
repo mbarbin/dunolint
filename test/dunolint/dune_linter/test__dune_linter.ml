@@ -164,13 +164,20 @@ let%expect_test "lint" =
         apply
           (dunolint
              (dunolint_lang_version (eq (Dunolint0.Dunolint_lang_version.create (1, 0)))));
+        apply
+          (dune_workspace
+             (dune_lang_version (eq (Dune_workspace.Dune_lang_version.create (3, 17)))));
         apply (path (glob "path/"));
         apply (not_ (dune_project (name (equals (Dune_project.Name.v "bar")))));
         apply
           (not_
              (dunolint
                 (dunolint_lang_version
-                   (eq (Dunolint0.Dunolint_lang_version.create (1, 0))))))
+                   (eq (Dunolint0.Dunolint_lang_version.create (1, 0))))));
+        apply
+          (not_
+             (dune_workspace
+                (dune_lang_version (eq (Dune_workspace.Dune_lang_version.create (3, 17))))))
       in
       ());
   print_diff t;

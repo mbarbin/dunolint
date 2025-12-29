@@ -59,7 +59,7 @@ module Linter = struct
     let eval (t : m) ~path ~predicate =
       match (predicate : Dunolint.Predicate.t) with
       | `path condition -> Dunolinter.eval_path ~path ~condition
-      | `dune _ | `dune_project _ -> Dunolint.Trilang.Undefined
+      | `dune _ | `dune_project _ | `dune_workspace _ -> Dunolint.Trilang.Undefined
       | `dunolint condition ->
         Dunolint.Trilang.eval condition ~f:(fun predicate -> M.eval t ~predicate)
     in
@@ -70,7 +70,7 @@ module Linter = struct
         ~enforce:(fun t predicate ->
           match predicate with
           | Not _ -> Eval
-          | T (`dune _ | `dune_project _ | `path _) -> Unapplicable
+          | T (`dune _ | `dune_project _ | `dune_workspace _ | `path _) -> Unapplicable
           | T (`dunolint condition) ->
             M.enforce t ~condition;
             Ok)

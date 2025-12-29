@@ -24,6 +24,7 @@
 module Blang = Blang
 module Dune = Dune
 module Dune_project = Dune_project
+module Dune_workspace = Dune_workspace
 module Dunolint0 = Dunolint0
 
 include module type of struct
@@ -35,6 +36,7 @@ val cond : ('condition * 'action) list -> [> `cond of ('condition * 'action) lis
 val dune : 'a -> [> `dune of 'a ] Blang.t
 val dune_lang_version : 'a -> [> `dune_lang_version of 'a ] Blang.t
 val dune_project : 'a -> [> `dune_project of 'a ] Blang.t
+val dune_workspace : 'a -> [> `dune_workspace of 'a ] Blang.t
 val dunolint : 'a -> [> `dunolint of 'a ] Blang.t
 val dunolint_lang_version : 'a -> [> `dunolint_lang_version of 'a ] Blang.t
 val enforce : 'a -> [> `enforce of 'a ]

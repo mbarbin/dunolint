@@ -19,15 +19,8 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-type t =
-  [ `dune
-  | `dune_project
-  | `dune_workspace
-  | `dunolint
-  ]
+type t = [ `dune_lang_version of Dune_lang_version.Predicate.t Blang.t ]
 
-val all : t list
-val to_string : t -> string
-val of_string : string -> (t, [ `Msg of string ]) Result.t
-
-include Container_key.S with type t := t
+val equal : t -> t -> bool
+val sexp_of_t : t -> Sexplib0.Sexp.t
+val t_of_sexp : Sexplib0.Sexp.t -> t

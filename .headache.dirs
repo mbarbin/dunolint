@@ -5,6 +5,7 @@ dunolint-config/src
 src/dunolint/bin
 src/dunolint/dune_linter
 src/dunolint/dune_project_linter
+src/dunolint/dune_workspace_linter
 src/dunolint/dunolint_cli
 src/dunolint/dunolint_engine
 src/dunolint/dunolint_linter
@@ -12,10 +13,12 @@ src/dunolint/dunolinter
 src/dunolint-lib-base
 src/dunolint-lib-base/dune0
 src/dunolint-lib-base/dune_project0
+src/dunolint-lib-base/dune_workspace0
 src/dunolint-lib-base/dunolint1
 src/dunolint-lib/dunolint
 src/dunolint-lib/dunolint/dune0
 src/dunolint-lib/dunolint/dune_project0
+src/dunolint-lib/dunolint/dune_workspace0
 src/dunolint-lib/dunolint/dunolint1
 src/dunolint-lib/vendor/blang
 test/cram/bin

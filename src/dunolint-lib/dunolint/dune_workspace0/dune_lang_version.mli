@@ -19,15 +19,41 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-type t =
-  [ `dune
-  | `dune_project
-  | `dune_workspace
-  | `dunolint
-  ]
+(** The format of the dune syntax used in a dune-workspace file.
 
-val all : t list
+    This is specified as the first stanza. For example:
+
+    {v
+      (lang dune 3.17)
+    v} *)
+
+(** Representing the two integers that are separated by the dot. For example,
+    the representation of ["3.17"] is [(3, 17)]. *)
+type t
+
+val equal : t -> t -> bool
+val compare : t -> t -> int
+
+include Sexpable.S with type t := t
+
+val create : int * int -> t
+
+(** Returns the string that can be used as atom in the dune-workspace file. *)
 val to_string : t -> string
-val of_string : string -> (t, [ `Msg of string ]) Result.t
 
-include Container_key.S with type t := t
+module Predicate : sig
+  type version := t
+
+  type t =
+    [ `eq of version
+    | `gt of version
+    | `gte of version
+    | `lt of version
+    | `lte of version
+    | `neq of version
+    ]
+
+  val equal : t -> t -> bool
+
+  include Sexpable.S with type t := t
+end

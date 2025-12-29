@@ -24,6 +24,7 @@ module Condition = Condition
 module Config = Config
 module Dune = Dune
 module Dune_project = Dune_project
+module Dune_workspace = Dune_workspace
 module Dunolint0 = Dunolint0
 module Glob = Glob
 module Linted_file_kind = Linted_file_kind
@@ -38,6 +39,7 @@ module Std : sig
   module Blang = Blang
   module Dune = Dune
   module Dune_project = Dune_project
+  module Dune_workspace = Dune_workspace
   module Dunolint0 = Dunolint0
 end
 
