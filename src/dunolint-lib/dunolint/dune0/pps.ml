@@ -125,62 +125,45 @@ module Predicate = struct
         && Applies_to.equal a.applies_to applies_to)
     ;;
 
-    let t_of_sexp =
-      (fun x__047_ ->
-         Sexplib0.Sexp_conv_record.record_of_sexp
-           ~caller:error_source
-           ~fields:
-             (Field
-                { name = "name"
-                ; kind = Required
-                ; conv = string_of_sexp
-                ; rest =
-                    Field
-                      { name = "param"
-                      ; kind = Required
-                      ; conv = Param.t_of_sexp
-                      ; rest =
-                          Field
-                            { name = "applies_to"
-                            ; kind = Required
-                            ; conv = Applies_to.t_of_sexp
-                            ; rest = Empty
-                            }
-                      }
-                })
-           ~index_of_field:(function
-             | "name" -> 0
-             | "param" -> 1
-             | "applies_to" -> 2
-             | _ -> -1)
-           ~allow_extra_fields:false
-           ~create:(fun (name, (param, (applies_to, ()))) ->
-             ({ name; param; applies_to } : t))
-           x__047_
-       : Sexplib0.Sexp.t -> t)
+    let t_of_sexp sexp =
+      Sexplib0.Sexp_conv_record.record_of_sexp
+        ~caller:error_source
+        ~fields:
+          (Field
+             { name = "name"
+             ; kind = Required
+             ; conv = string_of_sexp
+             ; rest =
+                 Field
+                   { name = "param"
+                   ; kind = Required
+                   ; conv = Param.t_of_sexp
+                   ; rest =
+                       Field
+                         { name = "applies_to"
+                         ; kind = Required
+                         ; conv = Applies_to.t_of_sexp
+                         ; rest = Empty
+                         }
+                   }
+             })
+        ~index_of_field:(function
+          | "name" -> 0
+          | "param" -> 1
+          | "applies_to" -> 2
+          | _ -> -1)
+        ~allow_extra_fields:false
+        ~create:(fun (name, (param, (applies_to, ()))) ->
+          ({ name; param; applies_to } : t))
+        sexp
     ;;
 
-    let sexp_of_t =
-      (fun { name = name__049_; param = param__051_; applies_to = applies_to__053_ } ->
-         let bnds__048_ = ([] : _ Stdlib.List.t) in
-         let bnds__048_ =
-           let arg__054_ = Applies_to.sexp_of_t applies_to__053_ in
-           (Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "applies_to"; arg__054_ ]
-            :: bnds__048_
-            : _ Stdlib.List.t)
-         in
-         let bnds__048_ =
-           let arg__052_ = Param.sexp_of_t param__051_ in
-           (Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "param"; arg__052_ ] :: bnds__048_
-            : _ Stdlib.List.t)
-         in
-         let bnds__048_ =
-           let arg__050_ = sexp_of_string name__049_ in
-           (Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "name"; arg__050_ ] :: bnds__048_
-            : _ Stdlib.List.t)
-         in
-         Sexplib0.Sexp.List bnds__048_
-       : t -> Sexplib0.Sexp.t)
+    let sexp_of_t { name; param; applies_to } : Sexp.t =
+      List
+        [ List [ Atom "name"; sexp_of_string name ]
+        ; List [ Atom "param"; Param.sexp_of_t param ]
+        ; List [ Atom "applies_to"; Applies_to.sexp_of_t applies_to ]
+        ]
     ;;
   end
 
@@ -201,60 +184,44 @@ module Predicate = struct
         Pp.Name.equal a.pp pp && equal_string a.flag flag && Param.equal a.param param)
     ;;
 
-    let t_of_sexp =
-      (fun x__061_ ->
-         Sexplib0.Sexp_conv_record.record_of_sexp
-           ~caller:error_source
-           ~fields:
-             (Field
-                { name = "pp"
-                ; kind = Required
-                ; conv = Pp.Name.t_of_sexp
-                ; rest =
-                    Field
-                      { name = "flag"
-                      ; kind = Required
-                      ; conv = string_of_sexp
-                      ; rest =
-                          Field
-                            { name = "param"
-                            ; kind = Required
-                            ; conv = Param.t_of_sexp
-                            ; rest = Empty
-                            }
-                      }
-                })
-           ~index_of_field:(function
-             | "pp" -> 0
-             | "flag" -> 1
-             | "param" -> 2
-             | _ -> -1)
-           ~allow_extra_fields:false
-           ~create:(fun (pp, (flag, (param, ()))) -> ({ pp; flag; param } : t))
-           x__061_
-       : Sexplib0.Sexp.t -> t)
+    let t_of_sexp sexp =
+      Sexplib0.Sexp_conv_record.record_of_sexp
+        ~caller:error_source
+        ~fields:
+          (Field
+             { name = "pp"
+             ; kind = Required
+             ; conv = Pp.Name.t_of_sexp
+             ; rest =
+                 Field
+                   { name = "flag"
+                   ; kind = Required
+                   ; conv = string_of_sexp
+                   ; rest =
+                       Field
+                         { name = "param"
+                         ; kind = Required
+                         ; conv = Param.t_of_sexp
+                         ; rest = Empty
+                         }
+                   }
+             })
+        ~index_of_field:(function
+          | "pp" -> 0
+          | "flag" -> 1
+          | "param" -> 2
+          | _ -> -1)
+        ~allow_extra_fields:false
+        ~create:(fun (pp, (flag, (param, ()))) -> ({ pp; flag; param } : t))
+        sexp
     ;;
 
-    let sexp_of_t =
-      (fun { pp = pp__063_; flag = flag__065_; param = param__067_ } ->
-         let bnds__062_ = ([] : _ Stdlib.List.t) in
-         let bnds__062_ =
-           let arg__068_ = Param.sexp_of_t param__067_ in
-           (Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "param"; arg__068_ ] :: bnds__062_
-            : _ Stdlib.List.t)
-         in
-         let bnds__062_ =
-           let arg__066_ = sexp_of_string flag__065_ in
-           (Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "flag"; arg__066_ ] :: bnds__062_
-            : _ Stdlib.List.t)
-         in
-         let bnds__062_ =
-           let arg__064_ = Pp.Name.sexp_of_t pp__063_ in
-           (Sexplib0.Sexp.List [ Sexplib0.Sexp.Atom "pp"; arg__064_ ] :: bnds__062_
-            : _ Stdlib.List.t)
-         in
-         Sexplib0.Sexp.List bnds__062_
-       : t -> Sexplib0.Sexp.t)
+    let sexp_of_t { pp; flag; param } : Sexp.t =
+      List
+        [ List [ Atom "pp"; Pp.Name.sexp_of_t pp ]
+        ; List [ Atom "flag"; sexp_of_string flag ]
+        ; List [ Atom "param"; Param.sexp_of_t param ]
+        ]
     ;;
   end
 
