@@ -25,12 +25,23 @@ module Sexp_helpers = Dunolint.Private.Sexp_helpers
 type test_predicate =
   [ `foo of string
   | `bar of int
+  | `nullary
+  | `ctx of string
+  | `variadic of string list
   ]
 [@@deriving sexp_of]
 
 let test_variant_spec : test_predicate Sexp_helpers.Variant_spec.t =
   [ { atom = "foo"; conv = Unary (fun sexp -> `foo (string_of_sexp sexp)) }
   ; { atom = "bar"; conv = Unary (fun sexp -> `bar (int_of_sexp sexp)) }
+  ; { atom = "nullary"; conv = Nullary `nullary }
+  ; { atom = "ctx"
+    ; conv = Unary_with_context (fun ~context:_ ~arg -> `ctx (string_of_sexp arg))
+    }
+  ; { atom = "variadic"
+    ; conv =
+        Variadic (fun ~context:_ ~fields -> `variadic (List.map fields ~f:string_of_sexp))
+    }
   ]
 ;;
 
@@ -118,6 +129,50 @@ let%expect_test "parse_variant" =
      "test_predicate_of_sexp: the empty list is an invalid polymorphic variant"
      (invalid_sexp ()))
     |}];
+  (* Success: nullary variant. *)
+  test "nullary";
+  [%expect {| nullary |}];
+  (* Error: nullary variant supplied with argument. *)
+  test "(nullary arg)";
+  [%expect
+    {|
+    (Of_sexp_error
+     "test_predicate_of_sexp: polymorphic variant does not take arguments"
+     (invalid_sexp (nullary arg)))
+    |}];
+  (* Success: unary_with_context variant. *)
+  test "(ctx hello)";
+  [%expect {| (ctx hello) |}];
+  (* Error: unary_with_context variant with incorrect number of arguments (2). *)
+  test "(ctx hello world)";
+  [%expect
+    {|
+    (Of_sexp_error
+     "test_predicate_of_sexp: polymorphic variant tag \"ctx\" has incorrect number of arguments"
+     (invalid_sexp (ctx hello world)))
+    |}];
+  (* Error: unary_with_context variant without argument. *)
+  test "ctx";
+  [%expect
+    {|
+    (Of_sexp_error
+     "test_predicate_of_sexp: polymorphic variant tag takes an argument"
+     (invalid_sexp ctx))
+    |}];
+  (* Success: variadic variant with arguments. *)
+  test "(variadic a b c)";
+  [%expect {| (variadic (a b c)) |}];
+  (* Success: variadic variant with no arguments. *)
+  test "(variadic)";
+  [%expect {| (variadic ()) |}];
+  (* Error: variadic variant without argument (as atom). *)
+  test "variadic";
+  [%expect
+    {|
+    (Of_sexp_error
+     "test_predicate_of_sexp: polymorphic variant tag takes an argument"
+     (invalid_sexp variadic))
+    |}];
   ()
 ;;
 
@@ -129,24 +184,26 @@ module Test_record = struct
     }
 
   let t_of_sexp sexp =
-    let error_source = "test_record.t" in
-    Sexplib0.Sexp_conv_record.record_of_sexp
-      ~caller:error_source
-      ~fields:
-        (Field
-           { name = "name"
-           ; kind = Required
-           ; conv = string_of_sexp
-           ; rest =
-               Field { name = "value"; kind = Required; conv = int_of_sexp; rest = Empty }
-           })
-      ~index_of_field:(function
-        | "name" -> 0
-        | "value" -> 1
-        | _ -> -1)
-      ~allow_extra_fields:false
-      ~create:(fun (name, (value, ())) -> ({ name; value } : t))
-      sexp
+    (let error_source = "test_record.t" in
+     Sexplib0.Sexp_conv_record.record_of_sexp
+       ~caller:error_source
+       ~fields:
+         (Field
+            { name = "name"
+            ; kind = Required
+            ; conv = string_of_sexp
+            ; rest =
+                Field
+                  { name = "value"; kind = Required; conv = int_of_sexp; rest = Empty }
+            })
+       ~index_of_field:(function
+         | "name" -> 0
+         | "value" -> 1
+         | _ -> -1)
+       ~allow_extra_fields:false
+       ~create:(fun (name, (value, ())) -> ({ name; value } : t))
+       sexp)
+    [@coverage off]
   ;;
 
   let sexp_of_t { name; value } : Sexp.t =
