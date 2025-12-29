@@ -31,23 +31,17 @@ module T = struct
     | `dunolint of Dunolint0.Predicate.t Blang.t
     ]
 
-  let equal =
-    (fun a__015_ ->
-       fun b__016_ ->
-       if Stdlib.( == ) a__015_ b__016_
-       then true
-       else (
-         match a__015_, b__016_ with
-         | `path _left__017_, `path _right__018_ ->
-           Blang.equal Path.Predicate.equal _left__017_ _right__018_
-         | `dune _left__021_, `dune _right__022_ ->
-           Blang.equal Dune.Predicate.equal _left__021_ _right__022_
-         | `dune_project _left__025_, `dune_project _right__026_ ->
-           Blang.equal Dune_project.Predicate.equal _left__025_ _right__026_
-         | `dunolint _left__027_, `dunolint _right__028_ ->
-           Blang.equal Dunolint0.Predicate.equal _left__027_ _right__028_
-         | x, y -> Stdlib.( = ) x y)
-     : t -> t -> bool)
+  let equal (a : t) (b : t) =
+    if Stdlib.( == ) a b
+    then true
+    else (
+      match a, b with
+      | `path va, `path vb -> Blang.equal Path.Predicate.equal va vb
+      | `dune va, `dune vb -> Blang.equal Dune.Predicate.equal va vb
+      | `dune_project va, `dune_project vb ->
+        Blang.equal Dune_project.Predicate.equal va vb
+      | `dunolint va, `dunolint vb -> Blang.equal Dunolint0.Predicate.equal va vb
+      | (`path _ | `dune _ | `dune_project _ | `dunolint _), _ -> false)
   ;;
 
   let __t_of_sexp__ =

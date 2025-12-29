@@ -26,11 +26,7 @@ module Rule = struct
 
   type t = (Predicate.t, Condition.t) Rule.Stable.V1.t
 
-  let equal =
-    (fun a__007_ ->
-       fun b__008_ -> Rule.Stable.V1.equal Predicate.equal Condition.equal a__007_ b__008_
-     : t -> t -> bool)
-  ;;
+  let equal (a : t) (b : t) = Rule.Stable.V1.equal Predicate.equal Condition.equal a b
 
   let t_of_sexp =
     (fun x__014_ ->
@@ -55,18 +51,14 @@ module Stanza = struct
     | `rule of Rule.t
     ]
 
-  let equal =
-    (fun a__009_ ->
-       fun b__010_ ->
-       if Stdlib.( == ) a__009_ b__010_
-       then true
-       else (
-         match a__009_, b__010_ with
-         | `skip_paths _left__011_, `skip_paths _right__012_ ->
-           equal_list Glob.equal _left__011_ _right__012_
-         | `rule _left__015_, `rule _right__016_ -> Rule.equal _left__015_ _right__016_
-         | x, y -> Stdlib.( = ) x y)
-     : t -> t -> bool)
+  let equal (a : t) (b : t) =
+    if Stdlib.( == ) a b
+    then true
+    else (
+      match a, b with
+      | `skip_paths va, `skip_paths vb -> equal_list Glob.equal va vb
+      | `rule va, `rule vb -> Rule.equal va vb
+      | (`skip_paths _ | `rule _), _ -> false)
   ;;
 
   let __t_of_sexp__ =
@@ -123,13 +115,12 @@ module T0 = struct
 
   type t = { stanzas : Stanza.t list }
 
-  let equal =
-    (fun a__005_ ->
-       fun b__006_ ->
-       if Stdlib.( == ) a__005_ b__006_
-       then true
-       else equal_list Stanza.equal a__005_.stanzas b__006_.stanzas
-     : t -> t -> bool)
+  let equal (a : t) (b : t) =
+    if Stdlib.( == ) a b
+    then true
+    else (
+      let { stanzas } = b in
+      equal_list Stanza.equal a.stanzas stanzas)
   ;;
 
   let sexp_of_t =

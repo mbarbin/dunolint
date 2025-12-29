@@ -28,15 +28,12 @@ module Predicate = struct
 
   type t = [ `glob of Glob.t ]
 
-  let equal =
-    (fun a__007_ ->
-       fun b__008_ ->
-       if Stdlib.( == ) a__007_ b__008_
-       then true
-       else (
-         match a__007_, b__008_ with
-         | `glob _left__011_, `glob _right__012_ -> Glob.equal _left__011_ _right__012_)
-     : t -> t -> bool)
+  let equal (a : t) (b : t) =
+    if Stdlib.( == ) a b
+    then true
+    else (
+      match a, b with
+      | `glob va, `glob vb -> Glob.equal va vb)
   ;;
 
   let __t_of_sexp__ =

@@ -27,15 +27,12 @@ module T = struct
 
   type t = [ `v1 of V1.t ]
 
-  let equal =
-    (fun a__007_ ->
-       fun b__008_ ->
-       if Stdlib.( == ) a__007_ b__008_
-       then true
-       else (
-         match a__007_, b__008_ with
-         | `v1 _left__011_, `v1 _right__012_ -> V1.equal _left__011_ _right__012_)
-     : t -> t -> bool)
+  let equal (a : t) (b : t) =
+    if Stdlib.( == ) a b
+    then true
+    else (
+      match a, b with
+      | `v1 va, `v1 vb -> V1.equal va vb)
   ;;
 end
 

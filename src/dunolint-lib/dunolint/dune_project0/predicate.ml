@@ -30,23 +30,23 @@ type t =
   | `name of Name.Predicate.t Blang.t
   ]
 
-let equal =
-  (fun a__019_ ->
-     fun b__020_ ->
-     if Stdlib.( == ) a__019_ b__020_
-     then true
-     else (
-       match a__019_, b__020_ with
-       | `dune_lang_version _left__021_, `dune_lang_version _right__022_ ->
-         Blang.equal Dune_lang_version.Predicate.equal _left__021_ _right__022_
-       | `generate_opam_files _left__025_, `generate_opam_files _right__026_ ->
-         Blang.equal Generate_opam_files.Predicate.equal _left__025_ _right__026_
-       | `implicit_transitive_deps _left__029_, `implicit_transitive_deps _right__030_ ->
-         Blang.equal Implicit_transitive_deps.Predicate.equal _left__029_ _right__030_
-       | `name _left__033_, `name _right__034_ ->
-         Blang.equal Name.Predicate.equal _left__033_ _right__034_
-       | x, y -> Stdlib.( = ) x y)
-   : t -> t -> bool)
+let equal (a : t) (b : t) =
+  if Stdlib.( == ) a b
+  then true
+  else (
+    match a, b with
+    | `dune_lang_version va, `dune_lang_version vb ->
+      Blang.equal Dune_lang_version.Predicate.equal va vb
+    | `generate_opam_files va, `generate_opam_files vb ->
+      Blang.equal Generate_opam_files.Predicate.equal va vb
+    | `implicit_transitive_deps va, `implicit_transitive_deps vb ->
+      Blang.equal Implicit_transitive_deps.Predicate.equal va vb
+    | `name va, `name vb -> Blang.equal Name.Predicate.equal va vb
+    | ( ( `dune_lang_version _
+        | `generate_opam_files _
+        | `implicit_transitive_deps _
+        | `name _ )
+      , _ ) -> false)
 ;;
 
 let __t_of_sexp__ =

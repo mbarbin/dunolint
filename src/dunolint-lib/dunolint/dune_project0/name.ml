@@ -50,21 +50,15 @@ module Predicate = struct
     | `is_suffix of string
     ]
 
-  let equal =
-    (fun a__014_ ->
-       fun b__015_ ->
-       if Stdlib.( == ) a__014_ b__015_
-       then true
-       else (
-         match a__014_, b__015_ with
-         | `equals _left__016_, `equals _right__017_ ->
-           equal_name _left__016_ _right__017_
-         | `is_prefix _left__018_, `is_prefix _right__019_ ->
-           equal_string _left__018_ _right__019_
-         | `is_suffix _left__020_, `is_suffix _right__021_ ->
-           equal_string _left__020_ _right__021_
-         | x, y -> Stdlib.( = ) x y)
-     : t -> t -> bool)
+  let equal (a : t) (b : t) =
+    if Stdlib.( == ) a b
+    then true
+    else (
+      match a, b with
+      | `equals va, `equals vb -> equal_name va vb
+      | `is_prefix va, `is_prefix vb -> equal_string va vb
+      | `is_suffix va, `is_suffix vb -> equal_string va vb
+      | (`equals _ | `is_prefix _ | `is_suffix _), _ -> false)
   ;;
 
   let __t_of_sexp__ =

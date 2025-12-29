@@ -28,16 +28,12 @@ module Predicate = struct
 
   type t = [ `equals of Value.t ]
 
-  let equal =
-    (fun a__005_ ->
-       fun b__006_ ->
-       if Stdlib.( == ) a__005_ b__006_
-       then true
-       else (
-         match a__005_, b__006_ with
-         | `equals _left__007_, `equals _right__008_ ->
-           Value.equal _left__007_ _right__008_)
-     : t -> t -> bool)
+  let equal (a : t) (b : t) =
+    if Stdlib.( == ) a b
+    then true
+    else (
+      match a, b with
+      | `equals va, `equals vb -> Value.equal va vb)
   ;;
 
   let __t_of_sexp__ =

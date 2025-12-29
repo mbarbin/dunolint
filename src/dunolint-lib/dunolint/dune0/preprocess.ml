@@ -29,18 +29,14 @@ module Predicate = struct
     | `pps of Pps.Predicate.t Blang.t
     ]
 
-  let equal =
-    (fun a__007_ ->
-       fun b__008_ ->
-       if Stdlib.( == ) a__007_ b__008_
-       then true
-       else (
-         match a__007_, b__008_ with
-         | `no_preprocessing, `no_preprocessing -> true
-         | `pps _left__009_, `pps _right__010_ ->
-           Blang.equal Pps.Predicate.equal _left__009_ _right__010_
-         | x, y -> Stdlib.( = ) x y)
-     : t -> t -> bool)
+  let equal (a : t) (b : t) =
+    if Stdlib.( == ) a b
+    then true
+    else (
+      match a, b with
+      | `no_preprocessing, `no_preprocessing -> true
+      | `pps va, `pps vb -> Blang.equal Pps.Predicate.equal va vb
+      | (`no_preprocessing | `pps _), _ -> false)
   ;;
 
   let __t_of_sexp__ =

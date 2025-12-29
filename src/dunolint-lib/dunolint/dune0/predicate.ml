@@ -34,40 +34,46 @@ type t =
   | `stanza of Stanza.Predicate.t Blang.t
   ]
 
-let equal =
-  (fun a__033_ ->
-     fun b__034_ ->
-     if Stdlib.( == ) a__033_ b__034_
-     then true
-     else (
-       match a__033_, b__034_ with
-       | `executable _left__035_, `executable _right__036_ ->
-         Blang.equal Executable.Predicate.equal _left__035_ _right__036_
-       | `has_field _left__039_, `has_field _right__040_ ->
-         if Stdlib.( == ) _left__039_ _right__040_
-         then true
-         else (
-           match _left__039_, _right__040_ with
-           | `instrumentation, `instrumentation -> true
-           | `lint, `lint -> true
-           | `name, `name -> true
-           | `preprocess, `preprocess -> true
-           | `public_name, `public_name -> true
-           | x, y -> Stdlib.( = ) x y)
-       | `include_subdirs _left__041_, `include_subdirs _right__042_ ->
-         Blang.equal Include_subdirs.Predicate.equal _left__041_ _right__042_
-       | `instrumentation _left__045_, `instrumentation _right__046_ ->
-         Blang.equal Instrumentation.Predicate.equal _left__045_ _right__046_
-       | `library _left__049_, `library _right__050_ ->
-         Blang.equal Library.Predicate.equal _left__049_ _right__050_
-       | `lint _left__053_, `lint _right__054_ ->
-         Blang.equal Lint.Predicate.equal _left__053_ _right__054_
-       | `preprocess _left__057_, `preprocess _right__058_ ->
-         Blang.equal Preprocess.Predicate.equal _left__057_ _right__058_
-       | `stanza _left__061_, `stanza _right__062_ ->
-         Blang.equal Stanza.Predicate.equal _left__061_ _right__062_
-       | x, y -> Stdlib.( = ) x y)
-   : t -> t -> bool)
+let equal_has_field
+      (va : [ `instrumentation | `lint | `name | `preprocess | `public_name ])
+      (vb : [ `instrumentation | `lint | `name | `preprocess | `public_name ])
+  =
+  if Stdlib.( == ) va vb
+  then true
+  else (
+    match va, vb with
+    | `instrumentation, `instrumentation -> true
+    | `lint, `lint -> true
+    | `name, `name -> true
+    | `preprocess, `preprocess -> true
+    | `public_name, `public_name -> true
+    | (`instrumentation | `lint | `name | `preprocess | `public_name), _ -> false)
+;;
+
+let equal (a : t) (b : t) =
+  if Stdlib.( == ) a b
+  then true
+  else (
+    match a, b with
+    | `executable va, `executable vb -> Blang.equal Executable.Predicate.equal va vb
+    | `has_field va, `has_field vb -> equal_has_field va vb
+    | `include_subdirs va, `include_subdirs vb ->
+      Blang.equal Include_subdirs.Predicate.equal va vb
+    | `instrumentation va, `instrumentation vb ->
+      Blang.equal Instrumentation.Predicate.equal va vb
+    | `library va, `library vb -> Blang.equal Library.Predicate.equal va vb
+    | `lint va, `lint vb -> Blang.equal Lint.Predicate.equal va vb
+    | `preprocess va, `preprocess vb -> Blang.equal Preprocess.Predicate.equal va vb
+    | `stanza va, `stanza vb -> Blang.equal Stanza.Predicate.equal va vb
+    | ( ( `executable _
+        | `has_field _
+        | `include_subdirs _
+        | `instrumentation _
+        | `library _
+        | `lint _
+        | `preprocess _
+        | `stanza _ )
+      , _ ) -> false)
 ;;
 
 let __t_of_sexp__ =

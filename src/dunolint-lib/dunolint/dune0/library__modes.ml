@@ -31,19 +31,14 @@ module Predicate = struct
     | `has_modes of Compilation_mode.t list
     ]
 
-  let equal =
-    (fun a__009_ ->
-       fun b__010_ ->
-       if Stdlib.( == ) a__009_ b__010_
-       then true
-       else (
-         match a__009_, b__010_ with
-         | `has_mode _left__011_, `has_mode _right__012_ ->
-           Compilation_mode.equal _left__011_ _right__012_
-         | `has_modes _left__013_, `has_modes _right__014_ ->
-           equal_list Compilation_mode.equal _left__013_ _right__014_
-         | x, y -> Stdlib.( = ) x y)
-     : t -> t -> bool)
+  let equal (a : t) (b : t) =
+    if Stdlib.( == ) a b
+    then true
+    else (
+      match a, b with
+      | `has_mode va, `has_mode vb -> Compilation_mode.equal va vb
+      | `has_modes va, `has_modes vb -> equal_list Compilation_mode.equal va vb
+      | (`has_mode _ | `has_modes _), _ -> false)
   ;;
 
   let __t_of_sexp__ =

@@ -38,29 +38,21 @@ module T = struct
     -> ('predicate, 'invariant) t
     -> bool
     =
-    fun _cmp__predicate ->
-    fun _cmp__invariant ->
-    fun a__019_ ->
-    fun b__020_ ->
-    if Stdlib.( == ) a__019_ b__020_
+    fun equal_predicate equal_invariant (a : _ t) (b : _ t) ->
+    if Stdlib.( == ) a b
     then true
     else (
-      match a__019_, b__020_ with
-      | `enforce _left__021_, `enforce _right__022_ ->
-        _cmp__invariant _left__021_ _right__022_
+      match a, b with
+      | `enforce va, `enforce vb -> equal_invariant va vb
       | `return, `return -> true
-      | `cond _left__023_, `cond _right__024_ ->
+      | `cond va, `cond vb ->
         equal_list
-          (fun a__025_ ->
-             fun b__026_ ->
-             let t__027_, t__028_ = a__025_ in
-             let t__029_, t__030_ = b__026_ in
-             Stdlib.( && )
-               (Blang.equal _cmp__predicate t__027_ t__029_)
-               (equal _cmp__predicate _cmp__invariant t__028_ t__030_))
-          _left__023_
-          _right__024_
-      | x, y -> Stdlib.( = ) x y)
+          (fun (conda, ta) (condb, tb) ->
+             Blang.equal equal_predicate conda condb
+             && equal equal_predicate equal_invariant ta tb)
+          va
+          vb
+      | (`enforce _ | `return | `cond _), _ -> false)
   ;;
 end
 

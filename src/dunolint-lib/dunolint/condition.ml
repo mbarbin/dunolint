@@ -24,10 +24,7 @@ module T = struct
 
   type t = Predicate.t Blang.t
 
-  let equal =
-    (fun a__005_ -> fun b__006_ -> Blang.equal Predicate.equal a__005_ b__006_
-     : t -> t -> bool)
-  ;;
+  let equal (a : t) (b : t) = Blang.equal Predicate.equal a b
 
   let t_of_sexp =
     (fun x__010_ -> Blang.t_of_sexp Predicate.t_of_sexp x__010_ : Sexplib0.Sexp.t -> t)

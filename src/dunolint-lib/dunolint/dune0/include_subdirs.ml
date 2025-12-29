@@ -30,18 +30,15 @@ module Mode = struct
     | `qualified
     ]
 
-  let equal =
-    (fun a__003_ ->
-       fun b__004_ ->
-       if Stdlib.( == ) a__003_ b__004_
-       then true
-       else (
-         match a__003_, b__004_ with
-         | `no, `no -> true
-         | `unqualified, `unqualified -> true
-         | `qualified, `qualified -> true
-         | x, y -> Stdlib.( = ) x y)
-     : t -> t -> bool)
+  let equal (a : t) (b : t) =
+    if Stdlib.( == ) a b
+    then true
+    else (
+      match a, b with
+      | `no, `no -> true
+      | `unqualified, `unqualified -> true
+      | `qualified, `qualified -> true
+      | (`no | `unqualified | `qualified), _ -> false)
   ;;
 
   let __t_of_sexp__ =
@@ -89,16 +86,12 @@ module Predicate = struct
 
   type t = [ `equals of Mode.t ]
 
-  let equal =
-    (fun a__017_ ->
-       fun b__018_ ->
-       if Stdlib.( == ) a__017_ b__018_
-       then true
-       else (
-         match a__017_, b__018_ with
-         | `equals _left__019_, `equals _right__020_ ->
-           Mode.equal _left__019_ _right__020_)
-     : t -> t -> bool)
+  let equal (a : t) (b : t) =
+    if Stdlib.( == ) a b
+    then true
+    else (
+      match a, b with
+      | `equals va, `equals vb -> Mode.equal va vb)
   ;;
 
   let __t_of_sexp__ =

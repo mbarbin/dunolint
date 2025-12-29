@@ -45,16 +45,12 @@ module Predicate = struct
 
   type t = [ `backend of Backend.Name.t ]
 
-  let equal =
-    (fun a__005_ ->
-       fun b__006_ ->
-       if Stdlib.( == ) a__005_ b__006_
-       then true
-       else (
-         match a__005_, b__006_ with
-         | `backend _left__007_, `backend _right__008_ ->
-           Backend.Name.equal _left__007_ _right__008_)
-     : t -> t -> bool)
+  let equal (a : t) (b : t) =
+    if Stdlib.( == ) a b
+    then true
+    else (
+      match a, b with
+      | `backend va, `backend vb -> Backend.Name.equal va vb)
   ;;
 
   let __t_of_sexp__ =

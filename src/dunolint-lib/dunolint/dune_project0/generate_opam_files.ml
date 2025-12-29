@@ -26,15 +26,12 @@ module Predicate = struct
 
   type t = [ `is_present ]
 
-  let equal =
-    (fun a__003_ ->
-       fun b__004_ ->
-       if Stdlib.( == ) a__003_ b__004_
-       then true
-       else (
-         match a__003_, b__004_ with
-         | `is_present, `is_present -> true)
-     : t -> t -> bool)
+  let equal (a : t) (b : t) =
+    if Stdlib.( == ) a b
+    then true
+    else (
+      match a, b with
+      | `is_present, `is_present -> true)
   ;;
 
   let __t_of_sexp__ =

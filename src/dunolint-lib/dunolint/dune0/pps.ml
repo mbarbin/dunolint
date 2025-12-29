@@ -34,20 +34,16 @@ module Predicate = struct
       | `equals of string
       ]
 
-    let equal =
-      (fun a__005_ ->
-         fun b__006_ ->
-         if Stdlib.( == ) a__005_ b__006_
-         then true
-         else (
-           match a__005_, b__006_ with
-           | `any, `any -> true
-           | `none, `none -> true
-           | `some, `some -> true
-           | `equals _left__007_, `equals _right__008_ ->
-             equal_string _left__007_ _right__008_
-           | x, y -> Stdlib.( = ) x y)
-       : t -> t -> bool)
+    let equal (a : t) (b : t) =
+      if Stdlib.( == ) a b
+      then true
+      else (
+        match a, b with
+        | `any, `any -> true
+        | `none, `none -> true
+        | `some, `some -> true
+        | `equals va, `equals vb -> equal_string va vb
+        | (`any | `none | `some | `equals _), _ -> false)
     ;;
 
     let __t_of_sexp__ =
@@ -112,18 +108,15 @@ module Predicate = struct
         | `pp of Pp.Name.t
         ]
 
-      let equal =
-        (fun a__025_ ->
-           fun b__026_ ->
-           if Stdlib.( == ) a__025_ b__026_
-           then true
-           else (
-             match a__025_, b__026_ with
-             | `any, `any -> true
-             | `driver, `driver -> true
-             | `pp _left__027_, `pp _right__028_ -> Pp.Name.equal _left__027_ _right__028_
-             | x, y -> Stdlib.( = ) x y)
-         : t -> t -> bool)
+      let equal (a : t) (b : t) =
+        if Stdlib.( == ) a b
+        then true
+        else (
+          match a, b with
+          | `any, `any -> true
+          | `driver, `driver -> true
+          | `pp va, `pp vb -> Pp.Name.equal va vb
+          | (`any | `driver | `pp _), _ -> false)
       ;;
 
       let __t_of_sexp__ =
@@ -183,18 +176,14 @@ module Predicate = struct
       ; applies_to : Applies_to.t
       }
 
-    let equal =
-      (fun a__043_ ->
-         fun b__044_ ->
-         if Stdlib.( == ) a__043_ b__044_
-         then true
-         else
-           Stdlib.( && )
-             (equal_string a__043_.name b__044_.name)
-             (Stdlib.( && )
-                (Param.equal a__043_.param b__044_.param)
-                (Applies_to.equal a__043_.applies_to b__044_.applies_to))
-       : t -> t -> bool)
+    let equal (a : t) (b : t) =
+      if Stdlib.( == ) a b
+      then true
+      else (
+        let { name; param; applies_to } = b in
+        equal_string a.name name
+        && Param.equal a.param param
+        && Applies_to.equal a.applies_to applies_to)
     ;;
 
     let t_of_sexp =
@@ -265,18 +254,12 @@ module Predicate = struct
       ; param : Param.t
       }
 
-    let equal =
-      (fun a__057_ ->
-         fun b__058_ ->
-         if Stdlib.( == ) a__057_ b__058_
-         then true
-         else
-           Stdlib.( && )
-             (Pp.Name.equal a__057_.pp b__058_.pp)
-             (Stdlib.( && )
-                (equal_string a__057_.flag b__058_.flag)
-                (Param.equal a__057_.param b__058_.param))
-       : t -> t -> bool)
+    let equal (a : t) (b : t) =
+      if Stdlib.( == ) a b
+      then true
+      else (
+        let { pp; flag; param } = b in
+        Pp.Name.equal a.pp pp && equal_string a.flag flag && Param.equal a.param param)
     ;;
 
     let t_of_sexp =
@@ -344,19 +327,15 @@ module Predicate = struct
     | `pp_with_flag of Pp_with_flag.t
     ]
 
-  let equal =
-    (fun a__077_ ->
-       fun b__078_ ->
-       if Stdlib.( == ) a__077_ b__078_
-       then true
-       else (
-         match a__077_, b__078_ with
-         | `pp _left__079_, `pp _right__080_ -> Pp.Name.equal _left__079_ _right__080_
-         | `flag _left__081_, `flag _right__082_ -> Flag.equal _left__081_ _right__082_
-         | `pp_with_flag _left__083_, `pp_with_flag _right__084_ ->
-           Pp_with_flag.equal _left__083_ _right__084_
-         | x, y -> Stdlib.( = ) x y)
-     : t -> t -> bool)
+  let equal (a : t) (b : t) =
+    if Stdlib.( == ) a b
+    then true
+    else (
+      match a, b with
+      | `pp va, `pp vb -> Pp.Name.equal va vb
+      | `flag va, `flag vb -> Flag.equal va vb
+      | `pp_with_flag va, `pp_with_flag vb -> Pp_with_flag.equal va vb
+      | (`pp _ | `flag _ | `pp_with_flag _), _ -> false)
   ;;
 
   let __t_of_sexp__ =

@@ -39,39 +39,45 @@ module Predicate = struct
     | `public_name of Public_name.Predicate.t Blang.t
     ]
 
-  let equal =
-    (fun a__029_ ->
-       fun b__030_ ->
-       if Stdlib.( == ) a__029_ b__030_
-       then true
-       else (
-         match a__029_, b__030_ with
-         | `has_field _left__031_, `has_field _right__032_ ->
-           if Stdlib.( == ) _left__031_ _right__032_
-           then true
-           else (
-             match _left__031_, _right__032_ with
-             | `instrumentation, `instrumentation -> true
-             | `lint, `lint -> true
-             | `modes, `modes -> true
-             | `name, `name -> true
-             | `preprocess, `preprocess -> true
-             | `public_name, `public_name -> true
-             | x, y -> Stdlib.( = ) x y)
-         | `instrumentation _left__033_, `instrumentation _right__034_ ->
-           Blang.equal Instrumentation.Predicate.equal _left__033_ _right__034_
-         | `lint _left__037_, `lint _right__038_ ->
-           Blang.equal Lint.Predicate.equal _left__037_ _right__038_
-         | `modes _left__041_, `modes _right__042_ ->
-           Blang.equal Modes.Predicate.equal _left__041_ _right__042_
-         | `name _left__045_, `name _right__046_ ->
-           Blang.equal Name.Predicate.equal _left__045_ _right__046_
-         | `preprocess _left__049_, `preprocess _right__050_ ->
-           Blang.equal Preprocess.Predicate.equal _left__049_ _right__050_
-         | `public_name _left__053_, `public_name _right__054_ ->
-           Blang.equal Public_name.Predicate.equal _left__053_ _right__054_
-         | x, y -> Stdlib.( = ) x y)
-     : t -> t -> bool)
+  let equal_has_field
+        (va : [ `instrumentation | `lint | `modes | `name | `preprocess | `public_name ])
+        (vb : [ `instrumentation | `lint | `modes | `name | `preprocess | `public_name ])
+    =
+    if Stdlib.( == ) va vb
+    then true
+    else (
+      match va, vb with
+      | `instrumentation, `instrumentation -> true
+      | `lint, `lint -> true
+      | `modes, `modes -> true
+      | `name, `name -> true
+      | `preprocess, `preprocess -> true
+      | `public_name, `public_name -> true
+      | (`instrumentation | `lint | `modes | `name | `preprocess | `public_name), _ ->
+        false)
+  ;;
+
+  let equal (a : t) (b : t) =
+    if Stdlib.( == ) a b
+    then true
+    else (
+      match a, b with
+      | `has_field va, `has_field vb -> equal_has_field va vb
+      | `instrumentation va, `instrumentation vb ->
+        Blang.equal Instrumentation.Predicate.equal va vb
+      | `lint va, `lint vb -> Blang.equal Lint.Predicate.equal va vb
+      | `modes va, `modes vb -> Blang.equal Modes.Predicate.equal va vb
+      | `name va, `name vb -> Blang.equal Name.Predicate.equal va vb
+      | `preprocess va, `preprocess vb -> Blang.equal Preprocess.Predicate.equal va vb
+      | `public_name va, `public_name vb -> Blang.equal Public_name.Predicate.equal va vb
+      | ( ( `has_field _
+          | `instrumentation _
+          | `lint _
+          | `modes _
+          | `name _
+          | `preprocess _
+          | `public_name _ )
+        , _ ) -> false)
   ;;
 
   let __t_of_sexp__ =
