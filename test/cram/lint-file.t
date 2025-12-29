@@ -108,6 +108,17 @@ integration.
   Error: unclosed parentheses at end of input
   [123]
 
+Test invalid lang stanza (missing middle constructor) for dune-project files.
+
+  $ printf '(lang 3.17)\n' > dune-project
+  $ dunolint tools lint-file dune-project
+  File "dune-project", line 1, characters 0-11:
+  1 | (lang 3.17)
+      ^^^^^^^^^^^
+  Error: Expected (lang dune VERSION) format.
+  (lang 3.17)
+  [123]
+
 Next we are going to test the command with config.
 
 The command may be passed a config file.

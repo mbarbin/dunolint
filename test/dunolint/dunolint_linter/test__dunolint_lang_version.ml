@@ -53,7 +53,7 @@ let%expect_test "read/write" =
   test {| (lang invalid 1.0) |};
   [%expect
     {|
-    File "dunolint", line 1, characters 1-19:
+    File "dunolint", line 1, characters 7-14:
     Error: Expected (lang dunolint VERSION) format.
     [123]
     |}];

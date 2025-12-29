@@ -100,7 +100,14 @@ let%expect_test "lint" =
          let original_sexp = Dunolinter.original_sexp stanza in
          print_s original_sexp;
          [%expect {| (lang dunolint 1.0) |}];
-         ()));
+         ());
+      (* Test eval with path predicate. *)
+      (match
+         eval ~path ~predicate:Dunolint.Config.Std.(`path (glob "path/to/dunolint"))
+       with
+       | True -> print_s [%sexp "path matched"]
+       | False | Undefined -> assert false);
+      [%expect {| "path matched" |}]);
   (* You can also use the enforcement construct from the OCaml API. *)
   Sexps_rewriter.reset sexps_rewriter;
   Dunolint_linter.visit t ~f:(fun stanza ->

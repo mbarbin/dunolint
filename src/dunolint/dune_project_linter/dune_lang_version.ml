@@ -29,23 +29,28 @@ let dune_lang_version t = t.dune_lang_version
 let set_dune_lang_version t ~dune_lang_version = t.dune_lang_version <- dune_lang_version
 
 let read ~sexps_rewriter ~field =
-  match field with
-  | Sexp.List [ Sexp.Atom "lang"; Sexp.Atom "dune"; (Sexp.Atom version_string as atom) ]
-    ->
-    (* Parse version string like "3.17" into tuple (3, 17) *)
-    (match String.split version_string ~on:'.' with
-     | [ major_str; minor_str ] ->
-       (match Int.of_string major_str, Int.of_string minor_str with
-        | major, minor ->
-          { dune_lang_version = Dune_project.Dune_lang_version.create (major, minor) }
-        | exception _ ->
+  match (field : Sexp.t) with
+  | List [ Atom "lang"; (Atom lang as atom_lang); (Atom version_string as atom) ] ->
+    (match String.equal lang "dune" with
+     | false ->
+       Err.raise
+         ~loc:(Sexps_rewriter.loc sexps_rewriter atom_lang)
+         [ Pp.text "Expected (lang dune VERSION) format." ]
+     | true ->
+       (* Parse version string like "3.17" into tuple (3, 17) *)
+       (match String.split version_string ~on:'.' with
+        | [ major_str; minor_str ] ->
+          (match Int.of_string major_str, Int.of_string minor_str with
+           | major, minor ->
+             { dune_lang_version = Dune_project.Dune_lang_version.create (major, minor) }
+           | exception _ ->
+             Err.raise
+               ~loc:(Sexps_rewriter.loc sexps_rewriter atom)
+               [ Pp.textf "Invalid version format: %S." version_string ])
+        | _ ->
           Err.raise
             ~loc:(Sexps_rewriter.loc sexps_rewriter atom)
-            [ Pp.textf "Invalid version format: %S." version_string ])
-     | _ ->
-       Err.raise
-         ~loc:(Sexps_rewriter.loc sexps_rewriter atom)
-         [ Pp.textf "Expected VERSION.MINOR format, got: %S." version_string ])
+            [ Pp.textf "Expected VERSION.MINOR format, got: %S." version_string ]))
   | _ ->
     Err.raise
       ~loc:(Sexps_rewriter.loc sexps_rewriter field)

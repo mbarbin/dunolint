@@ -53,7 +53,7 @@ let%expect_test "read/write" =
   test {| (lang invalid 3.20) |};
   [%expect
     {|
-    File "dune-project", line 1, characters 1-20:
+    File "dune-project", line 1, characters 7-14:
     Error: Expected (lang dune VERSION) format.
     [123]
     |}];

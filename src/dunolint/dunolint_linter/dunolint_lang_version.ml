@@ -32,23 +32,29 @@ let set_dunolint_lang_version t ~dunolint_lang_version =
 ;;
 
 let read ~sexps_rewriter ~field =
-  match field with
-  | Sexp.List
-      [ Sexp.Atom "lang"; Sexp.Atom "dunolint"; (Sexp.Atom version_string as atom) ] ->
-    (match String.split version_string ~on:'.' with
-     | [ major_str; minor_str ] ->
-       (match Int.of_string major_str, Int.of_string minor_str with
-        | major, minor ->
-          { dunolint_lang_version = Dunolint0.Dunolint_lang_version.create (major, minor)
-          }
-        | exception _ ->
+  match (field : Sexp.t) with
+  | List [ Atom "lang"; (Atom lang as atom_lang); (Atom version_string as atom) ] ->
+    (match String.equal lang "dunolint" with
+     | false ->
+       Err.raise
+         ~loc:(Sexps_rewriter.loc sexps_rewriter atom_lang)
+         [ Pp.text "Expected (lang dunolint VERSION) format." ]
+     | true ->
+       (match String.split version_string ~on:'.' with
+        | [ major_str; minor_str ] ->
+          (match Int.of_string major_str, Int.of_string minor_str with
+           | major, minor ->
+             { dunolint_lang_version =
+                 Dunolint0.Dunolint_lang_version.create (major, minor)
+             }
+           | exception _ ->
+             Err.raise
+               ~loc:(Sexps_rewriter.loc sexps_rewriter atom)
+               [ Pp.textf "Invalid version format: %S." version_string ])
+        | _ ->
           Err.raise
             ~loc:(Sexps_rewriter.loc sexps_rewriter atom)
-            [ Pp.textf "Invalid version format: %S." version_string ])
-     | _ ->
-       Err.raise
-         ~loc:(Sexps_rewriter.loc sexps_rewriter atom)
-         [ Pp.textf "Expected VERSION.MINOR format, got: %S." version_string ])
+            [ Pp.textf "Expected VERSION.MINOR format, got: %S." version_string ]))
   | _ ->
     Err.raise
       ~loc:(Sexps_rewriter.loc sexps_rewriter field)

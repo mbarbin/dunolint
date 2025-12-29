@@ -41,8 +41,8 @@ Create some files to lint.
   > EOF
 
   $ dunolint lint
-  File "dune-project", line 1, characters 0-19:
+  File "dune-project", line 1, characters 6-13:
   1 | (lang invalid 3.18)
-      ^^^^^^^^^^^^^^^^^^^
+            ^^^^^^^
   Error: Expected (lang dune VERSION) format.
   [123]

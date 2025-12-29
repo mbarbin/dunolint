@@ -1,5 +1,4 @@
-This test covers linting dunolint config files with the `--filename=dunolint`
-option and the `(lang dunolint X.Y)` stanza.
+This test covers linting dunolint config files.
 
 Initialize the project root.
 
@@ -8,23 +7,39 @@ Initialize the project root.
 
 Test that dunolint config files can be linted and formatted.
 
-  $ printf '(lang dunolint 1.0)\n' | dunolint tools lint-file --filename=dunolint
+  $ printf '(lang dunolint 1.0)\n' > dunolint
+  $ dunolint tools lint-file dunolint
   (lang dunolint 1.0)
 
 Test formatting of dunolint config files.
 
-  $ printf '(lang\n dunolint\n 1.0)\n' | dunolint tools lint-file --filename=dunolint
+  $ cat > dunolint <<'EOF'
+  > (lang
+  >  dunolint
+  >  1.0)
+  > EOF
+  $ dunolint tools lint-file dunolint
   (lang dunolint 1.0)
 
 Formatting can be disabled.
 
-  $ printf '(lang\n dunolint\n 1.0)\n' \
-  > | dunolint tools lint-file --filename=dunolint --format-file=false
+  $ cat > dunolint <<'EOF'
+  > (lang
+  >  dunolint
+  >  1.0)
+  > EOF
+  $ dunolint tools lint-file dunolint --format-file=false
   (lang
    dunolint
    1.0)
 
 Test invalid dunolint version format.
+
+Note: We use printf piping rather than writing to disk for these error tests
+because writing an invalid dunolint config to disk would affect config discovery
+when the linter runs, changing the code path being tested.
+
+  $ rm dunolint
 
   $ printf '(lang dunolint invalid)\n' | dunolint tools lint-file --filename=dunolint
   File "dunolint", line 1, characters 15-22:
@@ -41,14 +56,22 @@ Test invalid dunolint version format.
 Test invalid lang stanza (not dunolint).
 
   $ printf '(lang dune 3.17)\n' | dunolint tools lint-file --filename=dunolint
-  File "dunolint", line 1, characters 0-16:
+  File "dunolint", line 1, characters 6-10:
   Error: Expected (lang dunolint VERSION) format.
   (lang dune 3.17)
   [123]
 
+Test invalid lang stanza (missing middle constructor).
+
+  $ printf '(lang 1.0)\n' | dunolint tools lint-file --filename=dunolint
+  File "dunolint", line 1, characters 0-10:
+  Error: Expected (lang dunolint VERSION) format.
+  (lang 1.0)
+  [123]
+
 Test invalid sexp in dunolint config files.
 
-  $ printf "(invalid sexp\n" | dunolint tools lint-file --filename=dunolint
+  $ printf '(invalid sexp\n' | dunolint tools lint-file --filename=dunolint
   File "dunolint", line 2, characters 0-0:
   Error: unclosed parentheses at end of input
   [123]

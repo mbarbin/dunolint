@@ -130,7 +130,12 @@ let%expect_test "lint" =
            ~path
            ~condition:
              Dunolint.Config.Std.(
-               dune (library (name (equals (Dunolint.Dune.Library.Name.v "bar")))))));
+               dune (library (name (equals (Dunolint.Dune.Library.Name.v "bar"))))));
+      (* Test eval with path predicate. *)
+      (match eval ~path ~predicate:Dunolint.Config.Std.(`path (glob "path/to/dune")) with
+       | True -> print_s [%sexp "path matched"]
+       | False | Undefined -> assert false);
+      [%expect {| "path matched" |}]);
   print_diff t;
   [%expect
     {|

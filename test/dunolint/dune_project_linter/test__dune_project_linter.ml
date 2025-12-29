@@ -138,7 +138,14 @@ let%expect_test "lint" =
          File_rewriter.remove
            (Sexps_rewriter.file_rewriter sexps_rewriter)
            ~range:{ start; stop = stop + 1 };
-         ()));
+         ());
+      (* Test eval with path predicate. *)
+      (match
+         eval ~path ~predicate:Dunolint.Config.Std.(`path (glob "path/to/dune-project"))
+       with
+       | True -> print_s [%sexp "path matched"]
+       | False | Undefined -> assert false);
+      [%expect {| "path matched" |}]);
   print_diff t;
   [%expect
     {|
