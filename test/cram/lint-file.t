@@ -178,11 +178,11 @@ However, you may supply a config to use.
 
 Supplying an absent file or an invalid one results in errors:
 
-  $ dunolint tools lint-file dune-project --config=unknown
-  dunolint: option '--config': no 'unknown' file or directory
-  Usage: dunolint tools lint-file [OPTION]… [FILE]
-  Try 'dunolint tools lint-file --help' or 'dunolint --help' for more information.
+  $ dunolint tools lint-file dune-project --config=unknown 2> output
   [124]
+
+  $ grep '^dunolint: ' output; rm output
+  dunolint: option '--config': no 'unknown' file or directory
 
   $ dunolint tools lint-file dune-project --config=dune-project
   File "dune-project", line 1, characters 0-16:
@@ -305,15 +305,13 @@ file when provided.
    (libraries b c a))
 
   $ cat dune | dunolint tools lint-file --in-place
-  Error: The flag [in-place] may only be used when the input is read from a
-  regular file.
+  Error: When using [--in-place], at least one file must be specified.
   [124]
 
 The command shall not create non-existing files when the filename is overridden.
 
   $ cat dune | dunolint tools lint-file --in-place --filename=path/to/dune
-  Error: The flag [in-place] may only be used when the input is read from a
-  regular file.
+  Error: When using [--in-place], at least one file must be specified.
   [124]
 
   $ dunolint tools lint-file absent --in-place --filename=dune
@@ -358,6 +356,47 @@ The command is idempotent.
   $ dunolint tools lint-file dune --in-place
 
   $ diff dune dune-backup
+
+Test linting multiple files with --in-place.
+
+First, let's create some test files that need linting:
+
+  $ mkdir -p multi-test/lib1 multi-test/lib2
+  $ cat > multi-test/lib1/dune <<EOF
+  > (library (name lib1)
+  >  (libraries z b a))
+  > EOF
+
+  $ cat > multi-test/lib2/dune <<EOF
+  > (library (name lib2)
+  >  (libraries x c b))
+  > EOF
+
+Multiple files without --in-place should fail:
+
+  $ dunolint tools lint-file multi-test/lib1/dune multi-test/lib2/dune
+  Error: When supplying multiple files, [--in-place] must be used.
+  [124]
+
+Multiple files with --in-place should work:
+
+  $ dunolint tools lint-file multi-test/lib1/dune multi-test/lib2/dune --in-place
+
+  $ cat multi-test/lib1/dune
+  (library
+   (name lib1)
+   (libraries a b z))
+
+  $ cat multi-test/lib2/dune
+  (library
+   (name lib2)
+   (libraries b c x))
+
+The --filename flag may not be used with multiple files:
+
+  $ dunolint tools lint-file multi-test/lib1/dune multi-test/lib2/dune --in-place --filename=dune
+  Error: When supplying multiple files, [--filename] cannot be used.
+  [124]
 
 Test linting a file from outside the dune workspace. This should work and
 re-order the libraries without error.

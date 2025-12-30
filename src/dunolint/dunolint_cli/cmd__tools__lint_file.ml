@@ -69,6 +69,10 @@ let lint_file
     if format_file then Dunolint_engine.format_dune_file ~new_contents else new_contents
 ;;
 
+let in_place_switch = "in-place"
+let filename_switch = "filename"
+let pp_tty_switch switch = Pp_tty.kwd (module String) ("--" ^ switch)
+
 let select_linter ~path =
   let filename = Fpath.filename path in
   match Dunolint.Linted_file_kind.of_string filename with
@@ -88,28 +92,43 @@ let select_linter ~path =
       ~hints:
         Pp.O.
           [ Pp.text "You may override the filename with the flag "
-            ++ Pp_tty.kwd (module String) "--filename"
+            ++ pp_tty_switch filename_switch
             ++ Pp.verbatim "."
           ]
 ;;
 
+module Context = struct
+  type t =
+    | Autoloading of { engine : Dunolint_engine.t }
+    | Root_context of { context : Dunolint_engine.Context.t }
+end
+
+module File_with_filename = struct
+  (* Associates each file to lint with its logical filename for config discovery.
+
+     This abstraction separates the validation of [--filename] compatibility
+     from the iteration logic. When a single file is supplied, the user-provided
+     [--filename] (if any) applies to it. When multiple files are supplied, each
+     file uses its own path as filename (and [--filename] is rejected earlier).
+
+     Without this intermediate representation, the iteration code would appear
+     to use a shared [filename] variable for all files, making the intent less
+     clear even though runtime checks would prevent misuse. *)
+  type t =
+    { file : Fpath.t
+    ; filename : Fpath.t option
+    }
+end
+
+let assert_visit () =
+  (* This ensure the coverage for the branch is tested even though the raising
+     expression is disabled. This is a work around for a bisect_ppx issue. *)
+  ()
+;;
+
 let main =
-  let in_place_switch = "in-place" in
-  let save_in_place ~in_place ~file =
-    match in_place, file with
-    | false, (None | Some _) -> None
-    | true, Some file -> Some (Save_in_place.of_file ~file)
-    | true, None ->
-      Err.raise
-        ~exit_code:Err.Exit_code.cli_error
-        Pp.O.
-          [ Pp.text "The flag "
-            ++ Pp_tty.kwd (module String) in_place_switch
-            ++ Pp.text " may only be used when the input is read from a regular file."
-          ]
-  in
   Command.make
-    ~summary:"Lint a single file."
+    ~summary:"Lint file(s)."
     ~readme:(fun () ->
       "This command is meant to ease the integration with editors in workflows that \
        enable linting on save.\n\n\
@@ -117,6 +136,9 @@ let main =
        $(b,stdin) and print its linted result on $(b,stdout).\n\n\
        By default, the contents will be read from $(b,stdin). You may supply the path to \
        a file instead.\n\n\
+       When using $(b,--in-place), multiple files may be supplied. In this mode, each \
+       file is linted and saved back to disk (only if changed). This is useful for \
+       pre-commit hooks that process multiple files in a single invocation.\n\n\
        Dunolint will locate the workspace root by searching for $(b,dune-workspace) or \
        $(b,dune-project) files in the current directory and its ancestors. If no \
        workspace is found, the current working directory is used as the default \
@@ -128,15 +150,16 @@ let main =
        logical path of the file being linted. This path is used to: (1) infer the file \
        kind (e.g. dune vs dune-project), (2) discover which config files to load based \
        on the file's location in the directory hierarchy, and (3) evaluate skip_paths \
-       rules.")
+       rules. Note that $(b,--filename) cannot be used when multiple files are supplied.")
     (let open Command.Std in
      let+ () = Log_cli.set_config ()
-     and+ file =
-       Arg.pos_opt
-         ~pos:0
+     and+ files =
+       Arg.pos_all
          (Param.validated_string (module Fpath))
          ~docv:"FILE"
-         ~doc:"Path to file to lint (by default reads from stdin)."
+         ~doc:
+           "Path to file(s) to lint. By default reads from stdin. Multiple files may \
+            only be supplied when using $(b,--in-place)."
      and+ filename =
        Arg.named_opt
          [ "filename" ]
@@ -170,30 +193,16 @@ let main =
          ~default:true
          ~doc:"Format file with after linting, using [dune format-dune-file]."
      and+ root = Common_helpers.root in
-     let save_in_place = save_in_place ~in_place ~file in
      let cwd = Unix.getcwd () |> Absolute_path.v in
      let workspace_root =
        Workspace_root.find_exn ~default_is_cwd:true ~specified_by_user:root
      in
-     let filename =
-       Option.map filename ~f:(fun filename ->
-         Common_helpers.relativize ~workspace_root ~cwd ~path:filename)
-     in
-     let file =
-       Option.map file ~f:(fun file ->
-         Common_helpers.relativize ~workspace_root ~cwd ~path:file)
-     in
+     let relativize path = Common_helpers.relativize ~workspace_root ~cwd ~path in
      let config =
        Option.map config ~f:(fun config ->
-         Common_helpers.relativize ~workspace_root ~cwd ~path:(Fpath.v config)
-         |> Relative_path.to_string)
+         relativize (Fpath.v config) |> Relative_path.to_string)
      in
      Workspace_root.chdir workspace_root ~level:Debug;
-     let path =
-       match Option.first_some filename file with
-       | Some file -> file
-       | None -> Relative_path.v "stdin"
-     in
      let autoload_config = Option.is_none config in
      let root_configs =
        List.concat
@@ -204,48 +213,125 @@ let main =
               [ Dunolinter.Config_handler.load_config_exn ~filename:config_path ])
          ]
      in
-     let context =
+     let context : Context.t =
        if autoload_config
        then (
          (* [root_configs] are added to discovered configs by [build_context]. *)
          let engine = Dunolint_engine.create ~root_configs ~running_mode:Dry_run () in
-         Dunolint_engine.build_context engine ~path)
-       else
+         Autoloading { engine })
+       else (
          (* When autoload is disabled, we still need the [root_configs]. Since
-            build_context won't be called, manually create the context. *)
-         List.fold
-           root_configs
-           ~init:Dunolint_engine.Context.empty
-           ~f:(fun context config ->
-             Dunolint_engine.Context.add_config
-               context
-               ~config
-               ~location:Relative_path.empty)
+            [build_context] won't be called, manually create the context. *)
+         let context =
+           List.fold
+             root_configs
+             ~init:Dunolint_engine.Context.empty
+             ~f:(fun context config ->
+               Dunolint_engine.Context.add_config
+                 context
+                 ~config
+                 ~location:Relative_path.empty)
+         in
+         Root_context { context })
      in
-     let linter = select_linter ~path:(path :> Fpath.t) in
-     let original_contents =
-       match file with
-       | Some file -> In_channel.read_all (file |> Relative_path.to_string)
-       | None -> In_channel.input_all In_channel.stdin
+     let build_context ~path =
+       match context with
+       | Root_context { context } -> context
+       | Autoloading { engine } -> Dunolint_engine.build_context engine ~path
      in
-     let output =
+     let do_lint ~path ~original_contents =
+       let context = build_context ~path in
+       let linter = select_linter ~path:(path :> Fpath.t) in
        if Linter.should_skip_subtree ~context ~path
        then original_contents
        else lint_file linter ~format_file ~context ~path ~original_contents
      in
-     let () =
-       match save_in_place with
-       | None ->
-         Out_channel.flush Out_channel.stdout;
-         Out_channel.set_binary_mode Out_channel.stdout true;
-         Out_channel.output_string Out_channel.stdout output;
-         Out_channel.flush Out_channel.stdout;
-         Out_channel.set_binary_mode Out_channel.stdout false
-       | Some { file; perm } ->
+     if in_place
+     then (
+       (* --in-place mode: lint files and save back to disk. *)
+       let files_with_filenames =
+         match files with
+         | [ file ] -> [ { File_with_filename.file; filename } ]
+         | _ :: _ :: _ as files ->
+           let () =
+             match filename with
+             | None -> ()
+             | Some _ ->
+               let () = assert_visit () in
+               (Err.raise
+                  ~exit_code:Err.Exit_code.cli_error
+                  Pp.O.
+                    [ Pp.text "When supplying multiple files, "
+                      ++ pp_tty_switch filename_switch
+                      ++ Pp.text " cannot be used."
+                    ]
+                (* Exercised in tests but invisible due to out-edge bisect_ppx issue. *)
+                [@coverage off])
+           in
+           List.map files ~f:(fun file -> { File_with_filename.file; filename = None })
+         | [] ->
+           let () = assert_visit () in
+           (Err.raise
+              ~exit_code:Err.Exit_code.cli_error
+              Pp.O.
+                [ Pp.text "When using "
+                  ++ pp_tty_switch in_place_switch
+                  ++ Pp.text ", at least one file must be specified."
+                ]
+            (* Exercised in tests but invisible due to out-edge bisect_ppx issue. *)
+            [@coverage off])
+       in
+       List.iter files_with_filenames ~f:(fun { file; filename } ->
+         let file = relativize file in
+         let { Save_in_place.file = file_for_save; perm } =
+           Save_in_place.of_file ~file:(file :> Fpath.t)
+         in
+         let path =
+           match filename with
+           | Some filename -> relativize filename
+           | None -> file
+         in
+         let original_contents = In_channel.read_all (file |> Relative_path.to_string) in
+         let output = do_lint ~path ~original_contents in
          if not (String.equal original_contents output)
          then
-           Out_channel.with_file ~perm (Fpath.to_string file) ~f:(fun oc ->
-             Out_channel.output_string oc output)
-     in
-     ())
+           Out_channel.with_file ~perm (Fpath.to_string file_for_save) ~f:(fun oc ->
+             Out_channel.output_string oc output)))
+     else (
+       (* Output to stdout mode: read from file or stdin, print result. *)
+       let path, original_contents =
+         match files with
+         | [] ->
+           let path =
+             match filename with
+             | Some filename -> relativize filename
+             | None -> Relative_path.v "stdin"
+           in
+           path, In_channel.input_all In_channel.stdin
+         | [ file ] ->
+           let file = relativize file in
+           let path =
+             match filename with
+             | Some filename -> relativize filename
+             | None -> file
+           in
+           path, In_channel.read_all (file |> Relative_path.to_string)
+         | _ :: _ :: _ ->
+           let () = assert_visit () in
+           (Err.raise
+              ~exit_code:Err.Exit_code.cli_error
+              Pp.O.
+                [ Pp.text "When supplying multiple files, "
+                  ++ pp_tty_switch in_place_switch
+                  ++ Pp.text " must be used."
+                ]
+            (* Exercised in tests but invisible due to out-edge bisect_ppx issue. *)
+            [@coverage off])
+       in
+       let output = do_lint ~path ~original_contents in
+       Out_channel.flush Out_channel.stdout;
+       Out_channel.set_binary_mode Out_channel.stdout true;
+       Out_channel.output_string Out_channel.stdout output;
+       Out_channel.flush Out_channel.stdout;
+       Out_channel.set_binary_mode Out_channel.stdout false))
 ;;
