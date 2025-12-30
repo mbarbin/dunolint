@@ -21,6 +21,7 @@
  (libraries
   base
   dunolint
+  dunolint_stdlib
   dunolinter
   file-rewriter
   fpath-sexp0

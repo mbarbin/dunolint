@@ -10,7 +10,7 @@
   +a
   -open
   Dunolint_stdlib)
- (libraries dunolint_stdlib)
+ (libraries dunolint_stdlib sexplib0)
  (instrumentation
   (backend bisect_ppx))
  (lint
