@@ -6,7 +6,7 @@ If you are looking for a general introduction to the configuration language desi
 
 ## Config Filename
 
-Dunolint config files are expected to be named `dunolint`. The linter automatically discovers and loads any `dunolint` files found while traversing the project tree during linting operations. Configs accumulate from the workspace root down to each linted file's directory, with deeper configs taking precedence when rules modify the same fields.
+Dunolint config files are expected to be named `dunolint`. The linter automatically discovers and loads any `dunolint` files found while traversing the project tree during linting operations. Configs accumulate from the workspace root down to each linted file's directory, and all rules from all configs are applied together. Child configs add to parent rules; they cannot override or invalidate them.
 
 For details on how config autoloading works, see [Config Autoloading](../../explanation/config/autoloading.md).
 

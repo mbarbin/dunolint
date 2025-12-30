@@ -44,37 +44,64 @@ All three configs are accumulated and applied together.
 
 ### Rule Application Order
 
-Rules from all accumulated configs are applied in a specific order: shallower (parent) configs are processed first, then deeper (subdirectory) configs.
+Rules from all accumulated configs are applied together. Shallower (parent) configs are processed first, followed by deeper (subdirectory) configs, but the key point is that **all rules apply**.
 
-#### Accumulation vs Precedence
+#### All Rules Are Enforced
 
-It's important to understand the difference between **accumulation** and **precedence**:
+When configs accumulate, ALL rules from ALL configs are applied. If you have 3 configs with 5 rules each, all 15 rules will be enforced. Child configs **add** rules; they do not replace or override parent rules.
 
-- **Accumulation**: ALL rules from ALL configs are applied. If you have 3 configs with 5 rules each, all 15 rules will be applied.
+##### Example: Complementary Rules
 
-- **Precedence**: When multiple rules target the same field, the rule applied **last** (from the deepest config) has the final say.
+A root config requiring instrumentation and a subdirectory config requiring a naming convention:
 
-#### Example: All Rules Apply
+- Root config: `(enforce (dune (instrumentation (backend bisect_ppx))))`
+- Subdirectory config: `(enforce (dune (library (name (is_suffix _internal)))))`
+- Result: Both constraints are enforced together on libraries in the subdirectory
 
-If your root config enforces `(name (is_prefix foo))` and your subdirectory config enforces `(name (is_prefix bar))`:
+##### Example: Conditional Rules
 
-- **Both rules apply** in sequence
-- Root rule transforms `mylib` → `foomylib`
-- Subdirectory rule then transforms `foomylib` → `barfoomylib`
-- Final result: `barfoomylib`
+When you need different behavior in specific subtrees, use conditions within a single rule:
 
-The subdirectory rule "wins" because it was applied last, but the root rule still affected the result. This is accumulation with precedence.
+```dune
+(rule
+ (cond
+  ((path (glob vendor/**))
+   (enforce (dune (library (not (has_field instrumentation))))))
+  (true (enforce (dune (instrumentation (backend bisect_ppx)))))))
+```
 
-#### Example: Different Fields
+This rule, placed at the root, explicitly states that vendor code should not have instrumentation while everything else should. The logic is self-contained in one place.
 
-When rules target **different fields**, all rules are applied successfully:
-- Root config: `(has_field public_name)`
-- Subdirectory config: `(name (equals specific_name))`
-- Result: Both constraints are enforced
+## Design Rationale
 
-#### Design Rationale
+The autoloading design is motivated by two key principles:
 
-This design allows for specialization: you can set general rules at the root and add or override them with more specific rules in subdirectories as needed.
+### Compositionality
+
+Dunolint follows the same compositionality model as dune. If you have a standalone repository with a working `dunolint` config at its root, you can seamlessly integrate it as a subdirectory of a larger monorepo that has its own `dunolint` config. The rules from the inner repository continue to work without modification, and the outer repository's rules apply in addition.
+
+This makes it practical to:
+- Combine multiple independent projects into a monorepo
+- Add project-wide policies at the monorepo root without breaking existing configs
+- Maintain modular configurations that work both standalone and integrated
+
+### Self-Contained Rules
+
+Parent rules are intentionally designed to be authoritative. A rule stated in a parent config represents an invariant that applies throughout its subtree. Child configs cannot invalidate or contradict parent rules.
+
+If you read a parent rule, you know it holds everywhere below—there's no risk of discovering later that a child config says otherwise. This makes the configuration predictable and easier to reason about.
+
+When a parent rule genuinely shouldn't apply to certain subdirectories, the parent config should **explicitly exclude** those paths using `skip_paths` or conditional logic:
+
+```dune
+;; Parent config explicitly documents the exception
+(rule
+ (cond
+  ((path (glob experimental/**)) return)
+  (true (enforce (dune (has_field public_name))))))
+```
+
+This approach keeps rules self-contained: anyone reading the parent config understands both the rule and its exceptions without needing to inspect child configs.
 
 ## Using `--below` with Autoloading
 
@@ -113,7 +140,7 @@ This will show:
 
 2. **Add subdirectory configs as needed** - Create configs in subdirectories for specialized linting rules
 
-3. **Use deeper configs to specialize** - Subdirectory configs can override parent rules to implement directory-specific requirements
+3. **Use deeper configs to complement** - Subdirectory configs augment parent rules to implement directory-specific requirements
 
 4. **Use `skip_paths`** - To completely exclude subdirectories from linting, use `(skip_paths ...)` in a parent config
 
