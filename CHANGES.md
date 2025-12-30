@@ -19,8 +19,13 @@
 - Upgrade to and require fixes from `fpath-sexp0.0.4.0` (#133, @mbarbin).
 - Made some internal refactors suggested by the Zanuda linter (#130, @mbarbin).
 
+### Fixed
+
+- Allow dash char in package names (#154, @mbarbin).
+
 ### Removed
 
+- Removed `expect_test_helpers_core` dependency (#154, @mbarbin).
 - Removed unused `compare` functions on rules & predicates (#150, @mbarbin).
 - Removed redundant `skip_paths` constructs from dunolint config (#149, @mbarbin).
 - Removed now unused `fpath` dependency from `dunolint-lib` (#142, @mbarbin).
