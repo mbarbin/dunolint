@@ -10,7 +10,7 @@
   -open
   Base
   -open
-  Fpath_base
+  Fpath_sexp0
   -open
   Pplumbing_pp_tty
   -open
@@ -39,7 +39,7 @@
   dunolint.dunolinter
   dunolint_stdlib
   fpath
-  fpath-base
+  fpath-sexp0
   loc
   parsexp
   pp

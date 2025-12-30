@@ -20,7 +20,6 @@ depends: [
   "dunolint-lib-base" {= version}
   "file-rewriter" {>= "0.0.3"}
   "fpath" {>= "0.7.3"}
-  "fpath-base" {>= "0.4.0"}
   "fpath-sexp0" {>= "0.4.0"}
   "loc" {>= "0.2.2"}
   "logs" {>= "0.7.0"}

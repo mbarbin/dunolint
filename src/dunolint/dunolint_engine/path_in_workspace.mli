@@ -60,10 +60,10 @@
       all workspace paths to be non-escaping, the semantics are clear: they're
       paths relative to the workspace root.
 
-    {1 Relationship to fpath-base}
+    {1 Relationship to fpath-sexp0}
 
-    This module builds upon the [Relative_path] module in the fpath-base library
-    (see fpath-base v0.4.0+). The upstream library does:
+    This module builds upon the [Relative_path] module in the fpath-sexp0 library
+    (see fpath-sexp0 v0.4.0+). The upstream library does:
 
     - Reject escaping paths in [Relative_path.of_fpath], [Relative_path.of_string],
       etc.
