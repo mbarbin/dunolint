@@ -235,7 +235,7 @@ module Error_context = Dunolint.Private.Sexp_helpers.Error_context
 
 let render_sexp_error_exn ~loc exn =
   match exn with
-  | Err.E err -> err
+  | Err.E err -> err [@coverage off]
   | Failure str ->
     let message = Pp.text (if String.is_suffix str ~suffix:"." then str else str ^ ".") in
     Err.create ~loc [ message ]
