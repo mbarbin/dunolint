@@ -327,7 +327,14 @@ module Predicate = struct
     constraint
       'a =
       [ `has_field of
-          [ `instrumentation | `lint | `modes | `name | `preprocess | `public_name ]
+          [ `inline_tests
+          | `instrumentation
+          | `lint
+          | `modes
+          | `name
+          | `preprocess
+          | `public_name
+          ]
       | `instrumentation of Dune.Instrumentation.Predicate.t Blang.t
       | `lint of Dune.Lint.Predicate.t Blang.t
       | `modes of Dune.Library.Modes.Predicate.t Blang.t
@@ -445,11 +452,27 @@ let%expect_test "eval" =
     ~f:(fun field ->
       Test_helpers.is_true (Dune_linter.Library.eval t ~predicate:(`has_field field)));
   [%expect {||}];
+  (* Test has_field for inline_tests. *)
+  Test_helpers.is_false (Dune_linter.Library.eval t ~predicate:(`has_field `inline_tests));
+  [%expect {||}];
+  let _, t_with_inline_tests = parse {| (library (name mylib) (inline_tests)) |} in
+  Test_helpers.is_true
+    (Dune_linter.Library.eval t_with_inline_tests ~predicate:(`has_field `inline_tests));
+  [%expect {||}];
+  (* Test has_field for inline_tests with arguments (e.g., deps). *)
+  let _, t_with_inline_tests_args =
+    parse {| (library (name mylib) (inline_tests (deps ./test_data))) |}
+  in
+  Test_helpers.is_true
+    (Dune_linter.Library.eval
+       t_with_inline_tests_args
+       ~predicate:(`has_field `inline_tests));
+  [%expect {||}];
   let _, t_minimal = parse {| (library (name mylib)) |} in
   Test_helpers.is_true (Dune_linter.Library.eval t_minimal ~predicate:(`has_field `name));
   [%expect {||}];
   List.iter
-    [ `instrumentation; `lint; `preprocess; `public_name; `modes ]
+    [ `inline_tests; `instrumentation; `lint; `preprocess; `public_name; `modes ]
     ~f:(fun field ->
       Test_helpers.is_false
         (Dune_linter.Library.eval t_minimal ~predicate:(`has_field field)));
@@ -715,6 +738,10 @@ let%expect_test "non base negations" =
 let%expect_test "has_field_auto_initialize" =
   (* Test fields that can be auto-initialized when missing. *)
   let init = {| (library (name my-lib)) |} in
+  (* [inline_tests] field can be auto-initialized. *)
+  let t = parse init in
+  enforce t [ has_field `inline_tests ];
+  [%expect {| (library (name my-lib) (inline_tests)) |}];
   (* [instrumentation] field can be auto-initialized. *)
   let t = parse init in
   enforce t [ has_field `instrumentation ];
@@ -765,6 +792,7 @@ let%expect_test "remove_fields" =
 (library
  (name my-lib)
  (public_name my-public-lib)
+ (inline_tests)
  (modes byte native)
  (instrumentation (backend bisect_ppx))
  (lint (pps ppx_linter))
@@ -775,12 +803,44 @@ let%expect_test "remove_fields" =
     let t = parse init in
     enforce_diff t cond
   in
+  test [ not_ (has_field `inline_tests) ];
+  [%expect
+    {|
+    -1,7 +1,6
+      (library
+       (name my-lib)
+       (public_name my-public-lib)
+    -| (inline_tests)
+       (modes byte native)
+       (instrumentation
+        (backend bisect_ppx))
+    |}];
+  (* Test removing inline_tests with arguments. *)
+  let init_with_args =
+    {|
+(library
+ (name my-lib)
+ (inline_tests (deps ./test_data))
+ (modes byte native))
+|}
+  in
+  let t = parse init_with_args in
+  enforce_diff t [ not_ (has_field `inline_tests) ];
+  [%expect
+    {|
+    -1,5 +1,3
+      (library
+       (name my-lib)
+    -| (inline_tests
+    -|  (deps ./test_data))
+       (modes byte native))
+    |}];
   test [ not_ (has_field `instrumentation) ];
   [%expect
     {|
-    -2,8 +2,6
-       (name my-lib)
+    -3,8 +3,6
        (public_name my-public-lib)
+       (inline_tests)
        (modes byte native)
     -| (instrumentation
     -|  (backend bisect_ppx))
@@ -791,7 +851,7 @@ let%expect_test "remove_fields" =
   test [ not_ (has_field `lint) ];
   [%expect
     {|
-    -4,6 +4,4
+    -5,6 +5,4
        (modes byte native)
        (instrumentation
         (backend bisect_ppx))
@@ -802,7 +862,7 @@ let%expect_test "remove_fields" =
   test [ not_ (has_field `preprocess) ];
   [%expect
     {|
-    -5,5 +5,4
+    -6,5 +6,4
        (instrumentation
         (backend bisect_ppx))
        (lint
@@ -813,10 +873,10 @@ let%expect_test "remove_fields" =
   test [ not_ (has_field `modes) ];
   [%expect
     {|
-    -1,7 +1,6
-      (library
+    -2,7 +2,6
        (name my-lib)
        (public_name my-public-lib)
+       (inline_tests)
     -| (modes byte native)
        (instrumentation
         (backend bisect_ppx))
@@ -829,8 +889,8 @@ let%expect_test "remove_fields" =
       (library
     -| (name my-lib)
        (public_name my-public-lib)
+       (inline_tests)
        (modes byte native)
-       (instrumentation
     |}];
   test [ not_ (has_field `public_name) ];
   [%expect
@@ -839,9 +899,9 @@ let%expect_test "remove_fields" =
       (library
        (name my-lib)
     -| (public_name my-public-lib)
+       (inline_tests)
        (modes byte native)
        (instrumentation
-        (backend bisect_ppx))
     |}];
   ()
 ;;
@@ -853,6 +913,7 @@ let%expect_test "positive_enforcement_with_existing_fields" =
 (library
  (name my-lib)
  (public_name my-public-lib)
+ (inline_tests)
  (modes byte native)
  (instrumentation (backend bisect_ppx))
  (lint (pps ppx_linter))
@@ -866,6 +927,8 @@ let%expect_test "positive_enforcement_with_existing_fields" =
   test [ has_field `name ];
   [%expect {||}];
   test [ has_field `public_name ];
+  [%expect {||}];
+  test [ has_field `inline_tests ];
   [%expect {||}];
   test [ has_field `modes ];
   [%expect {||}];

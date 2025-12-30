@@ -18,31 +18,3 @@
 (*_  and the LGPL-3.0 Linking Exception along with this library. If not, see      *)
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
-
-module Modes = Library__modes
-module Name = Library__name
-module Public_name = Library__public_name
-
-module Predicate : sig
-  type t =
-    [ `has_field of
-        [ `inline_tests
-        | `instrumentation
-        | `lint
-        | `modes
-        | `name
-        | `preprocess
-        | `public_name
-        ]
-    | `instrumentation of Instrumentation.Predicate.t Blang.t
-    | `lint of Lint.Predicate.t Blang.t
-    | `modes of Modes.Predicate.t Blang.t
-    | `name of Name.Predicate.t Blang.t
-    | `preprocess of Preprocess.Predicate.t Blang.t
-    | `public_name of Public_name.Predicate.t Blang.t
-    ]
-
-  val equal : t -> t -> bool
-
-  include Sexpable.S with type t := t
-end

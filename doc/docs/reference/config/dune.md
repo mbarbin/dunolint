@@ -112,7 +112,7 @@ Stanza:
  (instrumentation (backend bisect_ppx)))
 ```
 
-Condition: `(dune (library (has_field ***)))`
+Condition: `(dune (library PREDICATE))`
 
 | Predicate | Result  |
 | --------- | ------- |
@@ -220,9 +220,47 @@ Stanza:
 
 It is almost identical to the *public_name* construct of the *executable* selector, thus we are not documenting it in details here.
 
+### has_field
+
+`(dune (library (has_field FIELD)))` is a predicate for checking the presence of fields in a *library* stanza.
+
+All fields from the generic *has_field* selector that are marked as applicable to *library* stanzas are available here. See the [has_field](#has_field) section for details on common fields like *instrumentation*, *lint*, *name*, *preprocess*, and *public_name*.
+
+Additionally, the following library-specific fields are supported:
+
+#### inline_tests
+
+`(dune (library (has_field inline_tests)))` checks for the presence of the *inline_tests* field.
+
+Stanza:
+```dune
+(library
+ (inline_tests))
+```
+
+When enforced, *dunolint* suggests adding `(inline_tests)` to the library if not present.
+
+**Negation**: When the negation is enforced, *dunolint* suggests removing the field entirely, including any arguments it may have (e.g., `(inline_tests (deps ./test_data))`).
+
+**Examples:**
+
+Stanza:
+```dune
+(library
+ (name my_test)
+ (inline_tests))
+```
+
+Condition: `(dune (library PREDICATE))`
+
+| Predicate | Result |
+| --------- | ------ |
+| (has_field inline_tests) | True |
+| (not (has_field inline_tests)) | False. Suggestion: remove the field |
+
 ### Fields shared with other stanzas
 
-This stanza share some sub selectors with other stanzas. See: *has_field*, *instrumentation*, *lint*, *preprocess*.
+This stanza shares some sub selectors with other stanzas. See: *instrumentation*, *lint*, *preprocess*.
 
 For example, you can use the `(dune (library (instrumentation _)))` syntax if you want the *instrumentation* selector to apply to the *library* stanza only.
 

@@ -57,6 +57,14 @@ let () =
 ;;
 
 let () =
+  rule
+    (cond
+       [ path (glob "test/**/src/*"), return
+       ; path (glob "test/**"), enforce (dune (library (has_field `inline_tests)))
+       ])
+;;
+
+let () =
   (* Under [test/] we prefer using the [(package _)] struct rather than having
      public names that are not going to be used by any depending code. At the
      moment there is no dunolint stanza to enforce the presence of the [package]

@@ -30,7 +30,8 @@ module Predicate = struct
 
   module Has_field = struct
     type t =
-      [ `instrumentation
+      [ `inline_tests
+      | `instrumentation
       | `lint
       | `modes
       | `name
@@ -41,7 +42,8 @@ module Predicate = struct
     let equal = (Stdlib.( = ) : t -> t -> bool)
 
     let variant_spec : t Sexp_helpers.Variant_spec.t =
-      [ { atom = "instrumentation"; conv = Nullary `instrumentation }
+      [ { atom = "inline_tests"; conv = Nullary `inline_tests }
+      ; { atom = "instrumentation"; conv = Nullary `instrumentation }
       ; { atom = "lint"; conv = Nullary `lint }
       ; { atom = "modes"; conv = Nullary `modes }
       ; { atom = "name"; conv = Nullary `name }
@@ -57,6 +59,7 @@ module Predicate = struct
     let sexp_of_t (t : t) : Sexp.t =
       Atom
         (match t with
+         | `inline_tests -> "inline_tests"
          | `instrumentation -> "instrumentation"
          | `lint -> "lint"
          | `modes -> "modes"

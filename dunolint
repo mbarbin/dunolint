@@ -12,6 +12,10 @@
   ((path (glob test/**)) (enforce (dune (library (name (is_suffix _test))))))))
 
 (rule
+ (cond ((path (glob test/**/src/*)) return)
+  ((path (glob test/**)) (enforce (dune (library (has_field inline_tests)))))))
+
+(rule
  (cond
   ((path (glob test/**))
    (enforce (dune (library (not (has_field public_name))))))))
