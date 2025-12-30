@@ -23,6 +23,19 @@ $ dunolint lint --root=/path/to/project
 
 This is the same flag that Dune uses, maintaining consistency between the tools.
 
+### The `DUNE_ROOT` Environment Variable
+
+As an alternative to the `--root` flag, you can set the `DUNE_ROOT` environment variable:
+
+<!-- $MDX skip -->
+```bash
+$ DUNE_ROOT=/path/to/project dunolint lint
+```
+
+This is useful for scripting scenarios or when you want to set the root once for multiple commands. Both absolute paths and paths relative to `cwd` are supported.
+
+**Precedence:** The `--root` flag takes precedence over the `DUNE_ROOT` environment variable.
+
 ## Working Directory Change
 
 Once the workspace root is determined, Dunolint changes its working directory to that root before performing any operations. This ensures:

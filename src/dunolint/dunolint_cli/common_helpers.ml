@@ -74,6 +74,11 @@ let enforce_rules_config ~rules =
        |> Dunolint.Config.v1)
 ;;
 
+let resolve_root_path path =
+  let cwd = Unix.getcwd () |> Absolute_path.v in
+  Absolute_path.relativize ~root:cwd path
+;;
+
 let root =
   let open Command.Std in
   let+ root =
@@ -81,14 +86,28 @@ let root =
       [ "root" ]
       (Param.validated_string (module Fpath))
       ~docv:"DIR"
-      ~doc:"Use this directory as dune workspace root instead of guessing it."
+      ~doc:
+        "Use this directory as dune workspace root instead of guessing it. Takes \
+         precedence over the $(b,DUNE_ROOT) environment variable."
   in
-  Option.map root ~f:(fun root ->
-    match Fpath.classify root with
-    | `Absolute path -> path
-    | `Relative path ->
-      let cwd = Unix.getcwd () |> Absolute_path.v in
-      Absolute_path.append cwd path)
+  match root with
+  | Some root -> Some (resolve_root_path root)
+  | None ->
+    (* Fall back to environment variable if flag is not provided. *)
+    (match Sys.getenv "DUNE_ROOT" with
+     | None -> None
+     | Some dune_root ->
+       (match Fpath.of_string dune_root with
+        | Ok path -> Some (resolve_root_path path)
+        | Error (`Msg msg) ->
+          Err.raise
+            ~exit_code:Err.Exit_code.cli_error
+            Pp.O.
+              [ Pp.text "Invalid value for "
+                ++ Pp_tty.kwd (module String) "DUNE_ROOT"
+                ++ Pp.text " environment variable."
+              ; Pp.text msg
+              ]))
 ;;
 
 let relativize ~workspace_root ~cwd ~path =

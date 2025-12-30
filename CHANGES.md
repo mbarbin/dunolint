@@ -2,6 +2,7 @@
 
 ### Added
 
+- Add support for `DUNE_ROOT` environment variable (#156, @mbarbin).
 - Add initial support for linting `dune-workspace` files (#153, @mbarbin).
 - Add initial support for linting `dunolint` files (#146, @mbarbin).
 - Enabled OCaml `5.4` in CI (#136, @mbarbin).
