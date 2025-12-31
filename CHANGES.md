@@ -11,6 +11,7 @@
 
 ### Changed
 
+- Support multiple input files in `tools lint-file --in-place` (#158, @mbarbin).
 - Make a few dunolint config parsing errors more friendly (#155, @mbarbin).
 - Refactor sexp parsing - prerequisite for future improvements (#152, @mbarbin).
 - Cleanup implementation of `equal` functions (#151, @mbarbin).
