@@ -302,7 +302,7 @@ let enforce =
                 | `equals name -> Some name
                 | `is_prefix _ | `is_suffix _ -> None)
             with
-            | None -> Eval
+            | None -> Fail
             | Some name ->
               let name = Name.create ~name in
               t.name <- Some name;
@@ -323,7 +323,7 @@ let enforce =
                 | `equals public_name -> Some public_name
                 | `is_prefix _ | `is_suffix _ -> None)
             with
-            | None -> Eval
+            | None -> Fail
             | Some public_name ->
               let public_name = Public_name.create ~public_name in
               t.public_name <- Some public_name;
