@@ -30,10 +30,7 @@
    (enforce (dune (library (public_name (is_prefix dunolint.))))))
   (true
    (enforce
-    (dune
-     (library
-      (or (not (has_field public_name))
-       (public_name (is_prefix dunolint-dev.)))))))))
+    (dune (library (if_present (public_name (is_prefix dunolint-dev.)))))))))
 
 (rule
  (cond

@@ -94,12 +94,7 @@ let () =
          , enforce (dune (library (public_name (is_prefix "dunolint.")))) )
        ; ( true_
          , enforce
-             (dune
-                (library
-                   (if_
-                      (has_field `public_name)
-                      (public_name (is_prefix "dunolint-dev."))
-                      true_))) )
+             (dune (library (if_present (`public_name (is_prefix "dunolint-dev."))))) )
        ])
 ;;
 
