@@ -85,13 +85,7 @@ let%expect_test "read/write" =
 let%expect_test "sexp_of" =
   let _, t = parse {| (library (name mylib)) |} in
   print_s [%sexp (t : Dune_linter.Library.t)];
-  [%expect
-    {|
-    ((name (((name mylib)))) (public_name ()) (package ()) (inline_tests ())
-     (modes ()) (flags ((flags ()))) (libraries ((sections ())))
-     (libraries_to_open_via_flags ()) (instrumentation ()) (lint ())
-     (preprocess ()) (marked_for_removal ()))
-    |}];
+  [%expect {| ((name ((name mylib)))) |}];
   ()
 ;;
 

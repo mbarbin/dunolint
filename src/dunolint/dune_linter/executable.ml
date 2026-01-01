@@ -50,7 +50,45 @@ type t =
   ; mutable preprocess : Preprocess.t option
   ; marked_for_removal : Hash_set.M(Field_name).t
   }
-[@@deriving sexp_of]
+
+let sexp_of_t
+      { name
+      ; public_name
+      ; flags
+      ; libraries
+      ; instrumentation
+      ; lint
+      ; preprocess
+      ; marked_for_removal
+      }
+  =
+  Sexp.List
+    (List.filter_opt
+       [ Option.map name ~f:(fun v -> Sexp.List [ Atom "name"; Name.sexp_of_t v ])
+       ; Option.map public_name ~f:(fun v ->
+           Sexp.List [ Atom "public_name"; Public_name.sexp_of_t v ])
+       ; (if Flags.is_empty flags
+          then None
+          else Some (Sexp.List [ Atom "flags"; Flags.sexp_of_t flags ]))
+       ; (if Libraries.is_empty libraries
+          then None
+          else Some (Sexp.List [ Atom "libraries"; Libraries.sexp_of_t libraries ]))
+       ; Option.map instrumentation ~f:(fun v ->
+           Sexp.List [ Atom "instrumentation"; Instrumentation.sexp_of_t v ])
+       ; Option.map lint ~f:(fun v -> Sexp.List [ Atom "lint"; Lint.sexp_of_t v ])
+       ; Option.map preprocess ~f:(fun v ->
+           Sexp.List [ Atom "preprocess"; Preprocess.sexp_of_t v ])
+       ; (if Hash_set.is_empty marked_for_removal
+          then None
+          else
+            Some
+              (Sexp.List
+                 [ Atom "marked_for_removal"
+                 ; Hash_set.sexp_of_m__t (module Field_name) marked_for_removal
+                 ]))
+       ])
+  [@coverage off]
+;;
 
 let indicative_field_ordering =
   [ "name"
