@@ -180,5 +180,8 @@ let main =
     (let open Command.Std in
      let+ () = Arg.return () in
      let config = config () in
-     print_endline (Dunolint.Config.to_file_contents config ~generated_by:"src/config.ml"))
+     print_endline
+       (Dunolint.Config.to_file_contents
+          config
+          ~generated_by:"dunolint-config/src/config.ml"))
 ;;
