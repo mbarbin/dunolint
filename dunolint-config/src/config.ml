@@ -60,22 +60,24 @@ let () =
 ;;
 
 let () =
-  (* Under [test/] we prefer using the [(package _)] struct rather than having
-     public names that are not going to be used by any depending code. At the
-     moment there is no dunolint stanza to enforce the presence of the [package]
-     construct but if we add one, we'll revisit here. Or perhaps we'll use
-     dune's [package.dir] stanza, TBD. *)
+  (* Under [test/] and [dunolint-config/] we prefer using the [(package _)]
+     stanza rather than having public names that are not going to be used by any
+     depending code. All these libraries belong to [dunolint-tests].
+
+     At the moment there is no dunolint stanza to enforce the presence of the
+     [package] construct but if we add one, we'll revisit here. Or perhaps we'll
+     use dune's [package.dir] stanza, TBD. *)
   rule
     (cond
-       [ path (glob "test/**"), enforce (dune (library (not_ (has_field `public_name)))) ])
+       [ ( path (or_ [ glob "test/**"; glob "dunolint-config/**" ])
+         , enforce (dune (library (not_ (has_field `public_name)))) )
+       ])
 ;;
 
 let () =
   rule
     (cond
-       [ ( path (glob "dunolint-config/**")
-         , enforce (dune (library (public_name (is_prefix "dunolint-tests.")))) )
-       ; ( path (glob "src/dunolint-lib/vendor/**")
+       [ ( path (glob "src/dunolint-lib/vendor/**")
          , enforce (dune (library (public_name (is_prefix "dunolint-lib.")))) )
        ; ( path (glob "src/dunolint-lib/dunolint/*")
          , enforce

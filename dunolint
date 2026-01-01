@@ -15,13 +15,11 @@
 
 (rule
  (cond
-  ((path (glob test/**))
+  ((path (or (glob test/**) (glob dunolint-config/**)))
    (enforce (dune (library (not (has_field public_name))))))))
 
 (rule
  (cond
-  ((path (glob dunolint-config/**))
-   (enforce (dune (library (public_name (is_prefix dunolint-tests.))))))
   ((path (glob src/dunolint-lib/vendor/**))
    (enforce (dune (library (public_name (is_prefix dunolint-lib.))))))
   ((path (glob src/dunolint-lib/dunolint/*))
