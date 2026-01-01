@@ -2,6 +2,7 @@
 
 ### Added
 
+- Add new qualifier `if_present` to enforce only if field is present (#159, @mbarbin).
 - Add predicates for the `(inline_tests)` library stanza (#157, @mbarbin).
 - Add support for `DUNE_ROOT` environment variable (#156, @mbarbin).
 - Add initial support for linting `dune-workspace` files (#153, @mbarbin).
@@ -25,6 +26,8 @@
 
 ### Fixed
 
+- Fix location of sexp error on invalid atoms (#160, @mbarbin).
+- Fix enforce on absent `public_name` fields (#159, @mbarbin).
 - Allow dash char in package names (#154, @mbarbin).
 
 ### Removed
