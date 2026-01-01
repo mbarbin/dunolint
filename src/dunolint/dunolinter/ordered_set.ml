@@ -52,6 +52,8 @@ let union = function
   | ([] | _ :: _ :: _) as union -> Union union
 ;;
 
+let empty = Union []
+
 let read ~read_element ~sexps_rewriter sexps =
   let rec one sexp =
     match (sexp : Sexp.t) with

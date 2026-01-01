@@ -55,6 +55,7 @@ end
 
 val of_set : ('a, _) Set.t -> 'a t
 val of_list : 'a list -> 'a t
+val empty : 'a t
 
 (** Return the elements of [t] as a set, using the specified static evaluator. *)
 val as_set

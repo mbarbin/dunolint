@@ -45,9 +45,11 @@ When enforced, *dunolint* suggests prepending or appending the supplied value di
 
 **Negation**: When the negation of the predicates *is_prefix* and *is_suffix* is enforced, *dunolint* suggests removing the supplied value directly from the name if applicable, if it is currently a prefix (resp. suffix).
 
+**Absent field**: Only `(equals NAME)` can initialize an absent field. Predicates like `(is_prefix _)` and `(is_suffix _)` cannot provide an initial value, so enforcing them on an absent field will fail. Use `(equals NAME)` to initialize the field, or add it manually before running dunolint.
+
 **Examples:**
 
-Stanza:
+Stanza with name present:
 ```dune
 (executable
  (name main))
@@ -60,6 +62,20 @@ Condition: `(dune (executable (name PREDICATE)))`
 | (equals main) | True |
 | (is_prefix "my_") | False. Suggestion: "my_main" |
 | (is_suffix "_test") | False. Suggestion: "main_test" |
+
+Stanza with name absent:
+```dune
+(executable
+ (public_name my-cli))
+```
+
+Condition: `(enforce (dune (executable (name PREDICATE))))`
+
+| Predicate | Result  |
+| --------- | ------- |
+| (equals main) | Field inserted: `(name main)` |
+| (is_prefix "my_") | Enforcement failure |
+| (is_suffix "_test") | Enforcement failure |
 
 ### public_name
 
@@ -119,6 +135,84 @@ Condition: `(dune (library PREDICATE))`
 | (has_field instrumentation) | True |
 | (has_field preprocess) | False. Suggestion: initialize the field |
 | (not (has_field instrumentation)) | False. Suggestion: remove the field |
+
+## if_present
+
+`(if_present (FIELD CONDITION))` is a conditional wrapper that applies a field predicate only when the field is present. If the field is absent, the condition evaluates to *true* and enforcement is skipped (unapplicable).
+
+This is useful when you want to enforce constraints on a field only if it exists, without failing when the field is absent.
+
+**Supported FIELDs:**
+
+| Field | Stanza |
+| ----- | ------ |
+| public_name | library |
+
+**Behavior:**
+
+- **Eval**: If the field is absent, returns *true*. If the field is present, evaluates the inner condition.
+- **Enforce**: If the field is absent, does nothing (unapplicable). If the field is present, enforces the inner condition.
+
+:::tip
+
+Use `if_present` when you want a constraint to apply only to existing fields without trying to create them. This is particularly useful for enforcing naming conventions like prefixes or suffixes on optional fields.
+
+:::
+
+**Examples:**
+
+Stanza without public_name:
+```dune
+(library
+ (name mylib))
+```
+
+| Condition | Result |
+| --------- | ------ |
+| `(if_present (public_name (is_prefix "lib.")))` | True (field absent, so condition is satisfied) |
+| `(public_name (is_prefix "lib."))` | Undefined (field absent) |
+| `(enforce (if_present (public_name (is_prefix "lib."))))` | No change (unapplicable) |
+| `(enforce (public_name (is_prefix "lib.")))` | Enforcement failure |
+
+Stanza with public_name:
+```dune
+(library
+ (name mylib)
+ (public_name my-public-lib))
+```
+
+| Condition | Result |
+| --------- | ------ |
+| `(if_present (public_name (is_prefix "lib.")))` | False. Suggestion: "lib.my-public-lib" |
+| `(if_present (public_name (is_prefix "my-")))` | True |
+
+**Use case in config:**
+
+```dune
+;; Apply prefix constraint only when public_name exists
+(rule
+ (cond
+  ((path (glob src/**))
+   (enforce
+    (dune
+     (library
+      (if_present (public_name (is_prefix "mylib.")))))))))
+```
+
+Compare with the alternative using `if_` and `has_field`:
+
+```dune
+;; Equivalent behavior using if_ and has_field
+(rule
+ (cond
+  ((path (glob src/**))
+   (enforce
+    (dune
+     (library
+      (if_ (has_field public_name)
+           (public_name (is_prefix "mylib."))
+           true_)))))))
+```
 
 ## include_subdirs
 

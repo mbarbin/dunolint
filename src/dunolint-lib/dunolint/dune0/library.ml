@@ -77,6 +77,7 @@ module Predicate = struct
     | `name of Name.Predicate.t Blang.t
     | `preprocess of Preprocess.Predicate.t Blang.t
     | `public_name of Public_name.Predicate.t Blang.t
+    | `if_present of [ `public_name of Public_name.Predicate.t Blang.t ]
     ]
 
   let equal (a : t) (b : t) =
@@ -92,17 +93,22 @@ module Predicate = struct
       | `name va, `name vb -> Blang.equal Name.Predicate.equal va vb
       | `preprocess va, `preprocess vb -> Blang.equal Preprocess.Predicate.equal va vb
       | `public_name va, `public_name vb -> Blang.equal Public_name.Predicate.equal va vb
+      | `if_present p1, `if_present p2 ->
+        (match p1, p2 with
+         | `public_name va, `public_name vb ->
+           Blang.equal Public_name.Predicate.equal va vb)
       | ( ( `has_field _
           | `instrumentation _
           | `lint _
           | `modes _
           | `name _
           | `preprocess _
-          | `public_name _ )
+          | `public_name _
+          | `if_present _ )
         , _ ) -> false)
   ;;
 
-  let variant_spec : t Sexp_helpers.Variant_spec.t =
+  let rec variant_spec : t Sexp_helpers.Variant_spec.t =
     [ { atom = "has_field"
       ; conv = Unary (fun sexp -> `has_field (Has_field.t_of_sexp sexp))
       }
@@ -133,7 +139,24 @@ module Predicate = struct
             (fun sexp ->
               `public_name (Blang.t_of_sexp Public_name.Predicate.t_of_sexp sexp))
       }
+    ; { atom = "if_present"
+      ; conv = Unary (fun sexp -> `if_present (if_present_of_sexp sexp))
+      }
     ]
+
+  and if_present_variant_spec
+    : [ `public_name of Public_name.Predicate.t Blang.t ] Sexp_helpers.Variant_spec.t
+    =
+    [ { atom = "public_name"
+      ; conv =
+          Unary
+            (fun sexp ->
+              `public_name (Blang.t_of_sexp Public_name.Predicate.t_of_sexp sexp))
+      }
+    ]
+
+  and if_present_of_sexp sexp =
+    Sexp_helpers.parse_variant if_present_variant_spec ~error_source sexp
   ;;
 
   let t_of_sexp (sexp : Sexp.t) : t =
@@ -153,5 +176,13 @@ module Predicate = struct
       List [ Atom "preprocess"; Blang.sexp_of_t Preprocess.Predicate.sexp_of_t v ]
     | `public_name v ->
       List [ Atom "public_name"; Blang.sexp_of_t Public_name.Predicate.sexp_of_t v ]
+    | `if_present p ->
+      List
+        [ Atom "if_present"
+        ; (match p with
+           | `public_name v ->
+             List
+               [ Atom "public_name"; Blang.sexp_of_t Public_name.Predicate.sexp_of_t v ])
+        ]
   ;;
 end

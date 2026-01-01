@@ -27,10 +27,6 @@ type t
 
 val create : modes:Ordered_set.t -> t
 
-(** When the field appears in the condition blang, we create a first value to
-    initialize when the field is not originally present. *)
-val initialize : condition:Dune.Library.Modes.Predicate.t Blang.t -> t
-
 include
   Dunolinter.Stanza_linter.S
   with type t := t

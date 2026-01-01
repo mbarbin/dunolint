@@ -1,6 +1,6 @@
 (library
  (name dunolint_dunolint_config_test)
- (public_name dunolint-tests.dunolint_dunolint_config_test)
+ (package dunolint-tests)
  (inline_tests)
  (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a)
  (libraries dunolint_dunolint_config)

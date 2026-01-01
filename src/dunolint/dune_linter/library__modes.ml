@@ -112,17 +112,3 @@ let enforce =
         List.iter modes ~f:(fun mode -> remove_mode t ~mode);
         Ok)
 ;;
-
-let initialize ~condition =
-  let modes =
-    let set =
-      Dunolinter.Linter.at_positive_enforcing_position condition
-      |> List.concat_map ~f:(function
-        | `has_modes modes -> modes
-        | `has_mode mode -> [ mode ])
-      |> Set.of_list (module Dune.Compilation_mode)
-    in
-    if Set.is_empty set then Set.singleton (module Dune.Compilation_mode) `best else set
-  in
-  { modes = Dunolinter.Ordered_set.of_set modes }
-;;

@@ -79,17 +79,17 @@ let enforce
   aux
 ;;
 
-let at_positive_enforcing_position (condition : 'a Blang.t) =
-  let rec loop acc t =
+let find_init_value (condition : 'a Blang.t) ~(f : 'a -> 'b option) : 'b option =
+  let rec loop t =
     match (t : _ Blang.t) with
-    | Base a -> a :: acc
+    | Base a -> f a
     | And (a, b) ->
-      let acc = loop acc a in
-      let acc = loop acc b in
-      acc
-    | If _ | True | False | Not _ | Or _ -> acc
+      (match loop a with
+       | Some _ as result -> result
+       | None -> loop b)
+    | If _ | True | False | Not _ | Or _ -> None
   in
-  List.rev (loop [] condition)
+  loop condition
 ;;
 
 let public_name_is_prefix name ~prefix =

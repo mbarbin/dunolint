@@ -398,6 +398,12 @@ let eval t ~predicate =
      | Some public_name ->
        Dunolint.Trilang.eval condition ~f:(fun predicate ->
          Public_name.eval public_name ~predicate))
+  | `if_present (`public_name condition) ->
+    (match t.public_name with
+     | None -> Dunolint.Trilang.True
+     | Some public_name ->
+       Dunolint.Trilang.eval condition ~f:(fun predicate ->
+         Public_name.eval public_name ~predicate))
   | `modes condition ->
     (match t.modes with
      | None -> Dunolint.Trilang.Undefined
@@ -458,6 +464,7 @@ let enforce =
                 with bisect_ppx atm. Left for future work. *)
              match[@coverage off] condition with
              | `has_field _ -> assert false
+             | `if_present _
              | `name _
              | `public_name _
              | `modes _
@@ -477,13 +484,11 @@ let enforce =
            Ok
          | None ->
            (match
-              List.find_map
-                (Dunolinter.Linter.at_positive_enforcing_position condition)
-                ~f:(function
+              Dunolinter.Linter.find_init_value condition ~f:(function
                 | `equals name -> Some name
                 | `is_prefix _ | `is_suffix _ -> None)
             with
-            | None -> Eval
+            | None -> Fail
             | Some name ->
               let name = Name.create ~name in
               t.name <- Some name;
@@ -493,6 +498,12 @@ let enforce =
         (match t.public_name with
          | Some _ -> Ok
          | None -> Fail)
+      | T (`if_present (`public_name condition)) ->
+        (match t.public_name with
+         | None -> Unapplicable
+         | Some public_name ->
+           Public_name.enforce public_name ~condition;
+           Ok)
       | T (`public_name condition) ->
         (match t.public_name with
          | Some public_name ->
@@ -500,13 +511,11 @@ let enforce =
            Ok
          | None ->
            (match
-              List.find_map
-                (Dunolinter.Linter.at_positive_enforcing_position condition)
-                ~f:(function
+              Dunolinter.Linter.find_init_value condition ~f:(function
                 | `equals public_name -> Some public_name
                 | `is_prefix _ | `is_suffix _ -> None)
             with
-            | None -> Eval
+            | None -> Fail
             | Some public_name ->
               let public_name = Public_name.create ~public_name in
               t.public_name <- Some public_name;
@@ -522,14 +531,15 @@ let enforce =
         (match t.modes with
          | Some _ -> Ok
          | None ->
-           t.modes <- Some (Modes.initialize ~condition:Blang.true_);
+           let modes = Modes.create ~modes:(Dunolinter.Ordered_set.of_list [ `best ]) in
+           t.modes <- Some modes;
            Ok)
       | T (`modes condition) ->
         let modes =
           match t.modes with
           | Some modes -> modes
           | None ->
-            let modes = Modes.initialize ~condition in
+            let modes = Modes.create ~modes:Dunolinter.Ordered_set.empty in
             t.modes <- Some modes;
             modes
         in

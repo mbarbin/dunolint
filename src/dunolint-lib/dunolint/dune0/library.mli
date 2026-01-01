@@ -40,6 +40,7 @@ module Predicate : sig
     | `name of Name.Predicate.t Blang.t
     | `preprocess of Preprocess.Predicate.t Blang.t
     | `public_name of Public_name.Predicate.t Blang.t
+    | `if_present of [ `public_name of Public_name.Predicate.t Blang.t ]
     ]
 
   val equal : t -> t -> bool

@@ -331,10 +331,16 @@ let%expect_test "enforce" =
   enforce t [ public_name (equals (Dune.Executable.Public_name.v "my-cli")) ];
   [%expect {| (executable (name main) (public_name my-cli)) |}];
   let t = parse {| (executable (name main)) |} in
-  (* When the required invariant is negated, and there is no public_name,
-     dunolint simply does nothing and considers it an undefined invariants. *)
-  enforce t [ public_name (not_ (equals (Dune.Executable.Public_name.v "my-cli"))) ];
-  [%expect {| (executable (name main)) |}];
+  (* When the field is absent and the condition cannot provide an initial value
+     (e.g., negation, is_prefix, is_suffix), enforcement fails. The user must
+     add the field manually before dunolint can enforce constraints on it. *)
+  require_does_raise (fun () ->
+    enforce t [ public_name (not_ (equals (Dune.Executable.Public_name.v "my-cli"))) ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (public_name (not (equals my-cli)))))
+    |}];
   ()
 ;;
 
@@ -382,17 +388,21 @@ let%expect_test "load_existing_libraries" =
 ;;
 
 let%expect_test "add_name_via_enforce" =
-  (* This test covers helpers dedicated to finding initial values for field when
-     an absent field is subject to invariants. Typically the function
-     [Dunolinter.at_positive_enforcing_position] and its downstream usages. *)
+  (* This test covers the initialization of absent fields during enforcement.
+     Only [equals] predicates at positive enforcing positions (Base and And)
+     can provide initial values. Other predicates like [is_prefix] or [is_suffix]
+     cannot provide initial values and cause enforcement to fail. *)
   let init = {| (executable (public_name my-cli)) |} in
   let main = Dune.Executable.Name.v "main" in
   let test cond =
     let t = parse init in
     enforce_diff t cond
   in
-  (* That's the easy case: you can simply pick the name from the invariant
-     directly. *)
+  let test_fails cond =
+    let t = parse init in
+    require_does_raise (fun () -> enforce t cond)
+  in
+  (* [equals] at a positive position can initialize the field. *)
   test [ name (equals main) ];
   [%expect
     {|
@@ -402,12 +412,21 @@ let%expect_test "add_name_via_enforce" =
     +| (public_name my-cli)
     +| (name main))
     |}];
-  (* The invariant will be undefined if the field isn't there. *)
-  test [ name (is_prefix "hey") ];
-  [%expect {||}];
-  test [ name (is_suffix "hey") ];
-  [%expect {||}];
-  (* When the invariant contains an initial value, it is used to initialize the field. *)
+  (* [is_prefix] and [is_suffix] cannot provide initial values - enforcement fails. *)
+  test_fails [ name (is_prefix "hey") ];
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (name (is_prefix hey))))
+    |}];
+  test_fails [ name (is_suffix "hey") ];
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (name (is_suffix hey))))
+    |}];
+  (* When [equals] is combined with other predicates in [and_], the initial
+     value from [equals] is used. *)
   test [ name (and_ [ equals main; is_prefix "ma" ]) ];
   [%expect
     {|
@@ -430,16 +449,28 @@ let%expect_test "add_name_via_enforce" =
     +| (public_name my-cli)
     +| (name hey_main))
     |}];
-  (* When going through other blang constructs, currently we do not pick initial
-     values. *)
-  test [ name (or_ [ equals main; is_prefix "hey" ]) ];
-  [%expect {||}];
-  test [ name (if_ (is_prefix "hey") (is_suffix "ho") (equals main)) ];
-  [%expect {||}];
-  test [ name (not_ (equals main)) ];
-  [%expect {||}];
-  test [ name false_ ];
-  [%expect {||}];
+  (* Predicates inside [or_], [if_], or [not_] are not at positive enforcing
+     positions, so they cannot provide initial values - enforcement fails. *)
+  test_fails [ name (or_ [ equals main; is_prefix "hey" ]) ];
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (name (or (equals main) (is_prefix hey)))))
+    |}];
+  test_fails [ name (if_ (is_prefix "hey") (is_suffix "ho") (equals main)) ];
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (name (if (is_prefix hey) (is_suffix ho) (equals main)))))
+    |}];
+  test_fails [ name (not_ (equals main)) ];
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (name (not (equals main)))))
+    |}];
+  test_fails [ name false_ ];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (name false))) |}];
   ()
 ;;
 
@@ -466,6 +497,10 @@ let%expect_test "enforce_failures" =
     let t = parse init in
     enforce_diff t cond
   in
+  let test_fails cond =
+    let t = parse init in
+    require_does_raise (fun () -> enforce t cond)
+  in
   test [ public_name (equals (Dune.Executable.Public_name.v "public-main")) ];
   [%expect
     {|
@@ -475,10 +510,19 @@ let%expect_test "enforce_failures" =
     +| (name my_exe)
     +| (public_name public-main))
     |}];
-  test [ public_name (is_prefix "prefix_") ];
-  [%expect {||}];
-  test [ public_name (is_suffix "_suffix") ];
-  [%expect {||}];
+  (* [is_prefix] and [is_suffix] cannot provide initial values - enforcement fails. *)
+  test_fails [ public_name (is_prefix "prefix_") ];
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (public_name (is_prefix prefix_))))
+    |}];
+  test_fails [ public_name (is_suffix "_suffix") ];
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (public_name (is_suffix _suffix))))
+    |}];
   ()
 ;;
 
@@ -490,6 +534,7 @@ let%expect_test "undefined conditions" =
   in
   let main = Dune.Executable.Name.v "main" in
   let _, t = parse init in
+  (* Evaluation of [is_prefix] on an absent field is undefined. *)
   Test_helpers.is_undefined
     (Dune_linter.Executable.eval t ~predicate:(`name (is_prefix "hey")));
   [%expect {||}];
@@ -497,12 +542,16 @@ let%expect_test "undefined conditions" =
   test [ if_ (name (is_prefix "hey")) (name (equals main)) (name (is_suffix "ho")) ];
   [%expect {| (executable (public_name my-cli)) |}];
   (* Beware of static code simplifications performed by Blang though! In the
-     following example, the [if_] is rewritten as a [And _] sequence, with the
-     first item being unapplicable, and thus ignored, and the second one being
-     evaluated. Arguably this is quite surprising, and maybe the semantic of
-     [And] shall be revisited. Left as characterization test for future work. *)
-  test [ if_ (name (is_prefix "hey")) (name (equals main)) false_ ];
-  [%expect {| (executable (public_name my-cli) (name main)) |}];
+     following example, the [if_] is rewritten as a [And _] sequence. Since
+     [is_prefix] is now at a positive enforcing position but cannot provide
+     an initial value for the absent field, enforcement fails. *)
+  require_does_raise (fun () ->
+    test [ if_ (name (is_prefix "hey")) (name (equals main)) false_ ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (name (is_prefix hey))))
+    |}];
   ()
 ;;
 

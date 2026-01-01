@@ -31,6 +31,13 @@ const sidebars: SidebarsConfig = {
         { type: 'doc', id: 'guides/installation', label: 'Installation' },
         { type: 'doc', id: 'guides/reformatter', label: 'Using dunolint as an Emacs reformatter' },
         { type: 'doc', id: 'guides/pre-commit', label: 'Using dunolint in pre-commit hooks' },
+        {
+          type: 'category', label: 'Migration Guides',
+          link: { type: 'doc', id: 'guides/migration-guides/README' },
+          items: [
+            { type: 'doc', id: 'guides/migration-guides/is-prefix-is-suffix-absent-fields', label: 'is_prefix/is_suffix on absent fields' },
+          ]
+        },
       ],
     },
   ],
