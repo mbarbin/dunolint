@@ -75,15 +75,13 @@ let () =
     (cond
        [ ( path (glob "dunolint-config/**")
          , enforce (dune (library (public_name (is_prefix "dunolint-tests.")))) )
-       ; ( path (glob "src/dunolint-lib/**")
+       ; ( path (glob "src/dunolint-lib/vendor/**")
+         , enforce (dune (library (public_name (is_prefix "dunolint-lib.")))) )
+       ; ( path (glob "src/dunolint-lib/dunolint/*")
          , enforce
              (dune
                 (library
-                   (public_name
-                      (or_
-                         [ is_prefix "dunolint-lib."
-                         ; equals (Dune.Library.Public_name.v "dunolint-lib")
-                         ])))) )
+                   (public_name (equals (Dune.Library.Public_name.v "dunolint-lib"))))) )
        ; ( path (glob "src/dunolint-lib-base/**")
          , enforce
              (dune
