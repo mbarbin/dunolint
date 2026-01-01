@@ -48,11 +48,16 @@ val enforce
   -> condition:'predicate Blang.t
   -> unit
 
-(** Returns the list of elements from the input condition that are directly
-    reachable as elements to be enforced, without going through dynamic
-    conditions or SAT logic. In practice, that is [Base], and elements under
-    [And _] recursively. *)
-val at_positive_enforcing_position : 'a Blang.t -> 'a list
+(** Search for an initial value that can be used to initialize an absent field.
+
+    Only predicates at positive enforcing positions (Base and And) are
+    considered. The function [f] should return [Some value] for predicates
+    that can provide a concrete initial value (like [equals]), and [None]
+    for predicates that cannot (like [is_prefix] or [is_suffix]).
+
+    Returns the first matching value found, or [None] if no predicate can
+    provide an initial value. *)
+val find_init_value : 'a Blang.t -> f:('a -> 'b option) -> 'b option
 
 (** A helper that applies some usually helpful heuristic when proposing a new
     name based on the [`is_prefix] predicate. Assumed to be called when the

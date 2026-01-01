@@ -241,6 +241,28 @@ let%expect_test "mem" =
   ()
 ;;
 
+let%expect_test "of_set and empty" =
+  let show t =
+    let sexps = Ordered_set.write ~write_a:Int.sexp_of_t t in
+    print_s [%sexp (sexps : Sexp.t list)]
+  in
+  let test set =
+    let t = Ordered_set.of_set set in
+    show t
+  in
+  (* empty *)
+  show Ordered_set.empty;
+  [%expect {| () |}];
+  (* of_set *)
+  test (Set.empty (module Int));
+  [%expect {| () |}];
+  test (Set.of_list (module Int) [ 1 ]);
+  [%expect {| (1) |}];
+  test (Set.of_list (module Int) [ 3; 1; 2 ]);
+  [%expect {| (1 2 3) |}];
+  ()
+;;
+
 let%expect_test "insert and remove" =
   let show t =
     let t = Ordered_set.canonical_sort (module Int) t in

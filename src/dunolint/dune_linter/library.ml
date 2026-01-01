@@ -477,9 +477,7 @@ let enforce =
            Ok
          | None ->
            (match
-              List.find_map
-                (Dunolinter.Linter.at_positive_enforcing_position condition)
-                ~f:(function
+              Dunolinter.Linter.find_init_value condition ~f:(function
                 | `equals name -> Some name
                 | `is_prefix _ | `is_suffix _ -> None)
             with
@@ -500,9 +498,7 @@ let enforce =
            Ok
          | None ->
            (match
-              List.find_map
-                (Dunolinter.Linter.at_positive_enforcing_position condition)
-                ~f:(function
+              Dunolinter.Linter.find_init_value condition ~f:(function
                 | `equals public_name -> Some public_name
                 | `is_prefix _ | `is_suffix _ -> None)
             with
@@ -522,14 +518,15 @@ let enforce =
         (match t.modes with
          | Some _ -> Ok
          | None ->
-           t.modes <- Some (Modes.initialize ~condition:Blang.true_);
+           let modes = Modes.create ~modes:(Dunolinter.Ordered_set.of_list [ `best ]) in
+           t.modes <- Some modes;
            Ok)
       | T (`modes condition) ->
         let modes =
           match t.modes with
           | Some modes -> modes
           | None ->
-            let modes = Modes.initialize ~condition in
+            let modes = Modes.create ~modes:Dunolinter.Ordered_set.empty in
             t.modes <- Some modes;
             modes
         in

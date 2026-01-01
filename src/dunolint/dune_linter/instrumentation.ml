@@ -91,9 +91,7 @@ let default_backend = Dune.Instrumentation.Backend.Name.v "bisect_ppx"
 
 let initialize ~condition =
   let backend =
-    List.find_map
-      (Dunolinter.Linter.at_positive_enforcing_position condition)
-      ~f:(function `backend name -> Some name)
+    Dunolinter.Linter.find_init_value condition ~f:(function `backend name -> Some name)
     |> Option.value ~default:default_backend
   in
   { backend }

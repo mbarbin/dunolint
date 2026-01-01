@@ -270,19 +270,3 @@ let%expect_test "enforce" =
   [%expect {| (modes :standard) |}];
   ()
 ;;
-
-let%expect_test "initialize" =
-  let test condition =
-    let t = Dune_linter.Library.Modes.initialize ~condition in
-    print_s (Dune_linter.Library.Modes.write t)
-  in
-  test true_;
-  [%expect {| (modes best) |}];
-  test (has_modes []);
-  [%expect {| (modes best) |}];
-  test (has_modes [ `byte; `native ]);
-  [%expect {| (modes byte native) |}];
-  test (has_mode `byte);
-  [%expect {| (modes byte) |}];
-  ()
-;;

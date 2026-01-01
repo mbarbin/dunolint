@@ -633,6 +633,17 @@ let%expect_test "add_name_via_enforce" =
     +| (public_name my-cli)
     +| (name main))
     |}];
+  (* When [equals] is the second operand, [find_init_value] continues scanning
+     past the first operand that doesn't provide an initial value. *)
+  test [ name (and_ [ is_prefix "ma"; equals main ]) ];
+  [%expect
+    {|
+    -1,2 +1,3
+      (library
+    -| (public_name my-cli))
+    +| (public_name my-cli)
+    +| (name main))
+    |}];
   (* Currently the application of invariant is not idempotent. See how, at the
      end of the application of this chain of [and_] the invariant no longer
      holds. We'll probably revisit at some later point, keeping as
