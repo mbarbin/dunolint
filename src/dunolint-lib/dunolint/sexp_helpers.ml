@@ -118,7 +118,7 @@ end
 let parse_variant (type a) (variant_spec : a Variant_spec.t) ~error_source (sexp : Sexp.t)
   : a
   =
-  let find_case atom =
+  let find_case ~located_sexp atom =
     match
       List.find_opt
         (fun (c : a Variant_spec.case) -> String.equal c.atom atom)
@@ -133,11 +133,11 @@ let parse_variant (type a) (variant_spec : a Variant_spec.t) ~error_source (sexp
         ; suggestion = None
         }
       in
-      raise (Sexplib0.Sexp_conv.Of_sexp_error (Error_context.E context, sexp))
+      raise (Sexplib0.Sexp_conv.Of_sexp_error (Error_context.E context, located_sexp))
   in
   match sexp with
   | Atom atom ->
-    (match find_case atom with
+    (match find_case ~located_sexp:sexp atom with
      | { conv = Nullary value; _ } -> value
      | { conv = Unary_with_context _ | Unary _ | Variadic _; _ } ->
        let context =
@@ -148,8 +148,8 @@ let parse_variant (type a) (variant_spec : a Variant_spec.t) ~error_source (sexp
          }
        in
        raise (Sexplib0.Sexp_conv.Of_sexp_error (Error_context.E context, sexp)))
-  | List (Atom atom :: args) ->
-    (match find_case atom with
+  | List ((Atom atom as located_sexp) :: args) ->
+    (match find_case ~located_sexp atom with
      | { conv = Nullary _; _ } -> Sexplib0.Sexp_conv_error.ptag_no_args error_source sexp
      | { conv = Unary f; _ } ->
        (match args with

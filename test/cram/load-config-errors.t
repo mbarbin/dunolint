@@ -159,9 +159,9 @@ Unknown constructor.
   > EOF
 
   $ dunolint tools config validate dunolint
-  File "dunolint", line 3, characters 15-60:
+  File "dunolint", line 3, characters 16-20:
   3 | (rule (enforce (duno (instrumentation (backend bisect_ppx)))))
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                      ^^^^
   Error: Unknown construct [duno].
   Hint: did you mean dune?
   [123]

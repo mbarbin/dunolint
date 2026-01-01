@@ -162,7 +162,7 @@ let%expect_test "Predicate.t_of_sexp" =
      (Dunolint.Sexp_helpers.Error_context.E
       ("Unknown construct [unknown]."
        (did_you_mean? ((var unknown) (candidates = > >= < <= !=)))))
-     (invalid_sexp (unknown 1.0)))
+     (invalid_sexp unknown))
     |}];
   ()
 ;;

@@ -96,7 +96,7 @@ let%expect_test "parse_variant" =
      (Dunolint.Sexp_helpers.Error_context.E
       ("Unknown construct [unknown]."
        (did_you_mean? ((var unknown) (candidates foo bar nullary ctx variadic)))))
-     (invalid_sexp (unknown hello)))
+     (invalid_sexp unknown))
     |}];
   (* Error: list with wrong number of arguments (zero). *)
   test "(foo)";

@@ -193,7 +193,7 @@ let%expect_test "Predicate.t_of_sexp" =
         ((var unknown)
          (candidates = > >= < <= != equals greater_than_or_equal_to
           less_than_or_equal_to)))))
-     (invalid_sexp (unknown 3.20)))
+     (invalid_sexp unknown))
     |}];
   ()
 ;;
