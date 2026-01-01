@@ -52,15 +52,10 @@ let () =
   rule
     (cond
        [ path (glob "test/**/src/*"), return
-       ; path (glob "test/**"), enforce (dune (library (name (is_suffix "_test"))))
-       ])
-;;
-
-let () =
-  rule
-    (cond
-       [ path (glob "test/**/src/*"), return
-       ; path (glob "test/**"), enforce (dune (library (has_field `inline_tests)))
+       ; ( path (glob "test/**")
+         , enforce
+             (dune (library (and_ [ name (is_suffix "_test"); has_field `inline_tests ])))
+         )
        ])
 ;;
 
