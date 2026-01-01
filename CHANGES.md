@@ -2,6 +2,7 @@
 
 ### Added
 
+- Add initial support for `package` predicates in libraries (#161, @mbarbin).
 - Add new qualifier `if_present` to enforce only if field is present (#159, @mbarbin).
 - Add predicates for the `(inline_tests)` library stanza (#157, @mbarbin).
 - Add support for `DUNE_ROOT` environment variable (#156, @mbarbin).
