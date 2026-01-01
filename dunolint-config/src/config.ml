@@ -62,15 +62,17 @@ let () =
 let () =
   (* Under [test/] and [dunolint-config/] we prefer using the [(package _)]
      stanza rather than having public names that are not going to be used by any
-     depending code. All these libraries belong to [dunolint-tests].
-
-     At the moment there is no dunolint stanza to enforce the presence of the
-     [package] construct but if we add one, we'll revisit here. Or perhaps we'll
-     use dune's [package.dir] stanza, TBD. *)
+     depending code. All these libraries belong to [dunolint-tests]. *)
   rule
     (cond
        [ ( path (or_ [ glob "test/**"; glob "dunolint-config/**" ])
-         , enforce (dune (library (not_ (has_field `public_name)))) )
+         , enforce
+             (dune
+                (library
+                   (and_
+                      [ not_ (has_field `public_name)
+                      ; package (equals (Dune.Package.Name.v "dunolint-tests"))
+                      ]))) )
        ])
 ;;
 

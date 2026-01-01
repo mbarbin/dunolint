@@ -16,7 +16,10 @@
 (rule
  (cond
   ((path (or (glob test/**) (glob dunolint-config/**)))
-   (enforce (dune (library (not (has_field public_name))))))))
+   (enforce
+    (dune
+     (library
+      (and (not (has_field public_name)) (package (equals dunolint-tests)))))))))
 
 (rule
  (cond
