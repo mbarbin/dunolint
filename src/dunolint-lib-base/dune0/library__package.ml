@@ -19,8 +19,4 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Modes = Dunolint.Dune.Library.Modes
-module Name = Library__name
-module Package = Library__package
-module Public_name = Library__public_name
-module Predicate = Dunolint.Dune.Library.Predicate
+module Predicate = Dunolint.Dune.Library.Package.Predicate

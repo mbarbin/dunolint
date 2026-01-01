@@ -21,6 +21,7 @@
 
 module Modes = Library__modes
 module Name = Library__name
+module Package = Library__package
 module Public_name = Library__public_name
 
 module Predicate : sig
@@ -31,6 +32,7 @@ module Predicate : sig
         | `lint
         | `modes
         | `name
+        | `package
         | `preprocess
         | `public_name
         ]
@@ -38,9 +40,13 @@ module Predicate : sig
     | `lint of Lint.Predicate.t Blang.t
     | `modes of Modes.Predicate.t Blang.t
     | `name of Name.Predicate.t Blang.t
+    | `package of Package.Predicate.t Blang.t
     | `preprocess of Preprocess.Predicate.t Blang.t
     | `public_name of Public_name.Predicate.t Blang.t
-    | `if_present of [ `public_name of Public_name.Predicate.t Blang.t ]
+    | `if_present of
+        [ `package of Package.Predicate.t Blang.t
+        | `public_name of Public_name.Predicate.t Blang.t
+        ]
     ]
 
   val equal : t -> t -> bool

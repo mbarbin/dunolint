@@ -21,6 +21,7 @@
 
 module Modes = Library__modes
 module Name = Library__name
+module Package = Library__package
 module Public_name = Library__public_name
 
 let field_name = "library"
@@ -30,6 +31,7 @@ module Field_name = struct
     type t =
       [ `name
       | `public_name
+      | `package
       | `inline_tests
       | `modes
       | `instrumentation
@@ -46,6 +48,7 @@ end
 type t =
   { mutable name : Name.t option
   ; mutable public_name : Public_name.t option
+  ; mutable package : Package.t option
   ; mutable inline_tests : unit option
   ; mutable modes : Modes.t option
   ; flags : Flags.t
@@ -204,6 +207,7 @@ let normalize t =
 let create
       ?name
       ?public_name
+      ?package
       ?inline_tests
       ?modes
       ?(flags = [])
@@ -218,6 +222,7 @@ let create
   let public_name =
     Option.map public_name ~f:(fun public_name -> Public_name.create ~public_name)
   in
+  let package = Option.map package ~f:(fun name -> Package.create ~name) in
   let modes = Option.map modes ~f:(fun modes -> Modes.create ~modes) in
   let flags = Flags.create ~flags in
   let libraries = Libraries.create ~libraries in
@@ -233,6 +238,7 @@ let create
   let t =
     { name
     ; public_name
+    ; package
     ; inline_tests
     ; modes
     ; flags
@@ -252,6 +258,7 @@ let read ~sexps_rewriter ~field =
   let fields = Dunolinter.Sexp_handler.get_args ~field_name ~sexps_rewriter ~field in
   let name = ref None in
   let public_name = ref None in
+  let package = ref None in
   let inline_tests = ref None in
   let modes = ref None in
   let flags = ref None in
@@ -264,6 +271,7 @@ let read ~sexps_rewriter ~field =
     | List (Atom "name" :: _) -> name := Some (Name.read ~sexps_rewriter ~field)
     | List (Atom "public_name" :: _) ->
       public_name := Some (Public_name.read ~sexps_rewriter ~field)
+    | List (Atom "package" :: _) -> package := Some (Package.read ~sexps_rewriter ~field)
     | List (Atom "inline_tests" :: _) -> inline_tests := Some ()
     | List (Atom "modes" :: _) -> modes := Some (Modes.read ~sexps_rewriter ~field)
     | List (Atom "flags" :: _) -> flags := Some (Flags.read ~sexps_rewriter ~field)
@@ -287,6 +295,7 @@ let read ~sexps_rewriter ~field =
   in
   { name = !name
   ; public_name = !public_name
+  ; package = !package
   ; inline_tests = !inline_tests
   ; modes = !modes
   ; flags
@@ -302,6 +311,7 @@ let read ~sexps_rewriter ~field =
 let write_fields
       ({ name
        ; public_name
+       ; package
        ; inline_tests
        ; modes
        ; flags
@@ -317,6 +327,7 @@ let write_fields
   List.filter_opt
     [ Option.map name ~f:Name.write
     ; Option.map public_name ~f:Public_name.write
+    ; Option.map package ~f:Package.write
     ; Option.map inline_tests ~f:(fun () -> Sexp.List [ Atom "inline_tests" ])
     ; Option.map modes ~f:Modes.write
     ; (if Flags.is_empty flags then None else Some (Flags.write flags))
@@ -364,6 +375,9 @@ let rewrite t ~sexps_rewriter ~field ~load_existing_libraries =
     | List (Atom "public_name" :: _) ->
       Option.iter t.public_name ~f:(fun t -> Public_name.rewrite t ~sexps_rewriter ~field);
       maybe_remove t.public_name `public_name field
+    | List (Atom "package" :: _) ->
+      Option.iter t.package ~f:(fun t -> Package.rewrite t ~sexps_rewriter ~field);
+      maybe_remove t.package `package field
     | List (Atom "inline_tests" :: _) -> maybe_remove t.inline_tests `inline_tests field
     | List (Atom "modes" :: _) ->
       Option.iter t.modes ~f:(fun t -> Modes.rewrite t ~sexps_rewriter ~field);
@@ -404,6 +418,18 @@ let eval t ~predicate =
      | Some public_name ->
        Dunolint.Trilang.eval condition ~f:(fun predicate ->
          Public_name.eval public_name ~predicate))
+  | `package condition ->
+    (match t.package with
+     | None -> Dunolint.Trilang.Undefined
+     | Some package ->
+       Dunolint.Trilang.eval condition ~f:(fun predicate ->
+         Package.eval package ~predicate))
+  | `if_present (`package condition) ->
+    (match t.package with
+     | None -> Dunolint.Trilang.True
+     | Some package ->
+       Dunolint.Trilang.eval condition ~f:(fun predicate ->
+         Package.eval package ~predicate))
   | `modes condition ->
     (match t.modes with
      | None -> Dunolint.Trilang.Undefined
@@ -430,6 +456,7 @@ let eval t ~predicate =
     (match field with
      | `name -> Option.is_some t.name
      | `public_name -> Option.is_some t.public_name
+     | `package -> Option.is_some t.package
      | `inline_tests -> Option.is_some t.inline_tests
      | `modes -> Option.is_some t.modes
      | `instrumentation -> Option.is_some t.instrumentation
@@ -451,6 +478,7 @@ let enforce =
            (match has_field with
             | `name -> t.name <- None
             | `public_name -> t.public_name <- None
+            | `package -> t.package <- None
             | `inline_tests -> t.inline_tests <- None
             | `modes -> t.modes <- None
             | `instrumentation -> t.instrumentation <- None
@@ -467,6 +495,7 @@ let enforce =
              | `if_present _
              | `name _
              | `public_name _
+             | `package _
              | `modes _
              | `instrumentation _
              | `lint _
@@ -520,6 +549,33 @@ let enforce =
               let public_name = Public_name.create ~public_name in
               t.public_name <- Some public_name;
               Public_name.enforce public_name ~condition;
+              Ok))
+      | T (`has_field `package) ->
+        (match t.package with
+         | Some _ -> Ok
+         | None -> Fail)
+      | T (`if_present (`package condition)) ->
+        (match t.package with
+         | None -> Unapplicable
+         | Some package ->
+           Package.enforce package ~condition;
+           Ok)
+      | T (`package condition) ->
+        (match t.package with
+         | Some package ->
+           Package.enforce package ~condition;
+           Ok
+         | None ->
+           (match
+              Dunolinter.Linter.find_init_value condition ~f:(function
+                | `equals name -> Some name
+                | `is_prefix _ | `is_suffix _ -> None)
+            with
+            | None -> Fail
+            | Some name ->
+              let package = Package.create ~name in
+              t.package <- Some package;
+              Package.enforce package ~condition;
               Ok))
       | T (`has_field `inline_tests) ->
         (match t.inline_tests with

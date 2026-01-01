@@ -61,6 +61,7 @@ let modes p = Blang.base (`modes p)
 let name p = Blang.base (`name p)
 let neq p = Blang.base (`neq p)
 let no_preprocessing = Blang.base `no_preprocessing
+let package p = Blang.base (`package p)
 let path p = Blang.base (`path p)
 let pp p = Blang.base (`pp p)
 let pps p = Blang.base (`pps p)

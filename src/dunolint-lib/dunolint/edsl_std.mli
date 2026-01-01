@@ -66,6 +66,7 @@ val modes : 'a -> [> `modes of 'a ] Blang.t
 val name : 'a -> [> `name of 'a ] Blang.t
 val neq : 'a -> [> `neq of 'a ] Blang.t
 val no_preprocessing : [> `no_preprocessing ] Blang.t
+val package : 'a -> [> `package of 'a ] Blang.t
 val path : 'a -> [> `path of 'a ] Blang.t
 val pp : Dune.Pp.Name.t -> [> `pp of Dune.Pp.Name.t ] Blang.t
 val pps : 'a -> [> `pps of 'a ] Blang.t

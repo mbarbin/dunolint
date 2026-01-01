@@ -87,8 +87,8 @@ let%expect_test "sexp_of" =
   print_s [%sexp (t : Dune_linter.Library.t)];
   [%expect
     {|
-    ((name (((name mylib)))) (public_name ()) (inline_tests ()) (modes ())
-     (flags ((flags ()))) (libraries ((sections ())))
+    ((name (((name mylib)))) (public_name ()) (package ()) (inline_tests ())
+     (modes ()) (flags ((flags ()))) (libraries ((sections ())))
      (libraries_to_open_via_flags ()) (instrumentation ()) (lint ())
      (preprocess ()) (marked_for_removal ()))
     |}];
@@ -332,6 +332,7 @@ module Predicate = struct
           | `lint
           | `modes
           | `name
+          | `package
           | `preprocess
           | `public_name
           ]
@@ -339,9 +340,13 @@ module Predicate = struct
       | `lint of Dune.Lint.Predicate.t Blang.t
       | `modes of Dune.Library.Modes.Predicate.t Blang.t
       | `name of Dune.Library.Name.Predicate.t Blang.t
+      | `package of Dune.Library.Package.Predicate.t Blang.t
       | `preprocess of Dune.Preprocess.Predicate.t Blang.t
       | `public_name of Dune.Library.Public_name.Predicate.t Blang.t
-      | `if_present of [ `public_name of Dune.Library.Public_name.Predicate.t Blang.t ]
+      | `if_present of
+          [ `package of Dune.Library.Package.Predicate.t Blang.t
+          | `public_name of Dune.Library.Public_name.Predicate.t Blang.t
+          ]
       ]
 end
 
@@ -448,10 +453,39 @@ let%expect_test "eval" =
        t
        ~predicate:(`preprocess (pps (pp (Dune.Pp.Name.v "ppx_compare")))));
   [%expect {||}];
+  (* Test package predicates. *)
+  Test_helpers.is_undefined
+    (Dune_linter.Library.eval
+       t
+       ~predicate:(`package (equals (Dune.Package.Name.v "some-pkg"))));
+  [%expect {||}];
+  let _, t_with_package = parse {| (library (name mylib) (package my-pkg)) |} in
+  Test_helpers.is_true
+    (Dune_linter.Library.eval
+       t_with_package
+       ~predicate:(`package (equals (Dune.Package.Name.v "my-pkg"))));
+  [%expect {||}];
+  Test_helpers.is_false
+    (Dune_linter.Library.eval
+       t_with_package
+       ~predicate:(`package (equals (Dune.Package.Name.v "other-pkg"))));
+  [%expect {||}];
+  Test_helpers.is_true
+    (Dune_linter.Library.eval t_with_package ~predicate:(`package (is_prefix "my-")));
+  [%expect {||}];
+  Test_helpers.is_false
+    (Dune_linter.Library.eval t_with_package ~predicate:(`package (is_prefix "other-")));
+  [%expect {||}];
   List.iter
     [ `instrumentation; `lint; `modes; `name; `preprocess; `public_name ]
     ~f:(fun field ->
       Test_helpers.is_true (Dune_linter.Library.eval t ~predicate:(`has_field field)));
+  [%expect {||}];
+  (* Test has_field for package. *)
+  Test_helpers.is_false (Dune_linter.Library.eval t ~predicate:(`has_field `package));
+  [%expect {||}];
+  Test_helpers.is_true
+    (Dune_linter.Library.eval t_with_package ~predicate:(`has_field `package));
   [%expect {||}];
   (* Test has_field for inline_tests. *)
   Test_helpers.is_false (Dune_linter.Library.eval t ~predicate:(`has_field `inline_tests));
@@ -473,7 +507,14 @@ let%expect_test "eval" =
   Test_helpers.is_true (Dune_linter.Library.eval t_minimal ~predicate:(`has_field `name));
   [%expect {||}];
   List.iter
-    [ `inline_tests; `instrumentation; `lint; `preprocess; `public_name; `modes ]
+    [ `inline_tests
+    ; `instrumentation
+    ; `lint
+    ; `package
+    ; `preprocess
+    ; `public_name
+    ; `modes
+    ]
     ~f:(fun field ->
       Test_helpers.is_false
         (Dune_linter.Library.eval t_minimal ~predicate:(`has_field field)));
@@ -548,6 +589,25 @@ let%expect_test "enforce" =
     {|
     (Dunolinter.Handler.Enforce_failure (loc _)
      (condition (public_name (not (equals my-public-lib)))))
+    |}];
+  (* When there is no package, enforcing the equality with a value results
+     in dunolint adding a new package field. *)
+  let t = parse {| (library (name mylib)) |} in
+  enforce t [ package (equals (Dune.Package.Name.v "my-pkg")) ];
+  [%expect {| (library (name mylib) (package my-pkg)) |}];
+  (* When there is a package field, enforcing a different value changes it. *)
+  let t = parse {| (library (name mylib) (package old-pkg)) |} in
+  enforce t [ package (equals (Dune.Package.Name.v "new-pkg")) ];
+  [%expect {| (library (name mylib) (package new-pkg)) |}];
+  (* When the field is absent and the condition cannot provide an initial value,
+     enforcement fails. *)
+  let t = parse {| (library (name mylib)) |} in
+  require_does_raise (fun () ->
+    enforce t [ package (not_ (equals (Dune.Package.Name.v "some-pkg"))) ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (package (not (equals some-pkg)))))
     |}];
   (* When there is no [modes], enforcing a invariant about this field results in
      dunolint creating a new field. *)
@@ -730,6 +790,29 @@ let%expect_test "add_name_via_enforce" =
     (Dunolinter.Handler.Enforce_failure (loc _)
      (condition (public_name (is_suffix _suffix))))
     |}];
+  (* Package can also be added via enforce with equals. *)
+  test [ package (equals (Dune.Package.Name.v "my-pkg")) ];
+  [%expect
+    {|
+    -1,2 +1,3
+      (library
+    -| (name my_lib))
+    +| (name my_lib)
+    +| (package my-pkg))
+    |}];
+  (* Package prefix/suffix predicates cannot provide initial values - enforcement fails. *)
+  test_fails [ package (is_prefix "prefix-") ];
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (package (is_prefix prefix-))))
+    |}];
+  test_fails [ package (is_suffix "-suffix") ];
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (package (is_suffix -suffix))))
+    |}];
   ()
 ;;
 
@@ -751,6 +834,12 @@ let%expect_test "enforce_failures" =
     (Dunolinter.Handler.Enforce_failure (loc _)
      (condition (has_field public_name)))
     |}];
+  (* [package] also has no default value, so [has_field `package] fails. *)
+  require_does_raise (fun () -> test [ has_field `package ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _) (condition (has_field package)))
+    |}];
   ()
 ;;
 
@@ -766,8 +855,23 @@ let%expect_test "undefined conditions" =
   Test_helpers.is_undefined
     (Dune_linter.Library.eval t ~predicate:(`name (is_prefix "hey")));
   [%expect {||}];
+  (* Package predicates are also undefined when the field is absent. *)
+  Test_helpers.is_undefined
+    (Dune_linter.Library.eval t ~predicate:(`package (is_prefix "my-")));
+  [%expect {||}];
+  Test_helpers.is_undefined
+    (Dune_linter.Library.eval t ~predicate:(`package (is_suffix "-pkg")));
+  [%expect {||}];
   (* When a condition is undefined, the entire if-then-else is ignored. *)
   test [ if_ (name (is_prefix "hey")) (name (equals main)) (name (is_suffix "ho")) ];
+  [%expect {| (library (public_name my-cli)) |}];
+  (* Same behavior for package conditions. *)
+  test
+    [ if_
+        (package (is_prefix "my-"))
+        (package (equals (Dune.Package.Name.v "my-pkg")))
+        (package (is_suffix "-other"))
+    ];
   [%expect {| (library (public_name my-cli)) |}];
   (* Beware of static code simplifications performed by Blang though! In the
      following example, the [if_] is rewritten as a [And _] sequence. Since
@@ -964,6 +1068,25 @@ let%expect_test "remove_fields" =
        (modes byte native)
        (instrumentation
     |}];
+  (* Test removing package field. *)
+  let init_with_package =
+    {|
+(library
+ (name my-lib)
+ (package my-pkg)
+ (modes byte native))
+|}
+  in
+  let t = parse init_with_package in
+  enforce_diff t [ not_ (has_field `package) ];
+  [%expect
+    {|
+    -1,4 +1,3
+      (library
+       (name my-lib)
+    -| (package my-pkg)
+       (modes byte native))
+    |}];
   ()
 ;;
 
@@ -998,6 +1121,18 @@ let%expect_test "positive_enforcement_with_existing_fields" =
   test [ has_field `lint ];
   [%expect {||}];
   test [ has_field `preprocess ];
+  [%expect {||}];
+  (* Test [has_field `package] with existing package field. *)
+  let init_with_package =
+    {|
+(library
+ (name my-lib)
+ (package my-pkg)
+ (modes byte native))
+|}
+  in
+  let t = parse init_with_package in
+  enforce_diff t [ has_field `package ];
   [%expect {||}];
   ()
 ;;
@@ -1078,6 +1213,39 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
     +| (preprocess
     +|  (pps ppx_compare)))
     |}];
+  (* Test package condition enforcement with existing package field. *)
+  let init_with_package =
+    {|
+(library
+ (name my-lib)
+ (package old-pkg)
+ (modes byte native))
+|}
+  in
+  let test_pkg cond =
+    let t = parse init_with_package in
+    enforce_diff t cond
+  in
+  test_pkg [ package (equals (Dune.Package.Name.v "new-pkg")) ];
+  [%expect
+    {|
+    -1,4 +1,4
+      (library
+       (name my-lib)
+    -| (package old-pkg)
+    +| (package new-pkg)
+       (modes byte native))
+    |}];
+  test_pkg [ package (is_prefix "prefix-"); package (is_suffix "-suffix") ];
+  [%expect
+    {|
+    -1,4 +1,4
+      (library
+       (name my-lib)
+    -| (package old-pkg)
+    +| (package prefix-old-pkg-suffix)
+       (modes byte native))
+    |}];
   ()
 ;;
 
@@ -1089,6 +1257,8 @@ let%expect_test "if_present eval" =
   let _, t_with_public_name =
     parse {| (library (name mylib) (public_name my-public-lib)) |}
   in
+  let _, t_no_package = parse {| (library (name mylib)) |} in
+  let _, t_with_package = parse {| (library (name mylib) (package my-pkg)) |} in
   (* [if_present] on absent public_name evaluates to True. *)
   Test_helpers.is_true
     (Dune_linter.Library.eval
@@ -1120,6 +1290,34 @@ let%expect_test "if_present eval" =
        t_with_public_name
        ~predicate:(`if_present (`public_name (is_prefix "wrong-"))));
   [%expect {||}];
+  (* [if_present] on absent package evaluates to True. *)
+  Test_helpers.is_true
+    (Dune_linter.Library.eval
+       t_no_package
+       ~predicate:(`if_present (`package (equals (Dune.Package.Name.v "anything")))));
+  [%expect {||}];
+  (* [if_present] on present package evaluates the inner condition. *)
+  Test_helpers.is_true
+    (Dune_linter.Library.eval
+       t_with_package
+       ~predicate:(`if_present (`package (equals (Dune.Package.Name.v "my-pkg")))));
+  [%expect {||}];
+  Test_helpers.is_false
+    (Dune_linter.Library.eval
+       t_with_package
+       ~predicate:(`if_present (`package (equals (Dune.Package.Name.v "wrong-pkg")))));
+  [%expect {||}];
+  (* [if_present] with is_prefix on present package field. *)
+  Test_helpers.is_true
+    (Dune_linter.Library.eval
+       t_with_package
+       ~predicate:(`if_present (`package (is_prefix "my-"))));
+  [%expect {||}];
+  Test_helpers.is_false
+    (Dune_linter.Library.eval
+       t_with_package
+       ~predicate:(`if_present (`package (is_prefix "wrong-"))));
+  [%expect {||}];
   ()
 ;;
 
@@ -1129,6 +1327,8 @@ let%expect_test "if_present enforce" =
      When the field is present, it enforces the inner condition. *)
   let init_no_public_name = {| (library (name mylib)) |} in
   let init_with_public_name = {| (library (name mylib) (public_name my-public-lib)) |} in
+  let init_no_package = {| (library (name mylib)) |} in
+  let init_with_package = {| (library (name mylib) (package my-pkg)) |} in
   (* [if_present] on absent public_name is unapplicable - no changes. *)
   let t = parse init_no_public_name in
   enforce_diff t [ if_present (`public_name (is_prefix "lib.")) ];
@@ -1157,6 +1357,32 @@ let%expect_test "if_present enforce" =
        (name mylib)
     -| (public_name my-public-lib))
     +| (public_name my-public-lib-new))
+    |}];
+  (* [if_present] on absent package is unapplicable - no changes. *)
+  let t = parse init_no_package in
+  enforce_diff t [ if_present (`package (is_prefix "prefix-")) ];
+  [%expect {||}];
+  (* [if_present] on present package enforces the inner condition. *)
+  let t = parse init_with_package in
+  enforce_diff t [ if_present (`package (is_prefix "prefix-")) ];
+  [%expect
+    {|
+    -1,3 +1,3
+      (library
+       (name mylib)
+    -| (package my-pkg))
+    +| (package prefix-my-pkg))
+    |}];
+  (* [if_present] with is_suffix on present package. *)
+  let t = parse init_with_package in
+  enforce_diff t [ if_present (`package (is_suffix "-suffix")) ];
+  [%expect
+    {|
+    -1,3 +1,3
+      (library
+       (name mylib)
+    -| (package my-pkg))
+    +| (package my-pkg-suffix))
     |}];
   (* [if_present] with equals changes the value when present. *)
   let t = parse init_with_public_name in
@@ -1209,6 +1435,18 @@ let%expect_test "if_present vs direct enforcement comparison" =
   let t = parse init_no_public_name in
   enforce t [ if_present (`public_name (is_suffix ".lib")) ];
   [%expect {| (library (name mylib)) |}];
+  (* Same comparison for package field. *)
+  let init_no_package = {| (library (name mylib)) |} in
+  let t = parse init_no_package in
+  require_does_raise (fun () -> enforce t [ package (is_prefix "pkg-") ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (package (is_prefix pkg-))))
+    |}];
+  let t = parse init_no_package in
+  enforce t [ if_present (`package (is_prefix "pkg-")) ];
+  [%expect {| (library (name mylib)) |}];
   ()
 ;;
 
@@ -1216,6 +1454,33 @@ let%expect_test "if_present with blang combinations" =
   (* Test [if_present] in combination with [and_], [or_], and [not_]. *)
   let init_no_public_name = {| (library (name mylib)) |} in
   let init_with_public_name = {| (library (name mylib) (public_name my-public-lib)) |} in
+  (* [and_] with multiple [if_present] conditions - all are skipped when absent. *)
+  let t = parse init_no_public_name in
+  enforce
+    t
+    [ and_
+        [ if_present (`public_name (is_prefix "lib."))
+        ; if_present (`package (is_prefix "pkg-"))
+        ]
+    ];
+  [%expect {| (library (name mylib)) |}];
+  (* [and_] where one field is present and one is absent. *)
+  let t = parse init_with_public_name in
+  enforce_diff
+    t
+    [ and_
+        [ if_present (`public_name (is_prefix "lib."))
+        ; if_present (`package (is_prefix "pkg-"))
+        ]
+    ];
+  [%expect
+    {|
+    -1,3 +1,3
+      (library
+       (name mylib)
+    -| (public_name my-public-lib))
+    +| (public_name lib.my-public-lib))
+    |}];
   (* [or_] with [if_present] - when field is absent, evaluates to true. *)
   let t = parse init_no_public_name in
   enforce

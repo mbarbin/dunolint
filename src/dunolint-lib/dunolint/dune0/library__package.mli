@@ -19,45 +19,16 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-module Modes = Library__modes
-module Name = Library__name
-module Package = Library__package
-module Public_name = Library__public_name
+(** Package field for library stanzas. *)
 
-type t
+module Predicate : sig
+  type t =
+    [ `equals of Package.Name.t
+    | `is_prefix of string
+    | `is_suffix of string
+    ]
 
-val create
-  :  ?name:Dune.Library.Name.t
-  -> ?public_name:Dune.Library.Public_name.t
-  -> ?package:Dune.Package.Name.t
-  -> ?inline_tests:bool
-  -> ?modes:Modes.Ordered_set.t
-  -> ?flags:Sexp.t list
-  -> ?libraries:Dune.Library.Name.t list
-  -> ?libraries_to_open_via_flags:string list
-  -> ?instrumentation:Instrumentation.t
-  -> ?lint:Lint.t
-  -> ?preprocess:Preprocess.t
-  -> unit
-  -> t
+  val equal : t -> t -> bool
 
-include
-  Dunolinter.Stanza_linter.S
-  with type t := t
-   and type predicate = Dune.Library.Predicate.t
-
-module Linter : Dunolinter.Linter.S with type t = t and type predicate = Dune.Predicate.t
-
-module Private : sig
-  (** At this time we export [rewrite] with an altered type, to add the extra
-      flag [load_existing_libraries]. Using [true] causes existing libraries to
-      be read and added to the in-memory value prior to rewriting. This is used
-      internally by a private tool but shall disappear after some refactoring
-      has happened. *)
-  val rewrite
-    :  t
-    -> sexps_rewriter:Sexps_rewriter.t
-    -> field:Sexp.t
-    -> load_existing_libraries:bool
-    -> unit
+  include Sexpable.S with type t := t
 end

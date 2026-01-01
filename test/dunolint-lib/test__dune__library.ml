@@ -31,6 +31,8 @@ let%expect_test "predicate" =
   [%expect {| (has_field modes) |}];
   test (has_field `name);
   [%expect {| (has_field name) |}];
+  test (has_field `package);
+  [%expect {| (has_field package) |}];
   test (has_field `preprocess);
   [%expect {| (has_field preprocess) |}];
   test (has_field `public_name);
@@ -43,6 +45,8 @@ let%expect_test "predicate" =
   [%expect {| (modes (has_mode melange)) |}];
   test (name (equals (Dune.Library.Name.v "main")));
   [%expect {| (name (equals main)) |}];
+  test (package (equals (Dune.Package.Name.v "my_package")));
+  [%expect {| (package (equals my_package)) |}];
   test (preprocess (pps (pp (Dune.Pp.Name.v "ppx_compare"))));
   [%expect {| (preprocess (pps (pp ppx_compare))) |}];
   test (public_name (equals (Dune.Library.Public_name.v "dunolint")));
