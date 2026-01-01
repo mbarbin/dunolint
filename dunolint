@@ -30,7 +30,12 @@
    (enforce (dune (library (public_name (equals dunolint-lib-base))))))
   ((path (or (glob src/dunolint/**) (glob src/stdlib/**)))
    (enforce (dune (library (public_name (is_prefix dunolint.))))))
-  (true (enforce (dune (library (public_name (is_prefix dunolint-dev.))))))))
+  (true
+   (enforce
+    (dune
+     (library
+      (or (not (has_field public_name))
+       (public_name (is_prefix dunolint-dev.)))))))))
 
 (rule
  (cond

@@ -90,7 +90,14 @@ let () =
          )
        ; ( path (or_ [ glob "src/dunolint/**"; glob "src/stdlib/**" ])
          , enforce (dune (library (public_name (is_prefix "dunolint.")))) )
-       ; true_, enforce (dune (library (public_name (is_prefix "dunolint-dev."))))
+       ; ( true_
+         , enforce
+             (dune
+                (library
+                   (if_
+                      (has_field `public_name)
+                      (public_name (is_prefix "dunolint-dev."))
+                      true_))) )
        ])
 ;;
 
