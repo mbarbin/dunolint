@@ -147,6 +147,7 @@ This is useful when you want to enforce constraints on a field only if it exists
 | Field | Stanza |
 | ----- | ------ |
 | public_name | library |
+| package | library |
 
 **Behavior:**
 
@@ -351,6 +352,99 @@ Condition: `(dune (library PREDICATE))`
 | --------- | ------ |
 | (has_field inline_tests) | True |
 | (not (has_field inline_tests)) | False. Suggestion: remove the field |
+
+#### package
+
+`(dune (library (has_field package)))` checks for the presence of the *package* field.
+
+Stanza:
+```dune
+(library
+ (package my_package))
+```
+
+When enforced, *dunolint* does not suggest adding a field (there is no valid placeholder value). To auto-add a package field, use the `(package (equals PKG))` predicate instead.
+
+**Negation**: When the negation is enforced, *dunolint* suggests removing the field entirely.
+
+**Examples:**
+
+Stanza:
+```dune
+(library
+ (name my_lib)
+ (package my_package))
+```
+
+Condition: `(dune (library PREDICATE))`
+
+| Predicate | Result |
+| --------- | ------ |
+| (has_field package) | True |
+| (not (has_field package)) | False. Suggestion: remove the field |
+
+### package
+
+`(dune (library (package _)))` is a selector for the *package* field found in *library* stanzas.
+
+Stanza:
+```dune
+(library
+ (package <PACKAGE_NAME>))
+```
+
+Its predicates are:
+
+1. `(equals PACKAGE_NAME)`
+
+Returns *true* iff the library's package name is exactly PACKAGE_NAME.
+
+When enforced, *dunolint* suggests setting the package name to the supplied value. If the field is not present, it will be inserted. Doesn't support suggestion when negated.
+
+2. `(is_prefix STRING)` and `(is_suffix STRING)`
+
+Returns *true* iff the library's package name starts (resp. ends) with the specified string.
+
+When enforced with `is_prefix`, *dunolint* suggests prepending the prefix if not already present.
+When enforced with `is_suffix`, *dunolint* suggests appending the suffix if not already present.
+
+**Negation**: When the negation is enforced, *dunolint* suggests removing the prefix (resp. suffix) from the package name if present.
+
+**Absent field**: Only `(equals PACKAGE_NAME)` can initialize an absent package field. Predicates like `(is_prefix _)` and `(is_suffix _)` cannot provide an initial value, so enforcing them on an absent field will fail. Use `(equals PACKAGE_NAME)` to initialize the field, or add it manually before running dunolint.
+
+**Examples:**
+
+Stanza with package present:
+```dune
+(library
+ (name my_lib)
+ (package pkg))
+```
+
+Condition: `(dune (library PREDICATE))`
+
+| Predicate | Result |
+| --------- | ------ |
+| (package (equals pkg)) | True |
+| (package (is_prefix pk)) | True |
+| (package (is_suffix kg)) | True |
+| (package (is_prefix prefix_)) | False. Suggestion: `(package prefix_pkg)` |
+| (package (is_suffix _suffix)) | False. Suggestion: `(package pkg_suffix)` |
+| (not (package (is_prefix pk))) | False. Suggestion: `(package g)` |
+
+Stanza with package absent:
+```dune
+(library
+ (name my_lib))
+```
+
+Condition: `(enforce (dune (library PREDICATE)))`
+
+| Predicate | Result |
+| --------- | ------ |
+| (package (equals pkg)) | Field inserted: `(package pkg)` |
+| (package (is_prefix prefix_)) | Enforcement failure |
+| (package (is_suffix _suffix)) | Enforcement failure |
 
 ### Fields shared with other stanzas
 
