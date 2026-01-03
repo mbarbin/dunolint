@@ -250,7 +250,27 @@ let render_sexp_error_exn ~loc exn =
            | Some text -> [ Pp.text text ])
         ]
     in
-    Err.create ~loc [ Pp.text (Error_context.message context) ] ~hints
+    Err.create
+      ~loc
+      (List.concat
+         [ [ Pp.text (Error_context.message context) ]
+         ; (match Error_context.did_you_mean context with
+            | None -> []
+            | Some { var = _; candidates } ->
+              let candidates = List.sort candidates ~compare:String.compare in
+              Pp.O.
+                [ Pp.text "The constructs available at that level are:"
+                ; Pp.hvbox
+                    ~indent:2
+                    (Pp.verbatim "  "
+                     ++ Pp.concat_map
+                          ~sep:(Pp.verbatim "," ++ Pp.space)
+                          candidates
+                          ~f:Pp.verbatim)
+                  ++ Pp.verbatim "."
+                ])
+         ])
+      ~hints
   | exn -> Err.create ~loc [ Err.exn exn ] [@coverage off]
 ;;
 

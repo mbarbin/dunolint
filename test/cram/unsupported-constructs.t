@@ -32,5 +32,7 @@ Create build files.
   3 |  (modes bytes))
               ^^^^^
   Error: Unknown construct [bytes].
+  The constructs available at that level are:
+    best, byte, melange, native.
   Hint: did you mean byte?
   [123]

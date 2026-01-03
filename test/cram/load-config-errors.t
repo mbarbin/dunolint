@@ -163,6 +163,8 @@ Unknown constructor.
   3 | (rule (enforce (duno (instrumentation (backend bisect_ppx)))))
                       ^^^^
   Error: Unknown construct [duno].
+  The constructs available at that level are:
+    dune, dune_project, dune_workspace, dunolint, path.
   Hint: did you mean dune?
   [123]
 
@@ -190,6 +192,8 @@ Unknown constructor.
   3 | (rule (enforce (dune (library (modes (has_mode mative))))))
                                                      ^^^^^^
   Error: Unknown construct [mative].
+  The constructs available at that level are:
+    best, byte, melange, native.
   Hint: did you mean native?
   [123]
 
@@ -239,6 +243,8 @@ Located errors for invalid stanzas, or stanzas with invalid args.
   3 | (invalid)
        ^^^^^^^
   Error: Unknown construct [invalid].
+  The constructs available at that level are:
+    rule, skip_paths.
   [123]
 
   $ cat > dunolint <<EOF
@@ -252,6 +258,8 @@ Located errors for invalid stanzas, or stanzas with invalid args.
   3 | atom
       ^^^^
   Error: Unknown construct [atom].
+  The constructs available at that level are:
+    rule, skip_paths.
   [123]
 
   $ cat > dunolint <<EOF
