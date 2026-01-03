@@ -4,4 +4,4 @@
 
 | Version | Guide |
 | ------- | ----- |
-| TBD | [is_prefix/is_suffix on absent fields](is-prefix-is-suffix-absent-fields.md) |
+| 0.0.20260103 | [is_prefix/is_suffix on absent fields](is-prefix-is-suffix-absent-fields.md) |
