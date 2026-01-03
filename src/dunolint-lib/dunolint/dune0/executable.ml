@@ -23,8 +23,6 @@ module Name = Executable__name
 module Public_name = Executable__public_name
 
 module Predicate = struct
-  [@@@coverage off]
-
   let error_source = "executable.t"
 
   module Has_field = struct

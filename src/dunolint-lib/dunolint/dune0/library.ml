@@ -25,8 +25,6 @@ module Package = Library__package
 module Public_name = Library__public_name
 
 module Predicate = struct
-  [@@@coverage off]
-
   let error_source = "library.t"
 
   module Has_field = struct

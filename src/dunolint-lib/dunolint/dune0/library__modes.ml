@@ -22,8 +22,6 @@
 open! Import
 
 module Predicate = struct
-  [@@@coverage off]
-
   let error_source = "library.modes.t"
 
   type t =

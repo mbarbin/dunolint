@@ -34,8 +34,6 @@ include Validated_string.Make (struct
   end)
 
 module Predicate = struct
-  [@@@coverage off]
-
   type name = t
 
   let equal_name = (equal : name -> name -> bool)

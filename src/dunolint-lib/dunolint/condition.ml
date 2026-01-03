@@ -19,20 +19,8 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module T = struct
-  [@@@coverage off]
+type t = Predicate.t Blang.t
 
-  type t = Predicate.t Blang.t
-
-  let equal (a : t) (b : t) = Blang.equal Predicate.equal a b
-
-  let t_of_sexp =
-    (fun x__010_ -> Blang.t_of_sexp Predicate.t_of_sexp x__010_ : Sexplib0.Sexp.t -> t)
-  ;;
-
-  let sexp_of_t =
-    (fun x__011_ -> Blang.sexp_of_t Predicate.sexp_of_t x__011_ : t -> Sexplib0.Sexp.t)
-  ;;
-end
-
-include T
+let equal (a : t) (b : t) = Blang.equal Predicate.equal a b
+let t_of_sexp sexp = Blang.t_of_sexp Predicate.t_of_sexp sexp
+let sexp_of_t t = Blang.sexp_of_t Predicate.sexp_of_t t

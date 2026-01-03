@@ -22,8 +22,6 @@
 open! Import
 
 module Predicate = struct
-  [@@@coverage off]
-
   module Param = struct
     let error_source = "pps.param.t"
 

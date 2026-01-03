@@ -22,23 +22,15 @@
 open! Import
 
 module Rule = struct
-  [@@@coverage off]
-
   type t = (Predicate.t, Condition.t) Rule.Stable.V1.t
 
   let equal (a : t) (b : t) = Rule.Stable.V1.equal Predicate.equal Condition.equal a b
 
-  let t_of_sexp =
-    (fun x__014_ ->
-       Rule.Stable.V1.t_of_sexp Predicate.t_of_sexp Condition.t_of_sexp x__014_
-     : Sexplib0.Sexp.t -> t)
+  let t_of_sexp sexp =
+    Rule.Stable.V1.t_of_sexp Predicate.t_of_sexp Condition.t_of_sexp sexp
   ;;
 
-  let sexp_of_t =
-    (fun x__015_ ->
-       Rule.Stable.V1.sexp_of_t Predicate.sexp_of_t Condition.sexp_of_t x__015_
-     : t -> Sexplib0.Sexp.t)
-  ;;
+  let sexp_of_t t = Rule.Stable.V1.sexp_of_t Predicate.sexp_of_t Condition.sexp_of_t t
 end
 
 module Stanza = struct

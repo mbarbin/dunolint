@@ -22,8 +22,6 @@
 module Value = Implicit_transitive_deps__value
 
 module Predicate = struct
-  [@@@coverage off]
-
   let error_source = "implicit_transitive_deps.t"
 
   type t = [ `equals of Value.t ]

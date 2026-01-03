@@ -20,8 +20,6 @@
 (*********************************************************************************)
 
 module Predicate = struct
-  [@@@coverage off]
-
   let error_source = "library.package.t"
 
   type t =

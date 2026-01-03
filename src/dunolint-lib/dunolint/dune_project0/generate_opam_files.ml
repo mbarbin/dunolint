@@ -20,8 +20,6 @@
 (*********************************************************************************)
 
 module Predicate = struct
-  [@@@coverage off]
-
   let error_source = "generate_opam_files.t"
 
   type t = [ `is_present ]

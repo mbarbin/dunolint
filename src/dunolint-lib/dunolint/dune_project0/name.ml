@@ -34,8 +34,6 @@ include Validated_string.Make (struct
   end)
 
 module Predicate = struct
-  [@@@coverage off]
-
   let error_source = "name.t"
 
   type name = t

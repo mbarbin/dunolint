@@ -19,43 +19,37 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module T = struct
-  [@@@coverage off]
+let error_source = "compilation_mode.t"
 
-  let error_source = "compilation_mode.t"
+type t =
+  [ `byte
+  | `native
+  | `best
+  | `melange
+  ]
 
-  type t =
-    [ `byte
-    | `native
-    | `best
-    | `melange
-    ]
+let all = ([ `byte; `native; `best; `melange ] : t list)
 
-  let all = ([ `byte; `native; `best; `melange ] : t list)
+let variant_spec : t Sexp_helpers.Variant_spec.t =
+  [ { atom = "byte"; conv = Nullary `byte }
+  ; { atom = "native"; conv = Nullary `native }
+  ; { atom = "best"; conv = Nullary `best }
+  ; { atom = "melange"; conv = Nullary `melange }
+  ]
+;;
 
-  let variant_spec : t Sexp_helpers.Variant_spec.t =
-    [ { atom = "byte"; conv = Nullary `byte }
-    ; { atom = "native"; conv = Nullary `native }
-    ; { atom = "best"; conv = Nullary `best }
-    ; { atom = "melange"; conv = Nullary `melange }
-    ]
-  ;;
+let t_of_sexp (sexp : Sexp.t) : t =
+  Sexp_helpers.parse_variant variant_spec ~error_source sexp
+;;
 
-  let t_of_sexp (sexp : Sexp.t) : t =
-    Sexp_helpers.parse_variant variant_spec ~error_source sexp
-  ;;
-
-  let sexp_of_t (t : t) : Sexp.t =
-    Atom
-      (match t with
-       | `byte -> "byte"
-       | `native -> "native"
-       | `best -> "best"
-       | `melange -> "melange")
-  ;;
-end
-
-include T
+let sexp_of_t (t : t) : Sexp.t =
+  Atom
+    (match t with
+     | `byte -> "byte"
+     | `native -> "native"
+     | `best -> "best"
+     | `melange -> "melange")
+;;
 
 let to_comparable_int = function
   | `byte -> 0

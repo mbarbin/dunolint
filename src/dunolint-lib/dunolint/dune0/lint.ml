@@ -20,8 +20,6 @@
 (*********************************************************************************)
 
 module Predicate = struct
-  [@@@coverage off]
-
   let error_source = "lint.t"
 
   type t = [ `pps of Pps.Predicate.t Blang.t ]

@@ -31,8 +31,6 @@ module Element = struct
     let compare = (Stdlib.compare : t -> t -> int)
   end
 
-  [@@@coverage off]
-
   type t =
     { prefix : Prefix.t
     ; name : string

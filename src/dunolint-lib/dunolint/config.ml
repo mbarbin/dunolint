@@ -22,21 +22,15 @@
 open! Import
 module V1 = Config_v1
 
-module T = struct
-  [@@@coverage off]
+type t = [ `v1 of V1.t ]
 
-  type t = [ `v1 of V1.t ]
-
-  let equal (a : t) (b : t) =
-    if Stdlib.( == ) a b
-    then true
-    else (
-      match a, b with
-      | `v1 va, `v1 vb -> V1.equal va vb)
-  ;;
-end
-
-include T
+let equal (a : t) (b : t) =
+  if Stdlib.( == ) a b
+  then true
+  else (
+    match a, b with
+    | `v1 va, `v1 vb -> V1.equal va vb)
+;;
 
 (* When breaking changes are introduced, we'd mint new versions such as:
 

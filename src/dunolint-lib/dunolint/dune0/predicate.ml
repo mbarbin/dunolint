@@ -19,8 +19,6 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-[@@@coverage off]
-
 let error_source = "predicate.t"
 
 module Has_field = struct

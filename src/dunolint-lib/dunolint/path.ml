@@ -22,8 +22,6 @@
 open! Import
 
 module Predicate = struct
-  [@@@coverage off]
-
   let error_source = "path.t"
 
   type t = [ `glob of Glob.t ]

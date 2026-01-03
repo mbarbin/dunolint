@@ -39,8 +39,6 @@ module Backend = struct
 end
 
 module Predicate = struct
-  [@@@coverage off]
-
   let error_source = "instrumentation.t"
 
   type t = [ `backend of Backend.Name.t ]

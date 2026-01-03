@@ -20,8 +20,6 @@
 (*********************************************************************************)
 
 module Mode = struct
-  [@@@coverage off]
-
   let error_source = "include_subdirs.mode.t"
 
   type t =
@@ -61,8 +59,6 @@ module Mode = struct
 end
 
 module Predicate = struct
-  [@@@coverage off]
-
   let error_source = "include_subdirs.t"
 
   type t = [ `equals of Mode.t ]

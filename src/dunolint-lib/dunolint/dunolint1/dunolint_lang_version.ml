@@ -71,8 +71,6 @@ let t_of_sexp sexp =
 let create t = t
 
 module Predicate = struct
-  [@@@coverage off]
-
   let error_source = "dunolint_lang_version.t"
 
   type version = t

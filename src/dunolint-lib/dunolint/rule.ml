@@ -21,42 +21,34 @@
 
 open! Import
 
-module T = struct
-  [@@@coverage off]
+type ('predicate, 'invariant) t =
+  [ `enforce of 'invariant
+  | `return
+  | `cond of ('predicate Blang.t * ('predicate, 'invariant) t) list
+  ]
 
-  type ('predicate, 'invariant) t =
-    [ `enforce of 'invariant
-    | `return
-    | `cond of ('predicate Blang.t * ('predicate, 'invariant) t) list
-    ]
-
-  let rec equal
-    :  'predicate 'invariant.
-       ('predicate -> 'predicate -> bool)
-    -> ('invariant -> 'invariant -> bool)
-    -> ('predicate, 'invariant) t
-    -> ('predicate, 'invariant) t
-    -> bool
-    =
-    fun equal_predicate equal_invariant (a : _ t) (b : _ t) ->
-    if Stdlib.( == ) a b
-    then true
-    else (
-      match a, b with
-      | `enforce va, `enforce vb -> equal_invariant va vb
-      | `return, `return -> true
-      | `cond va, `cond vb ->
-        equal_list
-          (fun (conda, ta) (condb, tb) ->
-             Blang.equal equal_predicate conda condb
-             && equal equal_predicate equal_invariant ta tb)
-          va
-          vb
-      | (`enforce _ | `return | `cond _), _ -> false)
-  ;;
-end
-
-include T
+let rec equal
+  :  'predicate 'invariant.
+     ('predicate -> 'predicate -> bool)
+  -> ('invariant -> 'invariant -> bool)
+  -> ('predicate, 'invariant) t
+  -> ('predicate, 'invariant) t
+  -> bool
+  =
+  fun equal_predicate equal_invariant (a : _ t) (b : _ t) ->
+  match a, b with
+  | `enforce va, `enforce vb -> Stdlib.( == ) a b || equal_invariant va vb
+  | `return, `return -> true
+  | `cond va, `cond vb ->
+    Stdlib.( == ) a b
+    || equal_list
+         (fun (conda, ta) (condb, tb) ->
+            Blang.equal equal_predicate conda condb
+            && equal equal_predicate equal_invariant ta tb)
+         va
+         vb
+  | (`enforce _ | `return | `cond _), _ -> false
+;;
 
 let rec eval t ~f =
   match t with

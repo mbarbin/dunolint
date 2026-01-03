@@ -19,42 +19,36 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module T = struct
-  [@@@coverage off]
+let error_source = "linted_file_kind.t"
 
-  let error_source = "linted_file_kind.t"
+type t =
+  [ `dune
+  | `dune_project
+  | `dune_workspace
+  | `dunolint
+  ]
 
-  type t =
-    [ `dune
-    | `dune_project
-    | `dune_workspace
-    | `dunolint
-    ]
+let all = ([ `dune; `dune_project; `dune_workspace; `dunolint ] : t list)
 
-  let all = ([ `dune; `dune_project; `dune_workspace; `dunolint ] : t list)
+let variant_spec : t Sexp_helpers.Variant_spec.t =
+  [ { atom = "dune"; conv = Nullary `dune }
+  ; { atom = "dune_project"; conv = Nullary `dune_project }
+  ; { atom = "dune_workspace"; conv = Nullary `dune_workspace }
+  ; { atom = "dunolint"; conv = Nullary `dunolint }
+  ]
+;;
 
-  let variant_spec : t Sexp_helpers.Variant_spec.t =
-    [ { atom = "dune"; conv = Nullary `dune }
-    ; { atom = "dune_project"; conv = Nullary `dune_project }
-    ; { atom = "dune_workspace"; conv = Nullary `dune_workspace }
-    ; { atom = "dunolint"; conv = Nullary `dunolint }
-    ]
-  ;;
+let t_of_sexp (sexp : Sexp.t) : t =
+  Sexp_helpers.parse_variant variant_spec ~error_source sexp
+;;
 
-  let t_of_sexp (sexp : Sexp.t) : t =
-    Sexp_helpers.parse_variant variant_spec ~error_source sexp
-  ;;
-
-  let sexp_of_t (t : t) : Sexp.t =
-    match t with
-    | `dune -> Atom "dune"
-    | `dune_project -> Atom "dune_project"
-    | `dune_workspace -> Atom "dune_workspace"
-    | `dunolint -> Atom "dunolint"
-  ;;
-end
-
-include T
+let sexp_of_t (t : t) : Sexp.t =
+  match t with
+  | `dune -> Atom "dune"
+  | `dune_project -> Atom "dune_project"
+  | `dune_workspace -> Atom "dune_workspace"
+  | `dunolint -> Atom "dunolint"
+;;
 
 let to_string = function
   | `dune -> "dune"
