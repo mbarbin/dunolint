@@ -2,6 +2,7 @@
 
 ### Added
 
+- Show supported candidates in invalid construct sexp error (#162, @mbarbin).
 - Add initial support for `package` predicates in libraries (#161, @mbarbin).
 - Add new qualifier `if_present` to enforce only if field is present (#159, @mbarbin).
 - Add predicates for the `(inline_tests)` library stanza (#157, @mbarbin).
@@ -13,6 +14,7 @@
 
 ### Changed
 
+- Improve tests for sexp and equal functions and their coverage (#162, @mbarbin).
 - Support multiple input files in `tools lint-file --in-place` (#158, @mbarbin).
 - Make a few dunolint config parsing errors more friendly (#155, @mbarbin).
 - Refactor sexp parsing - prerequisite for future improvements (#152, @mbarbin).
