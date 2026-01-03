@@ -19,6 +19,35 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open Dunolint.Std
+
+let%expect_test "Predicate.equal" =
+  let equal = Dune.Library.Modes.Predicate.equal in
+  let has_mode_byte = `has_mode `byte in
+  let has_mode_native = `has_mode `native in
+  let has_modes_a = `has_modes [ `byte; `native ] in
+  let has_modes_b = `has_modes [ `byte ] in
+  (* Physical equality. *)
+  require (equal has_mode_byte has_mode_byte);
+  [%expect {||}];
+  (* Structural equality - same variant, same value. *)
+  require (equal (`has_mode `byte) (`has_mode `byte));
+  [%expect {||}];
+  require (equal (`has_modes [ `byte; `native ]) (`has_modes [ `byte; `native ]));
+  [%expect {||}];
+  (* Same variant, different value. *)
+  require (not (equal has_mode_byte has_mode_native));
+  [%expect {||}];
+  require (not (equal has_modes_a has_modes_b));
+  [%expect {||}];
+  (* Test each variant as first argument to cover the catch-all. *)
+  require (not (equal has_mode_byte has_modes_a));
+  [%expect {||}];
+  require (not (equal has_modes_a has_mode_byte));
+  [%expect {||}];
+  ()
+;;
+
 open Dunolint.Config.Std
 
 let%expect_test "predicate" =

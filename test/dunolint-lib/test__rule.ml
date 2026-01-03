@@ -55,6 +55,40 @@ module T = struct
   let equal t1 t2 = Dunolint.Rule.Stable.V1.equal Trilang.equal Int.equal t1 t2
 end
 
+let%expect_test "equal" =
+  let equal = T.equal in
+  let enforce_a = `enforce 1 in
+  let enforce_b = `enforce 2 in
+  let return = `return in
+  let cond_a = `cond [ Blang.true_, `enforce 1 ] in
+  let cond_b = `cond [ Blang.true_, `enforce 2 ] in
+  (* Physical equality. *)
+  require (equal enforce_a enforce_a);
+  [%expect {||}];
+  require (equal cond_a cond_a);
+  [%expect {||}];
+  (* Structural equality - same variant, same value. *)
+  require (equal (`enforce 1) (`enforce 1));
+  [%expect {||}];
+  require (equal `return `return);
+  [%expect {||}];
+  require (equal (`cond [ Blang.true_, `enforce 1 ]) (`cond [ Blang.true_, `enforce 1 ]));
+  [%expect {||}];
+  (* Same variant, different value. *)
+  require (not (equal enforce_a enforce_b));
+  [%expect {||}];
+  require (not (equal cond_a cond_b));
+  [%expect {||}];
+  (* Test each variant as first argument to cover the catch-all. *)
+  require (not (equal enforce_a return));
+  [%expect {||}];
+  require (not (equal return cond_a));
+  [%expect {||}];
+  require (not (equal cond_a enforce_a));
+  [%expect {||}];
+  ()
+;;
+
 let%expect_test "sexp" =
   let test t =
     let sexp = T.sexp_of_t t in

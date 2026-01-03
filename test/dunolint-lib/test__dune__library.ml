@@ -19,6 +19,122 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open Dunolint.Std
+
+let%expect_test "Predicate.equal" =
+  let equal = Dune.Library.Predicate.equal in
+  let has_field_a = `has_field `instrumentation in
+  let has_field_b = `has_field `lint in
+  let instrumentation_a =
+    `instrumentation
+      (Blang.base (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")))
+  in
+  let lint_a = `lint (Blang.base (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_a"))))) in
+  let modes_a = `modes (Blang.base (`has_mode `melange)) in
+  let name_a = `name (Blang.base (`equals (Dune.Library.Name.v "main"))) in
+  let package_a = `package (Blang.base (`equals (Dune.Package.Name.v "pkg"))) in
+  let preprocess_a =
+    `preprocess (Blang.base (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_a")))))
+  in
+  let public_name_a =
+    `public_name (Blang.base (`equals (Dune.Library.Public_name.v "main")))
+  in
+  let if_present_a =
+    `if_present (`package (Blang.base (`equals (Dune.Package.Name.v "pkg_a"))))
+  in
+  let if_present_b =
+    `if_present (`package (Blang.base (`equals (Dune.Package.Name.v "pkg_b"))))
+  in
+  let if_present_pn =
+    `if_present (`public_name (Blang.base (`equals (Dune.Library.Public_name.v "pn"))))
+  in
+  (* Physical equality. *)
+  require (equal name_a name_a);
+  [%expect {||}];
+  (* Structural equality - same variant, same value. *)
+  require (equal (`has_field `instrumentation) (`has_field `instrumentation));
+  [%expect {||}];
+  require
+    (equal
+       (`instrumentation
+           (Blang.base (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"))))
+       (`instrumentation
+           (Blang.base (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")))));
+  [%expect {||}];
+  require
+    (equal
+       (`lint (Blang.base (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_a"))))))
+       (`lint (Blang.base (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_a")))))));
+  [%expect {||}];
+  require
+    (equal
+       (`modes (Blang.base (`has_mode `melange)))
+       (`modes (Blang.base (`has_mode `melange))));
+  [%expect {||}];
+  require
+    (equal
+       (`name (Blang.base (`equals (Dune.Library.Name.v "main"))))
+       (`name (Blang.base (`equals (Dune.Library.Name.v "main")))));
+  [%expect {||}];
+  require
+    (equal
+       (`package (Blang.base (`equals (Dune.Package.Name.v "pkg"))))
+       (`package (Blang.base (`equals (Dune.Package.Name.v "pkg")))));
+  [%expect {||}];
+  require
+    (equal
+       (`preprocess (Blang.base (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_a"))))))
+       (`preprocess (Blang.base (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_a")))))));
+  [%expect {||}];
+  require
+    (equal
+       (`public_name (Blang.base (`equals (Dune.Library.Public_name.v "main"))))
+       (`public_name (Blang.base (`equals (Dune.Library.Public_name.v "main")))));
+  [%expect {||}];
+  require
+    (equal
+       (`if_present (`package (Blang.base (`equals (Dune.Package.Name.v "pkg")))))
+       (`if_present (`package (Blang.base (`equals (Dune.Package.Name.v "pkg"))))));
+  [%expect {||}];
+  require
+    (equal
+       (`if_present
+           (`public_name (Blang.base (`equals (Dune.Library.Public_name.v "pn")))))
+       (`if_present
+           (`public_name (Blang.base (`equals (Dune.Library.Public_name.v "pn"))))));
+  [%expect {||}];
+  (* Same variant, different value. *)
+  require (not (equal has_field_a has_field_b));
+  [%expect {||}];
+  require (not (equal if_present_a if_present_b));
+  [%expect {||}];
+  (* Test each variant as first argument to cover the catch-all. *)
+  require (not (equal has_field_a instrumentation_a));
+  [%expect {||}];
+  require (not (equal instrumentation_a lint_a));
+  [%expect {||}];
+  require (not (equal lint_a modes_a));
+  [%expect {||}];
+  require (not (equal modes_a name_a));
+  [%expect {||}];
+  require (not (equal name_a package_a));
+  [%expect {||}];
+  require (not (equal package_a preprocess_a));
+  [%expect {||}];
+  require (not (equal preprocess_a public_name_a));
+  [%expect {||}];
+  require (not (equal public_name_a if_present_a));
+  [%expect {||}];
+  require (not (equal if_present_a has_field_a));
+  [%expect {||}];
+  (* Test each [if_present] variant as first argument to cover the nested catch-all. *)
+  require (not (equal if_present_a if_present_pn));
+  [%expect {||}];
+  require (not (equal if_present_pn if_present_a));
+  [%expect {||}];
+  ()
+;;
+
 open Dunolint.Config.Std
 
 let%expect_test "predicate" =

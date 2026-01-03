@@ -19,6 +19,22 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+let%expect_test "Predicate.equal" =
+  let equal = Dunolint.Path.Predicate.equal in
+  let glob_a = `glob (Dunolint.Glob.v ".git/*") in
+  let glob_b = `glob (Dunolint.Glob.v "src/*") in
+  (* Physical equality. *)
+  require (equal glob_a glob_a);
+  [%expect {||}];
+  (* Structural equality - same variant, same value. *)
+  require (equal (`glob (Dunolint.Glob.v ".git/*")) (`glob (Dunolint.Glob.v ".git/*")));
+  [%expect {||}];
+  (* Same variant, different value. *)
+  require (not (equal glob_a glob_b));
+  [%expect {||}];
+  ()
+;;
+
 open Dunolint.Config.Std
 
 let%expect_test "predicate" =

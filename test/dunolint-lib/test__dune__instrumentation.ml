@@ -19,6 +19,27 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open Dunolint.Std
+
+let%expect_test "Predicate.equal" =
+  let equal = Dune.Instrumentation.Predicate.equal in
+  let backend_a = `backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx") in
+  let backend_b = `backend (Dune.Instrumentation.Backend.Name.v "landmarks") in
+  (* Physical equality. *)
+  require (equal backend_a backend_a);
+  [%expect {||}];
+  (* Structural equality - same variant, same value. *)
+  require
+    (equal
+       (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"))
+       (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")));
+  [%expect {||}];
+  (* Same variant, different value. *)
+  require (not (equal backend_a backend_b));
+  [%expect {||}];
+  ()
+;;
+
 open Dunolint.Config.Std
 
 let%expect_test "of_string" =

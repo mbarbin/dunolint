@@ -19,6 +19,27 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open Dunolint.Std
+
+let%expect_test "Predicate.equal" =
+  let equal = Dune.Lint.Predicate.equal in
+  let pps_a = `pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_equal"))) in
+  let pps_b = `pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_sexp_conv"))) in
+  (* Physical equality. *)
+  require (equal pps_a pps_a);
+  [%expect {||}];
+  (* Structural equality - same variant, same value. *)
+  require
+    (equal
+       (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_equal"))))
+       (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_equal")))));
+  [%expect {||}];
+  (* Same variant, different value. *)
+  require (not (equal pps_a pps_b));
+  [%expect {||}];
+  ()
+;;
+
 open Dunolint.Config.Std
 
 let%expect_test "predicate" =

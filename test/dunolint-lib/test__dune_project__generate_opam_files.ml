@@ -19,6 +19,17 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open Dunolint.Std
+
+let%expect_test "Predicate.equal" =
+  let equal = Dune_project.Generate_opam_files.Predicate.equal in
+  (* Structural equality - same variant. *)
+  require (equal `is_present `is_present);
+  [%expect {||}];
+  (* Only one variant, so no different variant tests needed. *)
+  ()
+;;
+
 open Dunolint.Config.Std
 
 let%expect_test "predicate" =

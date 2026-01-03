@@ -19,6 +19,113 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+let%expect_test "Config.equal" =
+  let equal = Dunolint.Config.equal in
+  let v1_a = Dunolint.Config.v1 (Dunolint.Config.V1.create []) in
+  let v1_b =
+    Dunolint.Config.v1
+      (Dunolint.Config.V1.create [ `skip_paths [ Dunolint.Glob.v ".git/" ] ])
+  in
+  (* Physical equality. *)
+  require (equal v1_a v1_a);
+  [%expect {||}];
+  (* Structural equality - same variant, same value. *)
+  require
+    (equal
+       (Dunolint.Config.v1 (Dunolint.Config.V1.create []))
+       (Dunolint.Config.v1 (Dunolint.Config.V1.create [])));
+  [%expect {||}];
+  (* Same variant, different value. *)
+  require (not (equal v1_a v1_b));
+  [%expect {||}];
+  ()
+;;
+
+let%expect_test "Config.V1.equal" =
+  let equal = Dunolint.Config.V1.equal in
+  let get_v1 t =
+    match Dunolint.Config.Private.view t with
+    | `v1 v1 -> v1
+  in
+  let v1_a = get_v1 (Dunolint.Config.v1 (Dunolint.Config.V1.create [])) in
+  let v1_b =
+    get_v1
+      (Dunolint.Config.v1
+         (Dunolint.Config.V1.create [ `skip_paths [ Dunolint.Glob.v ".git/" ] ]))
+  in
+  let v1_c =
+    get_v1
+      (Dunolint.Config.v1
+         (Dunolint.Config.V1.create [ `skip_paths [ Dunolint.Glob.v "node_modules/" ] ]))
+  in
+  (* Physical equality. *)
+  require (equal v1_a v1_a);
+  [%expect {||}];
+  (* Structural equality - same value. *)
+  require (equal (Dunolint.Config.V1.create []) (Dunolint.Config.V1.create []));
+  [%expect {||}];
+  require
+    (equal
+       (Dunolint.Config.V1.create [ `skip_paths [ Dunolint.Glob.v ".git/" ] ])
+       (Dunolint.Config.V1.create [ `skip_paths [ Dunolint.Glob.v ".git/" ] ]));
+  [%expect {||}];
+  (* Different values. *)
+  require (not (equal v1_a v1_b));
+  [%expect {||}];
+  require (not (equal v1_b v1_c));
+  [%expect {||}];
+  ()
+;;
+
+let%expect_test "Config.V1.equal - with rules" =
+  let equal = Dunolint.Config.V1.equal in
+  let rule_a, rule_b =
+    let open Dunolint.Config.Std in
+    enforce (dune (has_field `instrumentation)), enforce (dune (has_field `lint))
+  in
+  let v1_no_rule = Dunolint.Config.V1.create [] in
+  let v1_rule_a = Dunolint.Config.V1.create [ `rule rule_a ] in
+  let v1_rule_b = Dunolint.Config.V1.create [ `rule rule_b ] in
+  let v1_two_rules = Dunolint.Config.V1.create [ `rule rule_a; `rule rule_b ] in
+  (* Physical equality. *)
+  require (equal v1_rule_a v1_rule_a);
+  [%expect {||}];
+  (* Structural equality - same rules. *)
+  require
+    (equal
+       (Dunolint.Config.V1.create [ `rule rule_a ])
+       (Dunolint.Config.V1.create [ `rule rule_a ]));
+  [%expect {||}];
+  let stanza_a = `rule rule_a in
+  let stanza_b = `skip_paths [ Dunolint.Glob.v ".git/" ] in
+  (* Structural equality with inner phys_equal. *)
+  require
+    (equal
+       (Dunolint.Config.V1.create [ stanza_a ])
+       (Dunolint.Config.V1.create [ stanza_a ]));
+  [%expect {||}];
+  (* Different stanzas. *)
+  require
+    (not
+       (equal
+          (Dunolint.Config.V1.create [ stanza_a ])
+          (Dunolint.Config.V1.create [ stanza_b ])));
+  [%expect {||}];
+  require
+    (not
+       (equal
+          (Dunolint.Config.V1.create [ stanza_b ])
+          (Dunolint.Config.V1.create [ stanza_a ])));
+  [%expect {||}];
+  require (not (equal v1_no_rule v1_rule_a));
+  [%expect {||}];
+  require (not (equal v1_rule_a v1_rule_b));
+  [%expect {||}];
+  require (not (equal v1_rule_a v1_two_rules));
+  [%expect {||}];
+  ()
+;;
+
 open Dunolint.Config.Std
 
 let%expect_test "create" =

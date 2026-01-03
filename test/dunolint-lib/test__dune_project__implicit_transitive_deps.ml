@@ -19,6 +19,31 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open Dunolint.Std
+
+let%expect_test "Predicate.equal" =
+  let equal = Dune_project.Implicit_transitive_deps.Predicate.equal in
+  let equals_true = `equals `True in
+  let equals_false = `equals `False in
+  (* Physical equality. *)
+  require (equal equals_true equals_true);
+  [%expect {||}];
+  (* Structural equality - same variant, same value. *)
+  require (equal (`equals `True) (`equals `True));
+  [%expect {||}];
+  require (equal (`equals `False) (`equals `False));
+  [%expect {||}];
+  require
+    (equal
+       (`equals `False_if_hidden_includes_supported)
+       (`equals `False_if_hidden_includes_supported));
+  [%expect {||}];
+  (* Same variant, different value. *)
+  require (not (equal equals_true equals_false));
+  [%expect {||}];
+  ()
+;;
+
 open Dunolint.Config.Std
 
 let%expect_test "all" =

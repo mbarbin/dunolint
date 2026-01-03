@@ -19,6 +19,25 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+let%expect_test "equal" =
+  let equal = Dunolint.Condition.equal in
+  let path_a = Blang.base (`path (Blang.base (`glob (Dunolint.Glob.v "src/*")))) in
+  let path_b = Blang.base (`path (Blang.base (`glob (Dunolint.Glob.v "test/*")))) in
+  (* Physical equality. *)
+  require (equal path_a path_a);
+  [%expect {||}];
+  (* Structural equality - same value. *)
+  require
+    (equal
+       (Blang.base (`path (Blang.base (`glob (Dunolint.Glob.v "src/*")))))
+       (Blang.base (`path (Blang.base (`glob (Dunolint.Glob.v "src/*"))))));
+  [%expect {||}];
+  (* Different values. *)
+  require (not (equal path_a path_b));
+  [%expect {||}];
+  ()
+;;
+
 open! Dunolint.Config.Std
 
 let%expect_test "sexp" =

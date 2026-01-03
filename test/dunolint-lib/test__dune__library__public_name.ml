@@ -19,6 +19,46 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open Dunolint.Std
+
+let%expect_test "Predicate.equal" =
+  let equal = Dune.Library.Public_name.Predicate.equal in
+  let equals_a = `equals (Dune.Library.Public_name.v "lib_a") in
+  let equals_b = `equals (Dune.Library.Public_name.v "lib_b") in
+  let is_prefix_a = `is_prefix "prefix_a" in
+  let is_prefix_b = `is_prefix "prefix_b" in
+  let is_suffix_a = `is_suffix "suffix_a" in
+  let is_suffix_b = `is_suffix "suffix_b" in
+  (* Physical equality. *)
+  require (equal equals_a equals_a);
+  [%expect {||}];
+  (* Structural equality - same variant, same value. *)
+  require
+    (equal
+       (`equals (Dune.Library.Public_name.v "lib_a"))
+       (`equals (Dune.Library.Public_name.v "lib_a")));
+  [%expect {||}];
+  require (equal (`is_prefix "prefix_a") (`is_prefix "prefix_a"));
+  [%expect {||}];
+  require (equal (`is_suffix "suffix_a") (`is_suffix "suffix_a"));
+  [%expect {||}];
+  (* Same variant, different value. *)
+  require (not (equal equals_a equals_b));
+  [%expect {||}];
+  require (not (equal is_prefix_a is_prefix_b));
+  [%expect {||}];
+  require (not (equal is_suffix_a is_suffix_b));
+  [%expect {||}];
+  (* Test each variant as first argument to cover the catch-all. *)
+  require (not (equal equals_a is_prefix_a));
+  [%expect {||}];
+  require (not (equal is_prefix_a is_suffix_a));
+  [%expect {||}];
+  require (not (equal is_suffix_a equals_a));
+  [%expect {||}];
+  ()
+;;
+
 open Dunolint.Config.Std
 
 let%expect_test "of_string" =

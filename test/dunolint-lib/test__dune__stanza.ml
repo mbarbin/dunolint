@@ -19,6 +19,25 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open Dunolint.Std
+
+let%expect_test "Predicate.equal" =
+  let equal = Dune.Stanza.Predicate.equal in
+  (* Structural equality - same variant. *)
+  require (equal `include_subdirs `include_subdirs);
+  [%expect {||}];
+  require (equal `library `library);
+  [%expect {||}];
+  require (equal `executable `executable);
+  [%expect {||}];
+  require (equal `executables `executables);
+  [%expect {||}];
+  (* Different variants. *)
+  require (not (equal `include_subdirs `library));
+  [%expect {||}];
+  ()
+;;
+
 open Dunolint.Config.Std
 
 module Predicate = struct

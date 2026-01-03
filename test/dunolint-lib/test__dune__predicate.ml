@@ -19,6 +19,75 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open Dunolint.Std
+
+let%expect_test "equal" =
+  let equal = Dune.Predicate.equal in
+  let executable_a =
+    `executable
+      (Blang.base (`name (Blang.base (`equals (Dune.Executable.Name.v "main")))))
+  in
+  let executable_b =
+    `executable
+      (Blang.base (`name (Blang.base (`equals (Dune.Executable.Name.v "test")))))
+  in
+  let has_field_a = `has_field `instrumentation in
+  let include_subdirs_a = `include_subdirs Blang.true_ in
+  let instrumentation_a = `instrumentation Blang.true_ in
+  let library_a = `library Blang.true_ in
+  let lint_a = `lint Blang.true_ in
+  let preprocess_a = `preprocess Blang.true_ in
+  let stanza_a = `stanza (Blang.base `library) in
+  (* Physical equality. *)
+  require (equal executable_a executable_a);
+  [%expect {||}];
+  (* Structural equality - same variant, same value. *)
+  require
+    (equal
+       (`executable
+           (Blang.base (`name (Blang.base (`equals (Dune.Executable.Name.v "main"))))))
+       (`executable
+           (Blang.base (`name (Blang.base (`equals (Dune.Executable.Name.v "main")))))));
+  [%expect {||}];
+  require (equal (`has_field `instrumentation) (`has_field `instrumentation));
+  [%expect {||}];
+  require (equal (`has_field `lint) (`has_field `lint));
+  [%expect {||}];
+  require (equal (`include_subdirs Blang.true_) (`include_subdirs Blang.true_));
+  [%expect {||}];
+  require (equal (`instrumentation Blang.true_) (`instrumentation Blang.true_));
+  [%expect {||}];
+  require (equal (`library Blang.true_) (`library Blang.true_));
+  [%expect {||}];
+  require (equal (`lint Blang.true_) (`lint Blang.true_));
+  [%expect {||}];
+  require (equal (`preprocess Blang.true_) (`preprocess Blang.true_));
+  [%expect {||}];
+  require (equal (`stanza (Blang.base `library)) (`stanza (Blang.base `library)));
+  [%expect {||}];
+  (* Same variant, different value. *)
+  require (not (equal executable_a executable_b));
+  [%expect {||}];
+  (* Test each variant as first argument to cover the catch-all. *)
+  require (not (equal executable_a has_field_a));
+  [%expect {||}];
+  require (not (equal has_field_a include_subdirs_a));
+  [%expect {||}];
+  require (not (equal include_subdirs_a instrumentation_a));
+  [%expect {||}];
+  require (not (equal instrumentation_a library_a));
+  [%expect {||}];
+  require (not (equal library_a lint_a));
+  [%expect {||}];
+  require (not (equal lint_a preprocess_a));
+  [%expect {||}];
+  require (not (equal preprocess_a stanza_a));
+  [%expect {||}];
+  require (not (equal stanza_a executable_a));
+  [%expect {||}];
+  ()
+;;
+
 open Dunolint.Config.Std
 
 let%expect_test "predicate" =

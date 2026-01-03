@@ -19,6 +19,76 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open Dunolint.Std
+
+let%expect_test "Predicate.equal" =
+  let equal = Dune.Executable.Predicate.equal in
+  let has_field_a = `has_field `instrumentation in
+  let has_field_b = `has_field `lint in
+  let instrumentation_a =
+    `instrumentation
+      (Blang.base (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")))
+  in
+  let lint_a = `lint (Blang.base (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_a"))))) in
+  let name_a = `name (Blang.base (`equals (Dune.Executable.Name.v "main"))) in
+  let preprocess_a =
+    `preprocess (Blang.base (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_a")))))
+  in
+  let public_name_a =
+    `public_name (Blang.base (`equals (Dune.Executable.Public_name.v "main")))
+  in
+  (* Physical equality. *)
+  require (equal instrumentation_a instrumentation_a);
+  [%expect {||}];
+  (* Structural equality - same variant, same value. *)
+  require (equal (`has_field `instrumentation) (`has_field `instrumentation));
+  [%expect {||}];
+  require
+    (equal
+       (`instrumentation
+           (Blang.base (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"))))
+       (`instrumentation
+           (Blang.base (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")))));
+  [%expect {||}];
+  require
+    (equal
+       (`lint (Blang.base (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_a"))))))
+       (`lint (Blang.base (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_a")))))));
+  [%expect {||}];
+  require
+    (equal
+       (`name (Blang.base (`equals (Dune.Executable.Name.v "main"))))
+       (`name (Blang.base (`equals (Dune.Executable.Name.v "main")))));
+  [%expect {||}];
+  require
+    (equal
+       (`preprocess (Blang.base (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_a"))))))
+       (`preprocess (Blang.base (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_a")))))));
+  [%expect {||}];
+  require
+    (equal
+       (`public_name (Blang.base (`equals (Dune.Executable.Public_name.v "main"))))
+       (`public_name (Blang.base (`equals (Dune.Executable.Public_name.v "main")))));
+  [%expect {||}];
+  (* Same variant, different value. *)
+  require (not (equal has_field_a has_field_b));
+  [%expect {||}];
+  (* Test each variant as first argument to cover the catch-all. *)
+  require (not (equal has_field_a instrumentation_a));
+  [%expect {||}];
+  require (not (equal instrumentation_a lint_a));
+  [%expect {||}];
+  require (not (equal lint_a name_a));
+  [%expect {||}];
+  require (not (equal name_a preprocess_a));
+  [%expect {||}];
+  require (not (equal preprocess_a public_name_a));
+  [%expect {||}];
+  require (not (equal public_name_a has_field_a));
+  [%expect {||}];
+  ()
+;;
+
 open Dunolint.Config.Std
 
 let%expect_test "predicate" =

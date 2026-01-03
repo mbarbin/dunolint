@@ -19,6 +19,58 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+let%expect_test "equal" =
+  let equal = Dunolint.Predicate.equal in
+  let path_a = `path (Blang.base (`glob (Dunolint.Glob.v "src/*"))) in
+  let path_b = `path (Blang.base (`glob (Dunolint.Glob.v "test/*"))) in
+  let dune_a = `dune (Blang.base (`library Blang.true_)) in
+  let dune_project_a =
+    `dune_project (Blang.base (`implicit_transitive_deps (Blang.base (`equals `True))))
+  in
+  let dune_workspace_a = `dune_workspace Blang.true_ in
+  let dunolint_a = `dunolint Blang.true_ in
+  (* Physical equality. *)
+  require (equal path_a path_a);
+  [%expect {||}];
+  (* Structural equality - same variant, same value. *)
+  require
+    (equal
+       (`path (Blang.base (`glob (Dunolint.Glob.v "src/*"))))
+       (`path (Blang.base (`glob (Dunolint.Glob.v "src/*")))));
+  [%expect {||}];
+  require
+    (equal
+       (`dune (Blang.base (`library Blang.true_)))
+       (`dune (Blang.base (`library Blang.true_))));
+  [%expect {||}];
+  require
+    (equal
+       (`dune_project
+           (Blang.base (`implicit_transitive_deps (Blang.base (`equals `True)))))
+       (`dune_project
+           (Blang.base (`implicit_transitive_deps (Blang.base (`equals `True))))));
+  [%expect {||}];
+  require (equal (`dune_workspace Blang.true_) (`dune_workspace Blang.true_));
+  [%expect {||}];
+  require (equal (`dunolint Blang.true_) (`dunolint Blang.true_));
+  [%expect {||}];
+  (* Same variant, different value. *)
+  require (not (equal path_a path_b));
+  [%expect {||}];
+  (* Test each variant as first argument to cover the catch-all. *)
+  require (not (equal path_a dune_a));
+  [%expect {||}];
+  require (not (equal dune_a dune_project_a));
+  [%expect {||}];
+  require (not (equal dune_project_a dune_workspace_a));
+  [%expect {||}];
+  require (not (equal dune_workspace_a dunolint_a));
+  [%expect {||}];
+  require (not (equal dunolint_a path_a));
+  [%expect {||}];
+  ()
+;;
+
 open Dunolint.Config.Std
 
 let%expect_test "predicate" =
