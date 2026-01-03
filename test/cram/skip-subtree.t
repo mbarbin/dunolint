@@ -100,6 +100,23 @@ Attempting to use the construct results in an error:
   Error: The [skip_subtree] construct is no longer supported.
   [123]
 
+Same if it is used with an argument.
+
+  $ cat > dunolint <<EOF
+  > (lang dunolint 1.0)
+  > 
+  > (rule (enforce (dune_project (name (equals foo)))))
+  > 
+  > (rule (cond ((path (glob bar/*)) (skip_subtree arg))))
+  > EOF
+
+  $ dunolint lint --dry-run --config dunolint
+  File "dunolint", line 5, characters 34-46:
+  5 | (rule (cond ((path (glob bar/*)) (skip_subtree arg))))
+                                        ^^^^^^^^^^^^
+  Error: The [skip_subtree] construct is no longer supported.
+  [123]
+
 Next we are going to characterize some behavior of the constructs `skip_subtree`
 and `skip_paths` when linting a file in particular.
 

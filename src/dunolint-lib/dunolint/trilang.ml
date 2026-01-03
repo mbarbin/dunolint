@@ -28,12 +28,12 @@ let equal = (Stdlib.( = ) : t -> t -> bool)
 let compare = (Stdlib.compare : t -> t -> int)
 let all = ([ True; False; Undefined ] : t list)
 
-let sexp_of_t =
-  (function
-   | True -> Sexplib0.Sexp.Atom "True"
-   | False -> Sexplib0.Sexp.Atom "False"
-   | Undefined -> Sexplib0.Sexp.Atom "Undefined"
-   : t -> Sexplib0.Sexp.t)
+let sexp_of_t (t : t) : Sexp.t =
+  Atom
+    (match t with
+     | True -> "True"
+     | False -> "False"
+     | Undefined -> "Undefined")
 ;;
 
 let const = function

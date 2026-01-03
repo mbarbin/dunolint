@@ -235,10 +235,10 @@ Located errors for invalid stanzas, or stanzas with invalid args.
   > EOF
 
   $ dunolint tools config validate dunolint
-  File "dunolint", line 3, characters 0-9:
+  File "dunolint", line 3, characters 1-8:
   3 | (invalid)
-      ^^^^^^^^^
-  Error: config.v1.stanza.t_of_sexp: no matching variant found.
+       ^^^^^^^
+  Error: Unknown construct [invalid].
   [123]
 
   $ cat > dunolint <<EOF
@@ -251,7 +251,7 @@ Located errors for invalid stanzas, or stanzas with invalid args.
   File "dunolint", line 3, characters 0-4:
   3 | atom
       ^^^^
-  Error: config.v1.stanza.t_of_sexp: no matching variant found.
+  Error: Unknown construct [atom].
   [123]
 
   $ cat > dunolint <<EOF
@@ -264,7 +264,8 @@ Located errors for invalid stanzas, or stanzas with invalid args.
   File "dunolint", line 3, characters 0-4:
   3 | rule
       ^^^^
-  Error: config.v1.stanza.t_of_sexp: polymorphic variant tag takes an argument.
+  Error: The construct [rule] expects one or more arguments.
+  Hint: Replace by: (rule ARG)
   [123]
 
 Missing argument.
