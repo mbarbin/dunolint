@@ -144,14 +144,12 @@ The *path* selector refers to either the path of the directory currently visited
 
 `(glob GLOB)` defines a predicate whose domain is the selected path, based on the evaluation of the GLOB pattern against the string representation of the path.
 
-When used in a *skip_subtree* rule, it selects the directory visited and in this case the path ends with a trailing `/` character.
-
 ##### Examples
 
 > Any file present directly under a directory named *test*, which can be present anywhere in the tree
 
 `(path (glob **/test/*)`
 
-> A few directories commonly ignored at the root of the repo
+> A few directories commonly and automatically ignored in repos
 
 `(path (or (glob .git/) (glob _build/) (glob _opam/)))`

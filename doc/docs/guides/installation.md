@@ -4,6 +4,7 @@ You can choose to install dunolint from either:
 
 - The public opam-repository (most stable releases)
 - A custom opam-repository (more frequent releases)
+- Pre-compiled binaries from GitHub releases
 - From source (most recent version, PRs, etc.)
 
 Releases are currently versioned using the scheme `0.0.YYYYMMDD` while we are in the early stages of development.
@@ -41,6 +42,10 @@ Then you can install *dunolint* using a normal opam workflow:
 ```sh
 opam install dunolint
 ```
+
+## Pre-compiled Binaries
+
+Pre-compiled binaries are available for select architectures from GitHub releases. This is the fastest installation method if your architecture is supported. The releases available on GitHub are the union of the releases published to the Public Opam Repository and our Custom one.
 
 ## Build from sources
 

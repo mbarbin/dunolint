@@ -146,4 +146,4 @@ val eval
 
 **Cond:**
 
-Clauses are evaluated one by one from left to right. Clauses that evaluate to *false* or *undefined* are discarded. If the evaluation returns *true*, then the clause is kept. The evaluation continues recursively with the right hand side of that clause. If no clause is kept, the evaluation is equivalent to *return* -- the rule doesn't select any invariant to enforce.
+Clauses are evaluated one by one from left to right. Clauses that evaluate to *false* or *undefined* are discarded. If the evaluation returns *true*, then the clause is selected. The evaluation continues recursively with the right hand side of that clause (same as a pattern matching in OCaml). If no clause applies, the evaluation of the entire *cond* construct is equivalent to *return* -- the rule doesn't select any invariant to enforce.
