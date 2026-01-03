@@ -33,15 +33,12 @@ module Predicate = struct
       ]
 
     let equal (a : t) (b : t) =
-      if Stdlib.( == ) a b
-      then true
-      else (
-        match a, b with
-        | `any, `any -> true
-        | `none, `none -> true
-        | `some, `some -> true
-        | `equals va, `equals vb -> equal_string va vb
-        | (`any | `none | `some | `equals _), _ -> false)
+      match a, b with
+      | `any, `any -> true
+      | `none, `none -> true
+      | `some, `some -> true
+      | `equals va, `equals vb -> Stdlib.( == ) a b || equal_string va vb
+      | (`any | `none | `some | `equals _), _ -> false
     ;;
 
     let variant_spec : t Sexp_helpers.Variant_spec.t =
@@ -76,14 +73,11 @@ module Predicate = struct
         ]
 
       let equal (a : t) (b : t) =
-        if Stdlib.( == ) a b
-        then true
-        else (
-          match a, b with
-          | `any, `any -> true
-          | `driver, `driver -> true
-          | `pp va, `pp vb -> Pp.Name.equal va vb
-          | (`any | `driver | `pp _), _ -> false)
+        match a, b with
+        | `any, `any -> true
+        | `driver, `driver -> true
+        | `pp va, `pp vb -> Stdlib.( == ) a b || Pp.Name.equal va vb
+        | (`any | `driver | `pp _), _ -> false
       ;;
 
       let variant_spec : t Sexp_helpers.Variant_spec.t =

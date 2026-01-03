@@ -28,13 +28,10 @@ module Predicate = struct
     ]
 
   let equal (a : t) (b : t) =
-    if Stdlib.( == ) a b
-    then true
-    else (
-      match a, b with
-      | `no_preprocessing, `no_preprocessing -> true
-      | `pps va, `pps vb -> Blang.equal Pps.Predicate.equal va vb
-      | (`no_preprocessing | `pps _), _ -> false)
+    match a, b with
+    | `no_preprocessing, `no_preprocessing -> true
+    | `pps va, `pps vb -> Stdlib.( == ) a b || Blang.equal Pps.Predicate.equal va vb
+    | (`no_preprocessing | `pps _), _ -> false
   ;;
 
   let variant_spec : t Sexp_helpers.Variant_spec.t =

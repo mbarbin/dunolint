@@ -24,13 +24,7 @@ module Predicate = struct
 
   type t = [ `is_present ]
 
-  let equal (a : t) (b : t) =
-    if Stdlib.( == ) a b
-    then true
-    else (
-      match a, b with
-      | `is_present, `is_present -> true)
-  ;;
+  let equal : t -> t -> bool = Stdlib.( = )
 
   let variant_spec : t Sexp_helpers.Variant_spec.t =
     [ { atom = "is_present"; conv = Nullary `is_present } ]

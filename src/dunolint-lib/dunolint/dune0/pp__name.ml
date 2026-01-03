@@ -36,26 +36,17 @@ module Element = struct
     ; name : string
     }
 
-  let compare =
-    (fun a__003_ ->
-       fun b__004_ ->
-       if Stdlib.( == ) a__003_ b__004_
-       then 0
-       else (
-         match Prefix.compare a__003_.prefix b__004_.prefix with
-         | 0 -> compare_string a__003_.name b__004_.name
-         | n -> n)
-     : t -> t -> int)
+  let compare a { prefix; name } =
+    match Prefix.compare a.prefix prefix with
+    | 0 -> compare_string a.name name
+    | n -> n
   ;;
 end
 
 module Elements = struct
   type t = Element.t list
 
-  let compare =
-    (fun a__005_ -> fun b__006_ -> compare_list Element.compare a__005_ b__006_
-     : t -> t -> int)
-  ;;
+  let compare (a : t) b = compare_list Element.compare a b
 
   let of_name pp =
     let ts = String.split pp ~on:'.' in
@@ -68,7 +59,11 @@ module Elements = struct
   ;;
 end
 
-let compare pp1 pp2 = Elements.compare (Elements.of_name pp1) (Elements.of_name pp2)
+let compare pp1 pp2 =
+  if String.equal pp1 pp2
+  then 0
+  else Elements.compare (Elements.of_name pp1) (Elements.of_name pp2)
+;;
 
 let invariant t =
   (not (String.is_empty t))

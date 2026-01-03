@@ -28,16 +28,7 @@ module Mode = struct
     | `qualified
     ]
 
-  let equal (a : t) (b : t) =
-    if Stdlib.( == ) a b
-    then true
-    else (
-      match a, b with
-      | `no, `no -> true
-      | `unqualified, `unqualified -> true
-      | `qualified, `qualified -> true
-      | (`no | `unqualified | `qualified), _ -> false)
-  ;;
+  let equal : t -> t -> bool = Stdlib.( = )
 
   let variant_spec : t Sexp_helpers.Variant_spec.t =
     [ { atom = "no"; conv = Nullary `no }
