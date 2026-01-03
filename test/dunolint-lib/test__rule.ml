@@ -118,6 +118,40 @@ let%expect_test "sexp" =
   ()
 ;;
 
+let%expect_test "t_of_sexp - invalid cond clause" =
+  let test str =
+    let sexp = Parsexp.Single.parse_string_exn str in
+    match T.t_of_sexp sexp with
+    | t -> print_s [%sexp (t : T.t)]
+    | exception exn -> print_s [%sexp (exn : Exn.t)]
+  in
+  (* Valid [cond]. *)
+  test "(cond (true (enforce 1)))";
+  [%expect {| (cond (true (enforce 1))) |}];
+  (* Invalid: clause with only 1 element instead of 2. *)
+  test "(cond (true))";
+  [%expect
+    {|
+    (Of_sexp_error "rule.v1.t_of_sexp: tuple of size 2 expected"
+     (invalid_sexp (true)))
+    |}];
+  (* Invalid: clause with 3 elements instead of 2. *)
+  test "(cond (true (enforce 1) extra))";
+  [%expect
+    {|
+    (Of_sexp_error "rule.v1.t_of_sexp: tuple of size 2 expected"
+     (invalid_sexp (true (enforce 1) extra)))
+    |}];
+  (* Invalid: clause with 0 elements. *)
+  test "(cond ())";
+  [%expect
+    {|
+    (Of_sexp_error "rule.v1.t_of_sexp: tuple of size 2 expected"
+     (invalid_sexp ()))
+    |}];
+  ()
+;;
+
 let%expect_test "eval" =
   let test t =
     let result = (Dunolint.Rule.eval t ~f:Fn.id :> T.t) in

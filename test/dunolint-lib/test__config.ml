@@ -165,6 +165,12 @@ let%expect_test "non-empty-v1" =
   in
   print_s [%sexp (Dunolint.Config.V1.rules v1 : Dunolint.Config.Rule.t list)];
   [%expect {| ((enforce (dune (has_field instrumentation)))) |}];
+  print_s [%sexp (v1 : Dunolint.Config.V1.t)];
+  [%expect
+    {|
+    ((stanzas
+      ((skip_paths .git/) (rule (enforce (dune (has_field instrumentation)))))))
+    |}];
   print_s [%sexp (t : Dunolint.Config.t)];
   [%expect
     {|

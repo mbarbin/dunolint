@@ -167,5 +167,11 @@ let%expect_test "predicate" =
   [%expect {| (preprocess (pps (pp ppx_compare))) |}];
   test (public_name (equals (Dune.Library.Public_name.v "dunolint")));
   [%expect {| (public_name (equals dunolint)) |}];
+  test (if_present (`package (Blang.base (`equals (Dune.Package.Name.v "my_package")))));
+  [%expect {| (if_present (package (equals my_package))) |}];
+  test
+    (if_present
+       (`public_name (Blang.base (`equals (Dune.Library.Public_name.v "dunolint")))));
+  [%expect {| (if_present (public_name (equals dunolint))) |}];
   ()
 ;;
