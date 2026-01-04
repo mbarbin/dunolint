@@ -115,6 +115,15 @@ module type S = sig
       exposed. *)
   val sexps_rewriter : t -> Sexps_rewriter.t
 
+  (** This returns all the stanzas that were originally parsed when creating
+      this linter, before any modification was applied.
+
+      This is a convenient wrapper for:
+      {[
+        Sexps_rewriter.original_sexps (sexps_rewriter t)
+      ]} *)
+  val original_sexps : t -> Sexp.t list
+
   (** Retrieve the path provided when [t] was created. *)
   val path : t -> Relative_path.t
 end

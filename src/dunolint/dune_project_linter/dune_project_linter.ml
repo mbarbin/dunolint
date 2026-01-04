@@ -39,6 +39,7 @@ let create ~(path : Relative_path.t) ~original_contents =
 
 let contents t = Sexps_rewriter.contents t.sexps_rewriter
 let sexps_rewriter t = t.sexps_rewriter
+let original_sexps t = Sexps_rewriter.original_sexps t.sexps_rewriter
 let path t = t.path
 
 module Stanza = struct

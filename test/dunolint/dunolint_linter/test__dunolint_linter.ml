@@ -49,6 +49,8 @@ let%expect_test "lint" =
   [%expect {||}];
   print_s [%sexp (Dunolint_linter.path t : Relative_path.t)];
   [%expect {| path/to/dunolint |}];
+  print_s [%sexp (List.length (Dunolint_linter.original_sexps t) : int)];
+  [%expect {| 3 |}];
   (* There's a typed API to access the supported stanza. *)
   Dunolint_linter.visit t ~f:(fun stanza ->
     match Dunolinter.match_stanza stanza with

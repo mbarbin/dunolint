@@ -53,6 +53,8 @@ let%expect_test "lint" =
   [%expect {||}];
   print_s [%sexp (Dune_project_linter.path t : Relative_path.t)];
   [%expect {| path/to/dune-project |}];
+  print_s [%sexp (List.length (Dune_project_linter.original_sexps t) : int)];
+  [%expect {| 5 |}];
   (* We can use the low-level sexps-rewriter API if we wish. *)
   let sexps_rewriter = Dune_project_linter.sexps_rewriter t in
   Sexps_rewriter.visit sexps_rewriter ~f:(fun sexp ~range ~file_rewriter ->
