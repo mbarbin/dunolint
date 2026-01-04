@@ -42,4 +42,8 @@ include
 
 module Linter : Dunolinter.Linter.S with type t = t and type predicate = Dune.Predicate.t
 
+(** {1 Getters} *)
+
+val flags : t -> Flags.t
+
 module Private : sig end

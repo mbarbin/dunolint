@@ -53,7 +53,7 @@ type t =
   ; mutable modes : Modes.t option
   ; flags : Flags.t
   ; libraries : Libraries.t
-  ; libraries_to_open_via_flags : string list
+  ; mutable libraries_to_open_via_flags : string list
   ; mutable instrumentation : Instrumentation.t option
   ; mutable lint : Lint.t option
   ; mutable preprocess : Preprocess.t option
@@ -128,6 +128,13 @@ let indicative_field_ordering =
   ; "lint"
   ; "preprocess"
   ]
+;;
+
+let name t = t.name
+let flags t = t.flags
+
+let set_libraries_to_open_via_flags t ~libraries_to_open_via_flags =
+  t.libraries_to_open_via_flags <- libraries_to_open_via_flags
 ;;
 
 module Library_open_via_flags = struct

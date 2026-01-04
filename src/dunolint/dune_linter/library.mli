@@ -48,4 +48,13 @@ include
 
 module Linter : Dunolinter.Linter.S with type t = t and type predicate = Dune.Predicate.t
 
+(** {1 Getters} *)
+
+val name : t -> Name.t option
+val flags : t -> Flags.t
+
+(** {1 Setters} *)
+
+val set_libraries_to_open_via_flags : t -> libraries_to_open_via_flags:string list -> unit
+
 module Private : sig end

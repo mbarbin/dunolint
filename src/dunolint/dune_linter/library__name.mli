@@ -27,3 +27,7 @@ include
   Dunolinter.Stanza_linter.S
   with type t := t
    and type predicate := Dune.Library.Name.Predicate.t
+
+(** {1 Getters} *)
+
+val name : t -> Dune.Library.Name.t

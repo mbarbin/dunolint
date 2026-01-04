@@ -164,6 +164,38 @@ let%expect_test "rewrite" =
      some future point as this may not be needed in dune. *)
   rewrite {| (library (name main) (flags :standard (a sexp))) |};
   [%expect {| (library (name main) (flags :standard (a sexp))) |}];
+  (* Exercising some getters and setters. *)
+  rewrite
+    {|
+     (library
+      (name mylib)
+      (flags :standard -open Base)
+      (libraries foo bar))
+    |}
+    ~f:(fun t ->
+      print_s [%sexp (Dune_linter.Library.name t : Dune_linter.Library.Name.t option)];
+      [%expect {| (((name mylib))) |}];
+      print_s [%sexp (Dune_linter.Library.flags t : Dune_linter.Flags.t)];
+      [%expect {| ((flags (:standard -open Base))) |}];
+      (* The open via flags only adds open for libraries that are dependencies.
+         For example here, [-open Foo] is added but [sna] is not a dependency so
+         it is not. *)
+      Dune_linter.Library.set_libraries_to_open_via_flags
+        t
+        ~libraries_to_open_via_flags:[ "foo"; "sna" ];
+      ());
+  [%expect
+    {|
+    (library
+     (name mylib)
+     (flags :standard -open Base -open Foo)
+     (libraries bar foo))
+    |}];
+  rewrite {| (library) |} ~f:(fun t ->
+    print_s [%sexp (Dune_linter.Library.name t : Dune_linter.Library.Name.t option)];
+    [%expect {| () |}];
+    ());
+  [%expect {| (library) |}];
   ()
 ;;
 

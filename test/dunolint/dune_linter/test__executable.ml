@@ -138,6 +138,12 @@ let%expect_test "rewrite" =
      (lint (pps ppx_linter -lint-flag))
      )
     |}];
+  (* Exercising some getters and setters. *)
+  rewrite {| (executable (name main) (flags :standard -open Base)) |} ~f:(fun t ->
+    print_s [%sexp (Dune_linter.Executable.flags t : Dune_linter.Flags.t)];
+    [%expect {| ((flags (:standard -open Base))) |}];
+    ());
+  [%expect {| (executable (name main) (flags :standard -open Base)) |}];
   ()
 ;;
 

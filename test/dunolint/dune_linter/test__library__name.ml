@@ -176,3 +176,22 @@ let%expect_test "enforce" =
   [%expect {| (name hello_suf) |}];
   ()
 ;;
+
+let rewrite ?(f = ignore) str =
+  let (sexps_rewriter, field), t = parse str in
+  f t;
+  Dune_linter.Library.Name.rewrite t ~sexps_rewriter ~field;
+  print_endline (Sexps_rewriter.contents sexps_rewriter)
+;;
+
+let%expect_test "rewrite" =
+  rewrite {| (name mylib) |};
+  [%expect {| (name mylib) |}];
+  (* Exercising some getters and setters. *)
+  rewrite {| (name mylib) |} ~f:(fun t ->
+    print_s [%sexp (Dune_linter.Library.Name.name t : Dune.Library.Name.t)];
+    [%expect {| mylib |}];
+    ());
+  [%expect {| (name mylib) |}];
+  ()
+;;

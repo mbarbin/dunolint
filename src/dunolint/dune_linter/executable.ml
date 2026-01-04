@@ -103,6 +103,7 @@ let indicative_field_ordering =
   ]
 ;;
 
+let flags t = t.flags
 let normalize t = Libraries.dedup_and_sort t.libraries
 
 let create

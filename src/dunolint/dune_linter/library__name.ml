@@ -22,6 +22,7 @@
 type t = { mutable name : Dune.Library.Name.t } [@@deriving sexp_of]
 
 let field_name = "name"
+let name t = t.name
 
 module Handler = Dunolinter.Sexp_handler.Make_atom (struct
     let field_name = field_name
