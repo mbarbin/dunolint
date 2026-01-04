@@ -68,6 +68,8 @@ open Dunolint.Config.Std
 
 let%expect_test "predicate" =
   let test p = Common.test_predicate (module Dune_project.Predicate) p in
+  test (dune_lang_version (gte (Dune_project.Dune_lang_version.create (3, 17))));
+  [%expect {| (dune_lang_version (>= 3.17)) |}];
   test (generate_opam_files (Blang.base `is_present));
   [%expect {| (generate_opam_files is_present) |}];
   test (implicit_transitive_deps (equals `True));

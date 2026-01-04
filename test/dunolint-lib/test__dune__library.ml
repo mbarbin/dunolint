@@ -139,6 +139,8 @@ open Dunolint.Config.Std
 
 let%expect_test "predicate" =
   let test p = Common.test_predicate (module Dune.Library.Predicate) p in
+  test (has_field `inline_tests);
+  [%expect {| (has_field inline_tests) |}];
   test (has_field `instrumentation);
   [%expect {| (has_field instrumentation) |}];
   test (has_field `lint);
