@@ -2,13 +2,19 @@
 
 ### Added
 
+- Add some library and executable linter getters/setters (#163, @mbarbin).
+
 ### Changed
+
+- Generalize `Dunolint_engine.with_linter` helper (#163, @mbarbin).
 
 ### Deprecated
 
 ### Fixed
 
 ### Removed
+
+- Removed deprecated `load_existing_libraries` private helper (#163, @mbarbin).
 
 ## 0.0.20260103 (2026-01-03)
 
