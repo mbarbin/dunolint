@@ -619,14 +619,13 @@ let%expect_test "enforce" =
   ()
 ;;
 
-let%expect_test "load_existing_libraries" =
-  (* This is covering a use-case which hopefully will be deprecated in the
-     future. Some external tool is using dunolint in such a way that existing
-     fields are linted against values obtained with [create], which ends up
-     erasing fields. *)
-  let test t str ~load_existing_libraries =
+let%expect_test "overwrite_existing_libraries" =
+  (* This is covering a use-case which we deprecated. When you rewrite a
+     library, the fields that were specified overwrite the ones found on disk,
+     which may end up erasing fields. *)
+  let test t str =
     let sexps_rewriter, field = Common.read str in
-    Dune_linter.Library.Private.rewrite t ~load_existing_libraries ~sexps_rewriter ~field;
+    Dune_linter.Library.rewrite t ~sexps_rewriter ~field;
     print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
   in
   let t =
@@ -647,14 +646,10 @@ let%expect_test "load_existing_libraries" =
      load existing libraries, they are removed, because they are not declared in
      [t]. See below, this is shown by the presence/absence of the [baz] library.
 
-     The main use case that we aim to support eventually is linting via
-     invariants, and usually, an invariant specify for a library to be present
-     or absent, but another library that is not directly involved with said
-     invariant is untouched when the invariant is enforced (not removed). *)
-  test t spec ~load_existing_libraries:false;
+     We replaced this with linting via invariants, and/or linting via the typed
+     linter API. *)
+  test t spec;
   [%expect {| (library (name main) (public_name my-cli) (libraries bar foo)) |}];
-  test t spec ~load_existing_libraries:true;
-  [%expect {| (library (name main) (public_name my-cli) (libraries bar baz foo)) |}];
   ()
 ;;
 

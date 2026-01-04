@@ -395,17 +395,8 @@ let write_fields
 
 let write t = Sexp.List (Atom field_name :: write_fields t)
 
-let rewrite t ~sexps_rewriter ~field ~load_existing_libraries =
+let rewrite t ~sexps_rewriter ~field =
   let fields = Dunolinter.Sexp_handler.get_args ~field_name ~sexps_rewriter ~field in
-  let () =
-    if load_existing_libraries
-    then (
-      let existing_entries =
-        Dunolinter.Sexp_handler.find (module Libraries) ~sexps_rewriter ~fields
-        |> Option.value_map ~default:[] ~f:Libraries.entries
-      in
-      Libraries.add_entries t.libraries ~entries:existing_entries)
-  in
   normalize t;
   let new_fields = write_fields t in
   (* First we insert all missing fields. *)
@@ -756,10 +747,4 @@ module Linter = struct
   ;;
 end
 
-module Private = struct
-  let rewrite = rewrite
-end
-
-let rewrite t ~sexps_rewriter ~field =
-  rewrite t ~sexps_rewriter ~field ~load_existing_libraries:false
-;;
+module Private = struct end
