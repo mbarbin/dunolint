@@ -144,7 +144,7 @@ let%expect_test "rewrite" =
   [%expect {| (libraries) |}];
   rewrite {| (libraries foo bar baz) |};
   [%expect {| (libraries foo bar baz) |}];
-  (* Here we exercise the getters. *)
+  (* Exercising some getters and setters. *)
   rewrite
     {|
 (libraries
@@ -194,8 +194,8 @@ let%expect_test "rewrite" =
      sna
      (invalid sexp))
     |}];
-  (* Let's now exercise some setters. The tests on the sorting are left out of
-     this section, and are written in a subsequent part below. *)
+  (* The tests on the sorting are left out of this section, and are written in a
+     subsequent part below. *)
   rewrite
     {|
 (libraries

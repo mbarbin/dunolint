@@ -70,16 +70,12 @@ let rewrite ?(f = ignore) str =
 let%expect_test "rewrite" =
   rewrite {| (instrumentation (backend bisect_ppx)) |};
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
-  (* Exercising some getters. *)
+  (* Exercising some getters and setters. *)
   rewrite {| (instrumentation (backend other_backend)) |} ~f:(fun t ->
     print_s
       [%sexp
         (Dune_linter.Instrumentation.backend t : Dune.Instrumentation.Backend.Name.t)];
     [%expect {| other_backend |}];
-    ());
-  [%expect {| (instrumentation (backend other_backend)) |}];
-  (* Exercising some setters. *)
-  rewrite {| (instrumentation (backend other_backend)) |} ~f:(fun t ->
     Dune_linter.Instrumentation.set_backend
       t
       ~backend:(Dune.Instrumentation.Backend.Name.v "bisect_ppx");

@@ -155,15 +155,9 @@ let rewrite ?(f = ignore) str =
 let%expect_test "rewrite" =
   rewrite {| (pps ppx_deriving) |};
   [%expect {| (pps ppx_deriving) |}];
-  (* Exercising some getters. *)
+  (* Exercising some getters and setters. *)
   rewrite {| (pps ppx_deriving -flag) |} ~f:(fun t ->
-    (* There are no getters to test at the moment. *)
-    ignore (t : Dune_linter.Pps.t);
-    ());
-  [%expect {| (pps ppx_deriving -flag) |}];
-  (* Exercising some setters. *)
-  rewrite {| (pps ppx_deriving -flag) |} ~f:(fun t ->
-    (* There are no setters to test at the moment. *)
+    (* There are no getters or setters to test at the moment. *)
     ignore (t : Dune_linter.Pps.t);
     ());
   [%expect {| (pps ppx_deriving -flag) |}];

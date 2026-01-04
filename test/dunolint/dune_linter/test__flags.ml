@@ -103,7 +103,7 @@ let%expect_test "rewrite" =
   [%expect {| (flags) |}];
   rewrite {| (flags :standard -open Foo) |};
   [%expect {| (flags :standard -open Foo) |}];
-  (* Here we exercise the getters. *)
+  (* Exercising some getters and setters. *)
   rewrite {| (flags) |} ~f:(fun t ->
     print_s [%sexp (Dune_linter.Flags.is_empty t : bool)];
     [%expect {| true |}];
@@ -118,13 +118,12 @@ let%expect_test "rewrite" =
     [%expect {| (:standard -open Foo) |}];
     ());
   [%expect {| (flags :standard -open Foo) |}];
-  (* Exercising some setters. *)
-  rewrite {| (flags :standard -open Foo) |} ~f:(fun t ->
-    Dune_linter.Flags.set_flags t ~flags:[ [%sexp "foo"]; [%sexp Some "bar"] ];
-    ());
   (* At the moment the flags rewrite does not remove flags that are already
      present on disk at the end of the rewritten position. That is a leftover
      from another system, and should be revisited. *)
+  rewrite {| (flags :standard -open Foo) |} ~f:(fun t ->
+    Dune_linter.Flags.set_flags t ~flags:[ [%sexp "foo"]; [%sexp Some "bar"] ];
+    ());
   [%expect {| (flags foo (Some bar) Foo) |}];
   (* Exercising flags insertion. *)
   rewrite {| (flags -open Bar) |} ~f:(fun t ->

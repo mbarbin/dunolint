@@ -72,15 +72,9 @@ let rewrite ?(f = ignore) str =
 let%expect_test "rewrite" =
   rewrite {| (lint (pps ppx_js_style)) |};
   [%expect {| (lint (pps ppx_js_style)) |}];
-  (* Exercising some getters. *)
+  (* Exercising some getters and setters. *)
   rewrite {| (lint (pps ppx_js_style -check-doc-comments)) |} ~f:(fun t ->
-    (* There are no getters to test at the moment. *)
-    ignore (t : Dune_linter.Lint.t);
-    ());
-  [%expect {| (lint (pps ppx_js_style -check-doc-comments)) |}];
-  (* Exercising some setters. *)
-  rewrite {| (lint (pps ppx_js_style -check-doc-comments)) |} ~f:(fun t ->
-    (* There are no setters to test at the moment. *)
+    (* There are no getters or setters to test at the moment. *)
     ignore (t : Dune_linter.Lint.t);
     ());
   [%expect {| (lint (pps ppx_js_style -check-doc-comments)) |}];
