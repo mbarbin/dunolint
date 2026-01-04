@@ -177,40 +177,25 @@ let format_dune_file_or_continue ~loc ~new_contents =
     new_contents
 ;;
 
-let lint_dune_file ?with_linter t ~(path : Relative_path.t) ~f =
+let with_linter
+      (type a)
+      (module Linter : Dunolinter.S with type t = a)
+      t
+      ~(path : Relative_path.t)
+      ~f
+  =
   lint_file
     t
     ~path
     ?create_file:None
     ~rewrite_file:(fun ~previous_contents ->
-      match Dune_linter.create ~path ~original_contents:previous_contents with
+      match Linter.create ~path ~original_contents:previous_contents with
       | Error { loc; message } ->
         Err.error ~loc [ Pp.textf "%s" message ];
         previous_contents
       | Ok linter ->
-        Dune_linter.visit linter ~f;
-        Option.iter with_linter ~f:(fun f -> f linter);
-        Dune_linter.contents linter)
-    ~autoformat_file:(fun ~new_contents ->
-      format_dune_file_or_continue
-        ~loc:(Loc.of_file ~path:(path :> Fpath.t))
-        ~new_contents)
-;;
-
-let lint_dune_project_file ?with_linter t ~(path : Relative_path.t) ~f =
-  lint_file
-    t
-    ~path
-    ?create_file:None
-    ~rewrite_file:(fun ~previous_contents ->
-      match Dune_project_linter.create ~path ~original_contents:previous_contents with
-      | Error { loc; message } ->
-        Err.error ~loc [ Pp.textf "%s" message ];
-        previous_contents
-      | Ok linter ->
-        Dune_project_linter.visit linter ~f;
-        Option.iter with_linter ~f:(fun f -> f linter);
-        Dune_project_linter.contents linter)
+        f linter;
+        Linter.contents linter)
     ~autoformat_file:(fun ~new_contents ->
       format_dune_file_or_continue
         ~loc:(Loc.of_file ~path:(path :> Fpath.t))

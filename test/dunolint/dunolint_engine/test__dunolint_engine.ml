@@ -39,56 +39,56 @@ let%expect_test "lint" =
 |}
        |> String.lstrip);
   (* In this section we exercise some ways dunolint_engine can be used as a library. *)
-  Dunolint_engine.lint_dune_project_file
+  Dunolint_engine.with_linter
+    (module Dune_project_linter)
     t
     ~path
-    ~f:(fun stanza ->
-      (* The API has a few getters. *)
-      print_s [%sexp (Dunolinter.path stanza : Relative_path.t)];
-      [%expect {| dune-project |}];
-      (* The intended use is to match on the actual stanza. *)
-      (match Dunolinter.match_stanza stanza with
-       | Dune_project_linter.Generate_opam_files _ ->
-         (* You may explicitly ignore the ones you are not interested in. *)
-         ()
-       | Dune_project_linter.Implicit_transitive_deps s ->
-         (* And use the typed getters and setters of the stanza you care about. *)
-         print_s
-           [%sexp
-             (Dune_project_linter.Implicit_transitive_deps.value s
-              : Dune_project_linter.Implicit_transitive_deps.Value.t)];
-         [%expect {| true |}];
-         (* If you use setters, the side effect on the memory value is done
-            right away, but actual sexp rewrite is going to be registered and only
-            executed during the call to [materialize] (see below). *)
-         Dune_project_linter.Implicit_transitive_deps.set_value s ~value:`False;
-         [%expect {||}];
-         ()
-       | Dune_project_linter.Name _ ->
-         (* In this example we illustrate that it is also possible to use the eDSL API
-            when using the dunolint engine as a library. For this purpose here,
-            we are going to rewrite the name using an invariant. *)
-         (match Dunolinter.linter stanza with
-          | Unhandled -> assert false
-          | T { eval = _; enforce } ->
-            (* Similarly to using typed setters, the side effect is performed
-               but the rewrite is done during materialization. *)
-            enforce
-              ~path
-              ~condition:
-                (dune_project (name (equals (Dune_project.Name.v "a-better-name"))));
-            [%expect {||}];
-            ())
-       | _ ->
-         (* Matching over values of extensible variant types must include a wild
-            card pattern in order to be exhaustive.
+    ~f:(fun linter ->
+      Dune_project_linter.visit linter ~f:(fun stanza ->
+        (* The API has a few getters. *)
+        print_s [%sexp (Dunolinter.path stanza : Relative_path.t)];
+        [%expect {| dune-project |}];
+        (* The intended use is to match on the actual stanza. *)
+        match Dunolinter.match_stanza stanza with
+        | Dune_project_linter.Generate_opam_files _ ->
+          (* You may explicitly ignore the ones you are not interested in. *)
+          ()
+        | Dune_project_linter.Implicit_transitive_deps s ->
+          (* And use the typed getters and setters of the stanza you care about. *)
+          print_s
+            [%sexp
+              (Dune_project_linter.Implicit_transitive_deps.value s
+               : Dune_project_linter.Implicit_transitive_deps.Value.t)];
+          [%expect {| true |}];
+          (* If you use setters, the side effect on the memory value is done
+             right away, but actual sexp rewrite is going to be registered and only
+             executed during the call to [materialize] (see below). *)
+          Dune_project_linter.Implicit_transitive_deps.set_value s ~value:`False;
+          [%expect {||}];
+          ()
+        | Dune_project_linter.Name _ ->
+          (* In this example we illustrate that it is also possible to use the eDSL API
+             when using the dunolint engine as a library. For this purpose here,
+             we are going to rewrite the name using an invariant. *)
+          (match Dunolinter.linter stanza with
+           | Unhandled -> assert false
+           | T { eval = _; enforce } ->
+             (* Similarly to using typed setters, the side effect is performed
+                but the rewrite is done during materialization. *)
+             enforce
+               ~path
+               ~condition:
+                 (dune_project (name (equals (Dune_project.Name.v "a-better-name"))));
+             [%expect {||}];
+             ())
+        | _ ->
+          (* Matching over values of extensible variant types must include a wild
+             card pattern in order to be exhaustive.
 
-            We make use of that design characteristic of OCaml to encourage the
-            users to write future proof code, where new constructs can be added
-            to the dunolint engine, and added over time to client codes. *)
-         ());
-      ())
-    ~with_linter:(fun linter ->
+             We make use of that design characteristic of OCaml to encourage the
+             users to write future proof code, where new constructs can be added
+             to the dunolint engine, and added over time to client codes. *)
+          ());
       (* It is also possible to access the linter value that holds the stanzas
          and using it directly. Here we'll illustrate this use case with an
          example involving access to the low-level sexps-rewriter. *)
@@ -162,27 +162,28 @@ let%expect_test "create-files" =
   Dunolint_engine.lint_file t ~path:(Relative_path.v "lib/a/dune");
   (* Another option to apply lints is to go through the [Dunolinter] API. *)
   let path = Relative_path.v "lib/a/dune" in
-  Dunolint_engine.lint_dune_file
+  Dunolint_engine.with_linter
+    (module Dune_linter)
     t
     ~path
-    ~f:(fun stanza ->
-      match Dunolinter.linter stanza with
-      | Unhandled ->
-        (* The file was created above, and only contains stanzas supported by
-           dunolint. Thus we are not exercising this [Unhandled] case during this
-           test. In general, you want to ignore unsupported stanzas - they will
-           not be linted and kept untouched. *)
-        () [@coverage off]
-      | T { eval = _; enforce } ->
-        enforce
-          ~path
-          ~condition:
-            (dune
-               (library
-                  (public_name (equals (Dune.Library.Public_name.v "a-public-name")))));
-        [%expect {||}];
-        ())
-    ~with_linter:(fun linter ->
+    ~f:(fun linter ->
+      Dune_linter.visit linter ~f:(fun stanza ->
+        match Dunolinter.linter stanza with
+        | Unhandled ->
+          (* The file was created above, and only contains stanzas supported by
+             dunolint. Thus we are not exercising this [Unhandled] case during this
+             test. In general, you want to ignore unsupported stanzas - they will
+             not be linted and kept untouched. *)
+          () [@coverage off]
+        | T { eval = _; enforce } ->
+          enforce
+            ~path
+            ~condition:
+              (dune
+                 (library
+                    (public_name (equals (Dune.Library.Public_name.v "a-public-name")))));
+          [%expect {||}];
+          ());
       (* It is also possible to access the linter value that holds the stanzas
          and using it directly. Here we'll illustrate this use case with an
          example involving simple getters. *)
@@ -244,10 +245,11 @@ let%expect_test "invalid files" =
     Out_channel.write_all "dune-project" ~data:"(lang dune 3.17)\n";
     Out_channel.write_all "invalid/dune" ~data:"(invalid";
     Out_channel.write_all "invalid/dune-project" ~data:"(invalid";
-    Dunolint_engine.lint_dune_file
+    Dunolint_engine.with_linter
+      (module Dune_linter)
       t
       ~path:(Relative_path.v "invalid/dune")
-      ~f:(ignore : Dune_linter.Stanza.t Dunolinter.Stanza.t -> unit);
+      ~f:(ignore : Dune_linter.t -> unit);
     [%expect
       {|
       File "invalid/dune", line 1, characters 8-8:
@@ -260,10 +262,11 @@ let%expect_test "invalid files" =
       <REDACTED IN TEST>
       Exited 1
       |}];
-    Dunolint_engine.lint_dune_project_file
+    Dunolint_engine.with_linter
+      (module Dune_project_linter)
       t
       ~path:(Relative_path.v "invalid/dune-project")
-      ~f:(ignore : Dune_project_linter.Stanza.t Dunolinter.Stanza.t -> unit);
+      ~f:(ignore : Dune_project_linter.t -> unit);
     [%expect
       {|
       File "invalid/dune-project", line 1, characters 8-8:
@@ -276,16 +279,18 @@ let%expect_test "invalid files" =
       <REDACTED IN TEST>
       Exited 1
       |}];
-    Dunolint_engine.lint_dune_project_file
+    Dunolint_engine.with_linter
+      (module Dune_project_linter)
       t
       ~path:(Relative_path.v "dune-project")
-      ~f:(fun stanza ->
-        match Dunolinter.match_stanza stanza with
-        | Dune_project_linter.Dune_lang_version stanza ->
-          Dune_project_linter.Dune_lang_version.set_dune_lang_version
-            stanza
-            ~dune_lang_version:(Dune_project.Dune_lang_version.create (3, 20))
-        | _ -> assert false);
+      ~f:(fun linter ->
+        Dune_project_linter.visit linter ~f:(fun stanza ->
+          match Dunolinter.match_stanza stanza with
+          | Dune_project_linter.Dune_lang_version stanza ->
+            Dune_project_linter.Dune_lang_version.set_dune_lang_version
+              stanza
+              ~dune_lang_version:(Dune_project.Dune_lang_version.create (3, 20))
+          | _ -> assert false));
     [%expect {||}];
     Dunolint_engine.materialize t;
     [%expect

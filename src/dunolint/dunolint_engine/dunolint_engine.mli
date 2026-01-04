@@ -97,18 +97,11 @@ val visit
 
 (** {1 Lint} *)
 
-val lint_dune_file
-  :  ?with_linter:(Dune_linter.t -> unit)
+val with_linter
+  :  (module Dunolinter.S with type t = 'a)
   -> t
   -> path:Relative_path.t
-  -> f:(Dune_linter.Stanza.t Dunolinter.Stanza.t -> unit)
-  -> unit
-
-val lint_dune_project_file
-  :  ?with_linter:(Dune_project_linter.t -> unit)
-  -> t
-  -> path:Relative_path.t
-  -> f:(Dune_project_linter.Stanza.t Dunolinter.Stanza.t -> unit)
+  -> f:('a -> unit)
   -> unit
 
 val lint_file
