@@ -64,4 +64,4 @@ jobs:
         run: opam install ./dunolint.opam ./dunolint-lib.opam ./dunolint-lib-base.opam ./dunolint-tests.opam --deps-only --with-test
 
       - name: Build & Run tests
-        run: opam exec -- dune build @all @runtest -p dunolint,dunolint-lib,dunolint-lib-base,dunolint-tests
+        run: opam exec -- dune build @all @runtest --only-packages=dunolint,dunolint-lib,dunolint-lib-base,dunolint-tests
