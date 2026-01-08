@@ -30,6 +30,8 @@ jobs:
         ocaml-compiler:
           - 5.4.x
           - 5.3.x
+          - 5.2.x
+          - 4.14.x
         exclude:
           # We exclude the combination already tested in the 'ci' workflow.
           - os: ubuntu-latest
@@ -57,11 +59,24 @@ jobs:
       - name: Edit dune-project
         run: opam exec -- ocaml .github/workflows/edit_dune_project_dot_ml "${{ matrix.ocaml-compiler }}"
 
+      - name: Environment setup
+        run: |
+          if [ "${{ matrix.ocaml-compiler }}" = "4.14.x" ]; then
+            echo "PACKAGES=dunolint-lib,dunolint-lib-base" >> "$GITHUB_ENV"
+            echo "OPAM_PACKAGES=./dunolint-lib.opam ./dunolint-lib-base.opam" >> "$GITHUB_ENV"
+          elif [ "${{ matrix.ocaml-compiler }}" = "5.2.x" ]; then
+            echo "PACKAGES=dunolint-lib,dunolint-lib-base" >> "$GITHUB_ENV"
+            echo "OPAM_PACKAGES=./dunolint-lib.opam ./dunolint-lib-base.opam" >> "$GITHUB_ENV"
+          else
+            echo "PACKAGES=dunolint,dunolint-lib,dunolint-lib-base,dunolint-tests" >> "$GITHUB_ENV"
+            echo "OPAM_PACKAGES=./dunolint.opam ./dunolint-lib.opam ./dunolint-lib-base.opam ./dunolint-tests.opam" >> "$GITHUB_ENV"
+          fi
+
       # We build and run tests for a subset of packages. More tests are run in
       # the development workflow and as part of the main CI job. These are the
       # tests that are checked for every combination of os and ocaml-compiler.
       - name: Install dependencies
-        run: opam install ./dunolint.opam ./dunolint-lib.opam ./dunolint-lib-base.opam ./dunolint-tests.opam --deps-only --with-test
+        run: opam install ${{ env.OPAM_PACKAGES }} --deps-only --with-test
 
       - name: Build & Run tests
-        run: opam exec -- dune build @all @runtest --only-packages=dunolint,dunolint-lib,dunolint-lib-base,dunolint-tests
+        run: opam exec -- dune build @all @runtest --only-packages=${{ env.PACKAGES }}
