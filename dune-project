@@ -147,7 +147,11 @@
   (ocaml
    (>= 5.3))
   (dune
-   (>= 3.20))
+   ;; Tests currently do not work with the new dune.
+   ;; See https://github.com/mbarbin/dunolint/issues/164
+   (and
+    (>= 3.20)
+    (< 3.21)))
   (base
    (>= v0.17))
   (cmdlang
