@@ -111,13 +111,22 @@ integration.
 Test invalid lang stanza (missing middle constructor) for dune-project files.
 
   $ printf '(lang 3.17)\n' > dune-project
-  $ dunolint tools lint-file dune-project
+  $ dunolint tools lint-file dune-project --format-file=false
   File "dune-project", line 1, characters 0-11:
   1 | (lang 3.17)
       ^^^^^^^^^^^
   Error: Expected (lang dune VERSION) format.
   (lang 3.17)
   [123]
+
+Started from dune [3.21] it is necessary in this test to reset the root
+[dune-project] file in order for it to have a valid initial lang version stanza,
+because it is used by the [dune-format-file] command to select the formatting
+version to use when formatting the other dune files of the project.
+
+  $ printf '(lang dune 3.17)\n' > dune-project
+  $ dunolint tools lint-file dune-project
+  (lang dune 3.17)
 
 Next we are going to test the command with config.
 

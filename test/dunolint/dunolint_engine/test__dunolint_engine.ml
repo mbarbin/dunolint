@@ -22,6 +22,34 @@
 open Dunolint.Config.Std
 module Unix = UnixLabels
 
+let autoformat_file ~new_contents =
+  match
+    Dunolint_engine.format_dune_file
+      ~dune_version:(Preset (Dune_project.Dune_lang_version.create (3, 17)))
+      ~new_contents
+  with
+  | res -> res
+  | exception Err.E err ->
+    Err.emit ~level:Error err;
+    new_contents
+;;
+
+let with_linter (type a) (module Linter : Dunolinter.S with type t = a) t ~path ~f =
+  Dunolint_engine.lint_file
+    t
+    ~path
+    ~autoformat_file
+    ?create_file:None
+    ~rewrite_file:(fun ~previous_contents ->
+      match Linter.create ~path ~original_contents:previous_contents with
+      | Error { loc; message } ->
+        Err.error ~loc [ Pp.textf "%s" message ];
+        previous_contents
+      | Ok linter ->
+        f linter;
+        Linter.contents linter)
+;;
+
 let%expect_test "lint" =
   let path = Relative_path.v "dune-project" in
   let t = Dunolint_engine.create ~running_mode:Dry_run () in
@@ -39,7 +67,7 @@ let%expect_test "lint" =
 |}
        |> String.lstrip);
   (* In this section we exercise some ways dunolint_engine can be used as a library. *)
-  Dunolint_engine.with_linter
+  with_linter
     (module Dune_project_linter)
     t
     ~path
@@ -124,6 +152,7 @@ let%expect_test "lint" =
 let%expect_test "format_dune_file" =
   let fmt =
     Dunolint_engine.format_dune_file
+      ~dune_version:(Preset (Dune_project.Dune_lang_version.create (3, 17)))
       ~new_contents:
         {|
 (lang dune 3.17) (name dunolint)
@@ -137,7 +166,11 @@ let%expect_test "format_dune_file" =
     (name dunolint)
     |}];
   Err.For_test.protect (fun () ->
-    match Dunolint_engine.format_dune_file ~new_contents:{|(invalid|} with
+    match
+      Dunolint_engine.format_dune_file
+        ~dune_version:(Preset (Dune_project.Dune_lang_version.create (3, 17)))
+        ~new_contents:{|(invalid|}
+    with
     | (_ : string) -> () [@coverage off]);
   [%expect
     {|
@@ -162,7 +195,7 @@ let%expect_test "create-files" =
   Dunolint_engine.lint_file t ~path:(Relative_path.v "lib/a/dune");
   (* Another option to apply lints is to go through the [Dunolinter] API. *)
   let path = Relative_path.v "lib/a/dune" in
-  Dunolint_engine.with_linter
+  with_linter
     (module Dune_linter)
     t
     ~path
@@ -245,7 +278,7 @@ let%expect_test "invalid files" =
     Out_channel.write_all "dune-project" ~data:"(lang dune 3.17)\n";
     Out_channel.write_all "invalid/dune" ~data:"(invalid";
     Out_channel.write_all "invalid/dune-project" ~data:"(invalid";
-    Dunolint_engine.with_linter
+    with_linter
       (module Dune_linter)
       t
       ~path:(Relative_path.v "invalid/dune")
@@ -257,12 +290,11 @@ let%expect_test "invalid files" =
 
       Error: unclosed parentheses at end of input
 
-      File "invalid/dune", line 1, characters 0-0:
       Error: Failed to format dune file:
       <REDACTED IN TEST>
       Exited 1
       |}];
-    Dunolint_engine.with_linter
+    with_linter
       (module Dune_project_linter)
       t
       ~path:(Relative_path.v "invalid/dune-project")
@@ -274,12 +306,11 @@ let%expect_test "invalid files" =
 
       Error: unclosed parentheses at end of input
 
-      File "invalid/dune-project", line 1, characters 0-0:
       Error: Failed to format dune file:
       <REDACTED IN TEST>
       Exited 1
       |}];
-    Dunolint_engine.with_linter
+    with_linter
       (module Dune_project_linter)
       t
       ~path:(Relative_path.v "dune-project")

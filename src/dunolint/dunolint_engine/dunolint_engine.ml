@@ -138,9 +138,28 @@ module Process_status = struct
   ;;
 end
 
-let format_dune_file_internal ~new_contents =
+module Dune_version = struct
+  type t =
+    | Inferred_by_dune
+    | Preset of Dune_project.Dune_lang_version.t
+end
+
+let format_dune_file_internal ~dune_version ~new_contents =
+  let dune_version_flag =
+    match (dune_version : Dune_version.t) with
+    | Inferred_by_dune -> []
+    | Preset dune_lang_version ->
+      [ Printf.sprintf
+          "--dune-version=%s"
+          (Dune_project.Dune_lang_version.to_string dune_lang_version)
+      ]
+  in
   let ((in_ch, out_ch, err_ch) as process) =
-    Unix.open_process_full "dune format-dune-file" ~env:(Unix.environment ())
+    Unix.open_process_full
+      (String.concat
+         ~sep:" "
+         (List.concat [ [ "dune format-dune-file" ]; dune_version_flag ]))
+      ~env:(Unix.environment ())
   in
   Out_channel.output_string out_ch new_contents;
   Out_channel.close out_ch;
@@ -163,43 +182,10 @@ let format_dune_file_internal ~new_contents =
       ]
 ;;
 
-let format_dune_file ~new_contents =
-  match format_dune_file_internal ~new_contents with
+let format_dune_file ~dune_version ~new_contents =
+  match format_dune_file_internal ~dune_version ~new_contents with
   | Ok output -> output
   | Error text -> Err.raise text
-;;
-
-let format_dune_file_or_continue ~loc ~new_contents =
-  match format_dune_file_internal ~new_contents with
-  | Ok output -> output
-  | Error text ->
-    Err.error ~loc text;
-    new_contents
-;;
-
-let with_linter
-      (type a)
-      (module Linter : Dunolinter.S with type t = a)
-      t
-      ~(path : Relative_path.t)
-      ~f
-  =
-  lint_file
-    t
-    ~path
-    ?create_file:None
-    ~rewrite_file:(fun ~previous_contents ->
-      match Linter.create ~path ~original_contents:previous_contents with
-      | Error { loc; message } ->
-        Err.error ~loc [ Pp.textf "%s" message ];
-        previous_contents
-      | Ok linter ->
-        f linter;
-        Linter.contents linter)
-    ~autoformat_file:(fun ~new_contents ->
-      format_dune_file_or_continue
-        ~loc:(Loc.of_file ~path:(path :> Fpath.t))
-        ~new_contents)
 ;;
 
 let is_directory ~path =

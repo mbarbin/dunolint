@@ -47,7 +47,7 @@ let should_skip_subtree ~context ~(path : Relative_path.t) =
            List.exists skip_paths ~f:(fun glob -> Dunolint.Glob.test glob path))))
 ;;
 
-let maybe_autoformat_file ~previous_contents ~new_contents =
+let maybe_autoformat_file ~dune_version ~previous_contents ~new_contents =
   (* For the time being we are using here a heuristic to drive whether to
      autoformat linted files. This is motivated by pragmatic reasoning and lower
      friction for onboarding in various situation where formatting may or may
@@ -58,14 +58,14 @@ let maybe_autoformat_file ~previous_contents ~new_contents =
     let was_originally_well_formatted =
       try
         let formatted =
-          Dunolint_engine.format_dune_file ~new_contents:previous_contents
+          Dunolint_engine.format_dune_file ~dune_version ~new_contents:previous_contents
         in
         String.equal formatted previous_contents
       with
       | _ -> false
     in
     if was_originally_well_formatted
-    then Dunolint_engine.format_dune_file ~new_contents
+    then Dunolint_engine.format_dune_file ~dune_version ~new_contents
     else new_contents)
 ;;
 
@@ -94,32 +94,33 @@ let lint_stanza ~path ~context ~stanza =
               | `enforce condition -> enforce ~path ~condition)))
 ;;
 
-module Lint_file (Linter : Dunolinter.S) = struct
-  let lint_file ~dunolint_engine ~context ~(path : Relative_path.t) =
-    let previous_contents_ref = ref "" in
-    Dunolint_engine.lint_file
-      dunolint_engine
-      ~path
-      ?create_file:None
-      ~rewrite_file:(fun ~previous_contents ->
-        previous_contents_ref := previous_contents;
-        match Linter.create ~path ~original_contents:previous_contents with
-        | Error { loc; message } ->
-          Err.error ~loc [ Pp.textf "%s" message ];
-          previous_contents
-        | Ok linter ->
-          Linter.visit linter ~f:(fun stanza -> lint_stanza ~path ~context ~stanza);
-          Linter.contents linter)
-      ~autoformat_file:(fun ~new_contents ->
-        let previous_contents = !previous_contents_ref in
-        maybe_autoformat_file ~previous_contents ~new_contents)
-  ;;
-end
-
-module Dune_lint = Lint_file (Dune_linter)
-module Dune_project_lint = Lint_file (Dune_project_linter)
-module Dune_workspace_lint = Lint_file (Dune_workspace_linter)
-module Dunolint_lint = Lint_file (Dunolint_linter)
+let lint_file
+      (module Linter : Dunolinter.S)
+      ~dunolint_engine
+      ~context
+      ~(path : Relative_path.t)
+  =
+  let previous_contents_ref = ref "" in
+  Dunolint_engine.lint_file
+    dunolint_engine
+    ~path
+    ?create_file:None
+    ~rewrite_file:(fun ~previous_contents ->
+      previous_contents_ref := previous_contents;
+      match Linter.create ~path ~original_contents:previous_contents with
+      | Error { loc; message } ->
+        Err.error ~loc [ Pp.textf "%s" message ];
+        previous_contents
+      | Ok linter ->
+        Linter.visit linter ~f:(fun stanza -> lint_stanza ~path ~context ~stanza);
+        Linter.contents linter)
+    ~autoformat_file:(fun ~new_contents ->
+      let previous_contents = !previous_contents_ref in
+      maybe_autoformat_file
+        ~dune_version:Inferred_by_dune
+        ~previous_contents
+        ~new_contents)
+;;
 
 let should_skip_file ~context ~path =
   List.exists (Dunolint_engine.Context.configs context) ~f:(fun { config; location } ->
@@ -144,11 +145,11 @@ let visit_directory ~dunolint_engine ~context ~parent_dir ~files =
         let path = Relative_path.extend parent_dir (Fsegment.v file) in
         if not (should_skip_file ~context ~path)
         then (
+          let lint_file m = lint_file m ~dunolint_engine ~context ~path in
           match linted_file_kind with
-          | `dune -> Dune_lint.lint_file ~dunolint_engine ~context ~path
-          | `dune_project -> Dune_project_lint.lint_file ~dunolint_engine ~context ~path
-          | `dune_workspace ->
-            Dune_workspace_lint.lint_file ~dunolint_engine ~context ~path
-          | `dunolint -> Dunolint_lint.lint_file ~dunolint_engine ~context ~path));
+          | `dune -> lint_file (module Dune_linter)
+          | `dune_project -> lint_file (module Dune_project_linter)
+          | `dune_workspace -> lint_file (module Dune_workspace_linter)
+          | `dunolint -> lint_file (module Dunolint_linter)));
     Dunolint_engine.Visitor_decision.Continue
 ;;

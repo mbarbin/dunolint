@@ -30,6 +30,7 @@
   dunolinter
   file-rewriter
   fpath-sexp0
+  pp
   pplumbing-err
   sexps-rewriter
   stdio

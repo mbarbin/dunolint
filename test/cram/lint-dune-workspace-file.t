@@ -7,19 +7,11 @@ Initialize the project root.
 
 Test that dune-workspace files can be linted and formatted.
 
-  $ printf '(lang dune 3.17)\n' > dune-workspace
+  $ printf '(lang dune 3.17)\n(context\ndefault)\n' > dune-workspace
   $ dunolint tools lint-file dune-workspace
   (lang dune 3.17)
-
-Test formatting of dune-workspace files.
-
-  $ cat > dune-workspace <<'EOF'
-  > (lang
-  >  dune
-  >  3.17)
-  > EOF
-  $ dunolint tools lint-file dune-workspace
-  (lang dune 3.17)
+  
+  (context default)
 
 Formatting can be disabled.
 
@@ -36,7 +28,7 @@ Formatting can be disabled.
 Test invalid dune version format.
 
   $ printf '(lang dune invalid)\n' > dune-workspace
-  $ dunolint tools lint-file dune-workspace
+  $ dunolint tools lint-file dune-workspace --format-file=false
   File "dune-workspace", line 1, characters 11-18:
   1 | (lang dune invalid)
                  ^^^^^^^
@@ -45,7 +37,7 @@ Test invalid dune version format.
   [123]
 
   $ printf '(lang dune 3.INVALID)\n' > dune-workspace
-  $ dunolint tools lint-file dune-workspace
+  $ dunolint tools lint-file dune-workspace --format-file=false
   File "dune-workspace", line 1, characters 11-20:
   1 | (lang dune 3.INVALID)
                  ^^^^^^^^^
@@ -56,7 +48,7 @@ Test invalid dune version format.
 Test invalid lang stanza (not dune).
 
   $ printf '(lang dunolint 1.0)\n' > dune-workspace
-  $ dunolint tools lint-file dune-workspace
+  $ dunolint tools lint-file dune-workspace --format-file=false
   File "dune-workspace", line 1, characters 6-14:
   1 | (lang dunolint 1.0)
             ^^^^^^^^
@@ -67,7 +59,7 @@ Test invalid lang stanza (not dune).
 Test invalid lang stanza (missing middle constructor).
 
   $ printf '(lang 3.17)\n' > dune-workspace
-  $ dunolint tools lint-file dune-workspace
+  $ dunolint tools lint-file dune-workspace --format-file=false
   File "dune-workspace", line 1, characters 0-11:
   1 | (lang 3.17)
       ^^^^^^^^^^^

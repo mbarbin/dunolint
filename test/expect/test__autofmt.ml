@@ -22,7 +22,10 @@
 let%expect_test "maybe_autoformat_file" =
   let test ~previous_contents ~new_contents =
     let fmt =
-      Dunolint_cli.Private.Linter.maybe_autoformat_file ~previous_contents ~new_contents
+      Dunolint_cli.Private.Linter.maybe_autoformat_file
+        ~dune_version:(Preset (Dunolint.Dune_project.Dune_lang_version.create (3, 17)))
+        ~previous_contents
+        ~new_contents
     in
     print_endline fmt
   in
@@ -49,7 +52,7 @@ let%expect_test "maybe_autoformat_file" =
     ~previous_contents:"(lang  dune 3.17) (name     dunolint)"
     ~new_contents:"(lang    dune 3.17) (name dunolint)";
   [%expect {| (lang    dune 3.17) (name dunolint) |}];
-  (* This includes cases where the previous contents fails to autofmt. *)
+  (* This includes cases where the previous contents fails to auto format. *)
   test
     ~previous_contents:"(lang  dune 3.17 invalid-file"
     ~new_contents:"(lang    dune 3.17) (name dunolint)";

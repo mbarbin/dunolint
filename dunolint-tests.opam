@@ -9,7 +9,7 @@ doc: "https://mbarbin.github.io/dunolint/"
 bug-reports: "https://github.com/mbarbin/dunolint/issues"
 depends: [
   "ocaml" {>= "5.3"}
-  "dune" {>= "3.17" & >= "3.20" & < "3.21"}
+  "dune" {>= "3.17" & >= "3.20"}
   "base" {>= "v0.17"}
   "cmdlang" {>= "0.0.9"}
   "cmdlang-cmdliner-err-runner" {>= "0.0.16"}
@@ -45,11 +45,9 @@ depends: [
   "sexps-rewriter" {>= "0.0.3"}
   "stdio" {>= "v0.17"}
   "volgo" {>= "0.0.21"}
-  "volgo-base" {>= "0.0.21"}
   "volgo-git-unix" {>= "0.0.21"}
   "volgo-hg-unix" {>= "0.0.21"}
   "volgo-vcs" {>= "0.0.21"}
-  "sherlodoc" {with-doc & >= "0.2"}
   "odoc" {with-doc}
 ]
 build: [

@@ -97,13 +97,6 @@ val visit
 
 (** {1 Lint} *)
 
-val with_linter
-  :  (module Dunolinter.S with type t = 'a)
-  -> t
-  -> path:Relative_path.t
-  -> f:('a -> unit)
-  -> unit
-
 val lint_file
   :  ?autoformat_file:(new_contents:string -> string)
   -> ?create_file:(unit -> string)
@@ -112,10 +105,31 @@ val lint_file
   -> path:Relative_path.t
   -> unit
 
+module Dune_version : sig
+  (** What format version shall be used by [dune format-dune-file]?
+
+      Dune can infer the version to use based on the information found in the
+      enclosing dune-project file. However, in the context of dunolint this API
+      supports the ability to bypass this discovery mechanism and choose a
+      preset value to use instead. We make use of [Preset] for example in tests.
+
+      There may exists other conditions in which [Preset] would make sense to
+      use in dunolint. For example, when inferring the lang version, dune
+      initiates some machinery such as its logging system, which may interact
+      with locks and/or other files from [_build] or other locations. We have
+      witnessed instances where this resulted in a conflicting interaction with
+      a running build or some other concurrent dune operation. We may look into
+      letting dunolint perform its own discovery at some point, however this is
+      left for future work. *)
+  type t =
+    | Inferred_by_dune
+    | Preset of Dune_project.Dune_lang_version.t
+end
+
 (** Spawn a [dune format-dune-file] on the new linted contents before
     materializing into a file. Exposed if you need to write your own linters on
     files that are supported by the formatter shipped with dune. *)
-val format_dune_file : new_contents:string -> string
+val format_dune_file : dune_version:Dune_version.t -> new_contents:string -> string
 
 (** This calls [f] once, registers all requests enqueued during the execution of
     [f], and then depending on the running mode, either do a dry-run, or
