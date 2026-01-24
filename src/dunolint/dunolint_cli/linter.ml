@@ -47,7 +47,7 @@ let should_skip_subtree ~context ~(path : Relative_path.t) =
            List.exists skip_paths ~f:(fun glob -> Dunolint.Glob.test glob path))))
 ;;
 
-let maybe_autoformat_file ~previous_contents ~new_contents =
+let maybe_autoformat_file ~dune_version ~previous_contents ~new_contents =
   (* For the time being we are using here a heuristic to drive whether to
      autoformat linted files. This is motivated by pragmatic reasoning and lower
      friction for onboarding in various situation where formatting may or may
@@ -58,14 +58,14 @@ let maybe_autoformat_file ~previous_contents ~new_contents =
     let was_originally_well_formatted =
       try
         let formatted =
-          Dunolint_engine.format_dune_file ~new_contents:previous_contents
+          Dunolint_engine.format_dune_file ~dune_version ~new_contents:previous_contents
         in
         String.equal formatted previous_contents
       with
       | _ -> false
     in
     if was_originally_well_formatted
-    then Dunolint_engine.format_dune_file ~new_contents
+    then Dunolint_engine.format_dune_file ~dune_version ~new_contents
     else new_contents)
 ;;
 
@@ -112,7 +112,10 @@ module Lint_file (Linter : Dunolinter.S) = struct
           Linter.contents linter)
       ~autoformat_file:(fun ~new_contents ->
         let previous_contents = !previous_contents_ref in
-        maybe_autoformat_file ~previous_contents ~new_contents)
+        maybe_autoformat_file
+          ~dune_version:Inferred_by_dune
+          ~previous_contents
+          ~new_contents)
   ;;
 end
 

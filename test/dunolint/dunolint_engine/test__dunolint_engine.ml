@@ -22,6 +22,18 @@
 open Dunolint.Config.Std
 module Unix = UnixLabels
 
+let autoformat_file ~new_contents =
+  match
+    Dunolint_engine.format_dune_file
+      ~dune_version:(Preset (Dune_project.Dune_lang_version.create (3, 17)))
+      ~new_contents
+  with
+  | res -> res
+  | exception Err.E err ->
+    Err.emit ~level:Error err;
+    new_contents
+;;
+
 let%expect_test "lint" =
   let path = Relative_path.v "dune-project" in
   let t = Dunolint_engine.create ~running_mode:Dry_run () in
@@ -43,6 +55,7 @@ let%expect_test "lint" =
     (module Dune_project_linter)
     t
     ~path
+    ~autoformat_file
     ~f:(fun linter ->
       Dune_project_linter.visit linter ~f:(fun stanza ->
         (* The API has a few getters. *)
@@ -124,6 +137,7 @@ let%expect_test "lint" =
 let%expect_test "format_dune_file" =
   let fmt =
     Dunolint_engine.format_dune_file
+      ~dune_version:(Preset (Dune_project.Dune_lang_version.create (3, 17)))
       ~new_contents:
         {|
 (lang dune 3.17) (name dunolint)
@@ -137,7 +151,11 @@ let%expect_test "format_dune_file" =
     (name dunolint)
     |}];
   Err.For_test.protect (fun () ->
-    match Dunolint_engine.format_dune_file ~new_contents:{|(invalid|} with
+    match
+      Dunolint_engine.format_dune_file
+        ~dune_version:(Preset (Dune_project.Dune_lang_version.create (3, 17)))
+        ~new_contents:{|(invalid|}
+    with
     | (_ : string) -> () [@coverage off]);
   [%expect
     {|
@@ -166,6 +184,7 @@ let%expect_test "create-files" =
     (module Dune_linter)
     t
     ~path
+    ~autoformat_file
     ~f:(fun linter ->
       Dune_linter.visit linter ~f:(fun stanza ->
         match Dunolinter.linter stanza with
@@ -249,6 +268,7 @@ let%expect_test "invalid files" =
       (module Dune_linter)
       t
       ~path:(Relative_path.v "invalid/dune")
+      ~autoformat_file
       ~f:(ignore : Dune_linter.t -> unit);
     [%expect
       {|
@@ -257,7 +277,6 @@ let%expect_test "invalid files" =
 
       Error: unclosed parentheses at end of input
 
-      File "invalid/dune", line 1, characters 0-0:
       Error: Failed to format dune file:
       <REDACTED IN TEST>
       Exited 1
@@ -266,6 +285,7 @@ let%expect_test "invalid files" =
       (module Dune_project_linter)
       t
       ~path:(Relative_path.v "invalid/dune-project")
+      ~autoformat_file
       ~f:(ignore : Dune_project_linter.t -> unit);
     [%expect
       {|
@@ -274,7 +294,6 @@ let%expect_test "invalid files" =
 
       Error: unclosed parentheses at end of input
 
-      File "invalid/dune-project", line 1, characters 0-0:
       Error: Failed to format dune file:
       <REDACTED IN TEST>
       Exited 1

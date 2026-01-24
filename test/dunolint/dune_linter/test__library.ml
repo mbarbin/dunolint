@@ -560,17 +560,19 @@ let enforce (((sexps_rewriter, _), _) as input) conditions =
   print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
 ;;
 
+let format_dune_file ~new_contents =
+  Dunolint_engine.format_dune_file
+    ~dune_version:(Preset (Dune_project.Dune_lang_version.create (3, 17)))
+    ~new_contents
+;;
+
 let enforce_diff (((sexps_rewriter, _), _) as input) conditions =
   Sexps_rewriter.reset sexps_rewriter;
   let original =
-    Dunolint_engine.format_dune_file
-      ~new_contents:(Sexps_rewriter.contents sexps_rewriter)
+    format_dune_file ~new_contents:(Sexps_rewriter.contents sexps_rewriter)
   in
   enforce_internal input conditions;
-  let changed =
-    Dunolint_engine.format_dune_file
-      ~new_contents:(Sexps_rewriter.contents sexps_rewriter)
-  in
+  let changed = format_dune_file ~new_contents:(Sexps_rewriter.contents sexps_rewriter) in
   Expect_test_patdiff.print_patdiff original changed ~context:3
 ;;
 

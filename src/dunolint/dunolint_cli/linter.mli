@@ -24,7 +24,11 @@ val should_skip_subtree
   -> path:Relative_path.t
   -> bool
 
-val maybe_autoformat_file : previous_contents:string -> new_contents:string -> string
+val maybe_autoformat_file
+  :  dune_version:Dunolint_engine.Dune_version.t
+  -> previous_contents:string
+  -> new_contents:string
+  -> string
 
 val lint_stanza
   :  path:Relative_path.t
