@@ -133,8 +133,6 @@
    (>= v0.17))
   (volgo
    (>= 0.0.21))
-  (volgo-base
-   (>= 0.0.21))
   (volgo-git-unix
    (>= 0.0.21))
   (volgo-hg-unix
@@ -219,8 +217,6 @@
   (stdio
    (>= v0.17))
   (volgo
-   (>= 0.0.21))
-  (volgo-base
    (>= 0.0.21))
   (volgo-git-unix
    (>= 0.0.21))
@@ -326,8 +322,6 @@
   (stdio
    (>= v0.17))
   (volgo
-   (>= 0.0.21))
-  (volgo-base
    (>= 0.0.21))
   (volgo-git-unix
    (>= 0.0.21))

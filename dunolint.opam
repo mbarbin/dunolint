@@ -42,7 +42,6 @@ depends: [
   "sexps-rewriter" {>= "0.0.3"}
   "stdio" {>= "v0.17"}
   "volgo" {>= "0.0.21"}
-  "volgo-base" {>= "0.0.21"}
   "volgo-git-unix" {>= "0.0.21"}
   "volgo-hg-unix" {>= "0.0.21"}
   "odoc" {with-doc}
