@@ -34,6 +34,22 @@ let autoformat_file ~new_contents =
     new_contents
 ;;
 
+let with_linter (type a) (module Linter : Dunolinter.S with type t = a) t ~path ~f =
+  Dunolint_engine.lint_file
+    t
+    ~path
+    ~autoformat_file
+    ?create_file:None
+    ~rewrite_file:(fun ~previous_contents ->
+      match Linter.create ~path ~original_contents:previous_contents with
+      | Error { loc; message } ->
+        Err.error ~loc [ Pp.textf "%s" message ];
+        previous_contents
+      | Ok linter ->
+        f linter;
+        Linter.contents linter)
+;;
+
 let%expect_test "lint" =
   let path = Relative_path.v "dune-project" in
   let t = Dunolint_engine.create ~running_mode:Dry_run () in
@@ -51,11 +67,10 @@ let%expect_test "lint" =
 |}
        |> String.lstrip);
   (* In this section we exercise some ways dunolint_engine can be used as a library. *)
-  Dunolint_engine.with_linter
+  with_linter
     (module Dune_project_linter)
     t
     ~path
-    ~autoformat_file
     ~f:(fun linter ->
       Dune_project_linter.visit linter ~f:(fun stanza ->
         (* The API has a few getters. *)
@@ -180,11 +195,10 @@ let%expect_test "create-files" =
   Dunolint_engine.lint_file t ~path:(Relative_path.v "lib/a/dune");
   (* Another option to apply lints is to go through the [Dunolinter] API. *)
   let path = Relative_path.v "lib/a/dune" in
-  Dunolint_engine.with_linter
+  with_linter
     (module Dune_linter)
     t
     ~path
-    ~autoformat_file
     ~f:(fun linter ->
       Dune_linter.visit linter ~f:(fun stanza ->
         match Dunolinter.linter stanza with
@@ -264,11 +278,10 @@ let%expect_test "invalid files" =
     Out_channel.write_all "dune-project" ~data:"(lang dune 3.17)\n";
     Out_channel.write_all "invalid/dune" ~data:"(invalid";
     Out_channel.write_all "invalid/dune-project" ~data:"(invalid";
-    Dunolint_engine.with_linter
+    with_linter
       (module Dune_linter)
       t
       ~path:(Relative_path.v "invalid/dune")
-      ~autoformat_file
       ~f:(ignore : Dune_linter.t -> unit);
     [%expect
       {|
@@ -281,11 +294,10 @@ let%expect_test "invalid files" =
       <REDACTED IN TEST>
       Exited 1
       |}];
-    Dunolint_engine.with_linter
+    with_linter
       (module Dune_project_linter)
       t
       ~path:(Relative_path.v "invalid/dune-project")
-      ~autoformat_file
       ~f:(ignore : Dune_project_linter.t -> unit);
     [%expect
       {|
@@ -298,7 +310,7 @@ let%expect_test "invalid files" =
       <REDACTED IN TEST>
       Exited 1
       |}];
-    Dunolint_engine.with_linter
+    with_linter
       (module Dune_project_linter)
       t
       ~path:(Relative_path.v "dune-project")

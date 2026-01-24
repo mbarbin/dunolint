@@ -97,14 +97,6 @@ val visit
 
 (** {1 Lint} *)
 
-val with_linter
-  :  (module Dunolinter.S with type t = 'a)
-  -> ?autoformat_file:(new_contents:string -> string)
-  -> t
-  -> path:Relative_path.t
-  -> f:('a -> unit)
-  -> unit
-
 val lint_file
   :  ?autoformat_file:(new_contents:string -> string)
   -> ?create_file:(unit -> string)

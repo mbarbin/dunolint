@@ -188,29 +188,6 @@ let format_dune_file ~dune_version ~new_contents =
   | Error text -> Err.raise text
 ;;
 
-let with_linter
-      (type a)
-      (module Linter : Dunolinter.S with type t = a)
-      ?autoformat_file
-      t
-      ~(path : Relative_path.t)
-      ~f
-  =
-  lint_file
-    t
-    ~path
-    ?autoformat_file
-    ?create_file:None
-    ~rewrite_file:(fun ~previous_contents ->
-      match Linter.create ~path ~original_contents:previous_contents with
-      | Error { loc; message } ->
-        Err.error ~loc [ Pp.textf "%s" message ];
-        previous_contents
-      | Ok linter ->
-        f linter;
-        Linter.contents linter)
-;;
-
 let is_directory ~path =
   let path = Relative_path.rem_empty_seg path in
   match (Unix.stat (Relative_path.to_string path)).st_kind with
