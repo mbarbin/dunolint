@@ -48,7 +48,6 @@ depends: [
   "volgo-git-unix" {>= "0.0.21"}
   "volgo-hg-unix" {>= "0.0.21"}
   "volgo-vcs" {>= "0.0.21"}
-  "sherlodoc" {with-doc & >= "0.2"}
   "odoc" {with-doc}
 ]
 build: [
