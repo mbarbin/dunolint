@@ -92,7 +92,7 @@
   (logs
    (>= 0.7.0))
   (pageantty
-   (>= 0.0.2))
+   (>= 0.0.3))
   (parsexp
    (>= v0.17))
   (patdiff
@@ -175,7 +175,7 @@
   (logs
    (>= 0.7.0))
   (pageantty
-   (>= 0.0.2))
+   (>= 0.0.3))
   (parsexp
    (>= v0.17))
   (patdiff
