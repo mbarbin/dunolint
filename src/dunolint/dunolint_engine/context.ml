@@ -28,6 +28,17 @@ end
 
 module Item = struct
   type t = Config of Config_with_location.t
+
+  open struct
+    (* Future plans include making use of this linter to keep some contextual
+       information about enclosing dune-project files. This part of the project
+       hasn't been written yet.
+
+       In the meanwhile we wish to enforce the right dependency ordering between
+       libraries, and silencing @unused-libs warnings. *)
+    open! Dune_linter
+    open! Dune_project_linter
+  end
 end
 
 type t = Item.t list

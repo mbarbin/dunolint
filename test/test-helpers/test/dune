@@ -15,8 +15,6 @@
   -open
   Dunolint_stdlib)
  (libraries
-  dune_linter
-  dune_project_linter
   dunolint
   dunolint_stdlib
   dunolinter

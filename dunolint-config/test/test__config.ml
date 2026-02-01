@@ -20,5 +20,7 @@
 (*********************************************************************************)
 
 open struct
-  open! Dunolint_cli
+  (* If we wanted to check some invariant on the config itself, we would create
+     expect tests here. *)
+  open! Dunolint_dunolint_config
 end

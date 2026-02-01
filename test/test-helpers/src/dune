@@ -19,8 +19,6 @@
   Dunolint_stdlib)
  (libraries
   base
-  dune_linter
-  dune_project_linter
   dunolint
   dunolint_cli
   dunolint_engine

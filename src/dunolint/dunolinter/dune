@@ -33,7 +33,6 @@
   pp
   pplumbing-err
   pplumbing-pp-tty
-  re
   sexps-rewriter
   stdio)
  (instrumentation
