@@ -2,6 +2,7 @@
 # Add new directories below. Lines starting with '#' are ignored.
 dunolint-config/bin
 dunolint-config/src
+dunolint-config/test
 src/dunolint/bin
 src/dunolint/dune_linter
 src/dunolint/dune_project_linter
@@ -32,6 +33,7 @@ test/dunolint/dunolint_linter
 test/dunolint/dunolinter
 test/dunolint/stdlib
 test/dunolint-lib
+test/dunolint-lib-base
 test/expect
 test/test-helpers/src
 test/test-helpers/test

@@ -6,8 +6,7 @@
   base
   dunolint-lib
   dunolint-lib.vendor_blang
-  dunolint-lib.vendor_vcs
-  re)
+  dunolint-lib.vendor_vcs)
  (instrumentation
   (backend bisect_ppx))
  (lint
