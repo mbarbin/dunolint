@@ -1,20 +1,33 @@
 ## 0.0.2026XXXX (unreleased)
 
+Starting from this version we're using GitHub immutable releases.
+
 ### Added
 
+- Add library modes `mem` variadic construct (@mbarbin).
+- Adapt release artifacts jobs for immutable releases (@mbarbin).
+- Added new CI workflow based on setup-dune (@mbarbin).
 - Add some library and executable linter getters/setters (#163, @mbarbin).
 
 ### Changed
 
+- Migrate main and doc CIs to `setup-dune` (#171, @mbarbin).
+- Assorted improvements to CI scripts. Upgrade an pin actions deps (@mbarbin).
 - Generalize `Dunolint_engine.with_linter` helper (#163, @mbarbin).
 
 ### Deprecated
 
+- Deprecate `has_mode` and `has_modes` library modes, replaced by `mem` (@mbarbin).
+
 ### Fixed
+
+- Fix new dune build target `unused-libs` (#171, @mbarbin).
+- Fix tests and prepare compatibility with `dune.3.21` (#167, @mbarbin).
 
 ### Removed
 
 - Removed deprecated `load_existing_libraries` private helper (#163, @mbarbin).
+- Removed root `dune-workspace` causing build issues with `dune.3.17`. (@mbarbin).
 
 ## 0.0.20260103 (2026-01-03)
 

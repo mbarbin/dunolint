@@ -159,8 +159,8 @@ let%expect_test "predicate" =
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
   test (lint (pps (pp (Dune.Pp.Name.v "ppx_compare"))));
   [%expect {| (lint (pps (pp ppx_compare))) |}];
-  test (modes (has_mode `melange));
-  [%expect {| (modes (has_mode melange)) |}];
+  test (modes (mem [ `melange ]));
+  [%expect {| (modes (mem melange)) |}];
   test (name (equals (Dune.Library.Name.v "main")));
   [%expect {| (name (equals main)) |}];
   test (package (equals (Dune.Package.Name.v "my_package")));

@@ -62,7 +62,7 @@ let has_mode t ~mode =
 
 let eval t ~predicate =
   match (predicate : predicate) with
-  | `has_modes modes ->
+  | `mem modes | `has_modes modes ->
     Dunolint.Trilang.const (List.for_all modes ~f:(fun mode -> has_mode t ~mode))
   | `has_mode mode -> Dunolint.Trilang.const (has_mode t ~mode)
 ;;
@@ -99,16 +99,16 @@ let enforce =
     ~eval
     ~enforce:(fun t predicate ->
       match predicate with
+      | T (`mem modes) | T (`has_modes modes) ->
+        List.iter modes ~f:(fun mode -> insert_mode t ~mode);
+        Ok
       | T (`has_mode mode) ->
         insert_mode t ~mode;
         Ok
-      | T (`has_modes modes) ->
-        List.iter modes ~f:(fun mode -> insert_mode t ~mode);
+      | Not (`mem modes) | Not (`has_modes modes) ->
+        List.iter modes ~f:(fun mode -> remove_mode t ~mode);
         Ok
       | Not (`has_mode mode) ->
         remove_mode t ~mode;
-        Ok
-      | Not (`has_modes modes) ->
-        List.iter modes ~f:(fun mode -> remove_mode t ~mode);
         Ok)
 ;;

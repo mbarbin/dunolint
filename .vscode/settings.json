@@ -1,9 +1,8 @@
 {
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
     "files.associations": {
         "**/crs-config.json": "jsonc"
-    },
-    "[jsonc]": {
-        "files.insertFinalNewline": true
     },
     "cSpell.words": [
         "alist",
@@ -19,12 +18,14 @@
         "dunolint",
         "Dunolinter",
         "EACCES",
+        "EDSL",
         "endline",
         "ENOENT",
         "fpath",
         "fprintf",
         "fsegment",
         "getcwd",
+        "getenv",
         "Hashtbl",
         "intf",
         "isatty",
@@ -36,13 +37,19 @@
         "mbarbin",
         "mkdirs",
         "mylib",
+        "nullary",
         "odoc",
         "opam",
         "Parsexp",
         "patdiff",
         "pplumbing",
         "ppxlib",
+        "prerr",
+        "Printexc",
+        "ptag",
         "sexp",
+        "sexpable",
+        "sexplib",
         "sexps",
         "sprintf",
         "Stdlib",
