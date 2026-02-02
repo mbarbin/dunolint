@@ -406,7 +406,7 @@ let%expect_test "eval" =
        ~predicate:(`public_name (equals (Dune.Library.Public_name.v "mylib"))));
   [%expect {||}];
   Test_helpers.is_undefined
-    (Dune_linter.Library.eval t ~predicate:(`modes (has_mode `best)));
+    (Dune_linter.Library.eval t ~predicate:(`modes (mem [ `best ])));
   [%expect {||}];
   let _, t =
     parse
@@ -418,9 +418,9 @@ let%expect_test "eval" =
 |}
   in
   Test_helpers.is_true
-    (Dune_linter.Library.eval t ~predicate:(`modes (has_modes [ `byte; `native ])));
+    (Dune_linter.Library.eval t ~predicate:(`modes (mem [ `byte; `native ])));
   [%expect {||}];
-  Test_helpers.is_false (Dune_linter.Library.eval t ~predicate:(`modes (has_mode `best)));
+  Test_helpers.is_false (Dune_linter.Library.eval t ~predicate:(`modes (mem [ `best ])));
   [%expect {||}];
   Test_helpers.is_undefined
     (Dune_linter.Library.eval
@@ -640,11 +640,11 @@ let%expect_test "enforce" =
   (* When there is no [modes], enforcing a invariant about this field results in
      dunolint creating a new field. *)
   let t = parse {| (library (name mylib)) |} in
-  enforce t [ modes (has_mode `native) ];
+  enforce t [ modes (mem [ `native ]) ];
   [%expect {| (library (name mylib) (modes native)) |}];
   (* Otherwise the mode is edited in place. *)
   let t = parse {| (library (name mylib) (modes byte)) |} in
-  enforce t [ modes (has_mode `native) ];
+  enforce t [ modes (mem [ `native ]) ];
   [%expect {| (library (name mylib) (modes byte native)) |}];
   (* Currently adding a field is only possible if some are already present. *)
   let t = parse {| (library) |} in
@@ -968,7 +968,7 @@ let%expect_test "field_conditions" =
   [%expect {| (library (name my-lib) (preprocess no_preprocessing)) |}];
   (* [modes] condition auto-creates field. *)
   let t = parse init in
-  enforce t [ modes (has_mode `byte) ];
+  enforce t [ modes (mem [ `byte ]) ];
   [%expect {| (library (name my-lib) (modes byte)) |}];
   ()
 ;;

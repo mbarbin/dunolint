@@ -49,8 +49,6 @@ val glob : string -> [> `glob of Glob.t ] Blang.t
 val gt : 'a -> [> `gt of 'a ] Blang.t
 val gte : 'a -> [> `gte of 'a ] Blang.t
 val has_field : 'a -> [> `has_field of 'a ] Blang.t
-val has_mode : 'a -> [> `has_mode of 'a ] Blang.t
-val has_modes : 'a -> [> `has_modes of 'a ] Blang.t
 val if_present : 'a -> [> `if_present of 'a ] Blang.t
 val implicit_transitive_deps : 'a -> [> `implicit_transitive_deps of 'a ] Blang.t
 val include_subdirs : 'a -> [> `include_subdirs of 'a ] Blang.t
@@ -62,6 +60,7 @@ val library : 'a -> [> `library of 'a ] Blang.t
 val lint : 'a -> [> `lint of 'a ] Blang.t
 val lt : 'a -> [> `lt of 'a ] Blang.t
 val lte : 'a -> [> `lte of 'a ] Blang.t
+val mem : 'a list -> [> `mem of 'a list ] Blang.t
 val modes : 'a -> [> `modes of 'a ] Blang.t
 val name : 'a -> [> `name of 'a ] Blang.t
 val neq : 'a -> [> `neq of 'a ] Blang.t
@@ -85,6 +84,14 @@ val stanza : 'a -> [> `stanza of 'a ] Blang.t
 val greater_than_or_equal_to : 'a -> [> `greater_than_or_equal_to of 'a ] Blang.t
 [@@ocaml.deprecated "[since 2025-12] Use [gte]. Hint: Run [ocamlmig migrate]"]
 [@@migrate { repl = Rel.gte }]
+
+val has_mode : 'a -> [> `has_mode of 'a ] Blang.t
+[@@ocaml.deprecated "[since 2026-02] Use [mem]. Hint: Run [ocamlmig migrate]"]
+[@@migrate { repl = (fun p -> Rel.mem [ p ]) }]
+
+val has_modes : 'a -> [> `has_modes of 'a ] Blang.t
+[@@ocaml.deprecated "[since 2026-02] Use [mem]. Hint: Run [ocamlmig migrate]"]
+[@@migrate { repl = Rel.mem }]
 
 val less_than_or_equal_to : 'a -> [> `less_than_or_equal_to of 'a ] Blang.t
 [@@ocaml.deprecated "[since 2025-12] Use [lte]. Hint: Run [ocamlmig migrate]"]

@@ -585,17 +585,13 @@ Compilation modes are ordered by *dunolint* as: `byte < native < best < melange`
 
 The predicates of the `modes` selector are:
 
-1. `(has_mode MODE)`
+1. `(mem MODES)`
 
-Returns *true* iif the mode specified is present in the list of values found in the fragment.
+Returns *true* iif the modes specified are all present in the list of values found in the fragment.
 
-When enforced, *dunolint* suggests adding the mode to the list of values found in the fragment, if it is not already among the existing values.
+When enforced, *dunolint* suggests adding the mode(s) not already present in the list of values found in the fragment.
 
-**Negation**: When the negation of the predicate *has_mode* is enforced, *dunolint* suggests removing the supplied mode from the fragment if this mode is currently present.
-
-2. `(has_modes MODES)`
-
-This is a shorthand for the conjunction of `(has_mode MODE)` for all the MODES.
+**Negation**: When the negation of the predicate *mem* is enforced, *dunolint* suggests removing the supplied mode(s) from the fragment when present.
 
 **Examples:**
 
@@ -609,10 +605,12 @@ Condition: `(dune (library (modes PREDICATE)))`
 
 | Predicate | Result |
 | --------- | ------ |
-| (has_modes byte native) | True |
-| (has_mode byte) | True |
-| (has_mode best) | False. Suggestion: add *best*, keep existing values. |
-| (not (has_mode native)) | False. Suggestion: remove *native* |
+| (mem byte native) | True |
+| (mem byte) | True |
+| (mem best) | False. Suggestion: add *best*, keep existing values |
+| (not (mem native)) | False. Suggestion: remove *native* |
+
+Note: the constructors `has_mode` and `has_modes` are deprecated and to be replaced by the single variadic `mem` constructor.
 
 ## stanza
 
