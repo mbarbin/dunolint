@@ -51,6 +51,25 @@ let () =
 let () =
   rule
     (cond
+       [ ( path
+             (or_
+                [ glob "src/dunolint/stdlib/**"
+                ; glob "src/dunolint/vendor/**"
+                ; glob "src/dunolint-lib/**"
+                ; glob "src/dunolint-lib-base/**"
+                ; glob "test/dunolint-lib-base/**"
+                ])
+         , return )
+       ; ( true_
+         , enforce
+             (dune (library (libraries (mem [ Dune.Library.Name.v "dunolint_stdlib" ]))))
+         )
+       ])
+;;
+
+let () =
+  rule
+    (cond
        [ path (glob "test/**/src/*"), return
        ; ( path (glob "test/**")
          , enforce

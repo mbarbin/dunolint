@@ -8,6 +8,15 @@
 (rule (enforce (dune_workspace (dune_lang_version (>= 3.20)))))
 
 (rule
+ (cond
+  ((path
+    (or (glob src/dunolint/stdlib/**) (glob src/dunolint/vendor/**)
+     (glob src/dunolint-lib/**) (glob src/dunolint-lib-base/**)
+     (glob test/dunolint-lib-base/**)))
+   return)
+  (true (enforce (dune (library (libraries (mem dunolint_stdlib))))))))
+
+(rule
  (cond ((path (glob test/**/src/*)) return)
   ((path (glob test/**))
    (enforce
