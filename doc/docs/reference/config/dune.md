@@ -446,6 +446,44 @@ Condition: `(enforce (dune (library PREDICATE)))`
 | (package (is_prefix prefix_)) | Enforcement failure |
 | (package (is_suffix _suffix)) | Enforcement failure |
 
+### libraries
+
+`(dune (library (libraries _)))` is a selector for the *libraries* field of a *library* stanza:
+
+Stanza:
+```dune
+(library
+ (libraries <FRAGMENT>))
+```
+
+The predicates of the `libraries` selector are:
+
+1. `(mem LIBRARY_NAMES)`
+
+Returns *true* iff all the library names specified are present in the list of dependencies found in the fragment.
+
+When enforced, *dunolint* suggests adding the library name(s) not already present. New libraries are added to the last section (when sections are delimited by comments) and sorted alphabetically within that section.
+
+**Negation**: When the negation of the predicate *mem* is enforced, *dunolint* suggests removing the supplied library name(s) from the fragment when present.
+
+**Examples:**
+
+Stanza:
+```dune
+(library
+ (name mylib)
+ (libraries base core))
+```
+
+Condition: `(dune (library (libraries PREDICATE)))`
+
+| Predicate | Result |
+| --------- | ------ |
+| (mem base core) | True |
+| (mem base) | True |
+| (mem async) | False. Suggestion: add *async*, keep existing values |
+| (not (mem core)) | False. Suggestion: remove *core* |
+
 ### Fields shared with other stanzas
 
 This stanza shares some sub selectors with other stanzas. See: *instrumentation*, *lint*, *preprocess*.
