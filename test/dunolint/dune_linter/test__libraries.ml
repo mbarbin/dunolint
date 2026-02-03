@@ -242,9 +242,6 @@ let%expect_test "rewrite" =
   ()
 ;;
 
-(* At the moment there is no predicate nor enforceable conditions on libraries.
-   We'll revisit when we add some. *)
-
 let%expect_test "sort" =
   let test str =
     let (sexps_rewriter, field), t = parse str in
@@ -582,6 +579,97 @@ let%expect_test "enforce - mem" =
   let t = parse {| (libraries) |} in
   enforce t [ mem [ Dune.Library.Name.v "foo" ] ];
   [%expect {| (libraries foo) |}];
+  ()
+;;
+
+let%expect_test "enforce - mem - with sorting" =
+  (* Test combining enforce with dedup_and_sort to show libraries are
+     sorted after being added. *)
+  let test str conditions =
+    let (sexps_rewriter, field), t = parse str in
+    List.iter conditions ~f:(fun condition -> Dune_linter.Libraries.enforce t ~condition);
+    Dune_linter.Libraries.dedup_and_sort t;
+    Dune_linter.Libraries.rewrite t ~sexps_rewriter ~field;
+    print_endline (Sexps_rewriter.contents sexps_rewriter)
+  in
+  (* Basic sorting after enforce. *)
+  test {| (libraries foo bar) |} [ mem [ Dune.Library.Name.v "baz" ] ];
+  [%expect
+    {|
+     (libraries bar baz
+    foo)
+    |}];
+  (* Multiple libraries added and sorted. *)
+  test
+    {| (libraries foo bar) |}
+    [ mem [ Dune.Library.Name.v "aaa"; Dune.Library.Name.v "zzz" ] ];
+  [%expect
+    {|
+     (libraries aaa bar
+    foo
+    zzz)
+    |}];
+  (* With sections - new libs added to last section and sorted there. *)
+  test
+    {|
+(libraries
+ ;; Core dependencies
+ base
+ core
+ ;; Test dependencies
+ ppx_expect
+ ppx_inline_test)
+|}
+    [ mem [ Dune.Library.Name.v "new_lib" ] ];
+  [%expect
+    {|
+    (libraries
+     ;; Core dependencies
+     base
+     core
+     ;; Test dependencies
+     new_lib
+     ppx_expect
+    ppx_inline_test)
+    |}];
+  (* Adding multiple libraries to the last section and sorted there. *)
+  test
+    {|
+(libraries
+ ;; Section A
+ aaa
+ ;; Section B
+ bbb)
+|}
+    [ mem [ Dune.Library.Name.v "zzz"; Dune.Library.Name.v "ccc" ] ];
+  [%expect
+    {|
+    (libraries
+     ;; Section A
+     aaa
+     ;; Section B
+     bbb
+    ccc
+    zzz)
+    |}];
+  (* Adding a library that already exists has no effect. *)
+  test
+    {|
+(libraries
+ ;; Section A
+ foo
+ ;; Section B
+ bar)
+|}
+    [ mem [ Dune.Library.Name.v "foo" ] ];
+  [%expect
+    {|
+    (libraries
+     ;; Section A
+     foo
+     ;; Section B
+     bar)
+    |}];
   ()
 ;;
 
