@@ -501,6 +501,133 @@ let%expect_test "enforce" =
   ()
 ;;
 
+module Predicate = struct
+  (* Aliased here so we remember to add new tests when this type is modified. *)
+  type t = Dune.Libraries.Predicate.t as 'a
+    constraint 'a = [ `mem of Dune.Library.Name.t list ]
+end
+
+open Dunolint.Config.Std
+
+let%expect_test "eval" =
+  let _ = (`none : [ `some of Predicate.t | `none ]) in
+  let _, t = parse {| (libraries foo bar baz) |} in
+  Test_helpers.is_true
+    (Dune_linter.Libraries.eval t ~predicate:(`mem [ Dune.Library.Name.v "foo" ]));
+  [%expect {||}];
+  Test_helpers.is_true
+    (Dune_linter.Libraries.eval
+       t
+       ~predicate:(`mem [ Dune.Library.Name.v "foo"; Dune.Library.Name.v "bar" ]));
+  [%expect {||}];
+  Test_helpers.is_true
+    (Dune_linter.Libraries.eval
+       t
+       ~predicate:
+         (`mem
+             [ Dune.Library.Name.v "foo"
+             ; Dune.Library.Name.v "bar"
+             ; Dune.Library.Name.v "baz"
+             ]));
+  [%expect {||}];
+  (* Empty list is trivially satisfied. *)
+  Test_helpers.is_true (Dune_linter.Libraries.eval t ~predicate:(`mem []));
+  [%expect {||}];
+  (* Absent library. *)
+  Test_helpers.is_false
+    (Dune_linter.Libraries.eval t ~predicate:(`mem [ Dune.Library.Name.v "absent" ]));
+  [%expect {||}];
+  (* Mixed present and absent. *)
+  Test_helpers.is_false
+    (Dune_linter.Libraries.eval
+       t
+       ~predicate:(`mem [ Dune.Library.Name.v "foo"; Dune.Library.Name.v "absent" ]));
+  [%expect {||}];
+  (* Empty libraries field. *)
+  let _, t_empty = parse {| (libraries) |} in
+  Test_helpers.is_true (Dune_linter.Libraries.eval t_empty ~predicate:(`mem []));
+  [%expect {||}];
+  Test_helpers.is_false
+    (Dune_linter.Libraries.eval t_empty ~predicate:(`mem [ Dune.Library.Name.v "foo" ]));
+  [%expect {||}];
+  ()
+;;
+
+let%expect_test "enforce - mem" =
+  let enforce ((sexps_rewriter, field), t) conditions =
+    Sexps_rewriter.reset sexps_rewriter;
+    Dunolinter.Handler.raise ~f:(fun () ->
+      List.iter conditions ~f:(fun condition ->
+        Dune_linter.Libraries.enforce t ~condition);
+      Dune_linter.Libraries.rewrite t ~sexps_rewriter ~field;
+      print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
+  in
+  let t = parse {| (libraries foo bar) |} in
+  (* Enforcing presence of existing libraries has no effect. *)
+  enforce t [ mem [ Dune.Library.Name.v "foo" ] ];
+  [%expect {| (libraries foo bar) |}];
+  enforce t [ mem [ Dune.Library.Name.v "foo"; Dune.Library.Name.v "bar" ] ];
+  [%expect {| (libraries foo bar) |}];
+  (* Enforcing presence of new libraries adds them. *)
+  enforce t [ mem [ Dune.Library.Name.v "baz" ] ];
+  [%expect {| (libraries foo bar baz) |}];
+  let t = parse {| (libraries foo bar) |} in
+  enforce t [ mem [ Dune.Library.Name.v "baz"; Dune.Library.Name.v "qux" ] ];
+  [%expect {| (libraries foo bar baz qux) |}];
+  (* Empty mem has no effect. *)
+  let t = parse {| (libraries foo bar) |} in
+  enforce t [ mem [] ];
+  [%expect {| (libraries foo bar) |}];
+  (* Starting from empty. *)
+  let t = parse {| (libraries) |} in
+  enforce t [ mem [ Dune.Library.Name.v "foo" ] ];
+  [%expect {| (libraries foo) |}];
+  ()
+;;
+
+let%expect_test "enforce - not mem" =
+  let enforce ((sexps_rewriter, field), t) conditions =
+    Sexps_rewriter.reset sexps_rewriter;
+    Dunolinter.Handler.raise ~f:(fun () ->
+      List.iter conditions ~f:(fun condition ->
+        Dune_linter.Libraries.enforce t ~condition);
+      Dune_linter.Libraries.rewrite t ~sexps_rewriter ~field;
+      print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
+  in
+  let t = parse {| (libraries foo bar baz) |} in
+  (* Enforcing absence of non-existing libraries has no effect. *)
+  enforce t [ not_ (mem [ Dune.Library.Name.v "qux" ]) ];
+  [%expect {| (libraries foo bar baz) |}];
+  (* Enforcing absence of existing libraries removes them. *)
+  let t = parse {| (libraries foo bar baz) |} in
+  enforce t [ not_ (mem [ Dune.Library.Name.v "bar" ]) ];
+  [%expect {| (libraries foo baz) |}];
+  let t = parse {| (libraries foo bar baz) |} in
+  enforce t [ not_ (mem [ Dune.Library.Name.v "foo"; Dune.Library.Name.v "baz" ]) ];
+  [%expect {| (libraries bar) |}];
+  (* Remove all libraries. *)
+  let t = parse {| (libraries foo bar) |} in
+  enforce t [ not_ (mem [ Dune.Library.Name.v "foo"; Dune.Library.Name.v "bar" ]) ];
+  [%expect {| (libraries) |}];
+  (* Empty not mem has no effect. *)
+  let t = parse {| (libraries foo bar) |} in
+  enforce t [ not_ (mem []) ];
+  [%expect {| (libraries foo bar) |}];
+  (* Starting from empty. *)
+  let t = parse {| (libraries) |} in
+  enforce t [ not_ (mem [ Dune.Library.Name.v "foo" ]) ];
+  [%expect {| (libraries) |}];
+  (* Re-exported libraries can also be removed. *)
+  let t = parse {| (libraries foo (re_export bar) baz) |} in
+  enforce t [ not_ (mem [ Dune.Library.Name.v "bar" ]) ];
+  [%expect {| (libraries foo baz) |}];
+  (* Unhandled entries are preserved when removing libraries. *)
+  let t = parse {| (libraries foo (unhandled) bar) |} in
+  enforce t [ not_ (mem [ Dune.Library.Name.v "foo"; Dune.Library.Name.v "bar" ]) ];
+  [%expect {| (libraries (unhandled)) |}];
+  ()
+;;
+
 let%expect_test "entries" =
   (* Entries created via the API have a library name. *)
   let my_lib = Dune.Library.Name.v "my_lib" in

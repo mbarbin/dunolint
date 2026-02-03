@@ -37,6 +37,7 @@ module Predicate : sig
         | `public_name
         ]
     | `instrumentation of Instrumentation.Predicate.t Blang.t
+    | `libraries of Libraries.Predicate.t Blang.t
     | `lint of Lint.Predicate.t Blang.t
     | `modes of Modes.Predicate.t Blang.t
     | `name of Name.Predicate.t Blang.t

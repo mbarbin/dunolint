@@ -23,6 +23,7 @@ module Compilation_mode = Dune0.Compilation_mode
 module Executable = Dune0.Executable
 module Include_subdirs = Dune0.Include_subdirs
 module Instrumentation = Dune0.Instrumentation
+module Libraries = Dune0.Libraries
 module Library = Dune0.Library
 module Lint = Dune0.Lint
 module Package = Dune0.Package
