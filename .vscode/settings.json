@@ -27,16 +27,19 @@
         "getcwd",
         "getenv",
         "Hashtbl",
+        "hset",
         "intf",
         "isatty",
         "iteri",
         "janestreet",
         "lsplit",
         "lstrip",
+        "mapi",
         "Mathieu",
         "mbarbin",
         "mkdirs",
         "mylib",
+        "nonrec",
         "nullary",
         "odoc",
         "opam",
@@ -61,6 +64,7 @@
         "verbatimf",
         "WEXITED",
         "WSIGNALED",
-        "WSTOPPED"
+        "WSTOPPED",
+        "yojson"
     ]
 }
