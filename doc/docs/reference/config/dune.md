@@ -89,9 +89,21 @@ Stanza:
 
 It is almost identical to its *name* sibling, thus we are not documenting it in details here. A notable difference is that the suggestions for the `(is_prefix my-package.)` predicate is improved when the prefix is a package name, as *dunolint* will indeed suggests to *replace* an existing package prefix if one if present. This is a minor ergonomic detail.
 
+### libraries
+
+`(dune (executable (libraries _)))` is a selector for the *libraries* field of an *executable* stanza:
+
+Stanza:
+```dune
+(executable
+ (libraries <FRAGMENT>))
+```
+
+It is identical to the [library (libraries)](#libraries) selector. See that section for details on predicates and examples.
+
 ### Fields shared with other stanzas
 
-This stanza share some sub selectors with other stanzas. See: *has_field*, *instrumentation*, *lint*, *preprocess*.
+This stanza share some sub selectors with other stanzas. See: *has_field*, *instrumentation*, *libraries*, *lint*, *preprocess*.
 
 For example, you can use the `(dune (executable (instrumentation _)))` syntax if you want the *instrumentation* selector to apply to the *executable* stanza only.
 
@@ -486,9 +498,21 @@ Condition: `(dune (library (libraries PREDICATE)))`
 
 ### Fields shared with other stanzas
 
-This stanza shares some sub selectors with other stanzas. See: *instrumentation*, *lint*, *preprocess*.
+This stanza shares some sub selectors with other stanzas. See: *instrumentation*, *libraries*, *lint*, *preprocess*.
 
 For example, you can use the `(dune (library (instrumentation _)))` syntax if you want the *instrumentation* selector to apply to the *library* stanza only.
+
+## libraries
+
+`(dune (libraries _))` is a selector for the *libraries* field found in stanzas *library* and *executable*.
+
+Stanza:
+```dune
+(library
+ (libraries <FRAGMENT>))
+```
+
+Its predicates are documented in the [library (libraries)](#libraries) section above.
 
 ## lint
 

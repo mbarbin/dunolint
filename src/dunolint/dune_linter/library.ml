@@ -734,9 +734,9 @@ module Linter = struct
     | `library condition ->
       Dunolint.Trilang.eval condition ~f:(fun predicate -> Top.eval t ~predicate)
     | `include_subdirs _ | `executable _ -> Dunolint.Trilang.Undefined
-    | ( `instrumentation _ | `lint _ | `preprocess _
-      | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name) ) as
-      predicate -> Top.eval t ~predicate
+    | ( `has_field (`instrumentation | `lint | `name | `preprocess | `public_name)
+      | `instrumentation _ | `libraries _ | `lint _ | `preprocess _ ) as predicate ->
+      Top.eval t ~predicate
   ;;
 
   let enforce =
@@ -753,9 +753,9 @@ module Linter = struct
           Top.enforce t ~condition;
           Ok
         | T
-            (( `instrumentation _ | `lint _ | `preprocess _
-             | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name)
-               ) as predicate) ->
+            (( `has_field (`instrumentation | `lint | `name | `preprocess | `public_name)
+             | `instrumentation _ | `libraries _ | `lint _ | `preprocess _ ) as predicate)
+          ->
           Top.enforce t ~condition:(Blang.base predicate);
           Ok)
   ;;

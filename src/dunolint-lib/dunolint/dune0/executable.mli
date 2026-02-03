@@ -26,6 +26,7 @@ module Predicate : sig
   type t =
     [ `has_field of [ `instrumentation | `lint | `name | `preprocess | `public_name ]
     | `instrumentation of Instrumentation.Predicate.t Blang.t
+    | `libraries of Libraries.Predicate.t Blang.t
     | `lint of Lint.Predicate.t Blang.t
     | `name of Name.Predicate.t Blang.t
     | `preprocess of Preprocess.Predicate.t Blang.t

@@ -268,6 +268,9 @@ let eval t ~predicate =
      | Some instrumentation ->
        Dunolint.Trilang.eval condition ~f:(fun predicate ->
          Instrumentation.eval instrumentation ~predicate))
+  | `libraries condition ->
+    Dunolint.Trilang.eval condition ~f:(fun predicate ->
+      Libraries.eval t.libraries ~predicate)
   | `lint condition ->
     (match t.lint with
      | None -> Dunolint.Trilang.Undefined
@@ -313,8 +316,12 @@ let enforce =
                 with bisect_ppx atm. Left for future work. *)
              match[@coverage off] condition with
              | `has_field _ -> assert false
-             | `instrumentation _ | `public_name _ | `preprocess _ | `name _ | `lint _ ->
-               ()
+             | `instrumentation _
+             | `libraries _
+             | `lint _
+             | `name _
+             | `preprocess _
+             | `public_name _ -> ()
            in
            Eval)
       | T (`has_field `name) ->
@@ -409,6 +416,9 @@ let enforce =
             preprocess
         in
         Preprocess.enforce preprocess ~condition;
+        Ok
+      | T (`libraries condition) ->
+        Libraries.enforce t.libraries ~condition;
         Ok)
 ;;
 
@@ -432,8 +442,8 @@ module Linter = struct
     | `include_subdirs _ | `library _ -> Dunolint.Trilang.Undefined
     | `executable condition ->
       Dunolint.Trilang.eval condition ~f:(fun predicate -> Top.eval t ~predicate)
-    | (`instrumentation _ | `lint _ | `preprocess _ | `has_field _) as predicate ->
-      Top.eval t ~predicate
+    | (`has_field _ | `instrumentation _ | `libraries _ | `lint _ | `preprocess _) as
+      predicate -> Top.eval t ~predicate
   ;;
 
   let enforce =
@@ -449,8 +459,9 @@ module Linter = struct
         | T (`executable condition) ->
           Top.enforce t ~condition;
           Ok
-        | T ((`instrumentation _ | `lint _ | `preprocess _ | `has_field _) as predicate)
-          ->
+        | T
+            ((`has_field _ | `instrumentation _ | `libraries _ | `lint _ | `preprocess _)
+             as predicate) ->
           Top.enforce t ~condition:(Blang.base predicate);
           Ok)
   ;;

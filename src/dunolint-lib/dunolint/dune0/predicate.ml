@@ -61,6 +61,7 @@ type t =
   | `has_field of Has_field.t
   | `include_subdirs of Include_subdirs.Predicate.t Blang.t
   | `instrumentation of Instrumentation.Predicate.t Blang.t
+  | `libraries of Libraries.Predicate.t Blang.t
   | `library of Library.Predicate.t Blang.t
   | `lint of Lint.Predicate.t Blang.t
   | `preprocess of Preprocess.Predicate.t Blang.t
@@ -78,6 +79,7 @@ let equal (a : t) (b : t) =
       Blang.equal Include_subdirs.Predicate.equal va vb
     | `instrumentation va, `instrumentation vb ->
       Blang.equal Instrumentation.Predicate.equal va vb
+    | `libraries va, `libraries vb -> Blang.equal Libraries.Predicate.equal va vb
     | `library va, `library vb -> Blang.equal Library.Predicate.equal va vb
     | `lint va, `lint vb -> Blang.equal Lint.Predicate.equal va vb
     | `preprocess va, `preprocess vb -> Blang.equal Preprocess.Predicate.equal va vb
@@ -86,6 +88,7 @@ let equal (a : t) (b : t) =
         | `has_field _
         | `include_subdirs _
         | `instrumentation _
+        | `libraries _
         | `library _
         | `lint _
         | `preprocess _
@@ -113,6 +116,11 @@ let variant_spec : t Sexp_helpers.Variant_spec.t =
         Unary
           (fun sexp ->
             `instrumentation (Blang.t_of_sexp Instrumentation.Predicate.t_of_sexp sexp))
+    }
+  ; { atom = "libraries"
+    ; conv =
+        Unary
+          (fun sexp -> `libraries (Blang.t_of_sexp Libraries.Predicate.t_of_sexp sexp))
     }
   ; { atom = "library"
     ; conv =
@@ -145,6 +153,8 @@ let sexp_of_t (t : t) : Sexp.t =
     List [ Atom "include_subdirs"; Blang.sexp_of_t Include_subdirs.Predicate.sexp_of_t v ]
   | `instrumentation v ->
     List [ Atom "instrumentation"; Blang.sexp_of_t Instrumentation.Predicate.sexp_of_t v ]
+  | `libraries v ->
+    List [ Atom "libraries"; Blang.sexp_of_t Libraries.Predicate.sexp_of_t v ]
   | `library v -> List [ Atom "library"; Blang.sexp_of_t Library.Predicate.sexp_of_t v ]
   | `lint v -> List [ Atom "lint"; Blang.sexp_of_t Lint.Predicate.sexp_of_t v ]
   | `preprocess v ->

@@ -174,12 +174,13 @@ module Predicate = struct
   type t = Dune.Executable.Predicate.t as 'a
     constraint
       'a =
-      [ `name of Dune.Executable.Name.Predicate.t Blang.t
-      | `public_name of Dune.Executable.Public_name.Predicate.t Blang.t
-      | `lint of Dune.Lint.Predicate.t Blang.t
+      [ `has_field of [ `instrumentation | `lint | `name | `preprocess | `public_name ]
       | `instrumentation of Dune.Instrumentation.Predicate.t Blang.t
+      | `libraries of Dune.Libraries.Predicate.t Blang.t
+      | `lint of Dune.Lint.Predicate.t Blang.t
+      | `name of Dune.Executable.Name.Predicate.t Blang.t
       | `preprocess of Dune.Preprocess.Predicate.t Blang.t
-      | `has_field of [ `instrumentation | `lint | `name | `preprocess | `public_name ]
+      | `public_name of Dune.Executable.Public_name.Predicate.t Blang.t
       ]
 end
 
@@ -779,5 +780,44 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
     +| (preprocess
     +|  (pps ppx_compare)))
     |}];
+  ()
+;;
+
+let%expect_test "libraries predicate - mem" =
+  let _, t = parse {| (executable (name main) (libraries base core)) |} in
+  Test_helpers.is_true
+    (Dune_linter.Executable.eval
+       t
+       ~predicate:(`libraries (mem [ Dune.Library.Name.v "base" ])));
+  [%expect {||}];
+  Test_helpers.is_true
+    (Dune_linter.Executable.eval
+       t
+       ~predicate:
+         (`libraries (mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ])));
+  [%expect {||}];
+  Test_helpers.is_false
+    (Dune_linter.Executable.eval
+       t
+       ~predicate:
+         (`libraries (mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "absent" ])));
+  [%expect {||}];
+  ()
+;;
+
+let%expect_test "libraries predicate - enforce" =
+  (* This exercises the T (`libraries condition) path in Executable.enforce. *)
+  let t = parse {| (executable (name main) (libraries base)) |} in
+  (* Enforcing presence of existing library has no effect. *)
+  enforce t [ libraries (mem [ Dune.Library.Name.v "base" ]) ];
+  [%expect {| (executable (name main) (libraries base)) |}];
+  (* Enforcing presence of new library adds it. *)
+  let t = parse {| (executable (name main) (libraries base)) |} in
+  enforce t [ libraries (mem [ Dune.Library.Name.v "core" ]) ];
+  [%expect {| (executable (name main) (libraries base core)) |}];
+  (* Enforcing absence of existing library removes it. *)
+  let t = parse {| (executable (name main) (libraries base core)) |} in
+  enforce t [ libraries (not_ (mem [ Dune.Library.Name.v "core" ])) ];
+  [%expect {| (executable (name main) (libraries base)) |}];
   ()
 ;;

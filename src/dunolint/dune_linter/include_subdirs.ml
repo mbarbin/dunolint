@@ -81,9 +81,13 @@ module Linter = struct
       |> Dunolint.Trilang.const
     | `include_subdirs condition ->
       Dunolint.Trilang.eval condition ~f:(fun predicate -> Top.eval t ~predicate)
-    | `executable _ | `library _ | `instrumentation _ | `lint _ | `preprocess _
-    | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name) ->
-      Dunolint.Trilang.Undefined
+    | `executable _
+    | `has_field _
+    | `instrumentation _
+    | `libraries _
+    | `library _
+    | `lint _
+    | `preprocess _ -> Dunolint.Trilang.Undefined
   ;;
 
   let enforce =
@@ -101,12 +105,12 @@ module Linter = struct
              Top.enforce t ~condition;
              Ok
            | `executable _
-           | `stanza _
-           | `library _
+           | `has_field _
            | `instrumentation _
+           | `libraries _
+           | `library _
            | `lint _
            | `preprocess _
-           | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name) ->
-             Unapplicable))
+           | `stanza _ -> Unapplicable))
   ;;
 end
