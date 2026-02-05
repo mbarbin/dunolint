@@ -56,6 +56,7 @@ val instrumentation : 'a -> [> `instrumentation of 'a ] Blang.t
 val is_prefix : string -> [> `is_prefix of string ] Blang.t
 val is_present : [> `is_present ] Blang.t
 val is_suffix : string -> [> `is_suffix of string ] Blang.t
+val libraries : 'a -> [> `libraries of 'a ] Blang.t
 val library : 'a -> [> `library of 'a ] Blang.t
 val lint : 'a -> [> `lint of 'a ] Blang.t
 val lt : 'a -> [> `lt of 'a ] Blang.t

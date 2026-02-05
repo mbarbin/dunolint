@@ -363,6 +363,7 @@ module Predicate = struct
           | `public_name
           ]
       | `instrumentation of Dune.Instrumentation.Predicate.t Blang.t
+      | `libraries of Dune.Libraries.Predicate.t Blang.t
       | `lint of Dune.Lint.Predicate.t Blang.t
       | `modes of Dune.Library.Modes.Predicate.t Blang.t
       | `name of Dune.Library.Name.Predicate.t Blang.t
@@ -1564,5 +1565,44 @@ let%expect_test "if_present eval semantics" =
   Test_helpers.is_undefined
     (Dune_linter.Library.eval t_no_public_name ~predicate:(`public_name (is_prefix "x")));
   [%expect {||}];
+  ()
+;;
+
+let%expect_test "libraries predicate - mem" =
+  let _, t = parse {| (library (name mylib) (libraries base core)) |} in
+  Test_helpers.is_true
+    (Dune_linter.Library.eval
+       t
+       ~predicate:(`libraries (mem [ Dune.Library.Name.v "base" ])));
+  [%expect {||}];
+  Test_helpers.is_true
+    (Dune_linter.Library.eval
+       t
+       ~predicate:
+         (`libraries (mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ])));
+  [%expect {||}];
+  Test_helpers.is_false
+    (Dune_linter.Library.eval
+       t
+       ~predicate:
+         (`libraries (mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "absent" ])));
+  [%expect {||}];
+  ()
+;;
+
+let%expect_test "libraries predicate - enforce via library" =
+  (* This exercises the T (`libraries condition) path in Library.enforce. *)
+  let t = parse {| (library (name mylib) (libraries base)) |} in
+  (* Enforcing presence of existing library has no effect. *)
+  enforce t [ libraries (mem [ Dune.Library.Name.v "base" ]) ];
+  [%expect {| (library (name mylib) (libraries base)) |}];
+  (* Enforcing presence of new library adds it. *)
+  let t = parse {| (library (name mylib) (libraries base)) |} in
+  enforce t [ libraries (mem [ Dune.Library.Name.v "core" ]) ];
+  [%expect {| (library (name mylib) (libraries base core)) |}];
+  (* Enforcing absence of existing library removes it. *)
+  let t = parse {| (library (name mylib) (libraries base core)) |} in
+  enforce t [ libraries (not_ (mem [ Dune.Library.Name.v "core" ])) ];
+  [%expect {| (library (name mylib) (libraries base)) |}];
   ()
 ;;

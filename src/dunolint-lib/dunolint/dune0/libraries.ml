@@ -19,16 +19,36 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Compilation_mode = Dune0.Compilation_mode
-module Executable = Dune0.Executable
-module Include_subdirs = Dune0.Include_subdirs
-module Instrumentation = Dune0.Instrumentation
-module Libraries = Dune0.Libraries
-module Library = Dune0.Library
-module Lint = Dune0.Lint
-module Package = Dune0.Package
-module Pp = Dune0.Pp
-module Pps = Dune0.Pps
-module Predicate = Dune0.Predicate
-module Preprocess = Dune0.Preprocess
-module Stanza = Dune0.Stanza
+open! Import
+
+module Predicate = struct
+  let error_source = "libraries.predicate.t"
+
+  type t = [ `mem of Library__name.t list ]
+
+  let equal (a : t) (b : t) =
+    if Stdlib.( == ) a b
+    then true
+    else (
+      match a, b with
+      | `mem va, `mem vb -> equal_list Library__name.equal va vb)
+  ;;
+
+  let variant_spec : t Sexp_helpers.Variant_spec.t =
+    [ { atom = "mem"
+      ; conv =
+          Variadic
+            (fun ~context:_ ~fields -> `mem (List.map fields ~f:Library__name.t_of_sexp))
+      }
+    ]
+  ;;
+
+  let t_of_sexp (sexp : Sexp.t) : t =
+    Sexp_helpers.parse_variant variant_spec ~error_source sexp
+  ;;
+
+  let sexp_of_t (t : t) : Sexp.t =
+    match t with
+    | `mem v -> List (Atom "mem" :: List.map v ~f:Library__name.sexp_of_t)
+  ;;
+end

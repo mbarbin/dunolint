@@ -74,6 +74,7 @@ module Predicate = struct
   type t =
     [ `has_field of Has_field.t
     | `instrumentation of Instrumentation.Predicate.t Blang.t
+    | `libraries of Libraries.Predicate.t Blang.t
     | `lint of Lint.Predicate.t Blang.t
     | `modes of Modes.Predicate.t Blang.t
     | `name of Name.Predicate.t Blang.t
@@ -94,6 +95,7 @@ module Predicate = struct
       | `has_field va, `has_field vb -> Has_field.equal va vb
       | `instrumentation va, `instrumentation vb ->
         Blang.equal Instrumentation.Predicate.equal va vb
+      | `libraries va, `libraries vb -> Blang.equal Libraries.Predicate.equal va vb
       | `lint va, `lint vb -> Blang.equal Lint.Predicate.equal va vb
       | `modes va, `modes vb -> Blang.equal Modes.Predicate.equal va vb
       | `name va, `name vb -> Blang.equal Name.Predicate.equal va vb
@@ -109,6 +111,7 @@ module Predicate = struct
       | ( ( `has_field _
           | `instrumentation _
           | `lint _
+          | `libraries _
           | `modes _
           | `name _
           | `package _
@@ -127,6 +130,11 @@ module Predicate = struct
           Unary
             (fun sexp ->
               `instrumentation (Blang.t_of_sexp Instrumentation.Predicate.t_of_sexp sexp))
+      }
+    ; { atom = "libraries"
+      ; conv =
+          Unary
+            (fun sexp -> `libraries (Blang.t_of_sexp Libraries.Predicate.t_of_sexp sexp))
       }
     ; { atom = "lint"
       ; conv = Unary (fun sexp -> `lint (Blang.t_of_sexp Lint.Predicate.t_of_sexp sexp))
@@ -190,6 +198,8 @@ module Predicate = struct
     | `instrumentation v ->
       List
         [ Atom "instrumentation"; Blang.sexp_of_t Instrumentation.Predicate.sexp_of_t v ]
+    | `libraries v ->
+      List [ Atom "libraries"; Blang.sexp_of_t Libraries.Predicate.sexp_of_t v ]
     | `lint v -> List [ Atom "lint"; Blang.sexp_of_t Lint.Predicate.sexp_of_t v ]
     | `modes v -> List [ Atom "modes"; Blang.sexp_of_t Modes.Predicate.sexp_of_t v ]
     | `name v -> List [ Atom "name"; Blang.sexp_of_t Name.Predicate.sexp_of_t v ]

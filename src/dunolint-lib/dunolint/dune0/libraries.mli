@@ -19,19 +19,20 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-module Name = Executable__name
-module Public_name = Executable__public_name
+(** Predicate for the ["libraries"] field of library/executable stanzas.
+
+    The predicates are syntactic - they refer to what is written in the dune
+    file, literally. *)
 
 module Predicate : sig
-  type t =
-    [ `has_field of [ `instrumentation | `lint | `name | `preprocess | `public_name ]
-    | `instrumentation of Instrumentation.Predicate.t Blang.t
-    | `libraries of Libraries.Predicate.t Blang.t
-    | `lint of Lint.Predicate.t Blang.t
-    | `name of Name.Predicate.t Blang.t
-    | `preprocess of Preprocess.Predicate.t Blang.t
-    | `public_name of Public_name.Predicate.t Blang.t
-    ]
+  (** Predicates to check library dependencies.
+
+      Example sexp syntax:
+      {v
+        (libraries (mem ordering yojson))
+      v} *)
+
+  type t = [ `mem of Library__name.t list ]
 
   val equal : t -> t -> bool
 

@@ -19,16 +19,47 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Compilation_mode = Dune0.Compilation_mode
-module Executable = Dune0.Executable
-module Include_subdirs = Dune0.Include_subdirs
-module Instrumentation = Dune0.Instrumentation
-module Libraries = Dune0.Libraries
-module Library = Dune0.Library
-module Lint = Dune0.Lint
-module Package = Dune0.Package
-module Pp = Dune0.Pp
-module Pps = Dune0.Pps
-module Predicate = Dune0.Predicate
-module Preprocess = Dune0.Preprocess
-module Stanza = Dune0.Stanza
+open Dunolint.Std
+
+let%expect_test "Predicate.equal" =
+  let equal = Dune.Libraries.Predicate.equal in
+  let mem_a = `mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ] in
+  let mem_b = `mem [ Dune.Library.Name.v "base" ] in
+  let mem_c = `mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ] in
+  (* Physical equality. *)
+  require (equal mem_a mem_a);
+  [%expect {||}];
+  (* Structural equality - same variant, same value. *)
+  require (equal mem_a mem_c);
+  [%expect {||}];
+  require
+    (equal (`mem [ Dune.Library.Name.v "base" ]) (`mem [ Dune.Library.Name.v "base" ]));
+  [%expect {||}];
+  (* Same variant, different value. *)
+  require (not (equal mem_a mem_b));
+  [%expect {||}];
+  (* Empty list. *)
+  require (equal (`mem []) (`mem []));
+  [%expect {||}];
+  ()
+;;
+
+open Dunolint.Config.Std
+
+let%expect_test "predicate" =
+  let test p = Common.test_predicate (module Dune.Libraries.Predicate) p in
+  test (mem []);
+  [%expect {| (mem) |}];
+  test (mem [ Dune.Library.Name.v "base" ]);
+  [%expect {| (mem base) |}];
+  test (mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]);
+  [%expect {| (mem base core) |}];
+  test
+    (mem
+       [ Dune.Library.Name.v "base"
+       ; Dune.Library.Name.v "core"
+       ; Dune.Library.Name.v "my-lib.sub-lib"
+       ]);
+  [%expect {| (mem base core my-lib.sub-lib) |}];
+  ()
+;;

@@ -26,10 +26,16 @@ type t
 
 val create : libraries:Dune.Library.Name.t list -> t
 
-(** At the moment there is no predicate nor enforceable conditions on
-    libraries. They are automatically sorted. We may change this in the
-    future, perhaps make the sorting optional, etc. TBD. *)
-include Dunolinter.Stanza_linter.S with type t := t and type predicate := Nothing.t
+(** Predicates for checking library dependencies.
+
+    Example sexp syntax:
+    {v
+      (libraries (mem ordering yojson))
+    v} *)
+include
+  Dunolinter.Stanza_linter.S
+  with type t := t
+   and type predicate := Dune.Libraries.Predicate.t
 
 (** {1 Getters} *)
 
@@ -56,6 +62,7 @@ val mem : t -> library:Dune.Library.Name.t -> bool
 
 val dedup_and_sort : t -> unit
 val add_libraries : t -> libraries:Dune.Library.Name.t list -> unit
+val remove_libraries : t -> libraries:Dune.Library.Name.t list -> unit
 val add_entries : t -> entries:Entry.t list -> unit
 
 (** {1 Private}

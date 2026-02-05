@@ -89,9 +89,21 @@ Stanza:
 
 It is almost identical to its *name* sibling, thus we are not documenting it in details here. A notable difference is that the suggestions for the `(is_prefix my-package.)` predicate is improved when the prefix is a package name, as *dunolint* will indeed suggests to *replace* an existing package prefix if one if present. This is a minor ergonomic detail.
 
+### libraries
+
+`(dune (executable (libraries _)))` is a selector for the *libraries* field of an *executable* stanza:
+
+Stanza:
+```dune
+(executable
+ (libraries <FRAGMENT>))
+```
+
+It is identical to the [library (libraries)](#libraries) selector. See that section for details on predicates and examples.
+
 ### Fields shared with other stanzas
 
-This stanza share some sub selectors with other stanzas. See: *has_field*, *instrumentation*, *lint*, *preprocess*.
+This stanza share some sub selectors with other stanzas. See: *has_field*, *instrumentation*, *libraries*, *lint*, *preprocess*.
 
 For example, you can use the `(dune (executable (instrumentation _)))` syntax if you want the *instrumentation* selector to apply to the *executable* stanza only.
 
@@ -446,11 +458,65 @@ Condition: `(enforce (dune (library PREDICATE)))`
 | (package (is_prefix prefix_)) | Enforcement failure |
 | (package (is_suffix _suffix)) | Enforcement failure |
 
+### libraries
+
+`(dune (library (libraries _)))` is a selector for the *libraries* field of a *library* stanza:
+
+Stanza:
+```dune
+(library
+ (libraries <FRAGMENT>))
+```
+
+The predicates of the `libraries` selector are:
+
+1. `(mem LIBRARY_NAMES)`
+
+Returns *true* iff all the library names specified are present in the list of dependencies found in the fragment.
+
+**Semantics**: The predicate `(mem a b c)` is best understood as the sequential application of individual membership checks: `(mem a) ; (mem b) ; (mem c)`, where `;` denotes conjunction (AND). Each library name is checked independently, and all must be present for the predicate to return *true*.
+
+When enforced, *dunolint* suggests adding the library name(s) not already present. New libraries are added to the last section (when sections are delimited by comments) and sorted alphabetically within that section.
+
+**Negation**: The negation `(not (mem a b c))` distributes as conjunction over the individual checks: `(not (mem a)) ; (not (mem b)) ; (not (mem c))`. This means "ensure none of the specified libraries are present" (all must be absent), not "ensure at least one is absent". When enforced, *dunolint* suggests removing all the supplied library name(s) from the fragment when present.
+
+**Empty arguments**: Enforcing `(mem)` or `(not (mem))` with no arguments has no effect.
+
+**Examples:**
+
+Stanza:
+```dune
+(library
+ (name mylib)
+ (libraries base core))
+```
+
+Condition: `(dune (library (libraries PREDICATE)))`
+
+| Predicate | Result |
+| --------- | ------ |
+| (mem base core) | True |
+| (mem base) | True |
+| (mem async) | False. Suggestion: add *async*, keep existing values |
+| (not (mem core)) | False. Suggestion: remove *core* |
+
 ### Fields shared with other stanzas
 
-This stanza shares some sub selectors with other stanzas. See: *instrumentation*, *lint*, *preprocess*.
+This stanza shares some sub selectors with other stanzas. See: *instrumentation*, *libraries*, *lint*, *preprocess*.
 
 For example, you can use the `(dune (library (instrumentation _)))` syntax if you want the *instrumentation* selector to apply to the *library* stanza only.
+
+## libraries
+
+`(dune (libraries _))` is a selector for the *libraries* field found in stanzas *library* and *executable*.
+
+Stanza:
+```dune
+(library
+ (libraries <FRAGMENT>))
+```
+
+Its predicates are documented in the [library (libraries)](#libraries) section above.
 
 ## lint
 

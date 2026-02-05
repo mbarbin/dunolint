@@ -19,7 +19,32 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-module Entry = struct
+module Entry : sig
+  type t =
+    | Unhandled of
+        { original_index : int
+        ; sexp : Sexp.t
+        ; source : string
+        }
+    | Re_export of
+        { name : Dune.Library.Name.t
+        ; source : string
+        }
+    | Library of
+        { name : Dune.Library.Name.t
+        ; source : string
+        }
+  [@@deriving sexp_of]
+
+  val library : Dune.Library.Name.t -> t
+  val re_export : Dune.Library.Name.t -> t
+  val unhandled : original_index:int -> sexp:Sexp.t -> t
+  val library_name : t -> Dune.Library.Name.t option
+
+  module For_sort : sig
+    val compare : t -> t -> int
+  end
+end = struct
   type t =
     | Unhandled of
         { original_index : int
@@ -85,13 +110,14 @@ let field_name = "libraries"
 let is_empty t = List.for_all t.sections ~f:(fun section -> List.is_empty section.entries)
 let entries t = List.concat_map t.sections ~f:(fun section -> section.entries)
 
-let mem t ~library =
+let exists_library_name t ~f =
   List.exists t.sections ~f:(fun section ->
     List.exists section.entries ~f:(function
       | Unhandled _ -> false
-      | Re_export { name; _ } | Library { name; _ } ->
-        Dune.Library.Name.equal name library))
+      | Re_export { name; _ } | Library { name; _ } -> f name))
 ;;
+
+let mem t ~library = exists_library_name t ~f:(Dune.Library.Name.equal library)
 
 let dedup_and_sort t =
   let names = Hash_set.create (module Dune.Library.Name) in
@@ -127,7 +153,11 @@ let add_entries t ~entries =
   <- section.entries
      @ List.filter_map entries ~f:(fun entry ->
        match (entry : Entry.t) with
-       | Unhandled _ -> None
+       | Unhandled _ ->
+         (* The public API does not permit building [Unhandled] entries so this
+            is not a user-facing execution path. However it is covered by a test
+            using an unhandled entry built via the [Private.Entry] module. *)
+         None
        | Re_export { name; _ } | Library { name; _ } ->
          if Hash_set.mem names name
          then None
@@ -138,6 +168,17 @@ let add_entries t ~entries =
 
 let add_libraries t ~libraries =
   add_entries t ~entries:(List.map libraries ~f:Entry.library)
+;;
+
+let remove_libraries t ~libraries =
+  let libraries_to_remove = Set.of_list (module Dune.Library.Name) libraries in
+  List.iter t.sections ~f:(fun section ->
+    section.entries
+    <- List.filter section.entries ~f:(fun (entry : Entry.t) ->
+         match entry with
+         | Unhandled _ -> true
+         | Re_export { name; _ } | Library { name; _ } ->
+           not (Set.mem libraries_to_remove name)))
 ;;
 
 let read ~sexps_rewriter ~field =
@@ -188,20 +229,26 @@ let rewrite t ~sexps_rewriter ~field =
     ~sections:(List.map t.sections ~f:(fun { entries } -> entries))
 ;;
 
-type predicate = Nothing.t
+type predicate = Dune.Libraries.Predicate.t
 
-let eval _t ~predicate =
-  match[@coverage off] (predicate : predicate) with
-  | x -> Nothing.unreachable_code x
+let eval t ~predicate =
+  match (predicate : predicate) with
+  | `mem libraries ->
+    Dunolint.Trilang.const (List.for_all libraries ~f:(fun library -> mem t ~library))
 ;;
 
 let enforce =
   Dunolinter.Linter.enforce
-    (module Nothing)
+    (module Dune.Libraries.Predicate)
     ~eval
-    ~enforce:(fun _ predicate ->
-      match[@coverage off] predicate with
-      | T x | Not x -> Nothing.unreachable_code x)
+    ~enforce:(fun t predicate ->
+      match predicate with
+      | T (`mem libraries) ->
+        add_libraries t ~libraries;
+        Ok
+      | Not (`mem libraries) ->
+        remove_libraries t ~libraries;
+        Ok)
 ;;
 
 module Private = struct

@@ -48,8 +48,15 @@ let%expect_test "Predicate.equal" =
   let if_present_pn =
     `if_present (`public_name (Blang.base (`equals (Dune.Library.Public_name.v "pn"))))
   in
+  let libraries_a =
+    `libraries
+      (Blang.base (`mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]))
+  in
+  let libraries_b = `libraries (Blang.base (`mem [ Dune.Library.Name.v "base" ])) in
   (* Physical equality. *)
   require (equal name_a name_a);
+  [%expect {||}];
+  require (equal libraries_a libraries_a);
   [%expect {||}];
   (* Structural equality - same variant, same value. *)
   require (equal (`has_field `instrumentation) (`has_field `instrumentation));
@@ -103,10 +110,17 @@ let%expect_test "Predicate.equal" =
        (`if_present
            (`public_name (Blang.base (`equals (Dune.Library.Public_name.v "pn"))))));
   [%expect {||}];
+  require
+    (equal
+       (`libraries (Blang.base (`mem [ Dune.Library.Name.v "base" ])))
+       (`libraries (Blang.base (`mem [ Dune.Library.Name.v "base" ]))));
+  [%expect {||}];
   (* Same variant, different value. *)
   require (not (equal has_field_a has_field_b));
   [%expect {||}];
   require (not (equal if_present_a if_present_b));
+  [%expect {||}];
+  require (not (equal libraries_a libraries_b));
   [%expect {||}];
   (* Test each variant as first argument to cover the catch-all. *)
   require (not (equal has_field_a instrumentation_a));
@@ -126,6 +140,8 @@ let%expect_test "Predicate.equal" =
   require (not (equal public_name_a if_present_a));
   [%expect {||}];
   require (not (equal if_present_a has_field_a));
+  [%expect {||}];
+  require (not (equal libraries_a if_present_a));
   [%expect {||}];
   (* Test each [if_present] variant as first argument to cover the nested catch-all. *)
   require (not (equal if_present_a if_present_pn));
@@ -175,5 +191,10 @@ let%expect_test "predicate" =
     (if_present
        (`public_name (Blang.base (`equals (Dune.Library.Public_name.v "dunolint")))));
   [%expect {| (if_present (public_name (equals dunolint))) |}];
+  (* libraries predicate. *)
+  test (libraries (mem [ Dune.Library.Name.v "base" ]));
+  [%expect {| (libraries (mem base)) |}];
+  test (libraries (mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]));
+  [%expect {| (libraries (mem base core)) |}];
   ()
 ;;

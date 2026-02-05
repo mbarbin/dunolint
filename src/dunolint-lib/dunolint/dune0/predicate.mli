@@ -24,6 +24,7 @@ type t =
   | `has_field of [ `instrumentation | `lint | `name | `preprocess | `public_name ]
   | `include_subdirs of Include_subdirs.Predicate.t Blang.t
   | `instrumentation of Instrumentation.Predicate.t Blang.t
+  | `libraries of Libraries.Predicate.t Blang.t
   | `library of Library.Predicate.t Blang.t
   | `lint of Lint.Predicate.t Blang.t
   | `preprocess of Preprocess.Predicate.t Blang.t

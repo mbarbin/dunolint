@@ -494,6 +494,9 @@ let eval t ~predicate =
      | Some instrumentation ->
        Dunolint.Trilang.eval condition ~f:(fun predicate ->
          Instrumentation.eval instrumentation ~predicate))
+  | `libraries condition ->
+    Dunolint.Trilang.eval condition ~f:(fun predicate ->
+      Libraries.eval t.libraries ~predicate)
   | `lint condition ->
     (match t.lint with
      | None -> Dunolint.Trilang.Undefined
@@ -546,13 +549,14 @@ let enforce =
              match[@coverage off] condition with
              | `has_field _ -> assert false
              | `if_present _
-             | `name _
-             | `public_name _
-             | `package _
-             | `modes _
              | `instrumentation _
+             | `libraries _
              | `lint _
-             | `preprocess _ -> ()
+             | `modes _
+             | `name _
+             | `package _
+             | `preprocess _
+             | `public_name _ -> ()
            in
            Eval)
       | T (`has_field `name) ->
@@ -677,6 +681,9 @@ let enforce =
          | None ->
            t.lint <- Some (Lint.create ());
            Ok)
+      | T (`libraries condition) ->
+        Libraries.enforce t.libraries ~condition;
+        Ok
       | T (`lint condition) ->
         let lint =
           match t.lint with
@@ -727,9 +734,9 @@ module Linter = struct
     | `library condition ->
       Dunolint.Trilang.eval condition ~f:(fun predicate -> Top.eval t ~predicate)
     | `include_subdirs _ | `executable _ -> Dunolint.Trilang.Undefined
-    | ( `instrumentation _ | `lint _ | `preprocess _
-      | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name) ) as
-      predicate -> Top.eval t ~predicate
+    | ( `has_field (`instrumentation | `lint | `name | `preprocess | `public_name)
+      | `instrumentation _ | `libraries _ | `lint _ | `preprocess _ ) as predicate ->
+      Top.eval t ~predicate
   ;;
 
   let enforce =
@@ -746,9 +753,9 @@ module Linter = struct
           Top.enforce t ~condition;
           Ok
         | T
-            (( `instrumentation _ | `lint _ | `preprocess _
-             | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name)
-               ) as predicate) ->
+            (( `has_field (`instrumentation | `lint | `name | `preprocess | `public_name)
+             | `instrumentation _ | `libraries _ | `lint _ | `preprocess _ ) as predicate)
+          ->
           Top.enforce t ~condition:(Blang.base predicate);
           Ok)
   ;;
