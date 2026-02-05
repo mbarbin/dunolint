@@ -34,12 +34,19 @@ let%expect_test "equal" =
   let has_field_a = `has_field `instrumentation in
   let include_subdirs_a = `include_subdirs Blang.true_ in
   let instrumentation_a = `instrumentation Blang.true_ in
+  let libraries_a =
+    `libraries
+      (Blang.base (`mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]))
+  in
+  let libraries_b = `libraries (Blang.base (`mem [ Dune.Library.Name.v "base" ])) in
   let library_a = `library Blang.true_ in
   let lint_a = `lint Blang.true_ in
   let preprocess_a = `preprocess Blang.true_ in
   let stanza_a = `stanza (Blang.base `library) in
   (* Physical equality. *)
   require (equal executable_a executable_a);
+  [%expect {||}];
+  require (equal libraries_a libraries_a);
   [%expect {||}];
   (* Structural equality - same variant, same value. *)
   require
@@ -57,6 +64,11 @@ let%expect_test "equal" =
   [%expect {||}];
   require (equal (`instrumentation Blang.true_) (`instrumentation Blang.true_));
   [%expect {||}];
+  require
+    (equal
+       (`libraries (Blang.base (`mem [ Dune.Library.Name.v "base" ])))
+       (`libraries (Blang.base (`mem [ Dune.Library.Name.v "base" ]))));
+  [%expect {||}];
   require (equal (`library Blang.true_) (`library Blang.true_));
   [%expect {||}];
   require (equal (`lint Blang.true_) (`lint Blang.true_));
@@ -68,6 +80,8 @@ let%expect_test "equal" =
   (* Same variant, different value. *)
   require (not (equal executable_a executable_b));
   [%expect {||}];
+  require (not (equal libraries_a libraries_b));
+  [%expect {||}];
   (* Test each variant as first argument to cover the catch-all. *)
   require (not (equal executable_a has_field_a));
   [%expect {||}];
@@ -75,7 +89,9 @@ let%expect_test "equal" =
   [%expect {||}];
   require (not (equal include_subdirs_a instrumentation_a));
   [%expect {||}];
-  require (not (equal instrumentation_a library_a));
+  require (not (equal instrumentation_a libraries_a));
+  [%expect {||}];
+  require (not (equal libraries_a library_a));
   [%expect {||}];
   require (not (equal library_a lint_a));
   [%expect {||}];
@@ -108,6 +124,11 @@ let%expect_test "predicate" =
   [%expect {| (include_subdirs (equals unqualified)) |}];
   test (instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")));
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
+  (* libraries predicate. *)
+  test (libraries (mem [ Dune.Library.Name.v "base" ]));
+  [%expect {| (libraries (mem base)) |}];
+  test (libraries (mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]));
+  [%expect {| (libraries (mem base core)) |}];
   test (library (name (equals (Dune.Library.Name.v "main"))));
   [%expect {| (library (name (equals main))) |}];
   test (lint (pps (pp (Dune.Pp.Name.v "ppx_equal"))));
