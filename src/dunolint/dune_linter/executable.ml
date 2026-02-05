@@ -383,6 +383,9 @@ let enforce =
         in
         Instrumentation.enforce instrumentation ~condition;
         Ok
+      | T (`libraries condition) ->
+        Libraries.enforce t.libraries ~condition;
+        Ok
       | T (`has_field `lint) ->
         (match t.lint with
          | Some _ -> Ok
@@ -416,9 +419,6 @@ let enforce =
             preprocess
         in
         Preprocess.enforce preprocess ~condition;
-        Ok
-      | T (`libraries condition) ->
-        Libraries.enforce t.libraries ~condition;
         Ok)
 ;;
 
