@@ -474,9 +474,13 @@ The predicates of the `libraries` selector are:
 
 Returns *true* iff all the library names specified are present in the list of dependencies found in the fragment.
 
+**Semantics**: The predicate `(mem a b c)` is best understood as the sequential application of individual membership checks: `(mem a) ; (mem b) ; (mem c)`, where `;` denotes conjunction (AND). Each library name is checked independently, and all must be present for the predicate to return *true*.
+
 When enforced, *dunolint* suggests adding the library name(s) not already present. New libraries are added to the last section (when sections are delimited by comments) and sorted alphabetically within that section.
 
-**Negation**: When the negation of the predicate *mem* is enforced, *dunolint* suggests removing the supplied library name(s) from the fragment when present.
+**Negation**: The negation `(not (mem a b c))` distributes as conjunction over the individual checks: `(not (mem a)) ; (not (mem b)) ; (not (mem c))`. This means "ensure none of the specified libraries are present" (all must be absent), not "ensure at least one is absent". When enforced, *dunolint* suggests removing all the supplied library name(s) from the fragment when present.
+
+**Empty arguments**: Enforcing `(mem)` or `(not (mem))` with no arguments has no effect.
 
 **Examples:**
 
