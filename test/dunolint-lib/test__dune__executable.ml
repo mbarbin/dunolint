@@ -29,6 +29,11 @@ let%expect_test "Predicate.equal" =
     `instrumentation
       (Blang.base (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")))
   in
+  let libraries_a =
+    `libraries
+      (Blang.base (`mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]))
+  in
+  let libraries_b = `libraries (Blang.base (`mem [ Dune.Library.Name.v "base" ])) in
   let lint_a = `lint (Blang.base (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_a"))))) in
   let name_a = `name (Blang.base (`equals (Dune.Executable.Name.v "main"))) in
   let preprocess_a =
@@ -40,6 +45,8 @@ let%expect_test "Predicate.equal" =
   (* Physical equality. *)
   require (equal instrumentation_a instrumentation_a);
   [%expect {||}];
+  require (equal libraries_a libraries_a);
+  [%expect {||}];
   (* Structural equality - same variant, same value. *)
   require (equal (`has_field `instrumentation) (`has_field `instrumentation));
   [%expect {||}];
@@ -49,6 +56,11 @@ let%expect_test "Predicate.equal" =
            (Blang.base (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"))))
        (`instrumentation
            (Blang.base (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")))));
+  [%expect {||}];
+  require
+    (equal
+       (`libraries (Blang.base (`mem [ Dune.Library.Name.v "base" ])))
+       (`libraries (Blang.base (`mem [ Dune.Library.Name.v "base" ]))));
   [%expect {||}];
   require
     (equal
@@ -73,10 +85,14 @@ let%expect_test "Predicate.equal" =
   (* Same variant, different value. *)
   require (not (equal has_field_a has_field_b));
   [%expect {||}];
+  require (not (equal libraries_a libraries_b));
+  [%expect {||}];
   (* Test each variant as first argument to cover the catch-all. *)
   require (not (equal has_field_a instrumentation_a));
   [%expect {||}];
-  require (not (equal instrumentation_a lint_a));
+  require (not (equal instrumentation_a libraries_a));
+  [%expect {||}];
+  require (not (equal libraries_a lint_a));
   [%expect {||}];
   require (not (equal lint_a name_a));
   [%expect {||}];
@@ -105,6 +121,11 @@ let%expect_test "predicate" =
   [%expect {| (has_field public_name) |}];
   test (instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")));
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
+  (* libraries predicate. *)
+  test (libraries (mem [ Dune.Library.Name.v "base" ]));
+  [%expect {| (libraries (mem base)) |}];
+  test (libraries (mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]));
+  [%expect {| (libraries (mem base core)) |}];
   test (lint (pps (pp (Dune.Pp.Name.v "ppx_compare"))));
   [%expect {| (lint (pps (pp ppx_compare))) |}];
   test (name (equals (Dune.Executable.Name.v "main")));
