@@ -61,28 +61,57 @@ let write (t : t) =
     ]
 ;;
 
+let rewrite_flags ~file_rewriter ~sexps_rewriter ~prev_sexp ~desired ~actual =
+  let rec iter ~prev_sexp desired actual =
+    match desired, actual with
+    | [], [] -> ()
+    | desired_flag :: rest_desired, actual_flag :: rest_actual ->
+      File_rewriter.replace
+        file_rewriter
+        ~range:(Sexps_rewriter.range sexps_rewriter actual_flag)
+        ~text:desired_flag;
+      iter ~prev_sexp:actual_flag rest_desired rest_actual
+    | rest_desired, [] ->
+      let insert_offset = Sexps_rewriter.stop_offset sexps_rewriter prev_sexp in
+      let text =
+        List.map rest_desired ~f:(fun flag -> " " ^ flag) |> String.concat ~sep:""
+      in
+      File_rewriter.insert file_rewriter ~offset:insert_offset ~text
+    | [], (_ :: _ as remaining_actual) ->
+      let last_arg = List.last_exn remaining_actual in
+      let range =
+        { Loc.Range.start = Sexps_rewriter.stop_offset sexps_rewriter prev_sexp
+        ; stop = Sexps_rewriter.stop_offset sexps_rewriter last_arg
+        }
+      in
+      File_rewriter.remove file_rewriter ~range
+  in
+  iter ~prev_sexp desired actual
+;;
+
 let rewrite t ~sexps_rewriter ~field =
   let args = Dunolinter.Sexp_handler.get_args ~field_name ~sexps_rewriter ~field in
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
+  let desired_name =
+    Dune.Instrumentation.Backend.Name.to_string
+      (Dune.Instrumentation.Backend.name t.backend)
+  in
+  let desired_flags =
+    List.map (Dune.Instrumentation.Backend.flags t.backend) ~f:(fun flag ->
+      Sexp.to_string (Dune.Instrumentation.Backend.Flag.sexp_of_t flag))
+  in
   List.iter args ~f:(function
-    | List (Atom "backend" :: _rest) as backend_list ->
-      let range = Sexps_rewriter.range sexps_rewriter backend_list in
-      let name = Dune.Instrumentation.Backend.name t.backend in
-      let flags = Dune.Instrumentation.Backend.flags t.backend in
-      let text =
-        match flags with
-        | [] ->
-          Printf.sprintf "(backend %s)" (Dune.Instrumentation.Backend.Name.to_string name)
-        | _ ->
-          Printf.sprintf
-            "(backend %s %s)"
-            (Dune.Instrumentation.Backend.Name.to_string name)
-            (String.concat
-               ~sep:" "
-               (List.map flags ~f:(fun flag ->
-                  Sexp.to_string (Dune.Instrumentation.Backend.Flag.sexp_of_t flag))))
-      in
-      File_rewriter.replace file_rewriter ~range ~text
+    | List (Atom "backend" :: (Atom _ as name_sexp) :: actual_flags) ->
+      File_rewriter.replace
+        file_rewriter
+        ~range:(Sexps_rewriter.range sexps_rewriter name_sexp)
+        ~text:desired_name;
+      rewrite_flags
+        ~file_rewriter
+        ~sexps_rewriter
+        ~prev_sexp:name_sexp
+        ~desired:desired_flags
+        ~actual:actual_flags
     | _ -> ())
 ;;
 

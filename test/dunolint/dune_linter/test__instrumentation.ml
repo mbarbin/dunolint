@@ -101,6 +101,151 @@ let%expect_test "rewrite" =
       t
       ~backend:(Dune.Instrumentation.Backend.v "bisect_ppx"));
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
+  (* Comment after name: identity rewrite preserves comment. *)
+  rewrite
+    {| (instrumentation (backend bisect_ppx ; coverage tool
+  )) |};
+  [%expect
+    {|
+    (instrumentation (backend bisect_ppx ; coverage tool
+     ))
+    |}];
+  (* Comment after name: rewrite name preserves comment. *)
+  rewrite
+    {| (instrumentation (backend bisect_ppx ; coverage tool
+  )) |}
+    ~f:(fun t ->
+      Dune_linter.Instrumentation.set_backend
+        t
+        ~backend:(Dune.Instrumentation.Backend.v "other_backend"));
+  [%expect
+    {|
+    (instrumentation (backend other_backend ; coverage tool
+     ))
+    |}];
+  (* Comment after name: add flags preserves comment. *)
+  rewrite
+    {| (instrumentation (backend bisect_ppx ; coverage tool
+  )) |}
+    ~f:(fun t ->
+      Dune_linter.Instrumentation.set_backend
+        t
+        ~backend:(Dune.Instrumentation.Backend.v "ppx_windtrap" ~flags:[ "--coverage" ]));
+  [%expect
+    {|
+    (instrumentation (backend ppx_windtrap --coverage ; coverage tool
+     ))
+    |}];
+  (* Comment after flag: identity rewrite preserves comment. *)
+  rewrite
+    {| (instrumentation (backend ppx_windtrap --coverage ; flag comment
+  )) |};
+  [%expect
+    {|
+    (instrumentation (backend ppx_windtrap --coverage ; flag comment
+     ))
+    |}];
+  (* Comment after flag: rewrite name preserves comment. *)
+  rewrite
+    {| (instrumentation (backend ppx_windtrap --coverage ; flag comment
+  )) |}
+    ~f:(fun t ->
+      Dune_linter.Instrumentation.set_backend
+        t
+        ~backend:(Dune.Instrumentation.Backend.v "other_windtrap" ~flags:[ "--coverage" ]));
+  [%expect
+    {|
+    (instrumentation (backend other_windtrap --coverage ; flag comment
+     ))
+    |}];
+  (* Comment after flag: remove flag preserves comment. *)
+  rewrite
+    {| (instrumentation (backend ppx_windtrap --coverage ; flag comment
+  )) |}
+    ~f:(fun t ->
+      Dune_linter.Instrumentation.set_backend
+        t
+        ~backend:(Dune.Instrumentation.Backend.v "bisect_ppx"));
+  [%expect
+    {|
+    (instrumentation (backend bisect_ppx ; flag comment
+     ))
+    |}];
+  (* Comment between name and flag. *)
+  rewrite
+    {| (instrumentation (backend bisect_ppx ; a comment
+   --flag)) |};
+  [%expect
+    {|
+    (instrumentation (backend bisect_ppx ; a comment
+      --flag))
+    |}];
+  (* Multi-line with comments between components: identity rewrite. *)
+  rewrite
+    {| (instrumentation (backend
+    ;; This is the backend in use
+    ppx_windtrap
+    ;; This one requires a flag
+    --coverage)) |};
+  [%expect
+    {|
+    (instrumentation (backend
+       ;; This is the backend in use
+       ppx_windtrap
+       ;; This one requires a flag
+       --coverage))
+    |}];
+  (* Multi-line with comments: rewrite name only. *)
+  rewrite
+    {| (instrumentation (backend
+    ;; This is the backend in use
+    ppx_windtrap
+    ;; This one requires a flag
+    --coverage)) |}
+    ~f:(fun t ->
+      Dune_linter.Instrumentation.set_backend
+        t
+        ~backend:(Dune.Instrumentation.Backend.v "other_windtrap" ~flags:[ "--coverage" ]));
+  [%expect
+    {|
+    (instrumentation (backend
+       ;; This is the backend in use
+       other_windtrap
+       ;; This one requires a flag
+       --coverage))
+    |}];
+  (* Multi-line with comments: remove flag, comments remain. *)
+  rewrite
+    {| (instrumentation (backend
+    ;; This is the backend in use
+    ppx_windtrap
+    ;; This one requires a flag
+    --coverage)) |}
+    ~f:(fun t ->
+      Dune_linter.Instrumentation.set_backend
+        t
+        ~backend:(Dune.Instrumentation.Backend.v "bisect_ppx"));
+  [%expect
+    {|
+    (instrumentation (backend
+       ;; This is the backend in use
+       bisect_ppx))
+    |}];
+  (* Multi-line with comments: add flag. *)
+  rewrite
+    {| (instrumentation (backend
+    ;; This is the backend in use
+    bisect_ppx)) |}
+    ~f:(fun t ->
+      Dune_linter.Instrumentation.set_backend
+        t
+        ~backend:(Dune.Instrumentation.Backend.v "ppx_windtrap" ~flags:[ "--coverage" ]));
+  [%expect
+    {|
+    (instrumentation (backend
+       ;; This is the backend in use
+       ppx_windtrap --coverage))
+    |}];
   ()
 ;;
 
