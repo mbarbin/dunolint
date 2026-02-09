@@ -274,15 +274,22 @@ Stanza:
 
 Its predicate are:
 
-1. `(backend ARGS)`
+1. `(backend NAME FLAGS...)`
 
-Returns *true* iif the ARGS supplied is an exact match for the arguments present in the FRAGMENT.
+Returns *true* iif the backend name and flags supplied are an exact match for the arguments present in the FRAGMENT.
 
-When enforced, *dunolint* suggests to replace any existing arguments with the one specified by the predicate. Doesn't support suggestion when negated.
+Some backends require additional flags. For example, *ppx_windtrap* uses the `--coverage` flag:
+
+```dune
+(instrumentation
+ (backend ppx_windtrap --coverage))
+```
+
+When enforced, *dunolint* suggests to replace the entire backend specification (name and flags) with the one specified by the predicate. Doesn't support suggestion when negated.
 
 **Examples:**
 
-Stanza:
+Stanza with name-only backend:
 ```dune
 (library
  (instrumentation (backend bisect_ppx)))
@@ -293,6 +300,21 @@ Condition: `(dune (library (instrumentation PREDICATE)))`
 | Predicate | Result  |
 | --------- | ------- |
 | (backend bisect_ppx) | True |
+| (backend ppx_windtrap --coverage) | False. Suggestion: replace with `(backend ppx_windtrap --coverage)` |
+
+Stanza with backend flags:
+```dune
+(library
+ (instrumentation (backend ppx_windtrap --coverage)))
+```
+
+Condition: `(dune (library (instrumentation PREDICATE)))`
+
+| Predicate | Result  |
+| --------- | ------- |
+| (backend ppx_windtrap --coverage) | True |
+| (backend ppx_windtrap) | False (flags must match exactly) |
+| (backend bisect_ppx) | False. Suggestion: replace with `(backend bisect_ppx)` |
 
 ## library
 

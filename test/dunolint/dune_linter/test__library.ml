@@ -427,7 +427,7 @@ let%expect_test "eval" =
     (Dune_linter.Library.eval
        t
        ~predicate:
-         (`instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"))));
+         (`instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx"))));
   [%expect {||}];
   Test_helpers.is_undefined
     (Dune_linter.Library.eval
@@ -454,13 +454,12 @@ let%expect_test "eval" =
     (Dune_linter.Library.eval
        t
        ~predicate:
-         (`instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"))));
+         (`instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx"))));
   [%expect {||}];
   Test_helpers.is_false
     (Dune_linter.Library.eval
        t
-       ~predicate:
-         (`instrumentation (backend (Dune.Instrumentation.Backend.Name.v "coverage"))));
+       ~predicate:(`instrumentation (backend (Dune.Instrumentation.Backend.v "coverage"))));
   [%expect {||}];
   Test_helpers.is_true
     (Dune_linter.Library.eval
@@ -955,9 +954,7 @@ let%expect_test "field_conditions" =
   let init = {| (library (name my-lib)) |} in
   (* [instrumentation] condition auto-creates field *)
   let t = parse init in
-  enforce
-    t
-    [ instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")) ];
+  enforce t [ instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx")) ];
   [%expect {| (library (name my-lib) (instrumentation (backend bisect_ppx))) |}];
   (* [lint] condition auto-creates field. *)
   let t = parse init in
@@ -1202,7 +1199,7 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
        (instrumentation
         (backend bisect_ppx))
     |}];
-  test [ instrumentation (backend (Dune.Instrumentation.Backend.Name.v "coverage")) ];
+  test [ instrumentation (backend (Dune.Instrumentation.Backend.v "coverage")) ];
   [%expect
     {|
     -3,7 +3,7

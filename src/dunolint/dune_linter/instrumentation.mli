@@ -24,7 +24,7 @@
 
 type t
 
-val create : backend:Dune.Instrumentation.Backend.Name.t -> t
+val create : backend:Dune.Instrumentation.Backend.t -> t
 
 (** When the field appears in the condition blang, we create a first value to
     initialize when the field is not originally present. *)
@@ -37,8 +37,8 @@ include
 
 (** {1 Getters} *)
 
-val backend : t -> Dune.Instrumentation.Backend.Name.t
+val backend : t -> Dune.Instrumentation.Backend.t
 
 (** {1 Setters} *)
 
-val set_backend : t -> backend:Dune.Instrumentation.Backend.Name.t -> unit
+val set_backend : t -> backend:Dune.Instrumentation.Backend.t -> unit

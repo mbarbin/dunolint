@@ -26,8 +26,7 @@ let%expect_test "Predicate.equal" =
   let has_field_a = `has_field `instrumentation in
   let has_field_b = `has_field `lint in
   let instrumentation_a =
-    `instrumentation
-      (Blang.base (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")))
+    `instrumentation (Blang.base (`backend (Dune.Instrumentation.Backend.v "bisect_ppx")))
   in
   let libraries_a =
     `libraries
@@ -53,9 +52,9 @@ let%expect_test "Predicate.equal" =
   require
     (equal
        (`instrumentation
-           (Blang.base (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"))))
+           (Blang.base (`backend (Dune.Instrumentation.Backend.v "bisect_ppx"))))
        (`instrumentation
-           (Blang.base (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")))));
+           (Blang.base (`backend (Dune.Instrumentation.Backend.v "bisect_ppx")))));
   [%expect {||}];
   require
     (equal
@@ -119,7 +118,7 @@ let%expect_test "predicate" =
   [%expect {| (has_field preprocess) |}];
   test (has_field `public_name);
   [%expect {| (has_field public_name) |}];
-  test (instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")));
+  test (instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx")));
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
   (* libraries predicate. *)
   test (libraries (mem [ Dune.Library.Name.v "base" ]));

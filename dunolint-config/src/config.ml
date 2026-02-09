@@ -142,7 +142,7 @@ let () =
        ])
 ;;
 
-let bisect_ppx = Dune.Instrumentation.Backend.Name.v "bisect_ppx"
+let bisect_ppx = Dune.Instrumentation.Backend.v "bisect_ppx"
 
 let () =
   rule

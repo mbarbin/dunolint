@@ -233,7 +233,7 @@ let%expect_test "eval" =
     (Dune_linter.Executable.eval
        t
        ~predicate:
-         (`instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"))));
+         (`instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx"))));
   [%expect {||}];
   Test_helpers.is_undefined
     (Dune_linter.Executable.eval t ~predicate:(`preprocess no_preprocessing));
@@ -267,7 +267,7 @@ let%expect_test "eval" =
     (Dune_linter.Executable.eval
        t
        ~predicate:
-         (`instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"))));
+         (`instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx"))));
   [%expect {||}];
   List.iter [ `instrumentation; `lint; `name; `preprocess; `public_name ] ~f:(fun field ->
     Test_helpers.is_true (Dune_linter.Executable.eval t ~predicate:(`has_field field)));
@@ -586,9 +586,7 @@ let%expect_test "field_conditions" =
   let init = {| (executable (name my-exe)) |} in
   (* [instrumentation] condition auto-creates field. *)
   let t = parse init in
-  enforce
-    t
-    [ instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")) ];
+  enforce t [ instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx")) ];
   [%expect {| (executable (name my-exe) (instrumentation (backend bisect_ppx))) |}];
   (* [lint] condition auto-creates field. *)
   let t = parse init in
@@ -745,7 +743,7 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
         (backend bisect_ppx))
        (lint
     |}];
-  test [ instrumentation (backend (Dune.Instrumentation.Backend.Name.v "coverage")) ];
+  test [ instrumentation (backend (Dune.Instrumentation.Backend.v "coverage")) ];
   [%expect
     {|
     -2,7 +2,7

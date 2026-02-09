@@ -25,6 +25,14 @@ module Backend = struct
     include T
     include Comparable.Make (T)
   end
+
+  module Flag = Dunolint.Dune.Instrumentation.Backend.Flag
+
+  include (
+    Dunolint.Dune.Instrumentation.Backend :
+      module type of Dunolint.Dune.Instrumentation.Backend
+      with module Name := Name
+      with module Flag := Flag)
 end
 
 module Predicate = Dunolint.Dune.Instrumentation.Predicate
