@@ -55,7 +55,12 @@ module Backend = struct
   let name t = t.name
   let flags t = t.flags
   let v ?(flags = []) name = { name = Name.v name; flags }
-  let equal a b = Name.equal a.name b.name && equal_list Flag.equal a.flags b.flags
+
+  let equal t1 ({ name; flags } as t2) =
+    if Stdlib.( == ) t1 t2
+    then true
+    else Name.equal t1.name name && equal_list Flag.equal t1.flags flags
+  ;;
 
   let t_of_sexp (sexp : Sexp.t) : t =
     match sexp with
