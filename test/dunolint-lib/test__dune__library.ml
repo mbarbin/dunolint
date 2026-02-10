@@ -26,8 +26,7 @@ let%expect_test "Predicate.equal" =
   let has_field_a = `has_field `instrumentation in
   let has_field_b = `has_field `lint in
   let instrumentation_a =
-    `instrumentation
-      (Blang.base (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")))
+    `instrumentation (Blang.base (`backend (Dune.Instrumentation.Backend.v "bisect_ppx")))
   in
   let lint_a = `lint (Blang.base (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_a"))))) in
   let modes_a = `modes (Blang.base (`has_mode `melange)) in
@@ -64,9 +63,9 @@ let%expect_test "Predicate.equal" =
   require
     (equal
        (`instrumentation
-           (Blang.base (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"))))
+           (Blang.base (`backend (Dune.Instrumentation.Backend.v "bisect_ppx"))))
        (`instrumentation
-           (Blang.base (`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")))));
+           (Blang.base (`backend (Dune.Instrumentation.Backend.v "bisect_ppx")))));
   [%expect {||}];
   require
     (equal
@@ -171,7 +170,7 @@ let%expect_test "predicate" =
   [%expect {| (has_field preprocess) |}];
   test (has_field `public_name);
   [%expect {| (has_field public_name) |}];
-  test (instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")));
+  test (instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx")));
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
   test (lint (pps (pp (Dune.Pp.Name.v "ppx_compare"))));
   [%expect {| (lint (pps (pp ppx_compare))) |}];

@@ -35,7 +35,8 @@ const sidebars: SidebarsConfig = {
           type: 'category', label: 'Migration Guides',
           link: { type: 'doc', id: 'guides/migration-guides/README' },
           items: [
-            { type: 'doc', id: 'guides/migration-guides/is-prefix-is-suffix-absent-fields', label: 'is_prefix/is_suffix on absent fields' },
+            { type: 'doc', id: 'guides/migration-guides/backend-type-change-in-ocaml-edsl', label: 'Backend type change in OCaml EDSL' },
+            { type: 'doc', id: 'guides/migration-guides/is-prefix-is-suffix-on-absent-fields', label: 'is_prefix/is_suffix on absent fields' },
           ]
         },
       ],

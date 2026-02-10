@@ -26,10 +26,28 @@ module Backend : sig
     include Container_key.S with type t := t
     include Validated_string.S with type t := t
   end
+
+  module Flag : sig
+    type t = string
+
+    val equal : t -> t -> bool
+
+    include Sexpable.S with type t := t
+  end
+
+  type t
+
+  val create : name:Name.t -> flags:Flag.t list -> t
+  val v : ?flags:Flag.t list -> string -> t
+  val name : t -> Name.t
+  val flags : t -> Flag.t list
+  val equal : t -> t -> bool
+
+  include Sexpable.S with type t := t
 end
 
 module Predicate : sig
-  type t = [ `backend of Backend.Name.t ]
+  type t = [ `backend of Backend.t ]
 
   val equal : t -> t -> bool
 

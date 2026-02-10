@@ -25,6 +25,20 @@ back too.
   
   (rule (enforce (dune (instrumentation (backend bisect_ppx)))))
 
+A simple 1.0 config with a backend that has flags.
+
+  $ cat > dunolint <<EOF
+  > (lang dunolint 1.0)
+  > 
+  > (rule (enforce (dune (instrumentation (backend ppx_windtrap --coverage)))))
+  > EOF
+
+  $ dunolint tools config validate dunolint --print
+  (lang dunolint 1.0)
+  
+  (rule (enforce (dune (instrumentation (backend ppx_windtrap --coverage)))))
+
+
 A simple 1.0 config with no stanzas but the version one.
 
   $ cat > dunolint <<EOF

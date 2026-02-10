@@ -50,6 +50,9 @@ let%expect_test "read/write" =
   (* Dunolint simply ignores other fields if any. *)
   test {| (instrumentation (other field) (backend bisect_ppx)) |};
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
+  (* Backend with flags. *)
+  test {| (instrumentation (backend ppx_windtrap --coverage)) |};
+  [%expect {| (instrumentation (backend ppx_windtrap --coverage)) |}];
   ()
 ;;
 
@@ -57,6 +60,9 @@ let%expect_test "sexp_of" =
   let _, t = parse {| (instrumentation (backend bisect_ppx)) |} in
   print_s [%sexp (t : Dune_linter.Instrumentation.t)];
   [%expect {| ((backend bisect_ppx)) |}];
+  let _, t = parse {| (instrumentation (backend ppx_windtrap --coverage)) |} in
+  print_s [%sexp (t : Dune_linter.Instrumentation.t)];
+  [%expect {| ((backend (ppx_windtrap --coverage))) |}];
   ()
 ;;
 
@@ -73,14 +79,173 @@ let%expect_test "rewrite" =
   (* Exercising some getters and setters. *)
   rewrite {| (instrumentation (backend other_backend)) |} ~f:(fun t ->
     print_s
-      [%sexp
-        (Dune_linter.Instrumentation.backend t : Dune.Instrumentation.Backend.Name.t)];
+      [%sexp (Dune_linter.Instrumentation.backend t : Dune.Instrumentation.Backend.t)];
     [%expect {| other_backend |}];
     Dune_linter.Instrumentation.set_backend
       t
-      ~backend:(Dune.Instrumentation.Backend.Name.v "bisect_ppx");
+      ~backend:(Dune.Instrumentation.Backend.v "bisect_ppx");
     ());
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
+  (* Rewrite: backend with flags. *)
+  rewrite {| (instrumentation (backend ppx_windtrap --coverage)) |};
+  [%expect {| (instrumentation (backend ppx_windtrap --coverage)) |}];
+  (* Rewrite: bisect_ppx -> ppx_windtrap --coverage. *)
+  rewrite {| (instrumentation (backend bisect_ppx)) |} ~f:(fun t ->
+    Dune_linter.Instrumentation.set_backend
+      t
+      ~backend:(Dune.Instrumentation.Backend.v "ppx_windtrap" ~flags:[ "--coverage" ]));
+  [%expect {| (instrumentation (backend ppx_windtrap --coverage)) |}];
+  (* Rewrite: ppx_windtrap --coverage -> bisect_ppx. *)
+  rewrite {| (instrumentation (backend ppx_windtrap --coverage)) |} ~f:(fun t ->
+    Dune_linter.Instrumentation.set_backend
+      t
+      ~backend:(Dune.Instrumentation.Backend.v "bisect_ppx"));
+  [%expect {| (instrumentation (backend bisect_ppx)) |}];
+  (* Comment after name: identity rewrite preserves comment. *)
+  rewrite
+    {| (instrumentation (backend bisect_ppx ; coverage tool
+  )) |};
+  [%expect
+    {|
+    (instrumentation (backend bisect_ppx ; coverage tool
+     ))
+    |}];
+  (* Comment after name: rewrite name preserves comment. *)
+  rewrite
+    {| (instrumentation (backend bisect_ppx ; coverage tool
+  )) |}
+    ~f:(fun t ->
+      Dune_linter.Instrumentation.set_backend
+        t
+        ~backend:(Dune.Instrumentation.Backend.v "other_backend"));
+  [%expect
+    {|
+    (instrumentation (backend other_backend ; coverage tool
+     ))
+    |}];
+  (* Comment after name: add flags preserves comment. *)
+  rewrite
+    {| (instrumentation (backend bisect_ppx ; coverage tool
+  )) |}
+    ~f:(fun t ->
+      Dune_linter.Instrumentation.set_backend
+        t
+        ~backend:(Dune.Instrumentation.Backend.v "ppx_windtrap" ~flags:[ "--coverage" ]));
+  [%expect
+    {|
+    (instrumentation (backend ppx_windtrap --coverage ; coverage tool
+     ))
+    |}];
+  (* Comment after flag: identity rewrite preserves comment. *)
+  rewrite
+    {| (instrumentation (backend ppx_windtrap --coverage ; flag comment
+  )) |};
+  [%expect
+    {|
+    (instrumentation (backend ppx_windtrap --coverage ; flag comment
+     ))
+    |}];
+  (* Comment after flag: rewrite name preserves comment. *)
+  rewrite
+    {| (instrumentation (backend ppx_windtrap --coverage ; flag comment
+  )) |}
+    ~f:(fun t ->
+      Dune_linter.Instrumentation.set_backend
+        t
+        ~backend:(Dune.Instrumentation.Backend.v "other_windtrap" ~flags:[ "--coverage" ]));
+  [%expect
+    {|
+    (instrumentation (backend other_windtrap --coverage ; flag comment
+     ))
+    |}];
+  (* Comment after flag: remove flag preserves comment. *)
+  rewrite
+    {| (instrumentation (backend ppx_windtrap --coverage ; flag comment
+  )) |}
+    ~f:(fun t ->
+      Dune_linter.Instrumentation.set_backend
+        t
+        ~backend:(Dune.Instrumentation.Backend.v "bisect_ppx"));
+  [%expect
+    {|
+    (instrumentation (backend bisect_ppx ; flag comment
+     ))
+    |}];
+  (* Comment between name and flag. *)
+  rewrite
+    {| (instrumentation (backend bisect_ppx ; a comment
+   --flag)) |};
+  [%expect
+    {|
+    (instrumentation (backend bisect_ppx ; a comment
+      --flag))
+    |}];
+  (* Multi-line with comments between components: identity rewrite. *)
+  rewrite
+    {| (instrumentation (backend
+    ;; This is the backend in use
+    ppx_windtrap
+    ;; This one requires a flag
+    --coverage)) |};
+  [%expect
+    {|
+    (instrumentation (backend
+       ;; This is the backend in use
+       ppx_windtrap
+       ;; This one requires a flag
+       --coverage))
+    |}];
+  (* Multi-line with comments: rewrite name only. *)
+  rewrite
+    {| (instrumentation (backend
+    ;; This is the backend in use
+    ppx_windtrap
+    ;; This one requires a flag
+    --coverage)) |}
+    ~f:(fun t ->
+      Dune_linter.Instrumentation.set_backend
+        t
+        ~backend:(Dune.Instrumentation.Backend.v "other_windtrap" ~flags:[ "--coverage" ]));
+  [%expect
+    {|
+    (instrumentation (backend
+       ;; This is the backend in use
+       other_windtrap
+       ;; This one requires a flag
+       --coverage))
+    |}];
+  (* Multi-line with comments: remove flag, comments remain. *)
+  rewrite
+    {| (instrumentation (backend
+    ;; This is the backend in use
+    ppx_windtrap
+    ;; This one requires a flag
+    --coverage)) |}
+    ~f:(fun t ->
+      Dune_linter.Instrumentation.set_backend
+        t
+        ~backend:(Dune.Instrumentation.Backend.v "bisect_ppx"));
+  [%expect
+    {|
+    (instrumentation (backend
+       ;; This is the backend in use
+       bisect_ppx))
+    |}];
+  (* Multi-line with comments: add flag. *)
+  rewrite
+    {| (instrumentation (backend
+    ;; This is the backend in use
+    bisect_ppx)) |}
+    ~f:(fun t ->
+      Dune_linter.Instrumentation.set_backend
+        t
+        ~backend:(Dune.Instrumentation.Backend.v "ppx_windtrap" ~flags:[ "--coverage" ]));
+  [%expect
+    {|
+    (instrumentation (backend
+       ;; This is the backend in use
+       ppx_windtrap --coverage))
+    |}];
   ()
 ;;
 
@@ -94,7 +259,7 @@ let%expect_test "create_then_rewrite" =
   in
   let t =
     Dune_linter.Instrumentation.create
-      ~backend:(Dune.Instrumentation.Backend.Name.v "bisect_ppx")
+      ~backend:(Dune.Instrumentation.Backend.v "bisect_ppx")
   in
   test t {| (instrumentation (backend other_backend)) |};
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
@@ -105,13 +270,24 @@ let%expect_test "create_then_rewrite" =
   (* As long as the targeted field is present, it is rewritten. *)
   test t {| (instrumentation (other field) (backend other_backend)) |};
   [%expect {| (instrumentation (other field) (backend bisect_ppx)) |}];
+  let windtrap = Dune.Instrumentation.Backend.v "ppx_windtrap" ~flags:[ "--coverage" ] in
+  (* Rewriting of stale flags. *)
+  let t_windtrap = Dune_linter.Instrumentation.create ~backend:windtrap in
+  test t_windtrap {| (instrumentation (backend ppx_windtrap --stale-flag)) |};
+  [%expect {| (instrumentation (backend ppx_windtrap --coverage)) |}];
+  (* Rewrite a flag that is a sexp list rather than an atom. This is not valid
+     dune syntax but exercises the [is_atom_and_equal] guard in [rewrite_flags],
+     ensuring the list is correctly detected as different and rewritten. *)
+  let t_windtrap = Dune_linter.Instrumentation.create ~backend:windtrap in
+  test t_windtrap {| (instrumentation (backend ppx_windtrap (nested flag))) |};
+  [%expect {| (instrumentation (backend ppx_windtrap --coverage)) |}];
   ()
 ;;
 
 module Predicate = struct
   (* Aliased here so we remember to add new tests when this type is modified. *)
   type t = Dune.Instrumentation.Predicate.t as 'a
-    constraint 'a = [ `backend of Dune.Instrumentation.Backend.Name.t ]
+    constraint 'a = [ `backend of Dune.Instrumentation.Backend.t ]
 end
 
 open Dunolint.Config.Std
@@ -122,12 +298,26 @@ let%expect_test "eval" =
   Test_helpers.is_true
     (Dune_linter.Instrumentation.eval
        t
-       ~predicate:(`backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")));
+       ~predicate:(`backend (Dune.Instrumentation.Backend.v "bisect_ppx")));
   [%expect {||}];
   Test_helpers.is_false
     (Dune_linter.Instrumentation.eval
        t
-       ~predicate:(`backend (Dune.Instrumentation.Backend.Name.v "other_backend")));
+       ~predicate:(`backend (Dune.Instrumentation.Backend.v "other_backend")));
+  [%expect {||}];
+  (* Backend with flags: exact match required. *)
+  let _, t = parse {| (instrumentation (backend ppx_windtrap --coverage)) |} in
+  Test_helpers.is_true
+    (Dune_linter.Instrumentation.eval
+       t
+       ~predicate:
+         (`backend (Dune.Instrumentation.Backend.v "ppx_windtrap" ~flags:[ "--coverage" ])));
+  [%expect {||}];
+  (* ppx_windtrap without --coverage does NOT match. *)
+  Test_helpers.is_false
+    (Dune_linter.Instrumentation.eval
+       t
+       ~predicate:(`backend (Dune.Instrumentation.Backend.v "ppx_windtrap")));
   [%expect {||}];
   ()
 ;;
@@ -146,20 +336,20 @@ let%expect_test "enforce" =
   enforce t [];
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
   (* Enforcing the equality with the current value has no effect. *)
-  enforce t [ backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx") ];
+  enforce t [ backend (Dune.Instrumentation.Backend.v "bisect_ppx") ];
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
   (* Enforcing the equality with a new value changes it. *)
-  enforce t [ backend (Dune.Instrumentation.Backend.Name.v "other_backend") ];
+  enforce t [ backend (Dune.Instrumentation.Backend.v "other_backend") ];
   [%expect {| (instrumentation (backend other_backend)) |}];
   let t = parse {| (instrumentation (backend other_backend)) |} in
   (* Enforcing the negation of the equality with another value has no effect. *)
-  enforce t [ not_ (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")) ];
+  enforce t [ not_ (backend (Dune.Instrumentation.Backend.v "bisect_ppx")) ];
   [%expect {| (instrumentation (backend other_backend)) |}];
   (* Enforcing the negation of a current equality triggers an error.
      Dunolint is not going to automatically invent a new setting, this
      requires the user's intervention. *)
   require_does_raise (fun () ->
-    enforce t [ not_ (backend (Dune.Instrumentation.Backend.Name.v "other_backend")) ]);
+    enforce t [ not_ (backend (Dune.Instrumentation.Backend.v "other_backend")) ]);
   [%expect
     {|
     (Dunolinter.Handler.Enforce_failure (loc _)
@@ -174,8 +364,8 @@ let%expect_test "enforce" =
   enforce
     t
     [ and_
-        [ not_ (backend (Dune.Instrumentation.Backend.Name.v "other_backend"))
-        ; backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")
+        [ not_ (backend (Dune.Instrumentation.Backend.v "other_backend"))
+        ; backend (Dune.Instrumentation.Backend.v "bisect_ppx")
         ]
     ];
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
@@ -184,8 +374,8 @@ let%expect_test "enforce" =
   enforce
     t
     [ or_
-        [ backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")
-        ; backend (Dune.Instrumentation.Backend.Name.v "other_backend")
+        [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
+        ; backend (Dune.Instrumentation.Backend.v "other_backend")
         ]
     ];
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
@@ -193,8 +383,8 @@ let%expect_test "enforce" =
     enforce
       t
       [ or_
-          [ backend (Dune.Instrumentation.Backend.Name.v "qualified")
-          ; backend (Dune.Instrumentation.Backend.Name.v "no")
+          [ backend (Dune.Instrumentation.Backend.v "qualified")
+          ; backend (Dune.Instrumentation.Backend.v "no")
           ]
       ]);
   [%expect
@@ -205,9 +395,9 @@ let%expect_test "enforce" =
   (* When defined, [if] enforces the clause that applies. *)
   let invariant =
     if_
-      (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"))
-      (backend (Dune.Instrumentation.Backend.Name.v "other_backend"))
-      (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"))
+      (backend (Dune.Instrumentation.Backend.v "bisect_ppx"))
+      (backend (Dune.Instrumentation.Backend.v "other_backend"))
+      (backend (Dune.Instrumentation.Backend.v "bisect_ppx"))
   in
   let t = parse {| (instrumentation (backend bisect_ppx)) |} in
   enforce t [ invariant ];
@@ -218,6 +408,36 @@ let%expect_test "enforce" =
   ()
 ;;
 
+let%expect_test "enforce windtrap" =
+  let enforce ((sexps_rewriter, field), t) conditions =
+    Sexps_rewriter.reset sexps_rewriter;
+    Dunolinter.Handler.raise ~f:(fun () ->
+      List.iter conditions ~f:(fun condition ->
+        Dune_linter.Instrumentation.enforce t ~condition);
+      Dune_linter.Instrumentation.rewrite t ~sexps_rewriter ~field;
+      print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
+  in
+  let windtrap = Dune.Instrumentation.Backend.v "ppx_windtrap" ~flags:[ "--coverage" ] in
+  let bisect = Dune.Instrumentation.Backend.v "bisect_ppx" in
+  (* Enforce windtrap on a file that has bisect_ppx. *)
+  let t = parse {| (instrumentation (backend bisect_ppx)) |} in
+  enforce t [ backend windtrap ];
+  [%expect {| (instrumentation (backend ppx_windtrap --coverage)) |}];
+  (* Enforce bisect_ppx on a file that has windtrap --coverage. *)
+  let t = parse {| (instrumentation (backend ppx_windtrap --coverage)) |} in
+  enforce t [ backend bisect ];
+  [%expect {| (instrumentation (backend bisect_ppx)) |}];
+  (* Enforce windtrap on a file that already has windtrap (no change). *)
+  let t = parse {| (instrumentation (backend ppx_windtrap --coverage)) |} in
+  enforce t [ backend windtrap ];
+  [%expect {| (instrumentation (backend ppx_windtrap --coverage)) |}];
+  (* Enforce windtrap when the field is not present (initialize from condition). *)
+  let t_init = Dune_linter.Instrumentation.initialize ~condition:(backend windtrap) in
+  print_s (Dune_linter.Instrumentation.write t_init);
+  [%expect {| (instrumentation (backend ppx_windtrap --coverage)) |}];
+  ()
+;;
+
 let%expect_test "initialize" =
   let test condition =
     let t = Dune_linter.Instrumentation.initialize ~condition in
@@ -225,7 +445,9 @@ let%expect_test "initialize" =
   in
   test true_;
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
-  test (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx"));
+  test (backend (Dune.Instrumentation.Backend.v "bisect_ppx"));
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
+  test (backend (Dune.Instrumentation.Backend.v "ppx_windtrap" ~flags:[ "--coverage" ]));
+  [%expect {| (instrumentation (backend ppx_windtrap --coverage)) |}];
   ()
 ;;

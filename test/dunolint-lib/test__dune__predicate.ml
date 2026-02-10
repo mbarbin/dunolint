@@ -122,7 +122,7 @@ let%expect_test "predicate" =
   [%expect {| (has_field public_name) |}];
   test (include_subdirs (equals `unqualified));
   [%expect {| (include_subdirs (equals unqualified)) |}];
-  test (instrumentation (backend (Dune.Instrumentation.Backend.Name.v "bisect_ppx")));
+  test (instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx")));
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
   (* libraries predicate. *)
   test (libraries (mem [ Dune.Library.Name.v "base" ]));
