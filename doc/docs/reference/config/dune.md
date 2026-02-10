@@ -522,6 +522,52 @@ Condition: `(dune (library (libraries PREDICATE)))`
 | (mem async) | False. Suggestion: add *async*, keep existing values |
 | (not (mem core)) | False. Suggestion: remove *core* |
 
+### modes
+
+`(dune (library (modes _)))` is a selector for the *modes* field of a *library* stanzas:
+
+Stanza:
+```dune
+(library
+ (modes <FRAGMENT>))
+```
+
+The compilation modes supported are
+```pre
+MODE := byte | native | best | melange
+```
+
+Compilation modes are ordered by *dunolint* as: `byte < native < best < melange`.
+
+The predicates of the `modes` selector are:
+
+1. `(mem MODES)`
+
+Returns *true* iif the modes specified are all present in the list of values found in the fragment.
+
+When enforced, *dunolint* suggests adding the mode(s) not already present in the list of values found in the fragment.
+
+**Negation**: When the negation of the predicate *mem* is enforced, *dunolint* suggests removing the supplied mode(s) from the fragment when present.
+
+**Examples:**
+
+Stanza:
+```dune
+(library
+ (modes byte native))
+```
+
+Condition: `(dune (library (modes PREDICATE)))`
+
+| Predicate | Result |
+| --------- | ------ |
+| (mem byte native) | True |
+| (mem byte) | True |
+| (mem best) | False. Suggestion: add *best*, keep existing values |
+| (not (mem native)) | False. Suggestion: remove *native* |
+
+Note: the constructors `has_mode` and `has_modes` are deprecated and to be replaced by the single variadic `mem` constructor.
+
 ### Fields shared with other stanzas
 
 This stanza shares some sub selectors with other stanzas. See: *instrumentation*, *libraries*, *lint*, *preprocess*.
@@ -653,52 +699,6 @@ When enforced, *dunolint* suggests to replace any existing setting with that fie
 In this case, the construction follows with a `pps` selector.
 
 When enforced, *dunolint* suggests to either replace or initiate a `pps` field based on the enforcement of that selector. Doesn't support suggestion when negated.
-
-## modes
-
-`(dune (library (modes _)))` is a selector for the *modes* field of a *library* stanzas:
-
-Stanza:
-```dune
-(library
- (modes <FRAGMENT>))
-```
-
-The compilation modes supported are
-```pre
-MODE := byte | native | best | melange
-```
-
-Compilation modes are ordered by *dunolint* as: `byte < native < best < melange`.
-
-The predicates of the `modes` selector are:
-
-1. `(mem MODES)`
-
-Returns *true* iif the modes specified are all present in the list of values found in the fragment.
-
-When enforced, *dunolint* suggests adding the mode(s) not already present in the list of values found in the fragment.
-
-**Negation**: When the negation of the predicate *mem* is enforced, *dunolint* suggests removing the supplied mode(s) from the fragment when present.
-
-**Examples:**
-
-Stanza:
-```dune
-(library
- (modes byte native))
-```
-
-Condition: `(dune (library (modes PREDICATE)))`
-
-| Predicate | Result |
-| --------- | ------ |
-| (mem byte native) | True |
-| (mem byte) | True |
-| (mem best) | False. Suggestion: add *best*, keep existing values |
-| (not (mem native)) | False. Suggestion: remove *native* |
-
-Note: the constructors `has_mode` and `has_modes` are deprecated and to be replaced by the single variadic `mem` constructor.
 
 ## stanza
 
