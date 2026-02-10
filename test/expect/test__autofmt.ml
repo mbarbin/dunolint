@@ -39,7 +39,7 @@ let%expect_test "maybe_autoformat_file" =
 
 (name dunolint)
 |})
-    ~new_contents:"(lang    dune 3.17) (name dunolint)";
+    ~new_contents:"(lang dune 3.17)\n(name      dunolint)";
   [%expect
     {|
     (lang dune 3.17)
@@ -49,13 +49,21 @@ let%expect_test "maybe_autoformat_file" =
   (* If the previous contents is not formatted, then we do not autoformat the
      new one. This is a heuristic. *)
   test
-    ~previous_contents:"(lang  dune 3.17) (name     dunolint)"
-    ~new_contents:"(lang    dune 3.17) (name dunolint)";
-  [%expect {| (lang    dune 3.17) (name dunolint) |}];
+    ~previous_contents:"(lang dune 3.17) (name     dunolint)"
+    ~new_contents:"(lang dune 3.17)\n(name    dunolint)";
+  [%expect
+    {|
+    (lang dune 3.17)
+    (name    dunolint)
+    |}];
   (* This includes cases where the previous contents fails to auto format. *)
   test
-    ~previous_contents:"(lang  dune 3.17 invalid-file"
-    ~new_contents:"(lang    dune 3.17) (name dunolint)";
-  [%expect {| (lang    dune 3.17) (name dunolint) |}];
+    ~previous_contents:"(lang dune 3.17 invalid-file"
+    ~new_contents:"(lang dune 3.17)\n(name    dunolint)";
+  [%expect
+    {|
+    (lang dune 3.17)
+    (name    dunolint)
+    |}];
   ()
 ;;
