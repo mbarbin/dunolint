@@ -343,7 +343,7 @@ module Visitor_decision = struct
     | Skip_subtree
 end
 
-let build_context (t : t) ~path =
+let build_context_internal (t : t) ~path ~autoload_config =
   (* Build context by first adding root_configs (base defaults), then
      auto-discovered configs from ancestors. In rule processing order:
      root_configs, then ancestor configs, then subtree configs (each taking
@@ -352,14 +352,17 @@ let build_context (t : t) ~path =
     List.fold t.root_configs ~init:Context.empty ~f:(fun context config ->
       Context.add_config context ~config ~location:Relative_path.empty)
   in
-  List.fold
-    (Path_in_workspace.ancestors_autoloading_dirs ~path)
-    ~init:initial_context
-    ~f:(fun context dir ->
-      match Config_cache.load_config_in_dir t.config_cache ~dir with
-      | Absent -> context
-      | Present config -> Context.add_config context ~config ~location:dir
-      | Error e -> raise (Err.E e))
+  if not autoload_config
+  then initial_context
+  else
+    List.fold
+      (Path_in_workspace.ancestors_autoloading_dirs ~path)
+      ~init:initial_context
+      ~f:(fun context dir ->
+        match Config_cache.load_config_in_dir t.config_cache ~dir with
+        | Absent -> context
+        | Present config -> Context.add_config context ~config ~location:dir
+        | Error e -> raise (Err.E e))
 ;;
 
 module Directory_entries = struct
@@ -410,14 +413,7 @@ let visit ?(autoload_config = true) ?below (t : t) ~f =
     | None -> Relative_path.empty
     | Some below -> Relative_path.to_dir_path below
   in
-  let initial_context =
-    if autoload_config
-    then build_context t ~path:root_path
-    else
-      (* When autoload is disabled, only use root_configs. *)
-      List.fold t.root_configs ~init:Context.empty ~f:(fun context config ->
-        Context.add_config context ~config ~location:Relative_path.empty)
-  in
+  let initial_context = build_context_internal t ~path:root_path ~autoload_config in
   let rec visit = function
     | [] -> ()
     | (_, []) :: tl -> visit tl
@@ -489,6 +485,8 @@ let run ?root_configs ~running_mode f =
   in
   result
 ;;
+
+let build_context t ~path = build_context_internal t ~path ~autoload_config:true
 
 module Private = struct
   let mkdirs = mkdirs
