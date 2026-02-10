@@ -25,7 +25,7 @@ module V1 = Config_v1
 type t = [ `v1 of V1.t ]
 
 let equal (a : t) (b : t) =
-  if Stdlib.( == ) a b
+  if phys_equal a b
   then true
   else (
     match a, b with

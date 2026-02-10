@@ -19,6 +19,8 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+let phys_equal a b = a == b
+
 module Sexp = Sexplib0.Sexp
 
 module With_equal_and_sexp = struct

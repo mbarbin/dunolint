@@ -35,7 +35,7 @@ module Predicate = struct
     ]
 
   let equal (a : t) (b : t) =
-    if Stdlib.( == ) a b
+    if phys_equal a b
     then true
     else (
       match a, b with

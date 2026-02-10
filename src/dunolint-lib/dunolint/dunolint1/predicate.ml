@@ -19,12 +19,14 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open! Import
+
 let error_source = "predicate.t"
 
 type t = [ `dunolint_lang_version of Dunolint_lang_version.Predicate.t Blang.t ]
 
 let equal (a : t) (b : t) =
-  if Stdlib.( == ) a b
+  if phys_equal a b
   then true
   else (
     match a, b with

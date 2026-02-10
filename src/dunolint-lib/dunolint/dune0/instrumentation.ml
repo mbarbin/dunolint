@@ -56,7 +56,7 @@ module Backend = struct
   let v ?(flags = []) name = { name = Name.v name; flags }
 
   let equal t1 ({ name; flags } as t2) =
-    if Stdlib.( == ) t1 t2
+    if phys_equal t1 t2
     then true
     else Name.equal t1.name name && equal_list Flag.equal t1.flags flags
   ;;
@@ -82,7 +82,7 @@ module Predicate = struct
   type t = [ `backend of Backend.t ]
 
   let equal (a : t) (b : t) =
-    if Stdlib.( == ) a b
+    if phys_equal a b
     then true
     else (
       match a, b with

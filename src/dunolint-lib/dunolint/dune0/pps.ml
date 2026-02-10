@@ -37,7 +37,7 @@ module Predicate = struct
       | `any, `any -> true
       | `none, `none -> true
       | `some, `some -> true
-      | `equals va, `equals vb -> Stdlib.( == ) a b || equal_string va vb
+      | `equals va, `equals vb -> phys_equal a b || equal_string va vb
       | (`any | `none | `some | `equals _), _ -> false
     ;;
 
@@ -76,7 +76,7 @@ module Predicate = struct
         match a, b with
         | `any, `any -> true
         | `driver, `driver -> true
-        | `pp va, `pp vb -> Stdlib.( == ) a b || Pp.Name.equal va vb
+        | `pp va, `pp vb -> phys_equal a b || Pp.Name.equal va vb
         | (`any | `driver | `pp _), _ -> false
       ;;
 
@@ -108,7 +108,7 @@ module Predicate = struct
       }
 
     let equal (a : t) (b : t) =
-      if Stdlib.( == ) a b
+      if phys_equal a b
       then true
       else (
         let { name; param; applies_to } = b in
@@ -169,7 +169,7 @@ module Predicate = struct
       }
 
     let equal (a : t) (b : t) =
-      if Stdlib.( == ) a b
+      if phys_equal a b
       then true
       else (
         let { pp; flag; param } = b in
@@ -226,7 +226,7 @@ module Predicate = struct
     ]
 
   let equal (a : t) (b : t) =
-    if Stdlib.( == ) a b
+    if phys_equal a b
     then true
     else (
       match a, b with

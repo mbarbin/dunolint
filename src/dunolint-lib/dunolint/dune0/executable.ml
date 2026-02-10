@@ -19,6 +19,7 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open! Import
 module Name = Executable__name
 module Public_name = Executable__public_name
 
@@ -71,7 +72,7 @@ module Predicate = struct
     ]
 
   let equal (a : t) (b : t) =
-    if Stdlib.( == ) a b
+    if phys_equal a b
     then true
     else (
       match a, b with

@@ -21,6 +21,8 @@
 
 (** Extending [Stdlib] for use in the project. *)
 
+val phys_equal : 'a -> 'a -> bool
+
 module Sexp = Sexplib0.Sexp
 
 module Code_error : sig

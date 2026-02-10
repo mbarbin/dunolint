@@ -19,13 +19,15 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open! Import
+
 module Predicate = struct
   let error_source = "lint.t"
 
   type t = [ `pps of Pps.Predicate.t Blang.t ]
 
   let equal (a : t) (b : t) =
-    if Stdlib.( == ) a b
+    if phys_equal a b
     then true
     else (
       match a, b with

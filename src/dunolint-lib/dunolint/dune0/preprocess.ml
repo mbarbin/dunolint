@@ -19,6 +19,8 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open! Import
+
 module Predicate = struct
   let error_source = "preprocess.t"
 
@@ -30,7 +32,7 @@ module Predicate = struct
   let equal (a : t) (b : t) =
     match a, b with
     | `no_preprocessing, `no_preprocessing -> true
-    | `pps va, `pps vb -> Stdlib.( == ) a b || Blang.equal Pps.Predicate.equal va vb
+    | `pps va, `pps vb -> phys_equal a b || Blang.equal Pps.Predicate.equal va vb
     | (`no_preprocessing | `pps _), _ -> false
   ;;
 

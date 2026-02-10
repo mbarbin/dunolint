@@ -19,6 +19,7 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open! Import
 module Value = Implicit_transitive_deps__value
 
 module Predicate = struct
@@ -27,7 +28,7 @@ module Predicate = struct
   type t = [ `equals of Value.t ]
 
   let equal (a : t) (b : t) =
-    if Stdlib.( == ) a b
+    if phys_equal a b
     then true
     else (
       match a, b with

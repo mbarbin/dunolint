@@ -19,6 +19,8 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
+open! Import
+
 module Mode = struct
   let error_source = "include_subdirs.mode.t"
 
@@ -55,7 +57,7 @@ module Predicate = struct
   type t = [ `equals of Mode.t ]
 
   let equal (a : t) (b : t) =
-    if Stdlib.( == ) a b
+    if phys_equal a b
     then true
     else (
       match a, b with

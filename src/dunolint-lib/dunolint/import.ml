@@ -21,6 +21,8 @@
 
 open! Stdlib_compat
 
+let phys_equal a b = a == b
+
 module Char = struct
   include Char
 

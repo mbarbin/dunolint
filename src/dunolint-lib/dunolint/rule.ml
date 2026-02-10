@@ -37,13 +37,13 @@ let rec equal
   =
   fun equal_predicate equal_invariant (a : _ t) (b : _ t) ->
   match a, b with
-  | `enforce va, `enforce vb -> Stdlib.( == ) a b || equal_invariant va vb
+  | `enforce va, `enforce vb -> phys_equal a b || equal_invariant va vb
   | `return, `return -> true
   | `cond va, `cond vb ->
-    Stdlib.( == ) a b
+    phys_equal a b
     || equal_list
-         (fun (conda, ta) (condb, tb) ->
-            Blang.equal equal_predicate conda condb
+         (fun (cond_a, ta) (cond_b, tb) ->
+            Blang.equal equal_predicate cond_a cond_b
             && equal equal_predicate equal_invariant ta tb)
          va
          vb
