@@ -117,12 +117,9 @@ module Predicate = struct
   let sexp_of_t (t : t) : Sexp.t =
     match t with
     | `backend { name; flags } ->
-      (match flags with
-       | [] -> List [ Atom "backend"; Backend.Name.sexp_of_t name ]
-       | _ ->
-         List
-           (Atom "backend"
-            :: Backend.Name.sexp_of_t name
-            :: List.map flags ~f:Backend.Flag.sexp_of_t))
+      List
+        (Atom "backend"
+         :: Backend.Name.sexp_of_t name
+         :: List.map flags ~f:Backend.Flag.sexp_of_t)
   ;;
 end
