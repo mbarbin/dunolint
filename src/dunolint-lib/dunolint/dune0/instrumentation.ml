@@ -51,7 +51,6 @@ module Backend = struct
     }
 
   let create ~name ~flags = { name; flags }
-  let of_name name = { name; flags = [] }
   let name t = t.name
   let flags t = t.flags
   let v ?(flags = []) name = { name = Name.v name; flags }

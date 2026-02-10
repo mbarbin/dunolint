@@ -38,7 +38,6 @@ module Backend : sig
   type t
 
   val create : name:Name.t -> flags:Flag.t list -> t
-  val of_name : Name.t -> t
   val v : ?flags:Flag.t list -> string -> t
   val name : t -> Name.t
   val flags : t -> Flag.t list

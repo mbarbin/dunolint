@@ -135,9 +135,7 @@ let enforce =
         Ok)
 ;;
 
-let default_backend =
-  Dune.Instrumentation.Backend.of_name (Dune.Instrumentation.Backend.Name.v "bisect_ppx")
-;;
+let default_backend = Dune.Instrumentation.Backend.v "bisect_ppx"
 
 let initialize ~condition =
   let backend =
