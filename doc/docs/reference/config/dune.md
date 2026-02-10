@@ -313,7 +313,6 @@ Condition: `(dune (library (instrumentation PREDICATE)))`
 | Predicate | Result  |
 | --------- | ------- |
 | (backend ppx_windtrap --coverage) | True |
-| (backend ppx_windtrap) | False (flags must match exactly) |
 | (backend bisect_ppx) | False. Suggestion: replace with `(backend bisect_ppx)` |
 
 ## library
