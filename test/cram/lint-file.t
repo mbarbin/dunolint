@@ -21,17 +21,19 @@ inferred. The filename must end with a basename that indicates a supported mode.
 
 By default, the contents is auto-formatted.
 
-  $ printf '(lang\n dune\n 3.17)\n' | dunolint tools lint-file --filename=dune-project
+  $ printf '(lang dune 3.17)\n(name\nmy_project)\n' | dunolint tools lint-file --filename=dune-project
   (lang dune 3.17)
+  
+  (name my_project)
 
 The formatting may however be disabled.
 
-  $ printf '(lang\n dune\n 3.17)\n' \
+  $ printf '(lang dune 3.17)\n(name\nmy_project)\n' \
   > | dunolint tools lint-file --filename=dune-project \
   >   --format-file=false
-  (lang
-   dune
-   3.17)
+  (lang dune 3.17)
+  (name
+  my_project)
 
 We note here a point of potential confusion:
 
