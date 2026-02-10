@@ -13,6 +13,8 @@ There is nothing to lint on an empty project.
 Let's add some files.
 
   $ cat > dune-project <<EOF
+  > (lang dune 3.17)
+  > 
   > (name main)
   > EOF
 
@@ -51,7 +53,9 @@ simulate lint errors.
   >   --enforce='(dune_project (name (equals foo)))' \
   >   --check
   check: Would edit file "dune-project":
-  -1,1 +1,1
+  -1,3 +1,3
+    (lang dune 3.17)
+    
   -|(name main)
   +|(name foo)
   

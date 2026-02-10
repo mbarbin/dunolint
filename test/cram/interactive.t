@@ -7,6 +7,8 @@ Initialize the project root.
 Create some files to lint.
 
   $ cat > dune-project <<EOF
+  > (lang dune 3.17)
+  > 
   > (name main)
   > EOF
 
@@ -44,7 +46,9 @@ We run the lint command in dry-run mode to visualize the changes suggested.
 
   $ dunolint lint --dry-run
   dry-run: Would edit file "dune-project":
-  -1,1 +1,1
+  -1,3 +1,3
+    (lang dune 3.17)
+    
   -|(name main)
   +|(name foo)
   
@@ -88,7 +92,9 @@ We can quit at any time during the interactive loop.
 
   $ printf 'q\n' | dunolint lint --interactive
   Would edit file "dune-project":
-  -1,1 +1,1
+  -1,3 +1,3
+    (lang dune 3.17)
+    
   -|(name main)
   +|(name foo)
   
@@ -98,7 +104,9 @@ We can choose to refuse some diff, and accept others.
 
   $ printf 'n\ny\n' | dunolint lint --interactive
   Would edit file "dune-project":
-  -1,1 +1,1
+  -1,3 +1,3
+    (lang dune 3.17)
+    
   -|(name main)
   +|(name foo)
   
@@ -112,6 +120,8 @@ We can choose to refuse some diff, and accept others.
   [?] Accept diff [N/y/q/?]: 
 
   $ cat dune-project
+  (lang dune 3.17)
+  
   (name main)
 
   $ cat lib/foo/dune
