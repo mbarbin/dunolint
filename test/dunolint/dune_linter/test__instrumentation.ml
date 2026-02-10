@@ -270,6 +270,17 @@ let%expect_test "create_then_rewrite" =
   (* As long as the targeted field is present, it is rewritten. *)
   test t {| (instrumentation (other field) (backend other_backend)) |};
   [%expect {| (instrumentation (other field) (backend bisect_ppx)) |}];
+  let windtrap = Dune.Instrumentation.Backend.v "ppx_windtrap" ~flags:[ "--coverage" ] in
+  (* Rewriting of stale flags. *)
+  let t_windtrap = Dune_linter.Instrumentation.create ~backend:windtrap in
+  test t_windtrap {| (instrumentation (backend ppx_windtrap --stale-flag)) |};
+  [%expect {| (instrumentation (backend ppx_windtrap --coverage)) |}];
+  (* Rewrite a flag that is a sexp list rather than an atom. This is not valid
+     dune syntax but exercises the [is_atom_and_equal] guard in [rewrite_flags],
+     ensuring the list is correctly detected as different and rewritten. *)
+  let t_windtrap = Dune_linter.Instrumentation.create ~backend:windtrap in
+  test t_windtrap {| (instrumentation (backend ppx_windtrap (nested flag))) |};
+  [%expect {| (instrumentation (backend ppx_windtrap --coverage)) |}];
   ()
 ;;
 

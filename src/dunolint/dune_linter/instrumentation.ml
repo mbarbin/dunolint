@@ -61,15 +61,23 @@ let write (t : t) =
     ]
 ;;
 
+let is_atom_and_equal sexp ~to_:text =
+  match (sexp : Sexp.t) with
+  | Atom s -> String.equal s text
+  | List _ -> false
+;;
+
 let rewrite_flags ~file_rewriter ~sexps_rewriter ~prev_sexp ~desired ~actual =
   let rec iter ~prev_sexp desired actual =
     match desired, actual with
     | [], [] -> ()
     | desired_flag :: rest_desired, actual_flag :: rest_actual ->
-      File_rewriter.replace
-        file_rewriter
-        ~range:(Sexps_rewriter.range sexps_rewriter actual_flag)
-        ~text:desired_flag;
+      if not (is_atom_and_equal actual_flag ~to_:desired_flag)
+      then
+        File_rewriter.replace
+          file_rewriter
+          ~range:(Sexps_rewriter.range sexps_rewriter actual_flag)
+          ~text:desired_flag;
       iter ~prev_sexp:actual_flag rest_desired rest_actual
     | rest_desired, [] ->
       let insert_offset = Sexps_rewriter.stop_offset sexps_rewriter prev_sexp in
@@ -96,16 +104,15 @@ let rewrite t ~sexps_rewriter ~field =
     Dune.Instrumentation.Backend.Name.to_string
       (Dune.Instrumentation.Backend.name t.backend)
   in
-  let desired_flags =
-    List.map (Dune.Instrumentation.Backend.flags t.backend) ~f:(fun flag ->
-      Sexp.to_string (Dune.Instrumentation.Backend.Flag.sexp_of_t flag))
-  in
+  let desired_flags = Dune.Instrumentation.Backend.flags t.backend in
   List.iter args ~f:(function
-    | List (Atom "backend" :: (Atom _ as name_sexp) :: actual_flags) ->
-      File_rewriter.replace
-        file_rewriter
-        ~range:(Sexps_rewriter.range sexps_rewriter name_sexp)
-        ~text:desired_name;
+    | List (Atom "backend" :: (Atom actual_name as name_sexp) :: actual_flags) ->
+      if not (String.equal actual_name desired_name)
+      then
+        File_rewriter.replace
+          file_rewriter
+          ~range:(Sexps_rewriter.range sexps_rewriter name_sexp)
+          ~text:desired_name;
       rewrite_flags
         ~file_rewriter
         ~sexps_rewriter
