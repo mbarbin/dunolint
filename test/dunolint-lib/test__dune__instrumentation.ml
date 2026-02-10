@@ -48,6 +48,13 @@ let%expect_test "Backend.equal" =
   (* Same name but different flags are not equal. *)
   require (not (equal windtrap windtrap_no_flags));
   [%expect {||}];
+  (* Different name, same flags. *)
+  require
+    (not
+       (equal
+          (Dune.Instrumentation.Backend.v "backend_a" ~flags:[ "--coverage" ])
+          (Dune.Instrumentation.Backend.v "backend_b" ~flags:[ "--coverage" ])));
+  [%expect {||}];
   ()
 ;;
 
