@@ -4,20 +4,21 @@ Starting from this version we're using GitHub immutable releases.
 
 ### Added
 
-- Add library modes `mem` variadic construct (@mbarbin).
+- Add library modes `mem` variadic construct (#174, @mbarbin).
 - Adapt release artifacts jobs for immutable releases (@mbarbin).
 - Added new CI workflow based on setup-dune (@mbarbin).
 - Add some library and executable linter getters/setters (#163, @mbarbin).
 
 ### Changed
 
+- Support supplying flags to instrumentation backends (#175, @mbarbin).
 - Migrate main and doc CIs to `setup-dune` (#171, @mbarbin).
-- Assorted improvements to CI scripts. Upgrade an pin actions deps (@mbarbin).
+- Assorted improvements to CI scripts. Upgrade an pin actions deps (#173, @mbarbin).
 - Generalize `Dunolint_engine.with_linter` helper (#163, @mbarbin).
 
 ### Deprecated
 
-- Deprecate `has_mode` and `has_modes` library modes, replaced by `mem` (@mbarbin).
+- Deprecate `has_mode` and `has_modes` library modes, replaced by `mem` (#172, @mbarbin).
 
 ### Fixed
 
