@@ -24,9 +24,9 @@ module Unix = UnixLabels
 
 let src = Logs.Src.create "dunolint" ~doc:"dunolint"
 
+module Dune_project_context = Dune_project_context
 module File_kind = File_kind
 module Running_mode = Running_mode
-module Config_cache = Config_cache
 module Context = Context
 
 module Edited_file = struct
@@ -43,6 +43,7 @@ end
 type t =
   { running_mode : Running_mode.t
   ; config_cache : Config_cache.t
+  ; dune_project_cache : Dune_project_cache.t
   ; edited_files : Edited_file.t Hashtbl.M(Relative_path).t
   ; root_configs : Dunolint.Config.t list
   }
@@ -50,6 +51,7 @@ type t =
 let create ?(root_configs = []) ~running_mode () =
   { running_mode
   ; config_cache = Config_cache.create ()
+  ; dune_project_cache = Dune_project_cache.create ()
   ; edited_files = Hashtbl.create (module Relative_path)
   ; root_configs
   }
@@ -138,21 +140,12 @@ module Process_status = struct
   ;;
 end
 
-module Dune_version = struct
-  type t =
-    | Inferred_by_dune
-    | Preset of Dune_project.Dune_lang_version.t
-end
-
-let format_dune_file_internal ~dune_version ~new_contents =
+let format_dune_file_internal ~dune_lang_version ~new_contents =
   let dune_version_flag =
-    match (dune_version : Dune_version.t) with
-    | Inferred_by_dune -> []
-    | Preset dune_lang_version ->
-      [ Printf.sprintf
-          "--dune-version=%s"
-          (Dune_project.Dune_lang_version.to_string dune_lang_version)
-      ]
+    [ Printf.sprintf
+        "--dune-version=%s"
+        (Dune_project.Dune_lang_version.to_string dune_lang_version)
+    ]
   in
   let ((in_ch, out_ch, err_ch) as process) =
     Unix.open_process_full
@@ -182,8 +175,8 @@ let format_dune_file_internal ~dune_version ~new_contents =
       ]
 ;;
 
-let format_dune_file ~dune_version ~new_contents =
-  match format_dune_file_internal ~dune_version ~new_contents with
+let format_dune_file ~dune_lang_version ~new_contents =
+  match format_dune_file_internal ~dune_lang_version ~new_contents with
   | Ok output -> output
   | Error text -> Err.raise text
 ;;
@@ -352,17 +345,26 @@ let build_context_internal (t : t) ~path ~autoload_config =
     List.fold t.root_configs ~init:Context.empty ~f:(fun context config ->
       Context.add_config context ~config ~location:Relative_path.empty)
   in
-  if not autoload_config
-  then initial_context
-  else
-    List.fold
-      (Path_in_workspace.ancestors_autoloading_dirs ~path)
-      ~init:initial_context
-      ~f:(fun context dir ->
-        match Config_cache.load_config_in_dir t.config_cache ~dir with
+  List.fold
+    (Path_in_workspace.ancestors_autoloading_dirs ~path)
+    ~init:initial_context
+    ~f:(fun context dir ->
+      let context =
+        match Dune_project_cache.load_dune_project_in_dir t.dune_project_cache ~dir with
         | Absent -> context
-        | Present config -> Context.add_config context ~config ~location:dir
-        | Error e -> raise (Err.E e))
+        | Present dune_project_context ->
+          Context.add_dune_project_context context ~dune_project_context ~location:dir
+      in
+      let context =
+        if not autoload_config
+        then context
+        else (
+          match Config_cache.load_config_in_dir t.config_cache ~dir with
+          | Absent -> context
+          | Present config -> Context.add_config context ~config ~location:dir
+          | Error e -> raise (Err.E e))
+      in
+      context)
 ;;
 
 module Directory_entries = struct
@@ -423,6 +425,19 @@ let visit ?(autoload_config = true) ?below (t : t) ~f =
           [ Pp.text "Visiting directory " ++ Pp_tty.path (module Relative_path) parent_dir
           ]);
       let subtree_context, skip_directory =
+        let context =
+          match
+            Dune_project_cache.load_dune_project_in_dir
+              t.dune_project_cache
+              ~dir:parent_dir
+          with
+          | Absent -> context
+          | Present dune_project_context ->
+            Context.add_dune_project_context
+              context
+              ~dune_project_context
+              ~location:parent_dir
+        in
         if autoload_config
         then (
           match Config_cache.load_config_in_dir t.config_cache ~dir:parent_dir with

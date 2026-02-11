@@ -19,32 +19,20 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-val should_skip_subtree
-  :  context:Dunolint_engine.Context.t
-  -> path:Relative_path.t
-  -> bool
+(** Cache for loaded dune-project to avoid re-parsing the same file multiple times.
 
-val enclosing_dune_lang_version
-  :  context:Dunolint_engine.Context.t
-  -> path:Relative_path.t
-  -> Dune_project.Dune_lang_version.t option
+    This is used for saving information from dune-project files used as
+    enclosing context when linting other files. Linting of [dune-project] files
+    themselves goes via another execution path. *)
 
-val autoformat_dune_file
-  :  context:Dunolint_engine.Context.t
-  -> path:Relative_path.t
-  -> previous_contents:string
-  -> new_contents:string
-  -> string
+module Load_result : sig
+  type t =
+    | Absent
+    | Present of
+        (Dune_project_context.t, Dune_project_context.Invalid_dune_project.t) Result.t
+end
 
-val lint_stanza
-  :  path:Relative_path.t
-  -> context:Dunolint_engine.Context.t
-  -> stanza:'a Dunolinter.Stanza.t
-  -> unit
+type t
 
-val visit_directory
-  :  dunolint_engine:Dunolint_engine.t
-  -> context:Dunolint_engine.Context.t
-  -> parent_dir:Relative_path.t
-  -> files:string list
-  -> Dunolint_engine.Visitor_decision.t
+val create : unit -> t
+val load_dune_project_in_dir : t -> dir:Relative_path.t -> Load_result.t

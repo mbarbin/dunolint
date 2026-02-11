@@ -44,6 +44,7 @@ If a loaded config is invalid, dunolint will report an error.
   $ printf '(blah)\n' > dunolint
 
   $ dunolint lint --dry-run -v
+  dunolint: [INFO] Loaded dune-project file from "dune-project".
   File "dunolint", line 1, characters 0-6:
   1 | (blah)
       ^^^^^^
@@ -54,6 +55,7 @@ If a loaded config is invalid, dunolint will report an error.
 This would also apply when loading invalid parent config via discovery.
 
   $ dunolint lint --dry-run -v --below vendor/
+  dunolint: [INFO] Loaded dune-project file from "dune-project".
   File "dunolint", line 1, characters 0-6:
   1 | (blah)
       ^^^^^^
