@@ -25,7 +25,7 @@ module Unix = UnixLabels
 let autoformat_file ~new_contents =
   match
     Dunolint_engine.format_dune_file
-      ~dune_version:(Preset (Dune_project.Dune_lang_version.create (3, 17)))
+      ~dune_lang_version:(Dune_project.Dune_lang_version.create (3, 17))
       ~new_contents
   with
   | res -> res
@@ -152,7 +152,7 @@ let%expect_test "lint" =
 let%expect_test "format_dune_file" =
   let fmt =
     Dunolint_engine.format_dune_file
-      ~dune_version:(Preset (Dune_project.Dune_lang_version.create (3, 17)))
+      ~dune_lang_version:(Dune_project.Dune_lang_version.create (3, 17))
       ~new_contents:
         {|
 (lang dune 3.17) (name dunolint)
@@ -168,7 +168,7 @@ let%expect_test "format_dune_file" =
   Err.For_test.protect (fun () ->
     match
       Dunolint_engine.format_dune_file
-        ~dune_version:(Preset (Dune_project.Dune_lang_version.create (3, 17)))
+        ~dune_lang_version:(Dune_project.Dune_lang_version.create (3, 17))
         ~new_contents:{|(invalid|}
     with
     | (_ : string) -> () [@coverage off]);

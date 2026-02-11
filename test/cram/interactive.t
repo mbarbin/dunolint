@@ -7,6 +7,8 @@ Initialize the project root.
 Create some files to lint.
 
   $ cat > dune-project <<EOF
+  > (lang dune 3.17)
+  > 
   > (name main)
   > EOF
 
@@ -24,6 +26,7 @@ We'll pretend there is a _build/ directory, to show that it is ignored by defaul
 Where this is nothing to lint, the interactive command exits with no prompt.
 
   $ dunolint lint --interactive --verbose
+  dunolint: [INFO] Loaded dune-project file from "dune-project".
   dunolint: [INFO] Linting file "dune-project"
   dunolint: [INFO] Linting file "dune-workspace"
   dunolint: [INFO] Skipping directory "_build/"
@@ -44,7 +47,9 @@ We run the lint command in dry-run mode to visualize the changes suggested.
 
   $ dunolint lint --dry-run
   dry-run: Would edit file "dune-project":
-  -1,1 +1,1
+  -1,3 +1,3
+    (lang dune 3.17)
+    
   -|(name main)
   +|(name foo)
   
@@ -66,10 +71,13 @@ Note it is possible to restrict the run to a subdirectory only.
 Run the same command in debug mode to visualize configs and directories loaded.
 
   $ dunolint lint --dry-run --below lib/ --log-level=debug
+  dunolint: [INFO] Loaded dune-project file from "dune-project".
   dunolint: [INFO] Loaded dunolint config from "dunolint".
   dunolint: [DEBUG] Visiting directory "lib/"
+  dunolint: [DEBUG] Dune project file does not exist at "lib/dune-project".
   dunolint: [DEBUG] Config file does not exist at "lib/dunolint".
   dunolint: [DEBUG] Visiting directory "lib/foo/"
+  dunolint: [DEBUG] Dune project file does not exist at "lib/foo/dune-project".
   dunolint: [DEBUG] Config file does not exist at "lib/foo/dunolint".
   dunolint: [INFO] Linting file "lib/foo/dune"
   dry-run: Would edit file "lib/foo/dune":
@@ -88,7 +96,9 @@ We can quit at any time during the interactive loop.
 
   $ printf 'q\n' | dunolint lint --interactive
   Would edit file "dune-project":
-  -1,1 +1,1
+  -1,3 +1,3
+    (lang dune 3.17)
+    
   -|(name main)
   +|(name foo)
   
@@ -98,7 +108,9 @@ We can choose to refuse some diff, and accept others.
 
   $ printf 'n\ny\n' | dunolint lint --interactive
   Would edit file "dune-project":
-  -1,1 +1,1
+  -1,3 +1,3
+    (lang dune 3.17)
+    
   -|(name main)
   +|(name foo)
   
@@ -112,6 +124,8 @@ We can choose to refuse some diff, and accept others.
   [?] Accept diff [N/y/q/?]: 
 
   $ cat dune-project
+  (lang dune 3.17)
+  
   (name main)
 
   $ cat lib/foo/dune

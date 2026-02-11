@@ -13,6 +13,8 @@ There is nothing to lint on an empty project.
 Let's add some files.
 
   $ cat > dune-project <<EOF
+  > (lang dune 3.17)
+  > 
   > (name main)
   > EOF
 
@@ -31,15 +33,19 @@ Let's do some linting!
 
   $ dunolint lint --check --verbosity=debug
   dunolint: [DEBUG] Visiting directory "./"
+  dunolint: [INFO] Loaded dune-project file from "dune-project".
   dunolint: [DEBUG] Config file does not exist at "dunolint".
   dunolint: [INFO] Linting file "dune-project"
   dunolint: [INFO] Linting file "dune-workspace"
   dunolint: [DEBUG] Visiting directory "_build/"
+  dunolint: [DEBUG] Dune project file does not exist at "_build/dune-project".
   dunolint: [DEBUG] Config file does not exist at "_build/dunolint".
   dunolint: [INFO] Skipping directory "_build/"
   dunolint: [DEBUG] Visiting directory "lib/"
+  dunolint: [DEBUG] Dune project file does not exist at "lib/dune-project".
   dunolint: [DEBUG] Config file does not exist at "lib/dunolint".
   dunolint: [DEBUG] Visiting directory "lib/foo/"
+  dunolint: [DEBUG] Dune project file does not exist at "lib/foo/dune-project".
   dunolint: [DEBUG] Config file does not exist at "lib/foo/dunolint".
   dunolint: [INFO] Linting file "lib/foo/dune"
 
@@ -51,7 +57,9 @@ simulate lint errors.
   >   --enforce='(dune_project (name (equals foo)))' \
   >   --check
   check: Would edit file "dune-project":
-  -1,1 +1,1
+  -1,3 +1,3
+    (lang dune 3.17)
+    
   -|(name main)
   +|(name foo)
   

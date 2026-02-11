@@ -19,32 +19,31 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-val should_skip_subtree
-  :  context:Dunolint_engine.Context.t
-  -> path:Relative_path.t
-  -> bool
+(** Context associated with a [dune-project] file.
 
-val enclosing_dune_lang_version
-  :  context:Dunolint_engine.Context.t
-  -> path:Relative_path.t
-  -> Dune_project.Dune_lang_version.t option
+    When performing linting it may be useful to refer to context from the
+    enclosing dune-project file. This type is used to hold the information we
+    wish to access. *)
 
-val autoformat_dune_file
-  :  context:Dunolint_engine.Context.t
-  -> path:Relative_path.t
-  -> previous_contents:string
-  -> new_contents:string
-  -> string
+(** Each value of type [t] refers to context found in exactly one file. This
+    type is non mutable. *)
+type t
 
-val lint_stanza
-  :  path:Relative_path.t
-  -> context:Dunolint_engine.Context.t
-  -> stanza:'a Dunolinter.Stanza.t
-  -> unit
+(** [create ~path ~original_contents] parses information needed from a
+    ["dune-project"] file, and extracts from it an immutable context required
+    for linting. *)
+val create : path:Relative_path.t -> original_contents:string -> (t, Err.t) Result.t
 
-val visit_directory
-  :  dunolint_engine:Dunolint_engine.t
-  -> context:Dunolint_engine.Context.t
-  -> parent_dir:Relative_path.t
-  -> files:string list
-  -> Dunolint_engine.Visitor_decision.t
+(** {1 Getters} *)
+
+(** A valid [dune-project] file will necessarily start with a valid lang dune
+    stanza, however if the file is not valid, this may return [None]. *)
+val dune_lang_version : t -> Dunolint.Dune_project.Dune_lang_version.t option
+
+module Invalid_dune_project : sig
+  (** Logging the actual error must be centralized and done once, so the calling
+      code shall simply handle the fact that an error occurred. *)
+  type t = private Invalid_dune_project
+
+  val acknowledge : Err.t -> t
+end

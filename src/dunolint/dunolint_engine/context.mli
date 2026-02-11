@@ -53,16 +53,58 @@ module Config_with_location : sig
   type t =
     { config : Dunolint.Config.t
     ; location : Relative_path.t
-      (** Directory where this config was found
-          relative to the workspace root. *)
+      (** Directory where this config was found relative to the workspace
+          root. *)
     }
 end
 
 (** Add a discovered config at the specified location. *)
 val add_config : t -> config:Dunolint.Config.t -> location:Relative_path.t -> t
 
-(** Get the list of discovered configs with their locations.
-    Returns configs in rule processing order: from least specific (root) to
-    most specific (closest to current location), so that deeper configs can
-    override rules from shallower configs. *)
+(** Get the list of discovered configs with their locations. Returns configs in
+    rule processing order: from least specific (root) to most specific (closest
+    to current location), so that deeper configs can override rules from
+    shallower configs. *)
 val configs : t -> Config_with_location.t list
+
+(** {1 Enclosing project metadata}
+
+    During linting we aggregate ["dune-project"] files found in parent
+    directories and retain some information used during linting.
+
+    An example of information used is the dune lang version in use in the
+    project, which informs the [dune format-dune-file --dune-version _] command
+    used to perform the formatting of dune files.
+
+    Dunolint supports performing linting operations when the enclosing
+    dune-project file is invalid. In particular this allows more flexibility
+    during development workflows such as linting-on-save.
+
+    To achieve this, the information retained from a dune-project file is a
+    result, and the code using this interface must handle the error case when
+    querying the enclosing dune project context. *)
+
+module Enclosing_result : sig
+  type 'a t = ('a, Dune_project_context.Invalid_dune_project.t) Result.t
+end
+
+(** Add a discovered dune-project at the specified location. *)
+val add_dune_project_context
+  :  t
+  -> dune_project_context:Dune_project_context.t Enclosing_result.t
+  -> location:Relative_path.t
+  -> t
+
+(** If known to be within the scope of an enclosing dune-project file, returns
+    the context we saved for it. This is used in particular to know which dune
+    version to use when formatting dune files. This returns [None] when no dune
+    project file was found in the enclosing context. *)
+val enclosing_dune_project_context : t -> Dune_project_context.t Enclosing_result.t option
+
+(** A convenient wrapper for {!enclosing_dune_project_context} which returns the
+    lang version. If the ["dune-project"] is valid the dune lang version must
+    have been found as its first line, otherwise we return [None] and rely on
+    dune to report the missing stanza. *)
+val enclosing_dune_lang_version
+  :  t
+  -> Dune_project.Dune_lang_version.t option Enclosing_result.t option

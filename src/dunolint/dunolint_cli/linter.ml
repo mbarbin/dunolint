@@ -47,7 +47,32 @@ let should_skip_subtree ~context ~(path : Relative_path.t) =
            List.exists skip_paths ~f:(fun glob -> Dunolint.Glob.test glob path))))
 ;;
 
-let maybe_autoformat_file ~dune_version ~previous_contents ~new_contents =
+let default_dune_lang_version = lazy (Dune_project.Dune_lang_version.create (2, 0))
+
+let enclosing_dune_lang_version ~context ~(path : Relative_path.t) =
+  match Dunolint_engine.Context.enclosing_dune_lang_version context with
+  | None -> Some (Lazy.force default_dune_lang_version)
+  | Some (Ok version_or_missing) -> version_or_missing
+  | Some (Error Invalid_dune_project) ->
+    (* Formatting is not applied when we do not know which version to use. We
+       emit only a debug message in this case because a warning or error has
+       already been emitted informing that the dune-project is invalid. Besides,
+       if we are in debug mode, the actual error for that specific file has
+       already been printed during the loading of the dune-project file. *)
+    Err.debug
+      ~loc:(Loc.of_file ~path:(path :> Fpath.t))
+      (lazy
+        Pp.O.
+          [ Pp.text "Formatting file "
+            ++ Pp_tty.path (module Relative_path) path
+            ++ Pp.text " was disabled due to existing errors in enclosing "
+            ++ Pp_tty.path (module String) "dune-project"
+            ++ Pp.text " file."
+          ]);
+    None
+;;
+
+let autoformat_dune_file ~context ~path ~previous_contents ~new_contents =
   (* For the time being we are using here a heuristic to drive whether to
      autoformat linted files. This is motivated by pragmatic reasoning and lower
      friction for onboarding in various situation where formatting may or may
@@ -55,18 +80,31 @@ let maybe_autoformat_file ~dune_version ~previous_contents ~new_contents =
   if String.equal previous_contents new_contents
   then new_contents
   else (
-    let was_originally_well_formatted =
-      try
-        let formatted =
-          Dunolint_engine.format_dune_file ~dune_version ~new_contents:previous_contents
-        in
-        String.equal formatted previous_contents
-      with
-      | _ -> false
-    in
-    if was_originally_well_formatted
-    then Dunolint_engine.format_dune_file ~dune_version ~new_contents
-    else new_contents)
+    match enclosing_dune_lang_version ~context ~path with
+    | None -> new_contents
+    | Some dune_lang_version ->
+      let was_originally_well_formatted =
+        try
+          let formatted =
+            Dunolint_engine.format_dune_file
+              ~dune_lang_version
+              ~new_contents:previous_contents
+          in
+          String.equal formatted previous_contents
+        with
+        | exn ->
+          Err.debug
+            ~loc:(Loc.of_file ~path:(path :> Fpath.t))
+            (lazy
+              [ Pp.text "Exception raised when formatting original file contents:"
+              ; Err.exn exn
+              ]
+              [@coverage off]);
+          false
+      in
+      if was_originally_well_formatted
+      then Dunolint_engine.format_dune_file ~dune_lang_version ~new_contents
+      else new_contents)
 ;;
 
 let lint_stanza ~path ~context ~stanza =
@@ -116,10 +154,7 @@ let lint_file
         Linter.contents linter)
     ~autoformat_file:(fun ~new_contents ->
       let previous_contents = !previous_contents_ref in
-      maybe_autoformat_file
-        ~dune_version:Inferred_by_dune
-        ~previous_contents
-        ~new_contents)
+      autoformat_dune_file ~context ~path ~previous_contents ~new_contents)
 ;;
 
 let should_skip_file ~context ~path =

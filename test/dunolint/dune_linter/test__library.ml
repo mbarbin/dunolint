@@ -562,7 +562,7 @@ let enforce (((sexps_rewriter, _), _) as input) conditions =
 
 let format_dune_file ~new_contents =
   Dunolint_engine.format_dune_file
-    ~dune_version:(Preset (Dune_project.Dune_lang_version.create (3, 17)))
+    ~dune_lang_version:(Dune_project.Dune_lang_version.create (3, 17))
     ~new_contents
 ;;
 

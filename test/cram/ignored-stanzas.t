@@ -7,6 +7,8 @@ Initialize the project root.
 Create some unknown/unsupported/invalid stanzas.
 
   $ cat > dune-project <<EOF
+  > (lang dune 3.17)
+  > 
   > (name main)
   > 
   > (() hello unknown stanza)
@@ -29,7 +31,9 @@ knows about located in the same files.
   >   --enforce='(dune_project (name (equals foo)))' \
   >   --yes
   Editing file "dune-project":
-  -1,3 +1,3
+  -1,5 +1,5
+    (lang dune 3.17)
+    
   -|(name main)
   +|(name foo)
     

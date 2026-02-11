@@ -12,12 +12,16 @@ There is nothing to lint on an empty project.
 Let's add some files.
 
   $ cat > dune-project <<EOF
+  > (lang dune 3.17)
+  > 
   > (name main)
   > EOF
 
   $ mkdir subrepo
 
   $ cat > subrepo/dune-project <<EOF
+  > (lang dune 3.17)
+  > 
   > (name subrepo)
   > 
   > (generate_opam_files)
@@ -26,8 +30,17 @@ Let's add some files.
   $ touch dune subrepo/dune
 
   $ dunolint lint --dry-run --enforce false
-  File "dune-project", line 1, characters 0-11:
-  1 | (name main)
+  File "dune-project", line 1, characters 0-16:
+  1 | (lang dune 3.17)
+      ^^^^^^^^^^^^^^^^
+  Error: Enforce Failure.
+  The following condition does not hold: false
+  Dunolint is able to suggest automatic modifications to satisfy linting rules
+  when a strategy is implemented, however in this case there is none available.
+  Hint: You need to attend and fix manually.
+  
+  File "dune-project", line 3, characters 0-11:
+  3 | (name main)
       ^^^^^^^^^^^
   Error: Enforce Failure.
   The following condition does not hold: false
@@ -35,8 +48,17 @@ Let's add some files.
   when a strategy is implemented, however in this case there is none available.
   Hint: You need to attend and fix manually.
   
-  File "subrepo/dune-project", line 1, characters 0-14:
-  1 | (name subrepo)
+  File "subrepo/dune-project", line 1, characters 0-16:
+  1 | (lang dune 3.17)
+      ^^^^^^^^^^^^^^^^
+  Error: Enforce Failure.
+  The following condition does not hold: false
+  Dunolint is able to suggest automatic modifications to satisfy linting rules
+  when a strategy is implemented, however in this case there is none available.
+  Hint: You need to attend and fix manually.
+  
+  File "subrepo/dune-project", line 3, characters 0-14:
+  3 | (name subrepo)
       ^^^^^^^^^^^^^^
   Error: Enforce Failure.
   The following condition does not hold: false
@@ -44,8 +66,8 @@ Let's add some files.
   when a strategy is implemented, however in this case there is none available.
   Hint: You need to attend and fix manually.
   
-  File "subrepo/dune-project", line 3, characters 0-21:
-  3 | (generate_opam_files)
+  File "subrepo/dune-project", line 5, characters 0-21:
+  5 | (generate_opam_files)
       ^^^^^^^^^^^^^^^^^^^^^
   Error: Enforce Failure.
   The following condition does not hold: false
@@ -56,21 +78,25 @@ Let's add some files.
 
   $ dunolint lint --dry-run --enforce '(dune_project (name (is_prefix sub)))'
   dry-run: Would edit file "dune-project":
-  -1,1 +1,1
+  -1,3 +1,3
+    (lang dune 3.17)
+    
   -|(name main)
   +|(name submain)
 
   $ dunolint lint --dry-run --enforce '(dune_project (name (not (is_prefix sub))))'
   dry-run: Would edit file "subrepo/dune-project":
-  -1,3 +1,3
+  -1,5 +1,5
+    (lang dune 3.17)
+    
   -|(name subrepo)
   +|(name repo)
     
     (generate_opam_files)
 
   $ dunolint lint --dry-run --enforce '(dune_project (name (not (equals main))))'
-  File "dune-project", line 1, characters 0-11:
-  1 | (name main)
+  File "dune-project", line 3, characters 0-11:
+  3 | (name main)
       ^^^^^^^^^^^
   Error: Enforce Failure.
   The following condition does not hold: (not (equals main))
@@ -112,7 +138,9 @@ With only --config, it should enforce (is_prefix main):
 
   $ dunolint lint --dry-run --config test-config
   dry-run: Would edit file "subrepo/dune-project":
-  -1,3 +1,3
+  -1,5 +1,5
+    (lang dune 3.17)
+    
   -|(name subrepo)
   +|(name mainsubrepo)
     
@@ -123,12 +151,16 @@ Both rules apply, but --enforce's (is_prefix sub) is applied after config's (is_
 
   $ dunolint lint --dry-run --config test-config --enforce '(dune_project (name (is_prefix sub)))'
   dry-run: Would edit file "dune-project":
-  -1,1 +1,1
+  -1,3 +1,3
+    (lang dune 3.17)
+    
   -|(name main)
   +|(name submain)
   
   dry-run: Would edit file "subrepo/dune-project":
-  -1,3 +1,3
+  -1,5 +1,5
+    (lang dune 3.17)
+    
   -|(name subrepo)
   +|(name submainsubrepo)
     
@@ -150,12 +182,16 @@ With auto-loaded config enforcing (is_prefix auto):
 
   $ dunolint lint --dry-run
   dry-run: Would edit file "dune-project":
-  -1,1 +1,1
+  -1,3 +1,3
+    (lang dune 3.17)
+    
   -|(name main)
   +|(name automain)
   
   dry-run: Would edit file "subrepo/dune-project":
-  -1,3 +1,3
+  -1,5 +1,5
+    (lang dune 3.17)
+    
   -|(name subrepo)
   +|(name autosubrepo)
     
@@ -165,12 +201,16 @@ With --enforce, autoloading is disabled so only enforce rules apply:
 
   $ dunolint lint --dry-run --enforce '(dune_project (name (is_prefix cmd)))'
   dry-run: Would edit file "dune-project":
-  -1,1 +1,1
+  -1,3 +1,3
+    (lang dune 3.17)
+    
   -|(name main)
   +|(name cmdmain)
   
   dry-run: Would edit file "subrepo/dune-project":
-  -1,3 +1,3
+  -1,5 +1,5
+    (lang dune 3.17)
+    
   -|(name subrepo)
   +|(name cmdsubrepo)
     
