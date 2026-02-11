@@ -1,4 +1,4 @@
-## 0.0.2026XXXX (unreleased)
+## 0.0.20260211 (2026-02-11)
 
 Starting from this version we're using GitHub immutable releases.
 
@@ -11,6 +11,7 @@ Starting from this version we're using GitHub immutable releases.
 
 ### Changed
 
+- Extract dune lang format directly from enclosing context (#177, @mbarbin).
 - Support supplying flags to instrumentation backends (#175, @mbarbin).
 - Migrate main and doc CIs to `setup-dune` (#171, @mbarbin).
 - Assorted improvements to CI scripts. Upgrade an pin actions deps (#173, @mbarbin).
