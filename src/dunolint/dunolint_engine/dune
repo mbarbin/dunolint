@@ -43,7 +43,6 @@
   logs
   pageantty.git-pager
   patdiff
-  patdiff.expect_test_patdiff
   pp
   pplumbing-err
   pplumbing-log
@@ -51,7 +50,8 @@
   sexplib0
   sexps-rewriter
   stdio
-  unix)
+  unix
+  windtrap.myers)
  (instrumentation
   (backend bisect_ppx))
  (lint

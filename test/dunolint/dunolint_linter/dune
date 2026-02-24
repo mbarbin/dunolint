@@ -28,11 +28,11 @@
   fpath-sexp0
   loc
   parsexp
-  patdiff.expect_test_patdiff
   pp
   pplumbing-err
   sexps-rewriter
-  test_helpers)
+  test_helpers
+  windtrap.myers)
  (instrumentation
   (backend bisect_ppx))
  (lint

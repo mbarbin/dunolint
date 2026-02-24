@@ -134,15 +134,17 @@ let%expect_test "lint" =
   [%expect
     {|
     dry-run: Would edit file "dune-project":
-    -1,7 +1,7
-    -|(lang dune 3.17)
-    +|(lang dune 3.19)
+    --- expected
+    +++ actual
+    @@ -1,7 +1,7 @@
+    - (lang dune 3.17)
+    + (lang dune 3.19)
 
-    -|(name dunolint)
-    +|(name a-better-name)
+    - (name dunolint)
+    + (name a-better-name)
 
-    -|(implicit_transitive_deps true)
-    +|(implicit_transitive_deps false)
+    - (implicit_transitive_deps true)
+    + (implicit_transitive_deps false)
 
       (generate_opam_files)
     |}];
@@ -228,10 +230,12 @@ let%expect_test "create-files" =
     {|
     Running `mkdir -p lib/a/`
     Editing file "lib/a/dune":
-    -1,0 +1,3
-    +|(library
-    +| (name my-lib)
-    +| (public_name a-public-name))
+    --- expected
+    +++ actual
+    @@ -1,0 +1,3 @@
+    + (library
+    +  (name my-lib)
+    +  (public_name a-public-name))
     |}];
   (* And the file indeed exists on disk after [materialize] has run. *)
   print_endline (In_channel.read_all "lib/a/dune");
@@ -327,9 +331,11 @@ let%expect_test "invalid files" =
     [%expect
       {|
       dry-run: Would edit file "dune-project":
-      -1,1 +1,1
-      -|(lang dune 3.17)
-      +|(lang dune 3.20)
+      --- expected
+      +++ actual
+      @@ -1,1 +1,1 @@
+      - (lang dune 3.17)
+      + (lang dune 3.20)
       |}];
     ());
   [%expect {| [123] |}];

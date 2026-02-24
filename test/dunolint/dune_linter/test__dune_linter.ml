@@ -46,7 +46,7 @@ atom
 
 let print_diff t =
   let new_contents = Dune_linter.contents t in
-  Expect_test_patdiff.print_patdiff original_contents new_contents ~context:3
+  Myers.print_diff original_contents new_contents ~context:3
 ;;
 
 let%expect_test "lint" =
@@ -57,7 +57,11 @@ let%expect_test "lint" =
     | Error _ -> assert false
   in
   print_diff t;
-  [%expect {||}];
+  [%expect
+    {|
+    --- expected
+    +++ actual
+    |}];
   print_s [%sexp (Dune_linter.path t : Relative_path.t)];
   [%expect {| path/to/dune |}];
   print_s [%sexp (List.length (Dune_linter.original_sexps t) : int)];
@@ -77,12 +81,14 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -13,7 +13,7
+    --- expected
+    +++ actual
+    @@ -13,7 +13,7 @@
         (name foo)
         (libraries a b c))
 
-    -|(unhandled 41)
-    +|(unhandled 42)
+    - (unhandled 41)
+    + (unhandled 42)
 
       ;; Atoms are ignored by dunolint (probably doesn't exists in dune).
       atom
@@ -105,10 +111,12 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -1,5 +1,5
+    --- expected
+    +++ actual
+    @@ -1,5 +1,5 @@
 
-    -|(include_subdirs unqualified)
-    +|(include_subdirs qualified)
+    - (include_subdirs unqualified)
+    + (include_subdirs qualified)
 
       (library
         (name foo)
@@ -141,12 +149,14 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -6,7 +6,7
+    --- expected
+    +++ actual
+    @@ -6,7 +6,7 @@
         (libraries a b c))
 
       (library
-    -|  (name foo_foo)
-    +|  (name bar)
+    -   (name foo_foo)
+    +   (name bar)
         (libraries a b c))
 
       (executable
@@ -185,12 +195,14 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -10,7 +10,7
+    --- expected
+    +++ actual
+    @@ -10,7 +10,7 @@
         (libraries a b c))
 
       (executable
-    -|  (name foo)
-    +|  (name my-exec)
+    -   (name foo)
+    +   (name my-exec)
         (libraries a b c))
 
       (unhandled 41)
