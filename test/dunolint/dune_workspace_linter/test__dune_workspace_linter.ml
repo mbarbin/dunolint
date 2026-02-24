@@ -33,7 +33,7 @@ atom
 
 let print_diff t =
   let new_contents = Dune_workspace_linter.contents t in
-  Expect_test_patdiff.print_patdiff original_contents new_contents ~context:3
+  Myers.print_diff original_contents new_contents ~context:3
 ;;
 
 let%expect_test "lint" =
@@ -44,7 +44,11 @@ let%expect_test "lint" =
     | Error _ -> assert false
   in
   print_diff t;
-  [%expect {||}];
+  [%expect
+    {|
+    --- expected
+    +++ actual
+    |}];
   print_s [%sexp (Dune_workspace_linter.path t : Relative_path.t)];
   [%expect {| dune-workspace |}];
   print_s [%sexp (List.length (Dune_workspace_linter.original_sexps t) : int)];
@@ -60,9 +64,11 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -1,4 +1,4
-    -|(lang dune 3.17)
-    +|(lang dune 3.19)
+    --- expected
+    +++ actual
+    @@ -1,4 +1,4 @@
+    - (lang dune 3.17)
+    + (lang dune 3.19)
 
       ;; Atoms are ignored by dunolint (probably doesn't exists in dune).
       atom
@@ -87,9 +93,11 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -1,4 +1,4
-    -|(lang dune 3.17)
-    +|(lang dune 3.20)
+    --- expected
+    +++ actual
+    @@ -1,4 +1,4 @@
+    - (lang dune 3.17)
+    + (lang dune 3.20)
 
       ;; Atoms are ignored by dunolint (probably doesn't exists in dune).
       atom
@@ -153,9 +161,11 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -1,4 +1,4
-    -|(lang dune 3.17)
-    +|(lang dune 4.5)
+    --- expected
+    +++ actual
+    @@ -1,4 +1,4 @@
+    - (lang dune 3.17)
+    + (lang dune 4.5)
 
       ;; Atoms are ignored by dunolint (probably doesn't exists in dune).
       atom

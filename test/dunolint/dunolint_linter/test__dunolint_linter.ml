@@ -35,7 +35,7 @@ atom
 
 let print_diff t =
   let new_contents = Dunolint_linter.contents t in
-  Expect_test_patdiff.print_patdiff original_contents new_contents ~context:3
+  Myers.print_diff original_contents new_contents ~context:3
 ;;
 
 let%expect_test "lint" =
@@ -46,7 +46,11 @@ let%expect_test "lint" =
     | Error _ -> assert false
   in
   print_diff t;
-  [%expect {||}];
+  [%expect
+    {|
+    --- expected
+    +++ actual
+    |}];
   print_s [%sexp (Dunolint_linter.path t : Relative_path.t)];
   [%expect {| path/to/dunolint |}];
   print_s [%sexp (List.length (Dunolint_linter.original_sexps t) : int)];
@@ -73,9 +77,11 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -1,4 +1,4
-    -|(lang dunolint 1.0)
-    +|(lang dunolint 1.1)
+    --- expected
+    +++ actual
+    @@ -1,4 +1,4 @@
+    - (lang dunolint 1.0)
+    + (lang dunolint 1.1)
 
       (rule (enforce (dune (has_field instrumentation))))
     |}];
@@ -138,9 +144,11 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    -1,4 +1,4
-    -|(lang dunolint 1.0)
-    +|(lang dunolint 1.5)
+    --- expected
+    +++ actual
+    @@ -1,4 +1,4 @@
+    - (lang dunolint 1.0)
+    + (lang dunolint 1.5)
 
       (rule (enforce (dune (has_field instrumentation))))
     |}];

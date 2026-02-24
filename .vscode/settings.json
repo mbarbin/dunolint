@@ -63,6 +63,7 @@
         "Trilang",
         "verbatimf",
         "WEXITED",
+        "windtrap",
         "WSIGNALED",
         "WSTOPPED",
         "yojson"
