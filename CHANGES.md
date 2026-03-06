@@ -1,3 +1,15 @@
+## 0.0.2026XXXX (unreleased)
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
 ## 0.0.20260306 (2026-03-06)
 
 From this version, pre-compiled release binaries are included as compressed archives.
