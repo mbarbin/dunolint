@@ -264,7 +264,7 @@ let materialize t =
         Out_channel.output_line
           flow
           (if Err.am_running_test ()
-           then Expect_test_patdiff.patdiff original_contents new_contents ~context:3
+           then Myers.diff original_contents new_contents ~context:3
            else (
              let name = Relative_path.to_string path in
              let rules =

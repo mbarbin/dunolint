@@ -136,7 +136,9 @@
   (volgo-git-unix
    (>= 0.0.21))
   (volgo-hg-unix
-   (>= 0.0.21))))
+   (>= 0.0.21))
+  (windtrap
+   (>= 0.1.0))))
 
 (package
  (name dunolint-tests)
@@ -177,8 +179,6 @@
   (pageantty
    (>= 0.0.3))
   (parsexp
-   (>= v0.17))
-  (patdiff
    (>= v0.17))
   (pp
    (>= 2.0.0))
@@ -223,7 +223,9 @@
   (volgo-hg-unix
    (>= 0.0.21))
   (volgo-vcs
-   (>= 0.0.21))))
+   (>= 0.0.21))
+  (windtrap
+   (>= 0.1.0))))
 
 (package
  (name dunolint-dev)
