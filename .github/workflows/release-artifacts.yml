@@ -86,8 +86,11 @@ jobs:
           os=$(echo "${{ runner.os }}" | tr '[:upper:]' '[:lower:]')
           arch=$(uname -m)
           bin_name="${{ github.workspace }}/dunolint-$TAG_NAME-$os-$arch"
-          cp "$OPAM_DESTDIR/bin/dunolint" $bin_name
+          cp "$OPAM_DESTDIR/bin/dunolint" "$bin_name"
           echo "BIN_NAME=$bin_name" >> $GITHUB_ENV
+          archive_name="${bin_name}.tar.gz"
+          tar -czf "$archive_name" -C "$OPAM_DESTDIR/bin" dunolint
+          echo "ARCHIVE_NAME=$archive_name" >> $GITHUB_ENV
 
       - name: Attest Build Provenance
         uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
