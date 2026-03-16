@@ -21,6 +21,13 @@
 
 (** Extending [Stdlib] for use in the project. *)
 
-include module type of struct
-  include Stdlib0
-end
+module Sexp = Sexp0
+module Code_error = Code_error0
+module With_equal_and_sexp = With_equal_and_sexp0
+
+val phys_equal : 'a -> 'a -> bool
+val require : bool -> unit
+val require_equal : (module With_equal_and_sexp.S with type t = 'a) -> 'a -> 'a -> unit
+val require_does_raise : (unit -> 'a) -> unit
+val print_s : Sexp.t -> unit
+val print_endline : string -> unit

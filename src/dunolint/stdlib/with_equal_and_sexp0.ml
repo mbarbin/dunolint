@@ -19,4 +19,9 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-include Stdlib0
+module type S = sig
+  type t
+
+  val equal : t -> t -> bool
+  val sexp_of_t : t -> Sexp.t
+end

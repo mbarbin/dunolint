@@ -19,8 +19,9 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-(** Extending [Stdlib] for use in the project. *)
+module type S = sig
+  type t
 
-include module type of struct
-  include Stdlib0
+  val equal : t -> t -> bool
+  val sexp_of_t : t -> Sexp.t
 end
