@@ -19,4 +19,22 @@
 (*  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*********************************************************************************)
 
-include Stdlib0
+type t =
+  { message : string
+  ; data : (string * Sexp.t) list
+  }
+
+exception E of t
+
+let raise message data = raise (E { message; data })
+
+let sexp_of_t { message; data } =
+  Sexp.List
+    (Atom message :: List.map (fun (field, sexp) -> Sexp.List [ Atom field; sexp ]) data)
+;;
+
+let () =
+  Printexc.register_printer (function
+    | E t -> Some (Sexp.to_string_hum (sexp_of_t t))
+    | _ -> None [@coverage off])
+;;

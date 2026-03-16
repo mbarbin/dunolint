@@ -19,8 +19,11 @@
 (*_  <http://www.gnu.org/licenses/> and <https://spdx.org>, respectively.         *)
 (*_********************************************************************************)
 
-(** Extending [Stdlib] for use in the project. *)
+type t =
+  { message : string
+  ; data : (string * Sexp.t) list
+  }
 
-include module type of struct
-  include Stdlib0
-end
+exception E of t
+
+val raise : string -> (string * Sexp.t) list -> _
