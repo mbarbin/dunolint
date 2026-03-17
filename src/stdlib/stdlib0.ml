@@ -5,11 +5,16 @@
 (*********************************************************************************)
 
 module Code_error = Code_error0
+module Dyn = Dyn0
+module Int = Int0
 module List = List0
+module Pp = Pp0
 module Sexp = Sexp0
 module With_equal_and_sexp = With_equal_and_sexp0
 
 let phys_equal a b = a == b
+let print pp = Format.printf "%a@." Pp.to_fmt pp
+let print_dyn dyn = print (Dyn.pp dyn)
 let print_s sexp = print_endline (Sexp.to_string_hum sexp)
 
 let require_does_raise f =

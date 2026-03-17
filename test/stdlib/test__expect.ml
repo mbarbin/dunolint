@@ -35,17 +35,24 @@ let%expect_test "require_does_raise did not raise" =
   ()
 ;;
 
-module Int = struct
-  type t = int
-
-  let equal = Int.equal
-  let sexp_of_t t = Sexp.Atom (Int.to_string t)
-end
-
 let%expect_test "require_equal not equal" =
   (match require_equal (module Int) 0 42 with
    | () -> assert false
    | exception exn -> print_string (Printexc.to_string exn));
   [%expect {| ("Values are not equal." (v1 0) (v2 42)) |}];
+  ()
+;;
+
+let%expect_test "print_dyn" =
+  print_dyn (Dyn.int 42);
+  [%expect {| 42 |}];
+  print_dyn (Dyn.string "hello");
+  [%expect {| "hello" |}];
+  print_dyn (Dyn.list Dyn.int [ 1; 2; 3 ]);
+  [%expect {| [ 1; 2; 3 ] |}];
+  print_dyn (Dyn.option Dyn.int None);
+  [%expect {| None |}];
+  print_dyn (Dyn.option Dyn.int (Some 7));
+  [%expect {| Some 7 |}];
   ()
 ;;
