@@ -1,8 +1,8 @@
-(*********************************************************************************)
-(*  Dunolint - A tool to lint and help manage files in dune projects             *)
-(*  SPDX-FileCopyrightText: 2024-2026 Mathieu Barbin <mathieu.barbin@gmail.com>  *)
-(*  SPDX-License-Identifier: LGPL-3.0-or-later WITH LGPL-3.0-linking-exception   *)
-(*********************************************************************************)
+(***************************************************************************************)
+(*  Dunolint_stdlib - Extending OCaml's Stdlib for Dunolint                            *)
+(*  SPDX-FileCopyrightText: 2025-2026 Mathieu Barbin <mathieu.barbin@gmail.com>        *)
+(*  SPDX-License-Identifier: MIT OR LGPL-3.0-or-later WITH LGPL-3.0-linking-exception  *)
+(***************************************************************************************)
 
 (* Some functions are copied from [Base] version [v0.17] which is released
    under MIT and may be found at [https://github.com/janestreet/base].
