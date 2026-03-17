@@ -38,7 +38,8 @@ let () =
     (cond
        [ ( path
              (or_
-                [ glob "src/dunolint/stdlib/**"
+                [ glob "src/stdlib/**"
+                ; glob "src/myers/**"
                 ; glob "src/dunolint/vendor/**"
                 ; glob "src/dunolint-lib/**"
                 ; glob "src/dunolint-lib-base/**"
