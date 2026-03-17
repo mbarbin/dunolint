@@ -364,33 +364,27 @@ module Directory_entries = struct
       |> Array.to_list
       |> List.sort ~compare:String.compare
     in
-    let subdirectories, files, _ =
-      entries
-      |> List.partition3_map ~f:(fun entry ->
-        match
-          (Unix.lstat (Stdlib.Filename.concat (Relative_path.to_string parent_dir) entry))
-            .st_kind
-        with
-        | S_DIR -> `Fst entry
-        | S_REG -> `Snd entry
-        | s_kind ->
-          let () =
-            match[@coverage off] s_kind with
-            | S_DIR | S_REG -> assert false
-            | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK -> ()
-          in
-          `Trd ()
-        | exception Unix.Unix_error (EACCES, _, _) ->
-          (Err.warning
-             Pp.O.
-               [ Pp.text "Permission denied - skipping "
-                 ++ Pp_tty.path (module Relative_path) parent_dir
-                 ++ Pp.text "."
-               ];
-           `Trd ())
-          [@coverage off])
-    in
-    { subdirectories; files }
+    let subdirectories = ref [] in
+    let files = ref [] in
+    List.iter entries ~f:(fun entry ->
+      match
+        (Unix.lstat (Stdlib.Filename.concat (Relative_path.to_string parent_dir) entry))
+          .st_kind
+      with
+      | S_DIR -> subdirectories := entry :: !subdirectories
+      | S_REG -> files := entry :: !files
+      | s_kind ->
+        (match[@coverage off] s_kind with
+         | S_DIR | S_REG -> assert false
+         | S_CHR | S_BLK | S_LNK | S_FIFO | S_SOCK -> ())
+      | exception Unix.Unix_error (EACCES, _, _) ->
+        Err.warning
+          Pp.O.
+            [ Pp.text "Permission denied - skipping "
+              ++ Pp_tty.path (module Relative_path) parent_dir
+              ++ Pp.text "."
+            ] [@coverage off]);
+    { subdirectories = List.rev !subdirectories; files = List.rev !files }
   ;;
 end
 

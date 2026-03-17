@@ -128,7 +128,7 @@ module Library_open_via_flags = struct
   let module_name (t : t) =
     String.split t ~on:'.'
     |> List.rev
-    |> List.hd_exn
+    |> List.hd
     |> String.capitalize
     |> String.map ~f:(function
       | '-' -> '_'

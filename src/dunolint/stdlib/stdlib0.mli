@@ -6,8 +6,9 @@
 
 (** Extending [Stdlib] for use in the project. *)
 
-module Sexp = Sexp0
 module Code_error = Code_error0
+module List = List0
+module Sexp = Sexp0
 module With_equal_and_sexp = With_equal_and_sexp0
 
 val phys_equal : 'a -> 'a -> bool

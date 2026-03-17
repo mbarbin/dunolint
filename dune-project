@@ -91,6 +91,8 @@
    (>= 0.3.3))
   (logs
    (>= 0.7.0))
+  (ordering
+   (>= 3.17))
   (pageantty
    (>= 0.0.3))
   (parsexp

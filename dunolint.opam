@@ -21,6 +21,7 @@ depends: [
   "fpath-sexp0" {>= "0.4.0"}
   "loc" {>= "0.3.3"}
   "logs" {>= "0.7.0"}
+  "ordering" {>= "3.17"}
   "pageantty" {>= "0.0.3"}
   "parsexp" {>= "v0.17"}
   "patdiff" {>= "v0.17"}

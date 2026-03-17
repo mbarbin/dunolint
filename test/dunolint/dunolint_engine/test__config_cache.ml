@@ -64,7 +64,7 @@ let%expect_test "config cache" =
     print_s [%sexp (List.length configs2 : int)];
     [%expect {| 2 |}];
     (* Verify that the configs are physically the same (from cache). *)
-    List.iter2_exn configs1 configs2 ~f:(fun c1 c2 ->
+    List.iter2 configs1 configs2 ~f:(fun c1 c2 ->
       require (phys_equal c1.config c2.config));
     (* Build context for a third file in the same directory. *)
     let ctx3 =
@@ -76,7 +76,7 @@ let%expect_test "config cache" =
     print_s [%sexp (List.length configs3 : int)];
     [%expect {| 2 |}];
     (* Verify that configs from ctx3 are also physically the same as ctx1. *)
-    List.iter2_exn configs1 configs3 ~f:(fun c1 c3 ->
+    List.iter2 configs1 configs3 ~f:(fun c1 c3 ->
       require (phys_equal c1.config c3.config));
     (* Build context for a file directly in lib (not in subdir).
        This should also have 2 configs (root and lib). *)
@@ -87,7 +87,7 @@ let%expect_test "config cache" =
     print_s [%sexp (List.length configs4 : int)];
     [%expect {| 2 |}];
     (* Verify that configs from ctx4 are also physically the same as ctx1. *)
-    List.iter2_exn configs1 configs4 ~f:(fun c1 c4 ->
+    List.iter2 configs1 configs4 ~f:(fun c1 c4 ->
       require (phys_equal c1.config c4.config));
     (* Build context for a file at the root level.
        This should only have 1 config (from root). *)
@@ -105,7 +105,7 @@ let%expect_test "config cache" =
     (* Verify that the single config from ctx5 is physically the same as the
        first config from ctx1 (both are the root config from the cache). *)
     let ctx1_prefix = List.take configs1 (List.length configs5) in
-    List.iter2_exn configs5 ctx1_prefix ~f:(fun c5 c1 ->
+    List.iter2 configs5 ctx1_prefix ~f:(fun c5 c1 ->
       require (phys_equal c5.config c1.config));
     ());
   [%expect {||}];

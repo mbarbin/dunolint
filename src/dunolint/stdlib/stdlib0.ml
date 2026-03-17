@@ -4,8 +4,9 @@
 (*  SPDX-License-Identifier: LGPL-3.0-or-later WITH LGPL-3.0-linking-exception   *)
 (*********************************************************************************)
 
-module Sexp = Sexp0
 module Code_error = Code_error0
+module List = List0
+module Sexp = Sexp0
 module With_equal_and_sexp = With_equal_and_sexp0
 
 let phys_equal a b = a == b

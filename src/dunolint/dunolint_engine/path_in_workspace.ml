@@ -11,7 +11,7 @@ let ancestors_autoloading_dirs ~path =
   then []
   else (
     let segs = Fpath.segs (Relative_path.rem_empty_seg path :> Fpath.t) in
-    List.init (List.length segs) ~f:(fun i ->
+    List.init ~len:(List.length segs) ~f:(fun i ->
       List.take segs i
       |> List.map ~f:Fsegment.v
       |> Relative_path.of_list
@@ -25,7 +25,7 @@ let paths_to_check_for_skip_predicates ~path =
     let segs = Fpath.segs (path :> Fpath.t) in
     let ancestors =
       List.init
-        (List.length segs - 1)
+        ~len:(List.length segs - 1)
         ~f:(fun i ->
           List.take segs (i + 1)
           |> List.map ~f:Fsegment.v

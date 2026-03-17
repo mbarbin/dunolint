@@ -38,9 +38,9 @@ let%expect_test "eval" =
   test (Blang.base Trilang.Undefined);
   [%expect {| Undefined |}];
   let and_table =
-    let open List.Let_syntax in
-    let%bind a = Trilang.all in
-    let%bind b = Trilang.all in
+    let ( let* ) x f = List.concat_map x ~f in
+    let* a = Trilang.all in
+    let* b = Trilang.all in
     [ a, b, Blang.and_ [ Blang.base a; Blang.base b ] ]
   in
   List.iter and_table ~f:(fun (a, b, expr) ->
@@ -61,9 +61,9 @@ let%expect_test "eval" =
     ((expr (and Undefined Undefined)) (eval Undefined))
     |}];
   let or_table =
-    let open List.Let_syntax in
-    let%bind a = Trilang.all in
-    let%bind b = Trilang.all in
+    let ( let* ) x f = List.concat_map x ~f in
+    let* a = Trilang.all in
+    let* b = Trilang.all in
     [ a, b, Blang.or_ [ Blang.base a; Blang.base b ] ]
   in
   List.iter or_table ~f:(fun (a, b, expr) ->
@@ -84,8 +84,8 @@ let%expect_test "eval" =
     ((expr (or Undefined Undefined)) (eval Undefined))
     |}];
   let not_table =
-    let open List.Let_syntax in
-    let%bind a = Trilang.all in
+    let ( let* ) x f = List.concat_map x ~f in
+    let* a = Trilang.all in
     [ Blang.not_ (Blang.base a) ]
   in
   List.iter not_table ~f:(fun expr ->
@@ -99,8 +99,8 @@ let%expect_test "eval" =
     ((expr (not Undefined)) (eval Undefined))
     |}];
   let if_table =
-    let open List.Let_syntax in
-    let%bind a = Trilang.all in
+    let ( let* ) x f = List.concat_map x ~f in
+    let* a = Trilang.all in
     [ Blang.if_ (Blang.base a) (Blang.base Trilang.True) (Blang.base Trilang.False) ]
   in
   List.iter if_table ~f:(fun expr ->
