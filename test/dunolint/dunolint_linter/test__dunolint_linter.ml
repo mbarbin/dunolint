@@ -31,11 +31,7 @@ let%expect_test "lint" =
     | Error _ -> assert false
   in
   print_diff t;
-  [%expect
-    {|
-    --- expected
-    +++ actual
-    |}];
+  [%expect {||}];
   print_s [%sexp (Dunolint_linter.path t : Relative_path.t)];
   [%expect {| path/to/dunolint |}];
   print_s [%sexp (List.length (Dunolint_linter.original_sexps t) : int)];
@@ -62,11 +58,9 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,4 +1,4 @@
-    - (lang dunolint 1.0)
-    + (lang dunolint 1.1)
+    -|(lang dunolint 1.0)
+    +|(lang dunolint 1.1)
 
       (rule (enforce (dune (has_field instrumentation))))
     |}];
@@ -129,11 +123,9 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,4 +1,4 @@
-    - (lang dunolint 1.0)
-    + (lang dunolint 1.5)
+    -|(lang dunolint 1.0)
+    +|(lang dunolint 1.5)
 
       (rule (enforce (dune (has_field instrumentation))))
     |}];

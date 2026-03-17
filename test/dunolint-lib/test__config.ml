@@ -195,7 +195,7 @@ let%expect_test "versioned_sexp v1" =
     match Dunolint.Config.Private.view t with
     | `v1 v1' -> require_equal (module Dunolint.Config.V1) v1 v1'
   in
-  [%expect {| |}];
+  [%expect {||}];
   ()
 ;;
 

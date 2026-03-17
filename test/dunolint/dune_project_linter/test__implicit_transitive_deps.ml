@@ -101,28 +101,28 @@ let%expect_test "eval" =
   let _, t = parse {| (implicit_transitive_deps true) |} in
   Test_helpers.is_true
     (Dune_project_linter.Implicit_transitive_deps.eval t ~predicate:(`equals `True));
-  [%expect {| |}];
+  [%expect {||}];
   Test_helpers.is_false
     (Dune_project_linter.Implicit_transitive_deps.eval t ~predicate:(`equals `False));
-  [%expect {| |}];
+  [%expect {||}];
   Test_helpers.is_false
     (Dune_project_linter.Implicit_transitive_deps.eval
        t
        ~predicate:(`equals `False_if_hidden_includes_supported));
-  [%expect {| |}];
+  [%expect {||}];
   (* Test with false-if-hidden-includes-supported value *)
   let _, t = parse {| (implicit_transitive_deps false-if-hidden-includes-supported) |} in
   Test_helpers.is_false
     (Dune_project_linter.Implicit_transitive_deps.eval t ~predicate:(`equals `True));
-  [%expect {| |}];
+  [%expect {||}];
   Test_helpers.is_false
     (Dune_project_linter.Implicit_transitive_deps.eval t ~predicate:(`equals `False));
-  [%expect {| |}];
+  [%expect {||}];
   Test_helpers.is_true
     (Dune_project_linter.Implicit_transitive_deps.eval
        t
        ~predicate:(`equals `False_if_hidden_includes_supported));
-  [%expect {| |}];
+  [%expect {||}];
   ()
 ;;
 

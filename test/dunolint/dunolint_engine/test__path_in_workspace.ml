@@ -161,7 +161,7 @@ let%expect_test "ancestors_autoloading_dirs - from documentation" =
   test "file.ml";
   [%expect {| ./ |}];
   test "./";
-  [%expect {| |}]
+  [%expect {||}]
 ;;
 
 let%expect_test "ancestors_autoloading_dirs - ordering" =

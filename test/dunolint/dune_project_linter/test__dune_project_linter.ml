@@ -35,7 +35,7 @@ let%expect_test "lint" =
     | Error _ -> assert false
   in
   print_diff t;
-  [%expect {| |}];
+  [%expect {||}];
   print_s [%sexp (Dune_project_linter.path t : Relative_path.t)];
   [%expect {| path/to/dune-project |}];
   print_s [%sexp (List.length (Dune_project_linter.original_sexps t) : int)];

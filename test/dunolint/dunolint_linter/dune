@@ -17,11 +17,14 @@
   -open
   Dunolint_stdlib
   -open
-  Dunolint.Std)
+  Dunolint.Std
+  -open
+  Dunolint_myers)
  (libraries
   base
   dunolint
   dunolint.dunolint_linter
+  dunolint_myers
   dunolint_stdlib
   dunolinter
   file-rewriter
@@ -31,8 +34,7 @@
   pp
   pplumbing-err
   sexps-rewriter
-  test_helpers
-  windtrap.myers)
+  test_helpers)
  (instrumentation
   (backend bisect_ppx))
  (lint

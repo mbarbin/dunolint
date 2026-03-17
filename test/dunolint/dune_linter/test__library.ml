@@ -1115,19 +1115,19 @@ let%expect_test "positive_enforcement_with_existing_fields" =
     enforce_diff t cond
   in
   test [ has_field `name ];
-  [%expect {| |}];
+  [%expect {||}];
   test [ has_field `public_name ];
-  [%expect {| |}];
+  [%expect {||}];
   test [ has_field `inline_tests ];
-  [%expect {| |}];
+  [%expect {||}];
   test [ has_field `modes ];
-  [%expect {| |}];
+  [%expect {||}];
   test [ has_field `instrumentation ];
-  [%expect {| |}];
+  [%expect {||}];
   test [ has_field `lint ];
-  [%expect {| |}];
+  [%expect {||}];
   test [ has_field `preprocess ];
-  [%expect {| |}];
+  [%expect {||}];
   (* Test [has_field `package] with existing package field. *)
   let init_with_package =
     {|
@@ -1139,7 +1139,7 @@ let%expect_test "positive_enforcement_with_existing_fields" =
   in
   let t = parse init_with_package in
   enforce_diff t [ has_field `package ];
-  [%expect {| |}];
+  [%expect {||}];
   ()
 ;;
 
@@ -1338,7 +1338,7 @@ let%expect_test "if_present enforce" =
   (* [if_present] on absent public_name is unapplicable - no changes. *)
   let t = parse init_no_public_name in
   enforce_diff t [ if_present (`public_name (is_prefix "lib.")) ];
-  [%expect {| |}];
+  [%expect {||}];
   (* [if_present] on present public_name enforces the inner condition. *)
   let t = parse init_with_public_name in
   enforce_diff t [ if_present (`public_name (is_prefix "lib.")) ];
@@ -1353,7 +1353,7 @@ let%expect_test "if_present enforce" =
   (* [if_present] with is_suffix on present public_name. *)
   let t = parse init_with_public_name in
   enforce_diff t [ if_present (`public_name (is_suffix "-lib")) ];
-  [%expect {| |}];
+  [%expect {||}];
   let t = parse init_with_public_name in
   enforce_diff t [ if_present (`public_name (is_suffix "-new")) ];
   [%expect
@@ -1367,7 +1367,7 @@ let%expect_test "if_present enforce" =
   (* [if_present] on absent package is unapplicable - no changes. *)
   let t = parse init_no_package in
   enforce_diff t [ if_present (`package (is_prefix "prefix-")) ];
-  [%expect {| |}];
+  [%expect {||}];
   (* [if_present] on present package enforces the inner condition. *)
   let t = parse init_with_package in
   enforce_diff t [ if_present (`package (is_prefix "prefix-")) ];
@@ -1408,7 +1408,7 @@ let%expect_test "if_present enforce" =
   enforce_diff
     t
     [ if_present (`public_name (equals (Dune.Library.Public_name.v "new-name"))) ];
-  [%expect {| |}];
+  [%expect {||}];
   ()
 ;;
 

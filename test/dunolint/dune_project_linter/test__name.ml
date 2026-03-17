@@ -91,21 +91,21 @@ let%expect_test "eval" =
     (Dune_project_linter.Name.eval
        t
        ~predicate:(`equals (Dune_project.Name.v "my_project")));
-  [%expect {| |}];
+  [%expect {||}];
   Test_helpers.is_false
     (Dune_project_linter.Name.eval
        t
        ~predicate:(`equals (Dune_project.Name.v "other_project")));
-  [%expect {| |}];
+  [%expect {||}];
   Test_helpers.is_true (Dune_project_linter.Name.eval t ~predicate:(`is_prefix "my_"));
-  [%expect {| |}];
+  [%expect {||}];
   Test_helpers.is_false (Dune_project_linter.Name.eval t ~predicate:(`is_prefix "other_"));
-  [%expect {| |}];
+  [%expect {||}];
   Test_helpers.is_true
     (Dune_project_linter.Name.eval t ~predicate:(`is_suffix "_project"));
-  [%expect {| |}];
+  [%expect {||}];
   Test_helpers.is_false (Dune_project_linter.Name.eval t ~predicate:(`is_suffix "_other"));
-  [%expect {| |}];
+  [%expect {||}];
   ()
 ;;
 

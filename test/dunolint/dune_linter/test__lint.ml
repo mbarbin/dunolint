@@ -105,12 +105,12 @@ let%expect_test "eval" =
     (Dune_linter.Lint.eval
        t
        ~predicate:(`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_js_style")))));
-  [%expect {| |}];
+  [%expect {||}];
   Test_helpers.is_false
     (Dune_linter.Lint.eval
        t
        ~predicate:(`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_other")))));
-  [%expect {| |}];
+  [%expect {||}];
   ()
 ;;
 

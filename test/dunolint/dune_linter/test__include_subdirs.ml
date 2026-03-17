@@ -86,15 +86,15 @@ let%expect_test "eval" =
   let _, t = parse {| (include_subdirs unqualified) |} in
   Test_helpers.is_true
     (Dune_linter.Include_subdirs.eval t ~predicate:(`equals `unqualified));
-  [%expect {| |}];
+  [%expect {||}];
   Test_helpers.is_false
     (Dune_linter.Include_subdirs.eval t ~predicate:(`equals `qualified));
-  [%expect {| |}];
+  [%expect {||}];
   Test_helpers.is_false (Dune_linter.Include_subdirs.eval t ~predicate:(`equals `no));
-  [%expect {| |}];
+  [%expect {||}];
   let _, t = parse {| (include_subdirs no) |} in
   Test_helpers.is_true (Dune_linter.Include_subdirs.eval t ~predicate:(`equals `no));
-  [%expect {| |}];
+  [%expect {||}];
   ()
 ;;
 

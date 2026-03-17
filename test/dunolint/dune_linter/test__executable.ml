@@ -676,15 +676,15 @@ let%expect_test "positive_enforcement_with_existing_fields" =
     enforce_diff t cond
   in
   test [ has_field `name ];
-  [%expect {| |}];
+  [%expect {||}];
   test [ has_field `public_name ];
-  [%expect {| |}];
+  [%expect {||}];
   test [ has_field `instrumentation ];
-  [%expect {| |}];
+  [%expect {||}];
   test [ has_field `lint ];
-  [%expect {| |}];
+  [%expect {||}];
   test [ has_field `preprocess ];
-  [%expect {| |}];
+  [%expect {||}];
   ()
 ;;
 
