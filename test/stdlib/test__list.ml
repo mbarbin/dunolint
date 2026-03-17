@@ -5,7 +5,7 @@
 (*********************************************************************************)
 
 let%expect_test "count - empty list" =
-  print_dyn (Dyn.int (List.count [] ~f:(fun _ -> true)));
+  print_dyn (Dyn.int (List.count [] ~f:(fun _ -> (assert false [@coverage off]))));
   [%expect {| 0 |}];
   ()
 ;;
@@ -73,7 +73,8 @@ let%expect_test "dedup_and_sort - reverse sorted" =
 ;;
 
 let%expect_test "find - empty list" =
-  print_dyn (Dyn.option Dyn.int (List.find [] ~f:(fun _ -> true)));
+  print_dyn
+    (Dyn.option Dyn.int (List.find [] ~f:(fun _ -> (assert false [@coverage off]))));
   [%expect {| None |}];
   ()
 ;;
