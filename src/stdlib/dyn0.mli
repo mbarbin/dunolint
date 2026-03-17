@@ -17,4 +17,3 @@ module type Stringable_S = sig
 end
 
 val stringable : (module Stringable_S with type t = 'a) -> 'a -> Dyn.t
-val to_sexp : Dyn.t -> Sexplib0.Sexp.t
