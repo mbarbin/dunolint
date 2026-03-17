@@ -47,7 +47,7 @@ depends: [
   "volgo-git-unix" {>= "0.0.21"}
   "volgo-hg-unix" {>= "0.0.21"}
   "volgo-vcs" {>= "0.0.21"}
-  "windtrap" {>= "0.1.0"}
+  "windtrap" {with-test & >= "0.1.0"}
   "odoc" {with-doc}
 ]
 build: [

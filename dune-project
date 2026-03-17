@@ -227,7 +227,14 @@
   (volgo-vcs
    (>= 0.0.21))
   (windtrap
-   (>= 0.1.0))))
+   ;; For the scope of the project the [:with-test] annotation below does not
+   ;; match our conventions, as this is test-only package. But without it,
+   ;; [opam-dune-lint] complains (it is only used by a dune [test] stanza atm.)
+   ;; We wish to continue relying on a clean exit code for [opam-dune-lint] at
+   ;; this time, so we added the annotation.
+   (and
+    :with-test
+    (>= 0.1.0)))))
 
 (package
  (name dunolint-dev)
