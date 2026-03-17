@@ -1,0 +1,6 @@
+(test
+ (name test_myers)
+ (package dunolint-tests)
+ (modules test_myers)
+ (flags -open Dunolint_myers)
+ (libraries dunolint_myers windtrap))
