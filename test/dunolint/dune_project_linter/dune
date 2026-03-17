@@ -17,14 +17,11 @@
   -open
   Dunolint_stdlib
   -open
-  Dunolint.Std
-  -open
-  Dunolint_myers)
+  Dunolint.Std)
  (libraries
   base
   dune_project_linter
   dunolint
-  dunolint_myers
   dunolint_stdlib
   dunolinter
   file-rewriter

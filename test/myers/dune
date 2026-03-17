@@ -8,10 +8,8 @@
   -warn-error
   +a
   -open
-  Dunolint_stdlib
-  -open
-  Dunolint_myers)
- (libraries dunolint_myers dunolint_stdlib)
+  Dunolint_stdlib)
+ (libraries dunolint_stdlib)
  (inline_tests)
  (instrumentation
   (backend bisect_ppx))

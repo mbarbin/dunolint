@@ -26,9 +26,7 @@
   -open
   Sexplib0
   -open
-  Dunolint.Std
-  -open
-  Dunolint_myers)
+  Dunolint.Std)
  (libraries
   base
   cmdlang
@@ -37,7 +35,6 @@
   dunolint.dune_project_linter
   dunolint.dunolinter
   dunolint.vendor_prompt
-  dunolint_myers
   dunolint_stdlib
   file-rewriter
   fpath

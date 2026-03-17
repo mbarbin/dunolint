@@ -8,6 +8,7 @@ module Code_error = Code_error0
 module Dyn = Dyn0
 module Int = Int0
 module List = List0
+module Myers = Myers0
 module Pp = Pp0
 module Sexp = Sexp0
 module With_equal_and_sexp = With_equal_and_sexp0
