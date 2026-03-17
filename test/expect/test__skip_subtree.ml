@@ -69,14 +69,12 @@ let%expect_test "path.equals" =
   [%expect
     {|
     dry-run: Would edit file "bar/dune-project":
-    --- expected
-    +++ actual
     @@ -1,4 +1,4 @@
 
       (lang dune 3.18)
 
-    - (name foo_bar)
-    + (name bar)
+    -|(name foo_bar)
+    +|(name bar)
     |}];
   ()
 ;;

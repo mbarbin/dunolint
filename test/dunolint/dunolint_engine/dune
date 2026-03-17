@@ -17,7 +17,9 @@
   -open
   Stdio
   -open
-  Dunolint_stdlib)
+  Dunolint_stdlib
+  -open
+  Dunolint_myers)
  (libraries
   base
   cmdlang
@@ -26,6 +28,7 @@
   dune_project_linter
   dunolint
   dunolint_engine
+  dunolint_myers
   dunolint_stdlib
   dunolinter
   file-rewriter

@@ -1,6 +1,6 @@
 (library
  (name dunolint_myers)
- (package dunolint-tests)
+ (package dunolint)
  (instrumentation
   (backend bisect_ppx))
  (lint

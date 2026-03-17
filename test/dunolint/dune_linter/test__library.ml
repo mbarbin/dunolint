@@ -691,13 +691,11 @@ let%expect_test "add_name_via_enforce" =
   test [ name (equals main) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,2 +1,3 @@
       (library
-    -  (public_name my-cli))
-    +  (public_name my-cli)
-    +  (name main))
+    -| (public_name my-cli))
+    +| (public_name my-cli)
+    +| (name main))
     |}];
   (* [is_prefix] and [is_suffix] cannot provide initial values - enforcement fails. *)
   test_fails [ name (is_prefix "hey") ];
@@ -717,26 +715,22 @@ let%expect_test "add_name_via_enforce" =
   test [ name (and_ [ equals main; is_prefix "ma" ]) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,2 +1,3 @@
       (library
-    -  (public_name my-cli))
-    +  (public_name my-cli)
-    +  (name main))
+    -| (public_name my-cli))
+    +| (public_name my-cli)
+    +| (name main))
     |}];
   (* When [equals] is the second operand, [find_init_value] continues scanning
      past the first operand that doesn't provide an initial value. *)
   test [ name (and_ [ is_prefix "ma"; equals main ]) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,2 +1,3 @@
       (library
-    -  (public_name my-cli))
-    +  (public_name my-cli)
-    +  (name main))
+    -| (public_name my-cli))
+    +| (public_name my-cli)
+    +| (name main))
     |}];
   (* Currently the application of invariant is not idempotent. See how, at the
      end of the application of this chain of [and_] the invariant no longer
@@ -745,13 +739,11 @@ let%expect_test "add_name_via_enforce" =
   test [ name (and_ [ equals main; is_prefix "hey_" ]) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,2 +1,3 @@
       (library
-    -  (public_name my-cli))
-    +  (public_name my-cli)
-    +  (name hey_main))
+    -| (public_name my-cli))
+    +| (public_name my-cli)
+    +| (name hey_main))
     |}];
   (* Predicates inside [or_], [if_], or [not_] are not at positive enforcing
      positions, so they cannot provide initial values - enforcement fails. *)
@@ -787,13 +779,11 @@ let%expect_test "add_name_via_enforce" =
   test [ public_name (equals (Dune.Library.Public_name.v "public_lib")) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,2 +1,3 @@
       (library
-    -  (name my_lib))
-    +  (name my_lib)
-    +  (public_name public_lib))
+    -| (name my_lib))
+    +| (name my_lib)
+    +| (public_name public_lib))
     |}];
   (* [is_prefix] and [is_suffix] cannot provide initial values - enforcement fails. *)
   test_fails [ public_name (is_prefix "prefix_") ];
@@ -812,13 +802,11 @@ let%expect_test "add_name_via_enforce" =
   test [ package (equals (Dune.Package.Name.v "my-pkg")) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,2 +1,3 @@
       (library
-    -  (name my_lib))
-    +  (name my_lib)
-    +  (package my-pkg))
+    -| (name my_lib))
+    +| (name my_lib)
+    +| (package my-pkg))
     |}];
   (* Package prefix/suffix predicates cannot provide initial values - enforcement fails. *)
   test_fails [ package (is_prefix "prefix-") ];
@@ -989,13 +977,11 @@ let%expect_test "remove_fields" =
   test [ not_ (has_field `inline_tests) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,7 +1,6 @@
       (library
        (name my-lib)
        (public_name my-public-lib)
-    -  (inline_tests)
+    -| (inline_tests)
        (modes byte native)
        (instrumentation
         (backend bisect_ppx))
@@ -1013,26 +999,22 @@ let%expect_test "remove_fields" =
   enforce_diff t [ not_ (has_field `inline_tests) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,5 +1,3 @@
       (library
        (name my-lib)
-    -  (inline_tests
-    -   (deps ./test_data))
+    -| (inline_tests
+    -|  (deps ./test_data))
        (modes byte native))
     |}];
   test [ not_ (has_field `instrumentation) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -3,8 +3,6 @@
        (public_name my-public-lib)
        (inline_tests)
        (modes byte native)
-    -  (instrumentation
-    -   (backend bisect_ppx))
+    -| (instrumentation
+    -|  (backend bisect_ppx))
        (lint
         (pps ppx_linter))
        (preprocess no_preprocessing))
@@ -1040,39 +1022,33 @@ let%expect_test "remove_fields" =
   test [ not_ (has_field `lint) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -5,6 +5,4 @@
        (modes byte native)
        (instrumentation
         (backend bisect_ppx))
-    -  (lint
-    -   (pps ppx_linter))
+    -| (lint
+    -|  (pps ppx_linter))
        (preprocess no_preprocessing))
     |}];
   test [ not_ (has_field `preprocess) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -6,5 +6,4 @@
        (instrumentation
         (backend bisect_ppx))
        (lint
-    -   (pps ppx_linter))
-    -  (preprocess no_preprocessing))
-    +   (pps ppx_linter)))
+    -|  (pps ppx_linter))
+    -| (preprocess no_preprocessing))
+    +|  (pps ppx_linter)))
     |}];
   test [ not_ (has_field `modes) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -2,7 +2,6 @@
        (name my-lib)
        (public_name my-public-lib)
        (inline_tests)
-    -  (modes byte native)
+    -| (modes byte native)
        (instrumentation
         (backend bisect_ppx))
        (lint
@@ -1080,11 +1056,9 @@ let%expect_test "remove_fields" =
   test [ not_ (has_field `name) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,5 +1,4 @@
       (library
-    -  (name my-lib)
+    -| (name my-lib)
        (public_name my-public-lib)
        (inline_tests)
        (modes byte native)
@@ -1092,12 +1066,10 @@ let%expect_test "remove_fields" =
   test [ not_ (has_field `public_name) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,6 +1,5 @@
       (library
        (name my-lib)
-    -  (public_name my-public-lib)
+    -| (public_name my-public-lib)
        (inline_tests)
        (modes byte native)
        (instrumentation
@@ -1115,12 +1087,10 @@ let%expect_test "remove_fields" =
   enforce_diff t [ not_ (has_field `package) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,4 +1,3 @@
       (library
        (name my-lib)
-    -  (package my-pkg)
+    -| (package my-pkg)
        (modes byte native))
     |}];
   ()
@@ -1145,47 +1115,19 @@ let%expect_test "positive_enforcement_with_existing_fields" =
     enforce_diff t cond
   in
   test [ has_field `name ];
-  [%expect
-    {|
-    --- expected
-    +++ actual
-    |}];
+  [%expect {| |}];
   test [ has_field `public_name ];
-  [%expect
-    {|
-    --- expected
-    +++ actual
-    |}];
+  [%expect {| |}];
   test [ has_field `inline_tests ];
-  [%expect
-    {|
-    --- expected
-    +++ actual
-    |}];
+  [%expect {| |}];
   test [ has_field `modes ];
-  [%expect
-    {|
-    --- expected
-    +++ actual
-    |}];
+  [%expect {| |}];
   test [ has_field `instrumentation ];
-  [%expect
-    {|
-    --- expected
-    +++ actual
-    |}];
+  [%expect {| |}];
   test [ has_field `lint ];
-  [%expect
-    {|
-    --- expected
-    +++ actual
-    |}];
+  [%expect {| |}];
   test [ has_field `preprocess ];
-  [%expect
-    {|
-    --- expected
-    +++ actual
-    |}];
+  [%expect {| |}];
   (* Test [has_field `package] with existing package field. *)
   let init_with_package =
     {|
@@ -1197,11 +1139,7 @@ let%expect_test "positive_enforcement_with_existing_fields" =
   in
   let t = parse init_with_package in
   enforce_diff t [ has_field `package ];
-  [%expect
-    {|
-    --- expected
-    +++ actual
-    |}];
+  [%expect {| |}];
   ()
 ;;
 
@@ -1225,13 +1163,11 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
   test [ public_name (equals (Dune.Library.Public_name.v "new.name")) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,6 +1,6 @@
       (library
        (name my-lib)
-    -  (public_name my-public-lib)
-    +  (public_name new.name)
+    -| (public_name my-public-lib)
+    +| (public_name new.name)
        (modes byte native)
        (instrumentation
         (backend bisect_ppx))
@@ -1239,13 +1175,11 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
   test [ public_name (is_prefix "lib."); public_name (is_suffix "-pub") ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,6 +1,6 @@
       (library
        (name my-lib)
-    -  (public_name my-public-lib)
-    +  (public_name lib.my-public-lib-pub)
+    -| (public_name my-public-lib)
+    +| (public_name lib.my-public-lib-pub)
        (modes byte native)
        (instrumentation
         (backend bisect_ppx))
@@ -1253,14 +1187,12 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
   test [ instrumentation (backend (Dune.Instrumentation.Backend.v "coverage")) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -3,7 +3,7 @@
        (public_name my-public-lib)
        (modes byte native)
        (instrumentation
-    -   (backend bisect_ppx))
-    +   (backend coverage))
+    -|  (backend bisect_ppx))
+    +|  (backend coverage))
        (lint
         (pps ppx_linter))
        (preprocess no_preprocessing))
@@ -1268,28 +1200,24 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
   test [ lint (pps (pp (Dune.Pp.Name.v "ppx_deriving"))) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -5,5 +5,5 @@
        (instrumentation
         (backend bisect_ppx))
        (lint
-    -   (pps ppx_linter))
-    +   (pps ppx_deriving ppx_linter))
+    -|  (pps ppx_linter))
+    +|  (pps ppx_deriving ppx_linter))
        (preprocess no_preprocessing))
     |}];
   test [ preprocess (pps (pp (Dune.Pp.Name.v "ppx_compare"))) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -6,4 +6,5 @@
         (backend bisect_ppx))
        (lint
         (pps ppx_linter))
-    -  (preprocess no_preprocessing))
-    +  (preprocess
-    +   (pps ppx_compare)))
+    -| (preprocess no_preprocessing))
+    +| (preprocess
+    +|  (pps ppx_compare)))
     |}];
   (* Test package condition enforcement with existing package field. *)
   let init_with_package =
@@ -1307,25 +1235,21 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
   test_pkg [ package (equals (Dune.Package.Name.v "new-pkg")) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,4 +1,4 @@
       (library
        (name my-lib)
-    -  (package old-pkg)
-    +  (package new-pkg)
+    -| (package old-pkg)
+    +| (package new-pkg)
        (modes byte native))
     |}];
   test_pkg [ package (is_prefix "prefix-"); package (is_suffix "-suffix") ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,4 +1,4 @@
       (library
        (name my-lib)
-    -  (package old-pkg)
-    +  (package prefix-old-pkg-suffix)
+    -| (package old-pkg)
+    +| (package prefix-old-pkg-suffix)
        (modes byte native))
     |}];
   ()
@@ -1414,77 +1338,57 @@ let%expect_test "if_present enforce" =
   (* [if_present] on absent public_name is unapplicable - no changes. *)
   let t = parse init_no_public_name in
   enforce_diff t [ if_present (`public_name (is_prefix "lib.")) ];
-  [%expect
-    {|
-    --- expected
-    +++ actual
-    |}];
+  [%expect {| |}];
   (* [if_present] on present public_name enforces the inner condition. *)
   let t = parse init_with_public_name in
   enforce_diff t [ if_present (`public_name (is_prefix "lib.")) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,3 +1,3 @@
       (library
        (name mylib)
-    -  (public_name my-public-lib))
-    +  (public_name lib.my-public-lib))
+    -| (public_name my-public-lib))
+    +| (public_name lib.my-public-lib))
     |}];
   (* [if_present] with is_suffix on present public_name. *)
   let t = parse init_with_public_name in
   enforce_diff t [ if_present (`public_name (is_suffix "-lib")) ];
-  [%expect
-    {|
-    --- expected
-    +++ actual
-    |}];
+  [%expect {| |}];
   let t = parse init_with_public_name in
   enforce_diff t [ if_present (`public_name (is_suffix "-new")) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,3 +1,3 @@
       (library
        (name mylib)
-    -  (public_name my-public-lib))
-    +  (public_name my-public-lib-new))
+    -| (public_name my-public-lib))
+    +| (public_name my-public-lib-new))
     |}];
   (* [if_present] on absent package is unapplicable - no changes. *)
   let t = parse init_no_package in
   enforce_diff t [ if_present (`package (is_prefix "prefix-")) ];
-  [%expect
-    {|
-    --- expected
-    +++ actual
-    |}];
+  [%expect {| |}];
   (* [if_present] on present package enforces the inner condition. *)
   let t = parse init_with_package in
   enforce_diff t [ if_present (`package (is_prefix "prefix-")) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,3 +1,3 @@
       (library
        (name mylib)
-    -  (package my-pkg))
-    +  (package prefix-my-pkg))
+    -| (package my-pkg))
+    +| (package prefix-my-pkg))
     |}];
   (* [if_present] with is_suffix on present package. *)
   let t = parse init_with_package in
   enforce_diff t [ if_present (`package (is_suffix "-suffix")) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,3 +1,3 @@
       (library
        (name mylib)
-    -  (package my-pkg))
-    +  (package my-pkg-suffix))
+    -| (package my-pkg))
+    +| (package my-pkg-suffix))
     |}];
   (* [if_present] with equals changes the value when present. *)
   let t = parse init_with_public_name in
@@ -1493,24 +1397,18 @@ let%expect_test "if_present enforce" =
     [ if_present (`public_name (equals (Dune.Library.Public_name.v "new-name"))) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,3 +1,3 @@
       (library
        (name mylib)
-    -  (public_name my-public-lib))
-    +  (public_name new-name))
+    -| (public_name my-public-lib))
+    +| (public_name new-name))
     |}];
   (* [if_present] with equals on absent field is unapplicable - no field added. *)
   let t = parse init_no_public_name in
   enforce_diff
     t
     [ if_present (`public_name (equals (Dune.Library.Public_name.v "new-name"))) ];
-  [%expect
-    {|
-    --- expected
-    +++ actual
-    |}];
+  [%expect {| |}];
   ()
 ;;
 
@@ -1583,13 +1481,11 @@ let%expect_test "if_present with blang combinations" =
     ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,3 +1,3 @@
       (library
        (name mylib)
-    -  (public_name my-public-lib))
-    +  (public_name lib.my-public-lib))
+    -| (public_name my-public-lib))
+    +| (public_name lib.my-public-lib))
     |}];
   (* [or_] with [if_present] - when field is absent, evaluates to true. *)
   let t = parse init_no_public_name in
@@ -1608,13 +1504,11 @@ let%expect_test "if_present with blang combinations" =
     [ if_present (`public_name (and_ [ is_prefix "lib."; is_suffix "-prod" ])) ];
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,3 +1,3 @@
       (library
        (name mylib)
-    -  (public_name my-public-lib))
-    +  (public_name lib.my-public-lib-prod))
+    -| (public_name my-public-lib))
+    +| (public_name lib.my-public-lib-prod))
     |}];
   ()
 ;;

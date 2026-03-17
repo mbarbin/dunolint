@@ -35,11 +35,7 @@ let%expect_test "lint" =
     | Error _ -> assert false
   in
   print_diff t;
-  [%expect
-    {|
-    --- expected
-    +++ actual
-    |}];
+  [%expect {| |}];
   print_s [%sexp (Dune_project_linter.path t : Relative_path.t)];
   [%expect {| path/to/dune-project |}];
   print_s [%sexp (List.length (Dune_project_linter.original_sexps t) : int)];
@@ -55,11 +51,9 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,4 +1,4 @@
-    - (lang dune 3.17)
-    + (lang dune 3.19)
+    -|(lang dune 3.17)
+    +|(lang dune 3.19)
 
       (name dunolint)
     |}];
@@ -96,16 +90,14 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,8 +1,8 @@
-    - (lang dune 3.17)
-    + (lang dune 3.20)
+    -|(lang dune 3.17)
+    +|(lang dune 3.20)
 
       (name dunolint)
 
-    - (implicit_transitive_deps true)
-    + (implicit_transitive_deps false)
+    -|(implicit_transitive_deps true)
+    +|(implicit_transitive_deps false)
 
       (generate_opam_files)
     |}];
@@ -144,18 +136,16 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,10 +1,9 @@
-    - (lang dune 3.17)
-    + (lang dune 3.20)
+    -|(lang dune 3.17)
+    +|(lang dune 3.20)
 
       (name dunolint)
 
-    - (implicit_transitive_deps true)
-    + (implicit_transitive_deps false)
+    -|(implicit_transitive_deps true)
+    +|(implicit_transitive_deps false)
 
-    - (generate_opam_files)
+    -|(generate_opam_files)
 
       ;; Atoms are ignored by dunolint (probably doesn't exists in dune).
       atom
@@ -205,13 +195,11 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    --- expected
-    +++ actual
     @@ -1,6 +1,6 @@
       (lang dune 3.17)
 
-    - (name dunolint)
-    + (name foo)
+    -|(name dunolint)
+    +|(name foo)
 
       (implicit_transitive_deps true)
     |}];

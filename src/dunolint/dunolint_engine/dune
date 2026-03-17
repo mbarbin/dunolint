@@ -26,7 +26,9 @@
   -open
   Sexplib0
   -open
-  Dunolint.Std)
+  Dunolint.Std
+  -open
+  Dunolint_myers)
  (libraries
   base
   cmdlang
@@ -35,6 +37,7 @@
   dunolint.dune_project_linter
   dunolint.dunolinter
   dunolint.vendor_prompt
+  dunolint_myers
   dunolint_stdlib
   file-rewriter
   fpath
@@ -50,8 +53,7 @@
   sexplib0
   sexps-rewriter
   stdio
-  unix
-  windtrap.myers)
+  unix)
  (instrumentation
   (backend bisect_ppx))
  (lint
