@@ -8,9 +8,7 @@
 
     This is specified as the first stanza. For example:
 
-    {v
-      (lang dune 3.17)
-    v} *)
+    {v   (lang dune 3.17) v} *)
 
 (** Representing the two integers that are separated by the dot. For example,
     the representation of ["3.17"] is [(3, 17)]. *)

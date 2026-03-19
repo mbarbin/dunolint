@@ -14,9 +14,7 @@ val create : libraries:Dune.Library.Name.t list -> t
 (** Predicates for checking library dependencies.
 
     Example sexp syntax:
-    {v
-      (libraries (mem ordering yojson))
-    v} *)
+    {v   (libraries (mem ordering yojson)) v} *)
 include
   Dunolinter.Stanza_linter.S
   with type t := t

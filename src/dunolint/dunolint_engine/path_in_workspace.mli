@@ -85,19 +85,19 @@ type t = Relative_path.t
 
     Linting file ["a/b/c.ml"] should check configs in:
     {[
-      ancestors_autoloading_dirs ~path:(v "a/b/c.ml")
+    ancestors_autoloading_dirs ~path:(v "a/b/c.ml")
     ]}
     Returns: [["./"; "a/"; "a/b/"]]
 
     Linting file ["file.ml"] at workspace root checks root config:
     {[
-      ancestors_autoloading_dirs ~path:(v "file.ml")
+    ancestors_autoloading_dirs ~path:(v "file.ml")
     ]}
     Returns: [["./"]].
 
     Empty path has no ancestors:
     {[
-      ancestors_autoloading_dirs ~path:empty
+    ancestors_autoloading_dirs ~path:empty
     ]}
     Returns: [[]]
 
@@ -121,27 +121,27 @@ val ancestors_autoloading_dirs : path:t -> t list
 
     File paths return parent directories and the file itself:
     {[
-      paths_to_check_for_skip_predicates ~path:(v "foo/bar/bin")
-      (* Returns: ["foo/"; "foo/bar/"; "foo/bar/bin"] *)
+    paths_to_check_for_skip_predicates ~path:(v "foo/bar/bin")
+    (* Returns: ["foo/"; "foo/bar/"; "foo/bar/bin"] *)
     ]}
 
     Directory paths (trailing ["/"]) include parent directories and the
     directory itself:
     {[
-      paths_to_check_for_skip_predicates ~path:(v "foo/bar/bin/")
-      (* Returns: ["foo/"; "foo/bar/"; "foo/bar/bin/"] *)
+    paths_to_check_for_skip_predicates ~path:(v "foo/bar/bin/")
+    (* Returns: ["foo/"; "foo/bar/"; "foo/bar/bin/"] *)
     ]}
 
     Single files at the root return just the file:
     {[
-      paths_to_check_for_skip_predicates ~path:(v "file.ml")
-      (* Returns: ["file.ml"] *)
+    paths_to_check_for_skip_predicates ~path:(v "file.ml")
+    (* Returns: ["file.ml"] *)
     ]}
 
     Workspace root returns empty:
     {[
-      paths_to_check_for_skip_predicates ~path:empty
-      (* Returns: [] *)
+    paths_to_check_for_skip_predicates ~path:empty
+    (* Returns: [] *)
     ]}
 
     This function is used when checking if paths match skip predicates in

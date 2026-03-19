@@ -43,9 +43,9 @@ module type S = sig
       as shown below:
 
       {[
-        match Dune_linter.create ~path ~original_contents with
-        | Ok r -> r
-        | Error { loc; message } -> Err.raise ~loc [ Pp.text message ]
+      match Dune_linter.create ~path ~original_contents with
+      | Ok r -> r
+      | Error { loc; message } -> Err.raise ~loc [ Pp.text message ]
       ]} *)
   val create
     :  path:Relative_path.t
@@ -105,7 +105,7 @@ module type S = sig
 
       This is a convenient wrapper for:
       {[
-        Sexps_rewriter.original_sexps (sexps_rewriter t)
+      Sexps_rewriter.original_sexps (sexps_rewriter t)
       ]} *)
   val original_sexps : t -> Sexp.t list
 

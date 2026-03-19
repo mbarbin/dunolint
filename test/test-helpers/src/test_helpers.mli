@@ -34,7 +34,7 @@ val is_undefined : Dunolint.Trilang.t -> unit
     call to [Err.For_test.protect], such as, for example:
 
     {[
-      Err.For_test.protct (fun () -> Test_helpers.run_linter ~config);
-      [%expect {||}]
+    Err.For_test.protct (fun () -> Test_helpers.run_linter ~config);
+    [%expect {||}]
     ]} *)
 val run_linter : config:Dunolint.Config.t -> unit

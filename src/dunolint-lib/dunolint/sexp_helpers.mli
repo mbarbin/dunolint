@@ -65,26 +65,26 @@ end
     Suppose you have a record type M:
 
     {[
-      module M = struct
-        type t =
-          { a : string
-          ; b : int
-          }
-      end
+    module M = struct
+      type t =
+        { a : string
+        ; b : int
+        }
+    end
 
-      type t = [ `cons of M.t ]
+    type t = [ `cons of M.t ]
     ]}
 
     We'd like to parse:
 
     {[
-      cons (a hello) (b 42)
+    cons (a hello) (b 42)
     ]}
 
     Instead of:
 
     {[
-      cons ((a hello) (b 42))
+    cons ((a hello) (b 42))
     ]}
 
     However care must be applied for the parsing exceptions raised by use an

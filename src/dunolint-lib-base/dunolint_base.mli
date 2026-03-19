@@ -21,7 +21,7 @@
     available to your scope:
 
     {[
-      module Dunolint = Dunolint_base.Dunolint
+    module Dunolint = Dunolint_base.Dunolint
     ]}
 
     Another way to achieve this is to open [Dunolint_base] via dune flags.

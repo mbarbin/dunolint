@@ -13,9 +13,7 @@ module Predicate : sig
   (** Predicates to check library dependencies.
 
       Example sexp syntax:
-      {v
-        (libraries (mem ordering yojson))
-      v} *)
+      {v   (libraries (mem ordering yojson)) v} *)
 
   type t = [ `mem of Library__name.t list ]
 

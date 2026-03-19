@@ -9,9 +9,7 @@
     This is specified in the [dune-project] file, as the first stanza. For
     example:
 
-    {v
-      (lang dune 3.20)
-    v} *)
+    {v   (lang dune 3.20) v} *)
 
 (** Representing the two integers that are separated by the dot. For example,
     the representation of ["3.20"] is [(3, 20)]. *)

@@ -20,13 +20,13 @@ let equal (a : t) (b : t) =
 (* When breaking changes are introduced, we'd mint new versions such as:
 
    {[
-     module V1 = Config_v1
-     module V2 = Config_v2
+   module V1 = Config_v1
+   module V2 = Config_v2
 
-     type t =
-       [ `v1 of V1.t
-       | `v2 of V2.t
-       ]
+   type t =
+     [ `v1 of V1.t
+     | `v2 of V2.t
+     ]
    ]}
 
    The evaluation engine is responsible for handing the different versions,
