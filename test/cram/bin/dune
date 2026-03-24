@@ -20,6 +20,7 @@
   base
   cmdlang
   cmdlang-cmdliner-err-runner
+  dune-build-info
   dunolint
   fpath-sexp0
   stdio)

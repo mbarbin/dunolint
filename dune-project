@@ -75,6 +75,8 @@
    (>= 0.0.9))
   (cmdlang-cmdliner-err-runner
    (>= 0.0.16))
+  (dune-build-info
+   (>= 3.17))
   (dunolint-lib
    (= :version))
   (dunolint-lib-base
@@ -164,6 +166,8 @@
    (and
     (>= 1.3.0)
     (< 2.0)))
+  (dune-build-info
+   (>= 3.20))
   (dunolint
    (= :version))
   (dunolint-lib
