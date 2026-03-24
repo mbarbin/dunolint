@@ -21,6 +21,7 @@
    - Simplify dead-code paths in [compute] (forward pass and backtracking).
    - Remove intermediate [Array] representation in [diff].
    - Add [?color:bool] flag to [diff] and [print_diff] for ANSI coloring.
+   - Use module [String] directly which satisfies [Eq].
 *)
 
 module type Equal = sig
@@ -137,13 +138,7 @@ let lines_of_string s =
 ;;
 
 let hunks_of_lines ~context expected actual =
-  let module Eq = struct
-    type t = string
-
-    let equal = String.equal
-  end
-  in
-  let ops = compute (module Eq) expected actual in
+  let ops = compute (module String) expected actual in
   let pre = Queue.create () in
   let hunks_rev = ref [] in
   let in_hunk = ref false in
