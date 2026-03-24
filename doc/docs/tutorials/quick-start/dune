@@ -1,6 +1,39 @@
-(mdx
+(library
+ (name quick_start)
  (package dunolint-dev)
- (deps
-  (package dunolint)
-  (glob_files *.txt))
- (preludes prelude.txt))
+ (inline_tests
+  (deps dunolint.exe))
+ (flags
+  :standard
+  -w
+  +a-4-40-41-42-44-45-48-66
+  -warn-error
+  +a
+  -open
+  Dunolint_stdlib)
+ (libraries dunolint_stdlib unix)
+ (instrumentation
+  (backend bisect_ppx))
+ (lint
+  (pps ppx_js_style -allow-let-operators -check-doc-comments))
+ (preprocess
+  (pps ppx_expect)))
+
+(rule
+ (target dunolint.exe)
+ (action
+  (copy %{bin:dunolint} %{target})))
+
+(rule
+ (target README.md.gen)
+ (deps quick_start.ml)
+ (action
+  (with-stdout-to
+   %{target}
+   (run mdexp pp %{deps}))))
+
+(rule
+ (package dunolint-dev)
+ (alias runtest)
+ (action
+  (diff README.md README.md.gen)))

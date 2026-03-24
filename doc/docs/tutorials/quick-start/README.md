@@ -9,22 +9,9 @@ in under a minute.
 
 Consider a project with a simple library:
 
-<details>
-<summary>
-For this mdx tutorial, let's simulate a typical OCaml project with a simple library:
-</summary>
+`src/dune`:
 
-For the purpose of this compiled documentation (mdx) we've prepared the contents of a simple dune file under the file `dune.txt` in our repo, we'll copy it as `src/dune` to make the rest of the test use it. We're also initializing a workspace file to set the project root used during the execution of this document.
-
-```bash
-$ touch dune-workspace
-$ mkdir -p src
-$ cat dune.txt > src/dune
-```
-</details>
-
-```bash
-$ cat src/dune
+```dune
 (library
  (name mylib))
 ```
@@ -34,18 +21,11 @@ $ cat src/dune
 Say you want all libraries & executables to have code coverage
 instrumentation.
 
-<details>
-<summary>
 Create a config file named `dunolint`:
-</summary>
 
-```bash
-$ cat dunolint.txt > dunolint
-```
-</details>
+`dunolint`:
 
-```bash
-$ cat dunolint
+```dune
 (lang dunolint 1.0)
 
 (rule
