@@ -29,13 +29,13 @@ With no configuration to skip things, the rule applies to both files.
 
   $ dunolint lint --dry-run --config dunolint
   dry-run: Would edit file "bar/dune-project":
-  -1,2 +1,2
+  @@ -1,2 +1,2 @@
     (lang dune 3.17)
   -|(name bar)
   +|(name foo)
   
   dry-run: Would edit file "dune-project":
-  -1,2 +1,2
+  @@ -1,2 +1,2 @@
     (lang dune 3.17)
   -|(name bar)
   +|(name foo)
@@ -55,7 +55,7 @@ As we can see below, the directory bar/ is not included.
 
   $ dunolint lint --dry-run --config dunolint
   dry-run: Would edit file "dune-project":
-  -1,2 +1,2
+  @@ -1,2 +1,2 @@
     (lang dune 3.17)
   -|(name bar)
   +|(name foo)
@@ -75,7 +75,7 @@ As we can see below, the directory bar/ is not included.
 
   $ dunolint lint --dry-run --config dunolint
   dry-run: Would edit file "dune-project":
-  -1,2 +1,2
+  @@ -1,2 +1,2 @@
     (lang dune 3.17)
   -|(name bar)
   +|(name foo)
@@ -160,7 +160,7 @@ When linting from the root, bar/ is correctly ignored.
 
   $ dunolint lint --dry-run --config=dunolint
   dry-run: Would edit file "dune-project":
-  -1,2 +1,2
+  @@ -1,2 +1,2 @@
     (lang dune 3.17)
   -|(name bar)
   +|(name foo)

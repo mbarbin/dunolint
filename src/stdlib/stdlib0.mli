@@ -22,3 +22,4 @@ val require_equal : (module With_equal_and_sexp.S with type t = 'a) -> 'a -> 'a 
 val require_does_raise : (unit -> 'a) -> unit
 val print_s : Sexp.t -> unit
 val print_endline : string -> unit
+val print_string : string -> unit

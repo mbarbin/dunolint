@@ -44,7 +44,7 @@ config is applied last, so it takes precedence.
   $ dunolint lint --dry-run
   Entering directory '$TESTCASE_ROOT/workspace'
   dry-run: Would edit file "subproject/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name original_name)
@@ -57,7 +57,7 @@ files are linted, not which configs are discovered.
   $ dunolint lint --below . --dry-run
   Entering directory '$TESTCASE_ROOT/workspace'
   dry-run: Would edit file "subproject/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name original_name)
@@ -70,7 +70,7 @@ workspace).
   $ dunolint lint --root . --dry-run
   Entering directory '$TESTCASE_ROOT/workspace/subproject/'
   dry-run: Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name original_name)
@@ -85,7 +85,7 @@ Verify that --root with an absolute path also works correctly:
 
   $ dunolint lint --root $PWD --dry-run
   dry-run: Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name original_name)
@@ -97,7 +97,7 @@ parent and subproject configs, with subproject config taking precedence.
   $ cd ..
   $ dunolint lint --below $PWD/subproject --dry-run
   dry-run: Would edit file "subproject/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name original_name)
@@ -108,7 +108,7 @@ specific config is used, and all auto-discovery is disabled.
 
   $ dunolint lint --config dunolint --dry-run
   dry-run: Would edit file "subproject/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name original_name)

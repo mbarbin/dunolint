@@ -31,7 +31,7 @@ knows about located in the same files.
   >   --enforce='(dune_project (name (equals foo)))' \
   >   --yes
   Editing file "dune-project":
-  -1,5 +1,5
+  @@ -1,5 +1,5 @@
     (lang dune 3.17)
     
   -|(name main)
@@ -40,7 +40,7 @@ knows about located in the same files.
     (() hello unknown stanza)
   
   Editing file "lib/foo/dune":
-  -1,4 +1,4
+  @@ -1,4 +1,4 @@
     (library
   -| (name bar))
   +| (name foo))

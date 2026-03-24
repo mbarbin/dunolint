@@ -57,14 +57,14 @@ simulate lint errors.
   >   --enforce='(dune_project (name (equals foo)))' \
   >   --check
   check: Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name main)
   +|(name foo)
   
   check: Would edit file "lib/foo/dune":
-  -1,2 +1,2
+  @@ -1,2 +1,2 @@
     (library
   -| (name bar))
   +| (name foo))

@@ -109,7 +109,7 @@ Let's lint with this config.
 
   $ dunolint lint --dry-run
   dry-run: Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name my_project_name)

@@ -20,6 +20,8 @@
    - Use [raise_notrace] for the local exception.
    - Simplify dead-code paths in [compute] (forward pass and backtracking).
    - Remove intermediate [Array] representation in [diff].
+   - Add [?color:bool] flag to [diff] and [print_diff] for ANSI coloring.
+   - Use module [String] directly which satisfies [Eq].
 *)
 
 module type Equal = sig
@@ -113,6 +115,7 @@ let compute
       done;
       (* After backtracking, x = y (both equal the length of the initial
          common prefix, which lies on the k=0 diagonal at d=0). *)
+      assert (x = y);
       while !x > 0 do
         ops := Line.Keep a.(!x - 1) :: !ops;
         decr x
@@ -136,13 +139,7 @@ let lines_of_string s =
 ;;
 
 let hunks_of_lines ~context expected actual =
-  let module Eq = struct
-    type t = string
-
-    let equal = String.equal
-  end
-  in
-  let ops = compute (module Eq) expected actual in
+  let ops = compute (module String) expected actual in
   let pre = Queue.create () in
   let hunks_rev = ref [] in
   let in_hunk = ref false in
@@ -233,11 +230,15 @@ let hunks_of_lines ~context expected actual =
   List.rev !hunks_rev
 ;;
 
-let diff ?(context = 3) ?expected_label ?actual_label expected actual =
+let diff ?(context = 3) ?(color = false) ?expected_label ?actual_label expected actual =
   let a = lines_of_string expected in
   let b = lines_of_string actual in
   let hunks = hunks_of_lines ~context a b in
   let buf = Buffer.create 2048 in
+  let reset = if color then "\027[m" else "" in
+  let red = if color then "\027[31m" else "" in
+  let green = if color then "\027[32m" else "" in
+  let cyan = if color then "\027[36m" else "" in
   if Option.is_some expected_label || Option.is_some actual_label
   then
     Buffer.add_string
@@ -251,8 +252,8 @@ let diff ?(context = 3) ?expected_label ?actual_label expected actual =
     Buffer.add_string
       buf
       (match line with
-       | Delete line -> Printf.sprintf "-|%s\n" line
-       | Insert line -> Printf.sprintf "+|%s\n" line
+       | Delete line -> Printf.sprintf "%s-|%s%s\n" red line reset
+       | Insert line -> Printf.sprintf "%s+|%s%s\n" green line reset
        | Keep line -> Printf.sprintf "  %s\n" line)
   in
   let flush_changes dels adds =
@@ -264,11 +265,13 @@ let diff ?(context = 3) ?expected_label ?actual_label expected actual =
        Buffer.add_string
          buf
          (Printf.sprintf
-            "@@ -%d,%d +%d,%d @@\n"
+            "%s@@ -%d,%d +%d,%d @@%s\n"
+            cyan
             h.exp_start
             h.exp_len
             h.act_start
-            h.act_len);
+            h.act_len
+            reset);
        let dels = ref [] in
        let adds = ref [] in
        List.iter
@@ -285,9 +288,4 @@ let diff ?(context = 3) ?expected_label ?actual_label expected actual =
        flush_changes !dels !adds)
     hunks;
   Buffer.contents buf
-;;
-
-let print_diff ?context ?expected_label ?actual_label expected actual =
-  let text = diff ?context ?expected_label ?actual_label expected actual in
-  print_string text
 ;;

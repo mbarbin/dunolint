@@ -47,14 +47,14 @@ We run the lint command in dry-run mode to visualize the changes suggested.
 
   $ dunolint lint --dry-run
   dry-run: Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name main)
   +|(name foo)
   
   dry-run: Would edit file "lib/foo/dune":
-  -1,2 +1,2
+  @@ -1,2 +1,2 @@
     (library
   -| (name bar))
   +| (name foo))
@@ -63,7 +63,7 @@ Note it is possible to restrict the run to a subdirectory only.
 
   $ dunolint lint --dry-run --below lib/
   dry-run: Would edit file "lib/foo/dune":
-  -1,2 +1,2
+  @@ -1,2 +1,2 @@
     (library
   -| (name bar))
   +| (name foo))
@@ -81,7 +81,7 @@ Run the same command in debug mode to visualize configs and directories loaded.
   dunolint: [DEBUG] Config file does not exist at "lib/foo/dunolint".
   dunolint: [INFO] Linting file "lib/foo/dune"
   dry-run: Would edit file "lib/foo/dune":
-  -1,2 +1,2
+  @@ -1,2 +1,2 @@
     (library
   -| (name bar))
   +| (name foo))
@@ -96,7 +96,7 @@ We can quit at any time during the interactive loop.
 
   $ printf 'q\n' | dunolint lint --interactive
   Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name main)
@@ -108,7 +108,7 @@ We can choose to refuse some diff, and accept others.
 
   $ printf 'n\ny\n' | dunolint lint --interactive
   Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name main)
@@ -116,7 +116,7 @@ We can choose to refuse some diff, and accept others.
   
   [?] Accept diff [N/y/q/?]: 
   Would edit file "lib/foo/dune":
-  -1,2 +1,2
+  @@ -1,2 +1,2 @@
     (library
   -| (name bar))
   +| (name foo))

@@ -18,7 +18,7 @@ Test that a directory named `dunolint` doesn't create a config discovery issue.
 
   $ dunolint lint
   Editing file "dunolint/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.18)
     
   -|(name test)

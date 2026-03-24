@@ -246,23 +246,13 @@ let materialize t =
            | Interactive -> "Would edit"
            | Force_yes -> "Editing")
           (Relative_path.to_string path);
-        Out_channel.output_line
+        Out_channel.output_string
           flow
-          (if Err.am_running_test ()
-           then Myers.diff original_contents new_contents ~context:3
-           else (
-             let name = Relative_path.to_string path in
-             let rules =
-               if should_enable_color
-               then None
-               else Some Patdiff.Format.Rules.(strip_styles default)
-             in
-             Patdiff.Patdiff_core.patdiff
-               ?rules
-               ~context:6
-               ~prev:{ name; text = original_contents }
-               ~next:{ name; text = new_contents }
-               ()));
+          (Myers.diff
+             original_contents
+             new_contents
+             ~context:6
+             ~color:should_enable_color);
         Out_channel.flush flow
       in
       let () =

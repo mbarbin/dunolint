@@ -51,28 +51,28 @@ Run dunolint from the root - everything should be linted.
 
   $ dunolint lint --dry-run 2>&1
   dry-run: Would edit file "dune":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (library
      (name rootlib)
   -| (libraries z a c b))
   +| (libraries a b c z))
   
   dry-run: Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name root_project)
   +|(name workspace_name)
   
   dry-run: Would edit file "src/lib1/dune":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (library
      (name lib1)
   -| (libraries d c b a))
   +| (libraries a b c d))
   
   dry-run: Would edit file "src/lib2/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name lib2_project)
@@ -85,28 +85,28 @@ the root files because it changes directory to the workspace root.
   $ dunolint lint --dry-run 2>&1
   Entering directory '$TESTCASE_ROOT'
   dry-run: Would edit file "dune":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (library
      (name rootlib)
   -| (libraries z a c b))
   +| (libraries a b c z))
   
   dry-run: Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name root_project)
   +|(name workspace_name)
   
   dry-run: Would edit file "src/lib1/dune":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (library
      (name lib1)
   -| (libraries d c b a))
   +| (libraries a b c d))
   
   dry-run: Would edit file "src/lib2/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name lib2_project)
@@ -128,28 +128,28 @@ Test from a deeply nested directory.
   $ dunolint lint --dry-run 2>&1
   Entering directory '$TESTCASE_ROOT'
   dry-run: Would edit file "dune":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (library
      (name rootlib)
   -| (libraries z a c b))
   +| (libraries a b c z))
   
   dry-run: Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name root_project)
   +|(name workspace_name)
   
   dry-run: Would edit file "src/lib1/dune":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (library
      (name lib1)
   -| (libraries d c b a))
   +| (libraries a b c d))
   
   dry-run: Would edit file "src/lib2/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name lib2_project)
@@ -164,7 +164,7 @@ Test that --below can limit the scope even when running from a subdirectory.
   $ dunolint lint --below . --dry-run 2>&1
   Entering directory '$TESTCASE_ROOT'
   dry-run: Would edit file "src/lib1/dune":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (library
      (name lib1)
   -| (libraries d c b a))

@@ -53,11 +53,12 @@ Check what needs to be fixed:
 ```bash
 $ dunolint lint --dry-run
 dry-run: Would edit file "src/dune":
--1,2 +1,4
+@@ -1,2 +1,4 @@
   (library
-!| (name mylib)
-!| (instrumentation
-!|  (backend bisect_ppx)))
+-| (name mylib))
++| (name mylib)
++| (instrumentation
++|  (backend bisect_ppx)))
 ```
 
 Apply the fix:
@@ -65,11 +66,12 @@ Apply the fix:
 ```bash
 $ dunolint lint --yes
 Editing file "src/dune":
--1,2 +1,4
+@@ -1,2 +1,4 @@
   (library
-!| (name mylib)
-!| (instrumentation
-!|  (backend bisect_ppx)))
+-| (name mylib))
++| (name mylib)
++| (instrumentation
++|  (backend bisect_ppx)))
 ```
 
 That's it! In under a minute, you've seen how dunolint enforces consistent build configurations across your entire project - both existing code and anything you add later.

@@ -40,6 +40,7 @@ let require_equal
 ;;
 
 let print_endline = print_endline
+let print_string = print_string
 
 let () =
   Sexplib0.Sexp_conv.Exn_converter.add

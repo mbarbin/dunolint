@@ -29,10 +29,11 @@ and gracefully skipped for libraries without one (no error, no change).
 
   $ dunolint lint --dry-run --enforce '(dune (library (if_present (public_name (is_prefix "lib.")))))'
   dry-run: Would edit file "with-public-name/dune":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (library
      (name mylib)
-  !| (public_name lib.my-public-lib))
+  -| (public_name my-public-lib))
+  +| (public_name lib.my-public-lib))
 
 Without [if_present]: the constraint is applied to libraries with a public_name,
 but enforcement fails for libraries without one (is_prefix cannot initialize
@@ -49,8 +50,9 @@ an absent field).
   Hint: You need to attend and fix manually.
   
   dry-run: Would edit file "with-public-name/dune":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (library
      (name mylib)
-  !| (public_name lib.my-public-lib))
+  -| (public_name my-public-lib))
+  +| (public_name lib.my-public-lib))
   [123]

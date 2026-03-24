@@ -26,7 +26,7 @@ root.
 
   $ dunolint lint --dry-run
   dry-run: Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name my_project_name)
@@ -43,7 +43,7 @@ Test that explicit --config overrides the automatic loading.
 
   $ dunolint lint --config explicit-config --dry-run
   dry-run: Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name my_project_name)
@@ -70,14 +70,14 @@ taking precedence for files in that directory.
   $ dunolint lint --dry-run
   Entering directory '$TESTCASE_ROOT'
   dry-run: Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name my_project_name)
   +|(name corrected_name)
   
   dry-run: Would edit file "subdir-with-config/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name subdir_project)
@@ -92,7 +92,7 @@ config continues to be loaded.
   $ mv dunolint dunolint.config
   $ dunolint lint --dry-run
   dry-run: Would edit file "subdir-with-config/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name subdir_project)

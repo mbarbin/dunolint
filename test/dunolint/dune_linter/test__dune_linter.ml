@@ -31,7 +31,7 @@ atom
 
 let print_diff t =
   let new_contents = Dune_linter.contents t in
-  Myers.print_diff original_contents new_contents ~context:3
+  Myers.diff original_contents new_contents ~context:3 |> print_string
 ;;
 
 let%expect_test "lint" =
