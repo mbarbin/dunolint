@@ -21,7 +21,7 @@ invisible!
 
   $ dunolint lint --interactive
   Would edit file "dune":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (library
      (name mylib)
   -| (libraries foo bar))
@@ -36,17 +36,17 @@ We check that it is possible to disable or force the colors when using the
 
   $ dunolint lint --interactive --color=always | cat -v
   Would edit file "dune":
-  -1,3 +1,3
+  ^[[36m@@ -1,3 +1,3 @@^[[m
     (library
      (name mylib)
-  ^[[0;1;31m-|^[[0m^[[0m (libraries foo^[[0;31m bar^[[0m))^[[0m
-  ^[[0;1;32m+|^[[0m^[[0m (libraries^[[0;32m bar^[[0m foo))^[[0m
+  ^[[31m-| (libraries foo bar))^[[m
+  ^[[32m+| (libraries bar foo))^[[m
   
   [^[[35m?^[[0m] Accept diff [N/y/q/?]: 
 
   $ dunolint lint --interactive --color=never | cat -v
   Would edit file "dune":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (library
      (name mylib)
   -| (libraries foo bar))
@@ -56,7 +56,7 @@ We check that it is possible to disable or force the colors when using the
 
   $ dunolint lint --interactive --color=auto | cat -v
   Would edit file "dune":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (library
      (name mylib)
   -| (libraries foo bar))
@@ -69,15 +69,15 @@ interface.
 
   $ dunolint lint --dry-run --color=always | cat -v
   dry-run: Would edit file "dune":
-  -1,3 +1,3
+  ^[[36m@@ -1,3 +1,3 @@^[[m
     (library
      (name mylib)
-  ^[[0;1;31m-|^[[0m^[[0m (libraries foo^[[0;31m bar^[[0m))^[[0m
-  ^[[0;1;32m+|^[[0m^[[0m (libraries^[[0;32m bar^[[0m foo))^[[0m
+  ^[[31m-| (libraries foo bar))^[[m
+  ^[[32m+| (libraries bar foo))^[[m
 
   $ dunolint lint --dry-run --color=never | cat -v
   dry-run: Would edit file "dune":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (library
      (name mylib)
   -| (libraries foo bar))
@@ -85,7 +85,7 @@ interface.
 
   $ dunolint lint --dry-run --color=auto | cat -v
   dry-run: Would edit file "dune":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (library
      (name mylib)
   -| (libraries foo bar))

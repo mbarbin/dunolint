@@ -28,9 +28,12 @@ end
     [before] to [after]. *)
 val compute : (module Equal with type t = 'a) -> 'a list -> 'a list -> 'a Line.t list
 
-(** [diff expected actual] renders a unified diff for text inputs. *)
+(** [diff expected actual] renders a unified diff for text inputs. When [color]
+    is [true], ANSI escape codes are used: cyan for hunk headers, red for
+    deletions, green for insertions. *)
 val diff
   :  ?context:int
+  -> ?color:bool
   -> ?expected_label:string
   -> ?actual_label:string
   -> string

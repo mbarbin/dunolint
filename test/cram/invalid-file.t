@@ -43,7 +43,7 @@ other lint checks to be performed on the rest of the files that are valid.
   Error: unexpected character: ')'
   
   check: Would edit file "foo/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name bar)

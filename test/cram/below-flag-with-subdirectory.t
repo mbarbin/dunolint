@@ -47,28 +47,28 @@ Running dunolint lint from root affects all files.
 
   $ dunolint lint --dry-run
   dry-run: Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name root_project)
   +|(name fixed_name)
   
   dry-run: Would edit file "subdir1/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name subdir1_project)
   +|(name fixed_name)
   
   dry-run: Would edit file "subdir1/nested/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name nested_project)
   +|(name fixed_name)
   
   dry-run: Would edit file "subdir2/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name subdir2_project)
@@ -80,14 +80,14 @@ Using --below . from a subdirectory only lints files in that subdirectory.
   $ dunolint lint --below . --dry-run
   Entering directory '$TESTCASE_ROOT'
   dry-run: Would edit file "subdir1/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name subdir1_project)
   +|(name fixed_name)
   
   dry-run: Would edit file "subdir1/nested/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name nested_project)
@@ -105,7 +105,7 @@ The --below flag now accepts absolute paths as well.
 
   $ dunolint lint --below ${ROOT}/subdir2 --dry-run
   dry-run: Would edit file "subdir2/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name subdir2_project)
@@ -117,7 +117,7 @@ Test absolute path for --below from a different directory:
   $ dunolint lint --below ${ROOT}/subdir2 --dry-run 2>&1
   Entering directory '$TESTCASE_ROOT'
   dry-run: Would edit file "subdir2/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name subdir2_project)
@@ -128,7 +128,7 @@ Using --below with a relative path from the root.
 
   $ dunolint lint --below subdir1/nested --dry-run
   dry-run: Would edit file "subdir1/nested/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name nested_project)
@@ -151,7 +151,7 @@ Test that paths are resolved correctly when using --below from a different cwd.
   $ dunolint lint --below ../subdir2 --dry-run 2>&1
   Entering directory '$TESTCASE_ROOT'
   dry-run: Would edit file "subdir2/dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name subdir2_project)

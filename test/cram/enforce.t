@@ -78,7 +78,7 @@ Let's add some files.
 
   $ dunolint lint --dry-run --enforce '(dune_project (name (is_prefix sub)))'
   dry-run: Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name main)
@@ -86,7 +86,7 @@ Let's add some files.
 
   $ dunolint lint --dry-run --enforce '(dune_project (name (not (is_prefix sub))))'
   dry-run: Would edit file "subrepo/dune-project":
-  -1,5 +1,5
+  @@ -1,5 +1,5 @@
     (lang dune 3.17)
     
   -|(name subrepo)
@@ -138,7 +138,7 @@ With only --config, it should enforce (is_prefix main):
 
   $ dunolint lint --dry-run --config test-config
   dry-run: Would edit file "subrepo/dune-project":
-  -1,5 +1,5
+  @@ -1,5 +1,5 @@
     (lang dune 3.17)
     
   -|(name subrepo)
@@ -151,14 +151,14 @@ Both rules apply, but --enforce's (is_prefix sub) is applied after config's (is_
 
   $ dunolint lint --dry-run --config test-config --enforce '(dune_project (name (is_prefix sub)))'
   dry-run: Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name main)
   +|(name submain)
   
   dry-run: Would edit file "subrepo/dune-project":
-  -1,5 +1,5
+  @@ -1,5 +1,5 @@
     (lang dune 3.17)
     
   -|(name subrepo)
@@ -182,14 +182,14 @@ With auto-loaded config enforcing (is_prefix auto):
 
   $ dunolint lint --dry-run
   dry-run: Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name main)
   +|(name automain)
   
   dry-run: Would edit file "subrepo/dune-project":
-  -1,5 +1,5
+  @@ -1,5 +1,5 @@
     (lang dune 3.17)
     
   -|(name subrepo)
@@ -201,14 +201,14 @@ With --enforce, autoloading is disabled so only enforce rules apply:
 
   $ dunolint lint --dry-run --enforce '(dune_project (name (is_prefix cmd)))'
   dry-run: Would edit file "dune-project":
-  -1,3 +1,3
+  @@ -1,3 +1,3 @@
     (lang dune 3.17)
     
   -|(name main)
   +|(name cmdmain)
   
   dry-run: Would edit file "subrepo/dune-project":
-  -1,5 +1,5
+  @@ -1,5 +1,5 @@
     (lang dune 3.17)
     
   -|(name subrepo)

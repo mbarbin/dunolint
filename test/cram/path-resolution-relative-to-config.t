@@ -51,6 +51,7 @@ Run lint:
 
   $ dunolint lint --dry-run
   dry-run: Would edit file "lib/alpha/nested/dune":
-  -1,2 +1,2
+  @@ -1,2 +1,2 @@
     (library
-  !| (name alpha_nested_lib))
+  -| (name nested_lib))
+  +| (name alpha_nested_lib))
