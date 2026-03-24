@@ -15,8 +15,6 @@
 
 (documentation "https://mbarbin.github.io/dunolint/")
 
-(using mdx 0.4)
-
 ;; The value for the [implicit_transtive_deps] option is set during the CI
 ;; depending on the OCaml compiler version.
 ;;
@@ -251,8 +249,6 @@
    (= :version))
   (dunolint-tests
    (= :version))
-  (mdx
-   (>= 2.4))
   (ppx_js_style
    (>= v0.17))
   (ppxlib

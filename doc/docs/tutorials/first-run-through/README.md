@@ -18,17 +18,15 @@ You'll need:
 
 Navigate to the root of your OCaml project and run:
 
-<!-- $MDX skip -->
 ```sh
 $ dunolint lint
 ```
 
 By default, in a terminal, dunolint runs in **interactive mode**. For each suggested change, you'll see a diff and a prompt:
 
-<!-- $MDX skip -->
 ```diff
 Editing file "lib/mylib/dune":
--1,5 +1,5
+@@ -1,5 +1,5 @@
   (library
    (name mylib)
    (libraries
@@ -50,17 +48,15 @@ Your options:
 
 To see all proposed changes without applying them:
 
-<!-- $MDX skip -->
 ```sh
 $ dunolint lint --dry-run
 ```
 
 This shows what would be changed without modifying any files:
 
-<!-- $MDX skip -->
 ```diff
 dry-run: Would edit file "lib/mylib/dune":
--1,5 +1,5
+@@ -1,5 +1,5 @@
   (library
    (name mylib)
    (libraries
@@ -72,7 +68,7 @@ dry-run: Would edit file "lib/mylib/dune":
   )
 
 dry-run: Would edit file "bin/dune":
--1,3 +1,3
+@@ -1,3 +1,3 @@
   (executable
    (name main)
 -  (libraries utils mylib)

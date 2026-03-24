@@ -1,4 +1,0 @@
-(lang dunolint 1.0)
-
-(rule
- (enforce (dune (instrumentation (backend bisect_ppx)))))

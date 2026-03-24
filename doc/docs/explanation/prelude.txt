@@ -1,2 +1,0 @@
-#require "dunolint-lib";;
-#require "dunolint";;
