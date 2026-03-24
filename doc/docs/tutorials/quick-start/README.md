@@ -1,8 +1,13 @@
 # Quick Start
 
-This is your first introduction to dunolint - a tool that helps you maintain consistent build configurations across OCaml projects. If you're familiar with dune but new to dunolint, this tutorial will show you the core concepts in under a minute.
+This is your first introduction to dunolint — a tool that helps you maintain
+consistent build configurations across OCaml projects. If you're familiar
+with dune but new to dunolint, this tutorial will show you the core concepts
+in under a minute.
 
-## Simulating an Existing Project
+## A Simple Library
+
+Consider a project with a simple library:
 
 <details>
 <summary>
@@ -26,7 +31,8 @@ $ cat src/dune
 
 ## Creating Your First Dunolint Configuration
 
-Say you want all libraries & executables to have code coverage instrumentation.
+Say you want all libraries & executables to have code coverage
+instrumentation.
 
 <details>
 <summary>
@@ -50,7 +56,7 @@ $ cat dunolint
 
 Check what needs to be fixed:
 
-```bash
+```diff
 $ dunolint lint --dry-run
 dry-run: Would edit file "src/dune":
 @@ -1,2 +1,4 @@
@@ -63,7 +69,7 @@ dry-run: Would edit file "src/dune":
 
 Apply the fix:
 
-```bash
+```diff
 $ dunolint lint --yes
 Editing file "src/dune":
 @@ -1,2 +1,4 @@
@@ -74,7 +80,9 @@ Editing file "src/dune":
 +|  (backend bisect_ppx)))
 ```
 
-That's it! In under a minute, you've seen how dunolint enforces consistent build configurations across your entire project - both existing code and anything you add later.
+That's it! In under a minute, you've seen how dunolint enforces consistent
+build configurations across your entire project — both existing code and
+anything you add later.
 
 ## Next Steps
 
