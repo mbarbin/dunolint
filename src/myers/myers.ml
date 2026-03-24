@@ -286,8 +286,3 @@ let diff ?(context = 3) ?expected_label ?actual_label expected actual =
     hunks;
   Buffer.contents buf
 ;;
-
-let print_diff ?context ?expected_label ?actual_label expected actual =
-  let text = diff ?context ?expected_label ?actual_label expected actual in
-  print_string text
-;;

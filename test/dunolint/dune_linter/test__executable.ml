@@ -285,7 +285,7 @@ let enforce_diff (((sexps_rewriter, _), _) as input) conditions =
   in
   enforce_internal input conditions;
   let changed = format_dune_file ~new_contents:(Sexps_rewriter.contents sexps_rewriter) in
-  Myers.print_diff original changed ~context:3
+  Myers.diff original changed ~context:3 |> print_string
 ;;
 
 let%expect_test "enforce" =

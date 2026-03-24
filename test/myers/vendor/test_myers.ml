@@ -71,9 +71,6 @@ let diff_tests =
           Myers.diff ~expected_label:"before" ~actual_label:"after" "x\n" "y\n"
         in
         is_true (contains ~needle:"--- before\n+++ after\n" actual))
-    ; test "print_diff writes to stdout" (fun () ->
-        let expected = Myers.diff "left\n" "right\n" in
-        capture_exact (fun () -> Myers.print_diff "left\n" "right\n") expected |> ignore)
     ]
 ;;
 

@@ -181,9 +181,9 @@ let%expect_test "diff - zero context" =
   ()
 ;;
 
-(* Exercises print_diff on a non-trivial diff. *)
+(* Exercises diff printed on a non-trivial diff. *)
 let%expect_test "print_diff" =
-  Myers.print_diff "hello\nworld\n" "hello\nearth\n";
+  Myers.diff "hello\nworld\n" "hello\nearth\n" |> print_string;
   [%expect
     {|
     @@ -1,2 +1,2 @@
