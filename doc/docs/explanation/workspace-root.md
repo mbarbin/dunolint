@@ -16,7 +16,6 @@ The workspace root detection logic was vendored from Dune 3.20.2, ensuring that 
 
 You can override the automatic detection by using the `--root=PATH` flag:
 
-<!-- $MDX skip -->
 ```bash
 $ dunolint lint --root=/path/to/project
 ```
@@ -27,7 +26,6 @@ This is the same flag that Dune uses, maintaining consistency between the tools.
 
 As an alternative to the `--root` flag, you can set the `DUNE_ROOT` environment variable:
 
-<!-- $MDX skip -->
 ```bash
 $ DUNE_ROOT=/path/to/project dunolint lint
 ```
@@ -46,7 +44,6 @@ Once the workspace root is determined, Dunolint changes its working directory to
 
 When this directory change occurs (if different from cwd and the log level includes warnings), you'll see a message like:
 
-<!-- $MDX skip -->
 ```bash
 Entering directory '/path/to/workspace/root'
 ```
@@ -63,7 +60,6 @@ For details on how config autoloading works, see [Config Autoloading](./config/a
 
 The `--below` flag limits linting to a specific subdirectory while still using the normal workspace root detection:
 
-<!-- $MDX skip -->
 ```bash
 # From within a subdirectory, lint only files in the current directory and below
 $ cd src/libs

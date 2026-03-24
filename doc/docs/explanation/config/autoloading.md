@@ -24,7 +24,6 @@ When running `dunolint lint`, the tool:
 
 Configs accumulate from root down to the file being linted. For example, given this structure:
 
-<!-- $MDX skip -->
 ```text
 workspace-root/
 ├── dunolint          (root config)
@@ -107,7 +106,6 @@ This approach keeps rules self-contained: anyone reading the parent config under
 
 The `--below` flag limits linting to a specific subdirectory, but **config autoloading still includes ancestor configs**:
 
-<!-- $MDX skip -->
 ```bash
 $ dunolint lint --below src/lib
 ```
@@ -124,7 +122,6 @@ Even though linting is restricted to `src/lib/`, configs from ancestor directori
 
 To see which config files are being loaded, use debug logging:
 
-<!-- $MDX skip -->
 ```bash
 $ dunolint lint --log-level=debug
 ```
