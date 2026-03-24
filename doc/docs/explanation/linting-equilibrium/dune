@@ -20,11 +20,15 @@
   (pps ppx_expect)))
 
 (rule
+ (package dunolint-dev)
  (target dunolint.exe)
+ (deps
+  (:exe %{project_root}/src/dunolint/bin/main.exe))
  (action
-  (copy %{bin:dunolint} %{target})))
+  (copy %{exe} %{target})))
 
 (rule
+ (package dunolint-dev)
  (target comments-in-libraries.md.gen)
  (deps comments_in_libraries.ml)
  (action
