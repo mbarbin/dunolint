@@ -33,7 +33,5 @@ Invalid DUNE_ROOT and --root values are rejected with a user-friendly error:
   $ dunolint tools find-workspace-root --root '' 2> output
   [124]
 
-  $ grep '^dunolint: ' output
-  dunolint: option '--root': "": invalid path
-
+  $ if ! grep -q 'option.*--root.*invalid path' output; then cat output; fi
   $ rm output

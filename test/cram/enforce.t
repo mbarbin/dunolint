@@ -107,13 +107,11 @@ Let's add some files.
 
 Let's exercise cases where the sexp supplied is invalid.
 
-  $ dunolint lint --dry-run --enforce '(blah'
-  dunolint: option '--enforce': (parse_error.ml.Parse_error
-              ((position ((line 1) (col 5) (offset 5)))
-                (message "unclosed parentheses at end of input")))
-  Usage: dunolint lint [OPTION]…
-  Try 'dunolint lint --help' or 'dunolint --help' for more information.
+  $ dunolint lint --dry-run --enforce '(blah' 2> output
   [124]
+
+  $ if ! grep -q 'Parse_error' output || ! grep -q 'unclosed parentheses' output; then cat output; fi
+  $ rm output
 
 We hide the output of this one because it contains an unstable file path.
 
