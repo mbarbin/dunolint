@@ -115,6 +115,7 @@ let compute
       done;
       (* After backtracking, x = y (both equal the length of the initial
          common prefix, which lies on the k=0 diagonal at d=0). *)
+      assert (x = y);
       while !x > 0 do
         ops := Line.Keep a.(!x - 1) :: !ops;
         decr x
