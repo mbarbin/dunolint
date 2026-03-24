@@ -1,3 +1,0 @@
-#require "base" ;;
-#require "dunolint-lib" ;;
-#require "dunolint" ;;
