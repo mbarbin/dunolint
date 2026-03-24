@@ -117,10 +117,6 @@
    (>= v0.17))
   (ppx_hash
    (>= v0.17))
-  (ppx_here
-   (>= v0.17))
-  (ppx_let
-   (>= v0.17))
   (ppx_sexp_conv
    (>= v0.17))
   (ppx_sexp_value
@@ -201,10 +197,6 @@
   (ppx_expect
    (>= v0.17))
   (ppx_hash
-   (>= v0.17))
-  (ppx_here
-   (>= v0.17))
-  (ppx_let
    (>= v0.17))
   (ppx_sexp_conv
    (>= v0.17))
