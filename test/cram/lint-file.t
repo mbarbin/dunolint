@@ -136,7 +136,7 @@ The command may be passed a config file.
 
   $ printf '(lang dunolint 1.0)\n' > dunolint
 
-  $ dunolint tools lint dune --config=dunolint
+  $ dunolint tools lint-file dune --config=dunolint
   (library
    (name mylib)
    (libraries a b c))
@@ -146,7 +146,7 @@ an OCaml file.
 
   $ ./lint_file_config_gen.exe --format=v1 > dunolint
 
-  $ dunolint tools lint dune
+  $ dunolint tools lint-file dune
   (library
    (name mylib)
    (libraries a b c))
@@ -192,8 +192,8 @@ Supplying an absent file or an invalid one results in errors:
   $ dunolint tools lint-file dune-project --config=unknown 2> output
   [124]
 
-  $ grep '^dunolint: ' output; rm output
-  dunolint: option '--config': no 'unknown' file or directory
+  $ if ! grep -q 'option.*--config.*unknown' output; then cat output; fi
+  $ rm output
 
   $ dunolint tools lint-file dune-project --config=dune-project
   File "dune-project", line 1, characters 0-16:

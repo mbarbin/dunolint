@@ -161,9 +161,7 @@
   (cmdlang-stdlib-runner
    (>= 0.0.9))
   (cmdliner
-   (and
-    (>= 1.3.0)
-    (< 2.0)))
+   (>= 1.3.0))
   (dune-build-info
    (>= 3.20))
   (dunolint
