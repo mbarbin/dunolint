@@ -246,11 +246,13 @@ let materialize t =
            | Interactive -> "Would edit"
            | Force_yes -> "Editing")
           (Relative_path.to_string path);
-        let context = if Err.am_running_test () then 3 else 6 in
-        let color = (not (Err.am_running_test ())) && should_enable_color in
         Out_channel.output_string
           flow
-          (Myers.diff original_contents new_contents ~context ~color);
+          (Myers.diff
+             original_contents
+             new_contents
+             ~context:6
+             ~color:should_enable_color);
         Out_channel.flush flow
       in
       let () =
