@@ -9,9 +9,7 @@ in under a minute.
 
 Consider a project with a simple library:
 
-`src/dune`:
-
-```dune
+```dune title="src/dune"
 (library
  (name mylib))
 ```
@@ -23,9 +21,7 @@ instrumentation.
 
 Create a config file named `dunolint`:
 
-`dunolint`:
-
-```dune
+```dune title="dunolint"
 (lang dunolint 1.0)
 
 (rule

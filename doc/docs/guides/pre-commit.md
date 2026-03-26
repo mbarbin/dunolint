@@ -4,7 +4,7 @@ Dunolint can be used to lint and format dune files automatically before commit, 
 
 Then, add to the `.pre-commit-config.yaml` of your project:
 
-```yaml
+```yaml title=".pre-commit-config.yaml"
 - repo: https://github.com/mbarbin/dunolint
   hooks:
     - id: dunolint

@@ -11,22 +11,22 @@ Without any configuration, dunolint enforces a canonical ordering for various fi
 #### Library Dependencies
 In `(libraries ...)` stanzas, dependencies are sorted alphabetically:
 
-```dune
-;; Before
+```dune title="Before"
 (libraries baz foo bar qux)
+```
 
-;; After
+```dune title="After"
 (libraries bar baz foo qux)
 ```
 
 #### PPX Preprocessors
 In `(preprocess (pps ...))` stanzas, PPX rewriters are sorted alphabetically:
 
-```dune
-;; Before
+```dune title="Before"
 (preprocess (pps ppx_jane ppx_deriving.std ppx_assert))
+```
 
-;; After
+```dune title="After"
 (preprocess (pps ppx_assert ppx_deriving.std ppx_jane))
 ```
 

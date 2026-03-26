@@ -11,11 +11,13 @@ let write_file path content =
   Out_channel.with_open_bin path (fun oc -> output_string oc content)
 ;;
 
-let print_file path =
+let print_dune_file path =
   let ic = open_in path in
   let content = In_channel.input_all ic in
   close_in ic;
-  print_string content
+  Printf.printf "```dune title=\"%s\"\n" path;
+  print_string content;
+  print_string "```\n"
 ;;
 
 let dunolint args =
@@ -56,13 +58,14 @@ let%expect_test "quick start" =
 (library
  (name mylib))
     |};
-  (* @mdexp `src/dune`: *)
-  print_file "src/dune";
-  (* @mdexp.snapshot { lang: "dune" } *)
+  print_dune_file "src/dune";
+  (* @mdexp.snapshot *)
   [%expect
     {|
+    ```dune title="src/dune"
     (library
      (name mylib))
+    ```
     |}];
   (* @mdexp
 
@@ -80,15 +83,16 @@ let%expect_test "quick start" =
 (rule
  (enforce (dune (instrumentation (backend bisect_ppx)))))
     |};
-  (* @mdexp `dunolint`: *)
-  print_file "dunolint";
-  (* @mdexp.snapshot { lang: "dune" } *)
+  print_dune_file "dunolint";
+  (* @mdexp.snapshot *)
   [%expect
     {|
+    ```dune title="dunolint"
     (lang dunolint 1.0)
 
     (rule
      (enforce (dune (instrumentation (backend bisect_ppx)))))
+    ```
     |}];
   (* @mdexp
 
