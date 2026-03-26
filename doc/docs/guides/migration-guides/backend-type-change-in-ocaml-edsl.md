@@ -12,11 +12,11 @@ The `backend` EDSL constructor now accepts a `Backend.t` (which includes name an
 
 Replace `Backend.Name.v` with `Backend.v`:
 
-```ocaml
-(* Before *)
+```ocaml title="Before"
 let bisect_ppx = Dune.Instrumentation.Backend.Name.v "bisect_ppx"
+```
 
-(* After *)
+```ocaml title="After"
 let bisect_ppx = Dune.Instrumentation.Backend.v "bisect_ppx"
 ```
 
