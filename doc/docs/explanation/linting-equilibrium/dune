@@ -29,6 +29,7 @@
 
 (rule
  (package dunolint-dev)
+ (enabled_if %{bin-available:mdexp})
  (target comments-in-libraries.md.gen)
  (deps comments_in_libraries.ml)
  (action
@@ -38,6 +39,7 @@
 
 (rule
  (package dunolint-dev)
+ (enabled_if %{bin-available:mdexp})
  (alias runtest)
  (action
   (diff comments-in-libraries.md comments-in-libraries.md.gen)))
