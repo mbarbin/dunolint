@@ -39,7 +39,7 @@ To format on save, add the hook for the dune major mode you use:
 
 ### Note for neocaml users
 
-[neocaml](https://github.com/bbatsov/neocaml) provides its own tree-sitter-based major mode for dune files (`neocaml-dune-mode`), which is a separate mode from the `dune-mode` provided by the tuareg/dune packages. The dunolint reformatter integration works with both — you just need to hook into the right mode.
+[neocaml](https://github.com/bbatsov/neocaml) provides its own tree-sitter-based major mode for dune files (`neocaml-dune-mode`), which is a separate mode from the [dune-mode](https://github.com/ocaml/dune/tree/main/editor-integration/emacs) that ships with the [dune opam package](https://opam.ocaml.org/packages/dune/). The dunolint reformatter integration works with both — you just need to hook into the right mode.
 
 neocaml also includes a built-in format-on-save feature that uses `dune format-dune-file` as its backend. If you enable the dunolint reformatter, make sure neocaml's own dune format-on-save is disabled to avoid running two formatters on save. dunolint applies its own linting rules on top of the standard dune formatting, so it is a superset of what `dune format-dune-file` provides.
 
