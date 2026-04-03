@@ -27,18 +27,32 @@ Once the reformatter package is installed, a dunolint reformatter can be configu
   :group 'dunolint-format)
 ```
 
-To format on save, add:
+To format on save, add the hook for the dune major mode you use:
 
 ```elisp
+;; For dune-mode (tuareg/dune package):
 (add-hook 'dune-mode-hook 'dunolint-format-on-save-mode)
+
+;; For neocaml-dune-mode (neocaml package):
+(add-hook 'neocaml-dune-mode-hook 'dunolint-format-on-save-mode)
 ```
+
+### Note for neocaml users
+
+[neocaml](https://github.com/bbatsov/neocaml) provides its own tree-sitter-based major mode for dune files (`neocaml-dune-mode`), which is a separate mode from the `dune-mode` provided by the tuareg/dune packages. The dunolint reformatter integration works with both — you just need to hook into the right mode.
+
+neocaml also includes a built-in format-on-save feature that uses `dune format-dune-file` as its backend. If you enable the dunolint reformatter, make sure neocaml's own dune format-on-save is disabled to avoid running two formatters on save. dunolint applies its own linting rules on top of the standard dune formatting, so it is a superset of what `dune format-dune-file` provides.
 
 ## Enabling `dune-mode` for dunolint config files
 
-To have dunolint configuration files (`dunolint`) open in `dune-mode` and benefit from format-on-save, add the following to your Emacs configuration:
+To have dunolint configuration files (`dunolint`) open in dune mode and benefit from format-on-save, add the following to your Emacs configuration:
 
 ```elisp
+;; For dune-mode:
 (add-to-list 'auto-mode-alist '("/dunolint\\'" . dune-mode))
+
+;; For neocaml-dune-mode:
+(add-to-list 'auto-mode-alist '("/dunolint\\'" . neocaml-dune-mode))
 ```
 
 We have tested this pragmatically and found that the resulting formatting works well on dunolint stanzas, producing a style consistent with other dune files.
