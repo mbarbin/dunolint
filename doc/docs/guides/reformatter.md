@@ -30,7 +30,7 @@ Once the reformatter package is installed, a dunolint reformatter can be configu
 To format on save, add the hook for the dune major mode you use:
 
 ```elisp
-;; For dune-mode (tuareg/dune package):
+;; For dune-mode (dune opam package):
 (add-hook 'dune-mode-hook 'dunolint-format-on-save-mode)
 
 ;; For neocaml-dune-mode (neocaml package):
