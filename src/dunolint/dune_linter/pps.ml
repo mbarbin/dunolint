@@ -40,8 +40,8 @@ module Mutable_arg = struct
     | Pp { pp_name = _ }, Flag { name = _; param = _; applies_to = `driver } -> 1
     | Pp { pp_name = pp1 }, Flag { name = _; param = _; applies_to = `pp pp2 } ->
       (match Dune.Pp.Name.compare pp1 pp2 |> Ordering.of_int with
-       | Less | Equal -> -1
-       | Greater -> 1)
+       | Lt | Eq -> -1
+       | Gt -> 1)
     | ( Flag { name = n1; param = _; applies_to = a1 }
       , Flag { name = n2; param = _; applies_to = a2 } ) ->
       (match a1, a2 with
@@ -54,8 +54,8 @@ module Mutable_arg = struct
     | Flag { name = _; param = _; applies_to = `driver }, Pp { pp_name = _ } -> -1
     | Flag { name = _; param = _; applies_to = `pp pp1 }, Pp { pp_name = pp2 } ->
       (match Dune.Pp.Name.compare pp1 pp2 |> Ordering.of_int with
-       | Less -> -1
-       | Equal | Greater -> 1)
+       | Lt -> -1
+       | Eq | Gt -> 1)
   ;;
 
   let of_arg (arg : Arg.t) ~applies_to =

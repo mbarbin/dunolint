@@ -11,10 +11,6 @@
   -open
   Base
   -open
-  Fpath_sexp0
-  -open
-  Pplumbing_err
-  -open
   Stdio
   -open
   Dunolint_stdlib)
@@ -29,9 +25,6 @@
   dunolint_stdlib
   dunolinter
   file-rewriter
-  fpath-sexp0
-  pp
-  pplumbing-err
   sexps-rewriter
   stdio
   unix)

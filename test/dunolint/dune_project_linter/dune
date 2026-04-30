@@ -11,10 +11,6 @@
   -open
   Base
   -open
-  Fpath_sexp0
-  -open
-  Pplumbing_err
-  -open
   Dunolint_stdlib
   -open
   Dunolint.Std)
@@ -25,11 +21,7 @@
   dunolint_stdlib
   dunolinter
   file-rewriter
-  fpath-sexp0
-  loc
   parsexp
-  pp
-  pplumbing-err
   sexps-rewriter
   test_helpers)
  (instrumentation

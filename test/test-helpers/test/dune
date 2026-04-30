@@ -9,21 +9,8 @@
   -warn-error
   +a
   -open
-  Fpath_sexp0
-  -open
-  Pplumbing_err
-  -open
   Dunolint_stdlib)
- (libraries
-  dunolint
-  dunolint_stdlib
-  dunolinter
-  fpath-sexp0
-  loc
-  pp
-  pplumbing-err
-  sexps-rewriter
-  test_helpers)
+ (libraries dunolint dunolint_stdlib dunolinter sexps-rewriter test_helpers)
  (instrumentation
   (backend bisect_ppx))
  (lint
