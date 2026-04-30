@@ -12,6 +12,6 @@ type t = Unix.file_kind =
   | S_LNK
   | S_FIFO
   | S_SOCK
-[@@deriving enumerate]
 
+val all : t list
 val to_string : t -> string

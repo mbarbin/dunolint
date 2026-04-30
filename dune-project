@@ -50,8 +50,6 @@
    (= :version))
   (ppx_compare
    (>= v0.16))
-  (ppx_enumerate
-   (>= v0.16))
   (ppx_sexp_conv
    (>= v0.16))
   (ppxlib
@@ -110,8 +108,6 @@
   (pplumbing-pp-tty
    (>= 0.0.16))
   (ppx_compare
-   (>= v0.17))
-  (ppx_enumerate
    (>= v0.17))
   (ppx_hash
    (>= v0.17))
@@ -189,8 +185,6 @@
   (pplumbing-pp-tty
    (>= 0.0.16))
   (ppx_compare
-   (>= v0.17))
-  (ppx_enumerate
    (>= v0.17))
   (ppx_expect
    (>= v0.17))
