@@ -177,9 +177,9 @@ let insert (type a) (module M : Comparator.S with type t = a) t elt =
     match (t : _ t) with
     | Element a ->
       (match compare a elt |> Ordering.of_int with
-       | Less -> Union [ t; Element elt ]
-       | Equal -> t
-       | Greater -> Union [ Element elt; t ])
+       | Lt -> Union [ t; Element elt ]
+       | Eq -> t
+       | Gt -> Union [ Element elt; t ])
     | Standard | Include _ -> Union [ t; Element elt ]
     | Diff (a, b) -> Diff (aux a, b)
     | Union ts ->
@@ -192,9 +192,9 @@ let insert (type a) (module M : Comparator.S with type t = a) t elt =
            | Union _ -> List.rev_append (aux hd :: acc) tl
            | Element a ->
              (match compare a elt |> Ordering.of_int with
-              | Less -> loop (hd :: acc) tl
-              | Equal -> List.rev_append acc ts
-              | Greater -> List.rev_append (Element elt :: acc) ts))
+              | Lt -> loop (hd :: acc) tl
+              | Eq -> List.rev_append acc ts
+              | Gt -> List.rev_append (Element elt :: acc) ts))
       in
       make_union (loop [] ts)
   in
@@ -207,8 +207,8 @@ let remove (type a) (module M : Comparator.S with type t = a) t elt =
     match (t : _ t) with
     | Element a ->
       (match compare a elt |> Ordering.of_int with
-       | Less | Greater -> t
-       | Equal -> Union [])
+       | Lt | Gt -> t
+       | Eq -> Union [])
     | Standard | Include _ -> t
     | Diff (a, b) -> Diff (aux a, b)
     | Union ts ->
@@ -220,8 +220,8 @@ let remove (type a) (module M : Comparator.S with type t = a) t elt =
            | Standard | Include _ | Diff _ | Union _ -> loop (aux hd :: acc) tl
            | Element a ->
              (match compare a elt |> Ordering.of_int with
-              | Less | Greater -> loop (hd :: acc) tl
-              | Equal -> loop acc tl))
+              | Lt | Gt -> loop (hd :: acc) tl
+              | Eq -> loop acc tl))
       in
       make_union (loop [] ts)
   in

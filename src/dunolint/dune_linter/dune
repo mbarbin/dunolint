@@ -10,14 +10,6 @@
   -open
   Base
   -open
-  Fpath_sexp0
-  -open
-  Pplumbing_pp_tty
-  -open
-  Pplumbing_err
-  -open
-  Sexplib0
-  -open
   Dunolint_stdlib
   -open
   Dunolint_base
@@ -29,24 +21,11 @@
   dunolint_stdlib
   dunolinter
   file-rewriter
-  fpath
-  fpath-sexp0
-  loc
   parsexp
-  pp
-  pplumbing-err
-  pplumbing-pp-tty
-  sexplib0
   sexps-rewriter)
  (instrumentation
   (backend bisect_ppx))
  (lint
   (pps ppx_js_style -allow-let-operators -check-doc-comments))
  (preprocess
-  (pps
-   -unused-code-warnings=force
-   ppx_compare
-   ppx_enumerate
-   ppx_hash
-   ppx_sexp_conv
-   ppx_sexp_value)))
+  (pps -unused-code-warnings=force ppx_compare ppx_sexp_conv ppx_sexp_value)))

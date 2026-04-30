@@ -10,10 +10,6 @@
   -open
   Base
   -open
-  Fpath_sexp0
-  -open
-  Pplumbing_err
-  -open
   Stdio
   -open
   Dunolint_stdlib)
@@ -24,10 +20,6 @@
   dunolint_engine
   dunolint_stdlib
   dunolinter
-  fpath-sexp0
-  loc
-  pp
-  pplumbing-err
   sexps-rewriter
   stdio)
  (instrumentation
@@ -35,10 +27,4 @@
  (lint
   (pps ppx_js_style -allow-let-operators -check-doc-comments))
  (preprocess
-  (pps
-   -unused-code-warnings=force
-   ppx_compare
-   ppx_enumerate
-   ppx_hash
-   ppx_sexp_conv
-   ppx_sexp_value)))
+  (pps -unused-code-warnings=force ppx_compare ppx_sexp_conv ppx_sexp_value)))

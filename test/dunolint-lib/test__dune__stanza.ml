@@ -33,7 +33,8 @@ module Predicate = struct
     | `executables
     ]
     constraint t = Dune.Stanza.Predicate.t
-  [@@deriving enumerate]
+
+  let all : t list = [ `include_subdirs; `library; `executable; `executables ]
 end
 
 let%expect_test "predicate" =

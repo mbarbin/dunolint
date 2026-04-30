@@ -12,7 +12,8 @@ type t = Unix.file_kind =
   | S_LNK
   | S_FIFO
   | S_SOCK
-[@@deriving enumerate]
+
+let all = [ S_REG; S_DIR; S_CHR; S_BLK; S_LNK; S_FIFO; S_SOCK ]
 
 let to_string = function
   | S_REG -> "Regular file"

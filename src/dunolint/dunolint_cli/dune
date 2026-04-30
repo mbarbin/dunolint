@@ -10,12 +10,6 @@
   -open
   Base
   -open
-  Fpath_sexp0
-  -open
-  Pplumbing_pp_tty
-  -open
-  Pplumbing_err
-  -open
   Pplumbing_log
   -open
   Pplumbing_log_cli
@@ -38,15 +32,9 @@
   dunolint.dunolint_linter
   dunolint.dunolinter
   dunolint_stdlib
-  fpath
-  fpath-sexp0
-  loc
   parsexp
-  pp
-  pplumbing-err
   pplumbing-log
   pplumbing-log-cli
-  pplumbing-pp-tty
   sexps-rewriter
   stdio
   unix)
@@ -55,10 +43,4 @@
  (lint
   (pps ppx_js_style -allow-let-operators -check-doc-comments))
  (preprocess
-  (pps
-   -unused-code-warnings=force
-   ppx_compare
-   ppx_enumerate
-   ppx_hash
-   ppx_sexp_conv
-   ppx_sexp_value)))
+  (pps -unused-code-warnings=force ppx_compare ppx_sexp_conv ppx_sexp_value)))

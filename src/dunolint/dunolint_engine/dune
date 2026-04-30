@@ -10,12 +10,6 @@
   -open
   Base
   -open
-  Fpath_sexp0
-  -open
-  Pplumbing_pp_tty
-  -open
-  Pplumbing_err
-  -open
   Pplumbing_log
   -open
   Stdio
@@ -23,8 +17,6 @@
   Dunolint_stdlib
   -open
   Cmdlang
-  -open
-  Sexplib0
   -open
   Dunolint.Std)
  (libraries
@@ -37,16 +29,9 @@
   dunolint.vendor_prompt
   dunolint_stdlib
   file-rewriter
-  fpath
-  fpath-sexp0
-  loc
   logs
   pageantty.git-pager
-  pp
-  pplumbing-err
   pplumbing-log
-  pplumbing-pp-tty
-  sexplib0
   sexps-rewriter
   stdio
   unix)
@@ -55,10 +40,4 @@
  (lint
   (pps ppx_js_style -allow-let-operators -check-doc-comments))
  (preprocess
-  (pps
-   -unused-code-warnings=force
-   ppx_compare
-   ppx_enumerate
-   ppx_hash
-   ppx_sexp_conv
-   ppx_sexp_value)))
+  (pps -unused-code-warnings=force ppx_compare ppx_sexp_conv ppx_sexp_value)))
