@@ -18,11 +18,16 @@ module Field_name = struct
       | `lint
       | `preprocess
       ]
-    [@@deriving compare, hash, sexp_of]
+    [@@deriving compare, sexp_of]
   end
 
   include T0
   include Comparable.Make (T0)
+
+  let hash (t : t) : int =
+    match t with
+    | `name | `public_name | `instrumentation | `lint | `preprocess -> Hashtbl.hash t
+  ;;
 end
 
 type t =

@@ -109,8 +109,6 @@
    (>= 0.0.16))
   (ppx_compare
    (>= v0.17))
-  (ppx_hash
-   (>= v0.17))
   (ppx_sexp_conv
    (>= v0.17))
   (ppx_sexp_value
@@ -187,8 +185,6 @@
   (ppx_compare
    (>= v0.17))
   (ppx_expect
-   (>= v0.17))
-  (ppx_hash
    (>= v0.17))
   (ppx_sexp_conv
    (>= v0.17))

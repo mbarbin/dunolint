@@ -37,6 +37,5 @@
    -unused-code-warnings=force
    ppx_compare
    ppx_expect
-   ppx_hash
    ppx_sexp_conv
    ppx_sexp_value)))
