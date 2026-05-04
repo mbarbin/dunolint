@@ -141,7 +141,7 @@ module Library_open_via_flags = struct
     String.split t ~on:'.'
     |> List.rev
     |> List.hd
-    |> String.capitalize
+    |> String.capitalize_ascii
     |> String.map ~f:(function
       | '-' -> '_'
       | c -> c)
@@ -188,7 +188,7 @@ let open_via_flags_groups sexps =
 let order_open_via_flags_sections sexps ~to_open_via_flags =
   let order_spec =
     List.mapi to_open_via_flags ~f:(fun i module_name -> module_name, i)
-    |> Map.of_alist_exn (module String)
+    |> Map.of_alist_exn (module Base.String)
   in
   sexps
   |> open_via_flags_groups

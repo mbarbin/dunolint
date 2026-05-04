@@ -172,7 +172,7 @@ let insert_new_fields ~sexps_rewriter ~indicative_field_ordering ~fields ~new_fi
           | hd :: tl ->
             if String.equal hd field_name then acc else aux (Set.add acc hd) tl
         in
-        aux (Set.empty (module String)) indicative_field_ordering
+        aux (Set.empty (module Base.String)) indicative_field_ordering
       in
       let pred_field =
         let rec aux last = function

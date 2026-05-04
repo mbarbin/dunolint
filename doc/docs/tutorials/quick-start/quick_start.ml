@@ -21,9 +21,9 @@ let print_dune_file path =
 ;;
 
 let dunolint args =
-  let display = "dunolint " ^ String.concat " " args in
+  let display = "dunolint " ^ String.concat ~sep:" " args in
   Printf.printf "$ %s\n" display;
-  let cmd = "./dunolint.exe " ^ String.concat " " args in
+  let cmd = "./dunolint.exe " ^ String.concat ~sep:" " args in
   let ic = Unix.open_process_in cmd in
   let output = In_channel.input_all ic in
   let status = Unix.close_process_in ic in
