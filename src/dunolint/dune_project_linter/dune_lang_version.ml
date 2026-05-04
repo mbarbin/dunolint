@@ -7,8 +7,13 @@
 let field_name = "lang"
 
 type t = { mutable dune_lang_version : Dune_project.Dune_lang_version.t }
-[@@deriving sexp_of]
 
+let to_dyn { dune_lang_version } =
+  Dyn.record
+    [ "dune_lang_version", Dune_project.Dune_lang_version.to_dyn dune_lang_version ]
+;;
+
+let sexp_of_t t = Dyn.to_sexp (to_dyn t)
 let create ~dune_lang_version = { dune_lang_version }
 let dune_lang_version t = t.dune_lang_version
 let set_dune_lang_version t ~dune_lang_version = t.dune_lang_version <- dune_lang_version

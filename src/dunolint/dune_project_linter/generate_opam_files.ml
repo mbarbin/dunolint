@@ -6,8 +6,9 @@
 
 let field_name = "generate_opam_files"
 
-type t = { args : Sexp.t list } [@@deriving sexp_of]
+type t = { args : Sexp.t list }
 
+let sexp_of_t { args } = Sexp.List [ List [ Atom "args"; List args ] ]
 let create () = { args = [] }
 
 module Handler = Dunolinter.Sexp_handler.Make_sexp_list (struct

@@ -6,8 +6,10 @@
 
 let field_name = "name"
 
-type t = { mutable name : Dune_project.Name.t } [@@deriving sexp_of]
+type t = { mutable name : Dune_project.Name.t }
 
+let to_dyn { name } = Dyn.record [ "name", Dune_project.Name.to_dyn name ]
+let sexp_of_t t = Dyn.to_sexp (to_dyn t)
 let create ~name = { name }
 let name t = t.name
 let set_name t ~name = t.name <- name
