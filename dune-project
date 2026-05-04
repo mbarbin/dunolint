@@ -33,6 +33,8 @@
  (depends
   (ocaml
    (>= 4.14))
+  (dyn
+   (>= 3.17))
   (re
    (>= 1.8.0))
   (sexplib0
