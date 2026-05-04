@@ -24,6 +24,12 @@
 
 (rule
  (cond
+  ((path (glob test/dunolint-lib-base/*))
+   (enforce
+    (dune
+     (library
+      (and (not (has_field public_name))
+       (package (equals dunolint-lib-base-tests)))))))
   ((path (or (glob test/**) (glob dunolint-config/**)))
    (enforce
     (dune

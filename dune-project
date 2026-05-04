@@ -211,6 +211,27 @@
     (>= 0.1.0)))))
 
 (package
+ (name dunolint-lib-base-tests)
+ (synopsis "Tests for dunolint-lib-base")
+ (depends
+  (ocaml
+   (>= 5.3))
+  (base
+   (>= v0.17))
+  (dunolint-lib
+   (= :version))
+  (dunolint-lib-base
+   (= :version))
+  (ppx_compare
+   (>= v0.17))
+  (ppx_expect
+   (>= v0.17))
+  (ppx_sexp_conv
+   (>= v0.17))
+  (ppx_sexp_value
+   (>= v0.17))))
+
+(package
  (name dunolint-dev)
  (synopsis "Package to regroup dev targets, documentation, and more")
  (allow_empty)
@@ -228,6 +249,8 @@
   (dunolint-lib
    (= :version))
   (dunolint-lib-base
+   (= :version))
+  (dunolint-lib-base-tests
    (= :version))
   (dunolint-tests
    (= :version))
