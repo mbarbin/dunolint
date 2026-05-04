@@ -11,8 +11,6 @@
   -open
   Base
   -open
-  Stdio
-  -open
   Dunolint_stdlib)
  (libraries
   base
@@ -26,7 +24,6 @@
   dunolinter
   file-rewriter
   sexps-rewriter
-  stdio
   unix)
  (instrumentation
   (backend bisect_ppx))

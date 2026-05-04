@@ -14,8 +14,6 @@
   -open
   Pplumbing_log_cli
   -open
-  Stdio
-  -open
   Dunolint_stdlib
   -open
   Cmdlang
@@ -36,7 +34,6 @@
   pplumbing-log
   pplumbing-log-cli
   sexps-rewriter
-  stdio
   unix)
  (instrumentation
   (backend bisect_ppx))

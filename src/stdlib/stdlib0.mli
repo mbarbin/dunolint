@@ -12,11 +12,13 @@ module Dyn = Dyn0
 module Err = Err0
 module Fpath = Fpath0
 module Fsegment = Fsegment0
+module In_channel = In_channel0
 module Int = Int0
 module List = List0
 module Loc = Loc0
 module Myers = Myers0
 module Ordering = Ordering0
+module Out_channel = Out_channel0
 module Pp = Pp0
 module Pp_tty = Pp_tty0
 module Relative_path = Relative_path0
@@ -29,5 +31,17 @@ val require : bool -> unit
 val require_equal : (module With_equal_and_sexp.S with type t = 'a) -> 'a -> 'a -> unit
 val require_does_raise : (unit -> 'a) -> unit
 val print_s : Sexp.t -> unit
+
+(** {1 Transition helpers}
+
+    Re exporting these may help when transitioning from libraries still using
+    Base. *)
+
+(** Shadows [Base.print_endline] which is deprecated. *)
 val print_endline : string -> unit
+
+(** Shadows [Base.print_string] which is deprecated. *)
 val print_string : string -> unit
+
+(** Shadows [Base.prerr_endline] which is deprecated. *)
+val prerr_endline : string -> unit

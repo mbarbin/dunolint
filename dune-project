@@ -121,8 +121,6 @@
    (>= v0.17))
   (sexps-rewriter
    (>= 0.0.3))
-  (stdio
-   (>= v0.17))
   (volgo
    (>= 0.0.21))
   (volgo-git-unix
@@ -196,8 +194,6 @@
    (>= v0.17))
   (sexps-rewriter
    (>= 0.0.3))
-  (stdio
-   (>= v0.17))
   (volgo
    (>= 0.0.21))
   (volgo-git-unix
