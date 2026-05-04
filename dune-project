@@ -128,9 +128,7 @@
   (volgo-git-unix
    (>= 0.0.21))
   (volgo-hg-unix
-   (>= 0.0.21))
-  (windtrap
-   (>= 0.1.0))))
+   (>= 0.0.21))))
 
 (package
  (name dunolint-tests)
