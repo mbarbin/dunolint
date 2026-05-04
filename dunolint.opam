@@ -15,7 +15,6 @@ depends: [
   "cmdlang-cmdliner-err-runner" {>= "0.0.16"}
   "dune-build-info" {>= "3.17"}
   "dunolint-lib" {= version}
-  "dunolint-lib-base" {= version}
   "dyn" {>= "3.17"}
   "file-rewriter" {>= "0.0.3"}
   "fmt" {>= "0.9.0"}

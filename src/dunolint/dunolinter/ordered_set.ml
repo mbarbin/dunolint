@@ -103,6 +103,14 @@ module Evaluator = struct
   let static = { standard = (fun () -> Unknown); include_ = (fun _ -> Unknown) }
 end
 
+module With_compare = struct
+  module type S = sig
+    type t
+
+    val compare : t -> t -> int
+  end
+end
+
 let as_set (m : _ Comparator.Module.t) t ~(evaluator : _ Evaluator.t) =
   let open Evaluation_result.Monad_syntax in
   let rec aux t =
@@ -133,13 +141,13 @@ let as_set (m : _ Comparator.Module.t) t ~(evaluator : _ Evaluator.t) =
 
 let mem
       (type a)
-      (module M : Comparator.S with type t = a)
+      (module M : With_compare.S with type t = a)
       t
       elt
       ~(evaluator : _ Evaluator.t)
   =
   let open Evaluation_result.Monad_syntax in
-  let compare = M.comparator.compare in
+  let compare = M.compare in
   let equal a b = compare a b = 0 in
   let rec aux t =
     match (t : _ t) with
@@ -171,8 +179,8 @@ let mem
   aux t
 ;;
 
-let insert (type a) (module M : Comparator.S with type t = a) t elt =
-  let compare = M.comparator.compare in
+let insert (type a) (module M : With_compare.S with type t = a) t elt =
+  let compare = M.compare in
   let rec aux t =
     match (t : _ t) with
     | Element a ->
@@ -201,8 +209,8 @@ let insert (type a) (module M : Comparator.S with type t = a) t elt =
   aux t
 ;;
 
-let remove (type a) (module M : Comparator.S with type t = a) t elt =
-  let compare = M.comparator.compare in
+let remove (type a) (module M : With_compare.S with type t = a) t elt =
+  let compare = M.compare in
   let rec aux t =
     match (t : _ t) with
     | Element a ->
@@ -242,8 +250,8 @@ let canonical_compare a b ~compare =
   | _, _ -> Int.compare (top_constructor_sort_value a) (top_constructor_sort_value b)
 ;;
 
-let canonical_sort (type a) (module M : Comparator.S with type t = a) t =
-  let compare = M.comparator.compare in
+let canonical_sort (type a) (module M : With_compare.S with type t = a) t =
+  let compare = M.compare in
   let rec aux t =
     match t with
     | (Element _ | Standard | Include _) as t -> t

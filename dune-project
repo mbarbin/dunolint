@@ -75,8 +75,6 @@
    (>= 3.17))
   (dunolint-lib
    (= :version))
-  (dunolint-lib-base
-   (= :version))
   (dyn
    (>= 3.17))
   (file-rewriter

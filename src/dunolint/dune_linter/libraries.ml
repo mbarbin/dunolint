@@ -155,15 +155,17 @@ let add_libraries t ~libraries =
   add_entries t ~entries:(List.map libraries ~f:Entry.library)
 ;;
 
+module Library_name_set = Stdlib.Set.Make (Dune.Library.Name)
+
 let remove_libraries t ~libraries =
-  let libraries_to_remove = Set.of_list (module Dune.Library.Name) libraries in
+  let libraries_to_remove = Library_name_set.of_list libraries in
   List.iter t.sections ~f:(fun section ->
     section.entries
     <- List.filter section.entries ~f:(fun (entry : Entry.t) ->
          match entry with
          | Unhandled _ -> true
          | Re_export { name; _ } | Library { name; _ } ->
-           not (Set.mem libraries_to_remove name)))
+           not (Library_name_set.mem name libraries_to_remove)))
 ;;
 
 let read ~sexps_rewriter ~field =
