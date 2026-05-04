@@ -25,7 +25,7 @@ let read ~sexps_rewriter ~field =
          ~loc:(Sexps_rewriter.loc sexps_rewriter atom_lang)
          [ Pp.text "Expected (lang dunolint VERSION) format." ]
      | true ->
-       (match String.split version_string ~on:'.' with
+       (match String.split_on_char '.' version_string with
         | [ major_str; minor_str ] ->
           (match Int.of_string major_str, Int.of_string minor_str with
            | major, minor ->
