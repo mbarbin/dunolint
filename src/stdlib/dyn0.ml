@@ -23,6 +23,9 @@ let to_sexp =
   let module Sexp = Sexplib0.Sexp in
   let module S = Sexplib0.Sexp_conv in
   let rec aux (dyn : Dyn.t) : Sexp.t =
+    (* We are not monitoring the actual coverage during a transition phase from sexp to
+       introducing more dyn usage in the project. Disabling coverage here is
+       intended. *)
     match[@coverage off] dyn with
     | Opaque -> Atom "<opaque>"
     | Unit -> List []

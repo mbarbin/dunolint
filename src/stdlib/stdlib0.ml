@@ -71,4 +71,4 @@ let () =
     | _ -> assert false)
 ;;
 
-let sexp_of_list = sexp_of_list
+let sexp_of_list = Sexplib0.Sexp_conv.sexp_of_list

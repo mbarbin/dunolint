@@ -8,7 +8,5 @@ include module type of Stdlib.Char
 
 val is_alphanum : char -> bool
 val is_whitespace : char -> bool
-val is_uppercase : char -> bool
+val is_uppercase_ascii : char -> bool
 val to_string : t -> string
-val lowercase : t -> t
-val uppercase : t -> t

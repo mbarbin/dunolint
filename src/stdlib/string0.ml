@@ -70,6 +70,12 @@ let lsplit2 t ~on =
 let split t ~on = split_on_char ~sep:on t
 let to_string t = t
 
+let of_char_list cs =
+  let buf = Bytes.create (List.length cs) in
+  List.iteri (fun i c -> Bytes.set buf i c) cs;
+  Bytes.unsafe_to_string buf
+;;
+
 (* ---------------------------------------------------------------------------- *)
 (* The following functions are copied from [Base] (MIT). See notice at the top
    of the file and project global notice for licensing information. *)

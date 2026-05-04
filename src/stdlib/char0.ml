@@ -52,11 +52,9 @@ let is_alphanum = function
 ;;
 
 let to_string = Stdlib.String.make 1
-let lowercase = lowercase_ascii
-let uppercase = uppercase_ascii
 
-(* [is_uppercase] is copied from [Base] (MIT). *)
-let is_uppercase = function
+(* [is_uppercase_ascii] is copied from [Base] (MIT). *)
+let is_uppercase_ascii = function
   | 'A' .. 'Z' -> true
   | _ -> false
 ;;

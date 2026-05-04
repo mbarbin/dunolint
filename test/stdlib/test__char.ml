@@ -59,8 +59,8 @@ let%expect_test "is_whitespace" =
   ()
 ;;
 
-let%expect_test "is_uppercase" =
-  let test c = print_dyn (Dyn.pair dyn_char Dyn.bool (c, Char.is_uppercase c)) in
+let%expect_test "is_uppercase_ascii" =
+  let test c = print_dyn (Dyn.pair dyn_char Dyn.bool (c, Char.is_uppercase_ascii c)) in
   test 'A';
   [%expect {| ("A", true) |}];
   test 'Z';
@@ -98,41 +98,5 @@ let%expect_test "to_string" =
   [%expect {| "\000" |}];
   require_equal (module Int) 1 (String.length (Char.to_string 'x'));
   [%expect {||}];
-  ()
-;;
-
-let%expect_test "lowercase" =
-  let test c = print_dyn (Dyn.pair dyn_char dyn_char (c, Char.lowercase c)) in
-  test 'A';
-  [%expect {| ("A", "a") |}];
-  test 'Z';
-  [%expect {| ("Z", "z") |}];
-  test 'a';
-  [%expect {| ("a", "a") |}];
-  test '0';
-  [%expect {| ("0", "0") |}];
-  test ' ';
-  [%expect {| (" ", " ") |}];
-  (* Non-ASCII bytes are passed through unchanged. *)
-  test '\xC9';
-  [%expect {| ("\201", "\201") |}];
-  ()
-;;
-
-let%expect_test "uppercase" =
-  let test c = print_dyn (Dyn.pair dyn_char dyn_char (c, Char.uppercase c)) in
-  test 'a';
-  [%expect {| ("a", "A") |}];
-  test 'z';
-  [%expect {| ("z", "Z") |}];
-  test 'A';
-  [%expect {| ("A", "A") |}];
-  test '0';
-  [%expect {| ("0", "0") |}];
-  test ' ';
-  [%expect {| (" ", " ") |}];
-  (* Non-ASCII bytes are passed through unchanged. *)
-  test '\xE9';
-  [%expect {| ("\233", "\233") |}];
   ()
 ;;

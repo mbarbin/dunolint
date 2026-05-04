@@ -18,6 +18,7 @@ val is_suffix : t -> suffix:string -> bool
 val lsplit2 : t -> on:char -> (t * t) option
 val lstrip : ?drop:(char -> bool) -> t -> t
 val rstrip : ?drop:(char -> bool) -> t -> t
+val of_char_list : char list -> t
 val split : t -> on:char -> t list
 val strip : ?drop:(char -> bool) -> t -> t
 val to_string : t -> t

@@ -41,7 +41,7 @@
 module Char = struct
   include Char
 
-  let is_uppercase c = equal c (uppercase_ascii c)
+  let is_uppercase_ascii c = equal c (uppercase_ascii c)
 end
 
 module List = struct
@@ -50,6 +50,12 @@ end
 
 module String = struct
   include StringLabels
+
+  let of_char_list cs =
+    let buf = Bytes.create (List.length cs) in
+    List.iteri cs ~f:(fun i c -> Bytes.set buf i c);
+    Bytes.unsafe_to_string buf
+  ;;
 end
 
 let read_line () =
@@ -101,13 +107,13 @@ end
 let choose (type a) ~(choices : (char * a) list) : char option -> (a, unit) Result.t
   = function
   | None ->
-    (match List.filter choices ~f:(fun (c, _) -> Char.is_uppercase c) with
+    (match List.filter choices ~f:(fun (c, _) -> Char.is_uppercase_ascii c) with
      | _ :: _ :: _ as l ->
        raise
          (Invalid_argument
             (Printf.sprintf
                "[Prompt.choose] supplied multiple defaults %S."
-               (String.of_seq (List.map l ~f:fst |> List.to_seq))))
+               (String.of_char_list (List.map l ~f:fst))))
      | [ (_, a) ] -> Ok a
      | [] -> Error ())
   | Some ch ->
@@ -121,7 +127,7 @@ let choose (type a) ~(choices : (char * a) list) : char option -> (a, unit) Resu
 
 let ask_internal (type a) ~prompt ~(choices : (char * a) list) =
   let prompt =
-    let cs = List.map choices ~f:(fun (c, _) -> Printf.sprintf "%c" c) in
+    let cs = List.map choices ~f:(fun (c, _) -> String.make 1 c) in
     Printf.sprintf "%s [%s]" prompt (String.concat ~sep:"/" cs)
   in
   let please_answer () =

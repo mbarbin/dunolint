@@ -152,6 +152,19 @@ let%expect_test "split" =
   ()
 ;;
 
+let%expect_test "of_char_list" =
+  let test cs = print_dyn (Dyn.string (String.of_char_list cs)) in
+  test [];
+  [%expect {| "" |}];
+  test [ 'h'; 'e'; 'l'; 'l'; 'o' ];
+  [%expect {| "hello" |}];
+  test [ 'a' ];
+  [%expect {| "a" |}];
+  test [ '\000'; '\001'; '\255' ];
+  [%expect {| "\000\001\255" |}];
+  ()
+;;
+
 let%expect_test "to_string" =
   print_dyn (Dyn.string (String.to_string ""));
   [%expect {| "" |}];
