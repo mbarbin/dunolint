@@ -38,6 +38,20 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE. *)
 
+module Char = struct
+  include Char
+
+  let is_uppercase c = equal c (uppercase_ascii c)
+end
+
+module List = struct
+  include ListLabels
+end
+
+module String = struct
+  include StringLabels
+end
+
 let read_line () =
   match In_channel.input_line In_channel.stdin with
   | Some line -> line
@@ -56,7 +70,7 @@ let read_char () =
   let str = read_line () in
   let len = String.length str in
   if len = 1
-  then Ok (Some (Char.lowercase str.[0]))
+  then Ok (Some (Char.lowercase_ascii str.[0]))
   else if len = 0
   then Ok None
   else Error ()
@@ -81,7 +95,7 @@ module Choice = struct
   type 'a t = char * 'a * string
 
   let create char a ~help:string = char, a, string
-  let default (c, a, s) = Char.uppercase c, a, s
+  let default (c, a, s) = Char.uppercase_ascii c, a, s
 end
 
 let choose (type a) ~(choices : (char * a) list) : char option -> (a, unit) Result.t
@@ -93,19 +107,21 @@ let choose (type a) ~(choices : (char * a) list) : char option -> (a, unit) Resu
          (Invalid_argument
             (Printf.sprintf
                "[Prompt.choose] supplied multiple defaults %S."
-               (String.of_char_list (List.map l ~f:fst))))
+               (String.of_seq (List.map l ~f:fst |> List.to_seq))))
      | [ (_, a) ] -> Ok a
      | [] -> Error ())
   | Some ch ->
-    let filter (reply, _) = Char.equal (Char.lowercase reply) (Char.lowercase ch) in
-    (match List.find choices ~f:filter with
+    let filter (reply, _) =
+      Char.equal (Char.lowercase_ascii reply) (Char.lowercase_ascii ch)
+    in
+    (match List.find_opt choices ~f:filter with
      | Some (_, a) -> Ok a
      | None -> Error ())
 ;;
 
 let ask_internal (type a) ~prompt ~(choices : (char * a) list) =
   let prompt =
-    let cs = List.map choices ~f:(fun (c, _) -> Char.to_string c) in
+    let cs = List.map choices ~f:(fun (c, _) -> Printf.sprintf "%c" c) in
     Printf.sprintf "%s [%s]" prompt (String.concat ~sep:"/" cs)
   in
   let please_answer () =
@@ -113,8 +129,8 @@ let ask_internal (type a) ~prompt ~(choices : (char * a) list) =
     let choices =
       List.mapi choices ~f:(fun i (char, _value) ->
         let sep = if i = 0 then "" else if i = num_choices - 1 then " or " else ", " in
-        Printf.sprintf "%s'%c'" sep (Char.lowercase char))
-      |> String.concat
+        Printf.sprintf "%s'%c'" sep (Char.lowercase_ascii char))
+      |> String.concat ~sep:""
     in
     aprintf "[%s] Please answer %s.\n\n" (styled (`Fg `Red) "!") choices
   in
@@ -138,7 +154,7 @@ let ask ~prompt ~choices =
   let print_help () =
     aprintf "\nPlease choose among the following options:\n";
     List.iter choices ~f:(fun (char, _value, help) ->
-      aprintf "  %c : %s\n" (Char.lowercase char) help);
+      aprintf "  %c : %s\n" (Char.lowercase_ascii char) help);
     aprintf "  ? : Print this help.\n\n"
   in
   let choices =
