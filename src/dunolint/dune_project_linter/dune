@@ -8,21 +8,12 @@
   -warn-error
   +a
   -open
-  Base
-  -open
   Dunolint_stdlib
   -open
   Dunolint.Std)
- (libraries
-  base
-  dunolint
-  dunolint_stdlib
-  dunolinter
-  file-rewriter
-  sexps-rewriter)
+ (libraries dunolint dunolint_stdlib dunolinter file-rewriter sexps-rewriter)
  (instrumentation
   (backend bisect_ppx))
  (lint
   (pps ppx_js_style -allow-let-operators -check-doc-comments))
- (preprocess
-  (pps -unused-code-warnings=force ppx_compare ppx_sexp_conv ppx_sexp_value)))
+ (preprocess no_preprocessing))
