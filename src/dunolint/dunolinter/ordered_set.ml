@@ -65,7 +65,6 @@ let make_union = function
 ;;
 
 let of_list elts = make_union (List.map elts ~f:(fun e -> Element e))
-let of_set set = of_list (Set.to_list set)
 
 module Evaluation_result = struct
   type 'a t =
@@ -81,16 +80,9 @@ module Evaluation_result = struct
     | Known a -> Known (f a)
   ;;
 
-  let bind a f =
-    match a with
-    | Unknown -> Unknown
-    | Known a -> f a
-  ;;
-
   module Monad_syntax = struct
     let return = return
     let ( let+ ) = map
-    let ( let* ) = bind
   end
 end
 
@@ -110,34 +102,6 @@ module With_compare = struct
     val compare : t -> t -> int
   end
 end
-
-let as_set (m : _ Comparator.Module.t) t ~(evaluator : _ Evaluator.t) =
-  let open Evaluation_result.Monad_syntax in
-  let rec aux t =
-    match (t : _ t) with
-    | Element a -> return (Set.singleton m a)
-    | Standard ->
-      let+ list = evaluator.standard () in
-      Set.of_list m list
-    | Union ts ->
-      let rec loop acc = function
-        | [] -> return (List.rev acc)
-        | hd :: tl ->
-          let* hd = aux hd in
-          loop (hd :: acc) tl
-      in
-      let+ ts = loop [] ts in
-      Set.union_list m ts
-    | Diff (a, b) ->
-      let* a = aux a in
-      let+ b = aux b in
-      Set.diff a b
-    | Include var ->
-      let+ list = evaluator.include_ var in
-      Set.of_list m list
-  in
-  aux t
-;;
 
 let mem
       (type a)
