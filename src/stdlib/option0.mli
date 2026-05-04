@@ -5,16 +5,9 @@
 (*_**************************************************************************************)
 
 include module type of struct
-  include Dyn
+  include Option
 end
 
-val inline_record : string -> (string * Dyn.t) list -> Dyn.t
-
-module type Stringable_S = sig
-  type t
-
-  val to_string : t -> string
-end
-
-val stringable : (module Stringable_S with type t = 'a) -> 'a -> Dyn.t
-val to_sexp : Dyn.t -> Sexplib0.Sexp.t
+val iter : 'a t -> f:('a -> unit) -> unit
+val map : 'a t -> f:('a -> 'b) -> 'b t
+val value_map : 'a t -> default:'b -> f:('a -> 'b) -> 'b

@@ -25,6 +25,7 @@ let to_string = function
   | `False_if_hidden_includes_supported -> "false-if-hidden-includes-supported"
 ;;
 
+let to_dyn t = Dyn.string (to_string t)
 let sexp_of_t t = Sexp.Atom (to_string t)
 
 let t_of_sexp sexp =

@@ -18,6 +18,8 @@ include Validated_string.Make (struct
     let invariant = invariant
   end)
 
+let to_dyn t = Dyn.string (to_string t)
+
 module Predicate = struct
   let error_source = "name.t"
 

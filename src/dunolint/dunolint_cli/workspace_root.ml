@@ -99,7 +99,7 @@ let find () =
        candidate)
       [@coverage off]
     | files ->
-      let files = Set.of_list (module String) (Array.to_list files) in
+      let files = Set.of_list (module Base.String) (Array.to_list files) in
       let candidate =
         let candidate_priority =
           match candidate with

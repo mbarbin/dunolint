@@ -8,8 +8,10 @@ let field_name = "implicit_transitive_deps"
 
 module Value = Dune_project.Implicit_transitive_deps.Value
 
-type t = { mutable value : Value.t } [@@deriving sexp_of]
+type t = { mutable value : Value.t }
 
+let to_dyn { value } = Dyn.record [ "value", Value.to_dyn value ]
+let sexp_of_t t = Dyn.to_sexp (to_dyn t)
 let create ~implicit_transitive_deps:value = { value }
 let value t = t.value
 let set_value t ~value = t.value <- value

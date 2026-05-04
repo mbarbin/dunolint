@@ -7,6 +7,7 @@
 (** Extending [Stdlib] for use in the project. *)
 
 module Absolute_path = Absolute_path0
+module Char = Char0
 module Code_error = Code_error0
 module Dyn = Dyn0
 module Err = Err0
@@ -17,12 +18,15 @@ module Int = Int0
 module List = List0
 module Loc = Loc0
 module Myers = Myers0
+module Nothing = Nothing0
+module Option = Option0
 module Ordering = Ordering0
 module Out_channel = Out_channel0
 module Pp = Pp0
 module Pp_tty = Pp_tty0
 module Relative_path = Relative_path0
 module Sexp = Sexp0
+module String = String0
 module With_equal_and_sexp = With_equal_and_sexp0
 
 val phys_equal : 'a -> 'a -> bool
@@ -31,6 +35,10 @@ val require : bool -> unit
 val require_equal : (module With_equal_and_sexp.S with type t = 'a) -> 'a -> 'a -> unit
 val require_does_raise : (unit -> 'a) -> unit
 val print_s : Sexp.t -> unit
+
+(** {1 Sexp helpers} *)
+
+val sexp_of_list : ('a -> Sexp.t) -> 'a list -> Sexp.t
 
 (** {1 Transition helpers}
 

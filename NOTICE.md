@@ -31,3 +31,11 @@ A few helpers from the [Stdio](https://github.com/janestreet/stdio) project (rel
 ### Notice
 
 The relevant file is `src/stdlib/out_channel0.ml`. It carries a notice next to the code that was copied, and `Stdio`'s original LICENSE is included in this repo at `third-party-license/janestreet/stdio/LICENSE.md`.
+
+## A note about Base
+
+A few helpers from the [Base](https://github.com/janestreet/base) project (released under `MIT`) are reproduced in our local `Stdlib` extensions to avoid taking on `base` as a direct dependency.
+
+### Notice
+
+The relevant files are `src/stdlib/char0.ml` and `src/stdlib/string0.ml`. Each carries a notice at the top of the file, and the copied functions are clearly indicated next to the code. `Base`'s original LICENSE is included in this repo at `third-party-license/janestreet/base/LICENSE.md`.

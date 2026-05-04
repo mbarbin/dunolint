@@ -70,7 +70,15 @@ let () =
      depending code. All these libraries belong to [dunolint-tests]. *)
   rule
     (cond
-       [ ( path (or_ [ glob "test/**"; glob "dunolint-config/**" ])
+       [ ( path (glob "test/dunolint-lib-base/*")
+         , enforce
+             (dune
+                (library
+                   (and_
+                      [ not_ (has_field `public_name)
+                      ; package (equals (Dune.Package.Name.v "dunolint-lib-base-tests"))
+                      ]))) )
+       ; ( path (or_ [ glob "test/**"; glob "dunolint-config/**" ])
          , enforce
              (dune
                 (library

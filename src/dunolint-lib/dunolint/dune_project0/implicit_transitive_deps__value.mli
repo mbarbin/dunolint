@@ -13,5 +13,7 @@ type t =
   ]
 
 val all : t list
+val to_string : t -> string
+val to_dyn : t -> Dyn.t
 
 include Container_key.S with type t := t

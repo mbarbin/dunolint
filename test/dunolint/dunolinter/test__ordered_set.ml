@@ -6,44 +6,6 @@
 
 module Ordered_set = Dunolinter.Ordered_set
 
-let evaluator = Ordered_set.Evaluator.static
-
-let%expect_test "as_set" =
-  let test t =
-    let res = Ordered_set.as_set (module Base.Int) t ~evaluator in
-    print_s [%sexp (res : Set.M(Base.Int).t Ordered_set.Evaluation_result.t)]
-  in
-  test (Element 0);
-  [%expect {| (Known (0)) |}];
-  test Standard;
-  [%expect {| Unknown |}];
-  test (Include "foo");
-  [%expect {| Unknown |}];
-  test (Union [ Element 0; Element 1 ]);
-  [%expect {| (Known (0 1)) |}];
-  test (Union [ Element 0; Standard ]);
-  [%expect {| Unknown |}];
-  test (Diff (Union [ Element 0; Element 1 ], Element 0));
-  [%expect {| (Known (1)) |}];
-  let test t =
-    let res =
-      Ordered_set.as_set
-        (module Base.Int)
-        t
-        ~evaluator:
-          { standard = (fun () -> Known [ 1; 2; 3 ])
-          ; include_ = (fun var -> Known [ String.length var ])
-          }
-    in
-    print_s [%sexp (res : Set.M(Base.Int).t Ordered_set.Evaluation_result.t)]
-  in
-  test (Include "foo");
-  [%expect {| (Known (3)) |}];
-  test Standard;
-  [%expect {| (Known (1 2 3)) |}];
-  ()
-;;
-
 let%expect_test "write" =
   let test t =
     let sexps = Ordered_set.write ~write_a:Int.sexp_of_t t in
@@ -226,25 +188,14 @@ let%expect_test "mem" =
   ()
 ;;
 
-let%expect_test "of_set and empty" =
+let%expect_test "empty" =
   let show t =
     let sexps = Ordered_set.write ~write_a:Int.sexp_of_t t in
     print_s [%sexp (sexps : Sexp.t list)]
   in
-  let test set =
-    let t = Ordered_set.of_set set in
-    show t
-  in
   (* empty *)
   show Ordered_set.empty;
   [%expect {| () |}];
-  (* of_set *)
-  test (Set.empty (module Base.Int));
-  [%expect {| () |}];
-  test (Set.of_list (module Base.Int) [ 1 ]);
-  [%expect {| (1) |}];
-  test (Set.of_list (module Base.Int) [ 3; 1; 2 ]);
-  [%expect {| (1 2 3) |}];
   ()
 ;;
 

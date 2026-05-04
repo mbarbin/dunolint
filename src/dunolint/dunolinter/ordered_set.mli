@@ -46,16 +46,8 @@ module With_compare : sig
   end
 end
 
-val of_set : ('a, _) Set.t -> 'a t
 val of_list : 'a list -> 'a t
 val empty : 'a t
-
-(** Return the elements of [t] as a set, using the specified static evaluator. *)
-val as_set
-  :  ('a, 'cmp) Comparator.Module.t
-  -> 'a t
-  -> evaluator:'a Evaluator.t
-  -> ('a, 'cmp) Set.t Evaluation_result.t
 
 (** Whether it is possible to determine statically if a value belongs to the
     set. This is meant to cover more cases in which, even though it is not

@@ -7,8 +7,15 @@
 let field_name = "lang"
 
 type t = { mutable dunolint_lang_version : Dunolint0.Dunolint_lang_version.t }
-[@@deriving sexp_of]
 
+let to_dyn { dunolint_lang_version } =
+  Dyn.record
+    [ ( "dunolint_lang_version"
+      , Dunolint0.Dunolint_lang_version.to_dyn dunolint_lang_version )
+    ]
+;;
+
+let sexp_of_t t = Dyn.to_sexp (to_dyn t)
 let create ~dunolint_lang_version = { dunolint_lang_version }
 let dunolint_lang_version t = t.dunolint_lang_version
 

@@ -1,6 +1,6 @@
 (library
  (name dunolint_base_test)
- (package dunolint-tests)
+ (package dunolint-lib-base-tests)
  (inline_tests)
  (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a -open Base)
  (libraries base dunolint dunolint_base)
