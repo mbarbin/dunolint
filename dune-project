@@ -150,8 +150,6 @@
    (= :version))
   (dunolint-lib
    (= :version))
-  (dunolint-lib-base
-   (= :version))
   (file-rewriter
    (>= 0.0.3))
   (fpath
