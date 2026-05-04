@@ -18,6 +18,7 @@ module Int = Int0
 module List = List0
 module Loc = Loc0
 module Myers = Myers0
+module Nothing = Nothing0
 module Option = Option0
 module Ordering = Ordering0
 module Out_channel = Out_channel0
@@ -34,6 +35,10 @@ val require : bool -> unit
 val require_equal : (module With_equal_and_sexp.S with type t = 'a) -> 'a -> 'a -> unit
 val require_does_raise : (unit -> 'a) -> unit
 val print_s : Sexp.t -> unit
+
+(** {1 Sexp helpers} *)
+
+val sexp_of_list : ('a -> Sexp.t) -> 'a list -> Sexp.t
 
 (** {1 Transition helpers}
 

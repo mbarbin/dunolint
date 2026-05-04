@@ -16,6 +16,7 @@ module Int = Int0
 module List = List0
 module Loc = Loc0
 module Myers = Myers0
+module Nothing = Nothing0
 module Option = Option0
 module Ordering = Ordering0
 module Out_channel = Out_channel0
@@ -69,3 +70,5 @@ let () =
       List [ Atom "Of_sexp_error"; exn; List [ Atom "invalid_sexp"; sexp ] ]
     | _ -> assert false)
 ;;
+
+let sexp_of_list = sexp_of_list
