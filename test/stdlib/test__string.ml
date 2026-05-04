@@ -11,14 +11,14 @@ let%expect_test "sexp round-trip" =
   let test s =
     let sexp = String.sexp_of_t s in
     let s' = String.t_of_sexp sexp in
-    print_dyn (Dyn.string s')
+    require_equal (module String) s s'
   in
   test "";
-  [%expect {| "" |}];
+  [%expect {||}];
   test "hello";
-  [%expect {| "hello" |}];
+  [%expect {||}];
   test "with spaces and \"quotes\"";
-  [%expect {| "with spaces and \"quotes\"" |}];
+  [%expect {||}];
   ()
 ;;
 
