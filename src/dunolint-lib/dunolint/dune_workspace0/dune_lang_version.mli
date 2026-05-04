@@ -19,6 +19,7 @@ val compare : t -> t -> int
 
 include Sexpable.S with type t := t
 
+val to_dyn : t -> Dyn.t
 val create : int * int -> t
 
 (** Returns the string that can be used as atom in the dune-workspace file. *)
