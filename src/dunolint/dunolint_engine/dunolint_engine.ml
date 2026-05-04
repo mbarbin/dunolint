@@ -228,7 +228,7 @@ let materialize t =
       in
       let with_flow ~should_enable_color flow =
         Option.iter should_mkdir ~f:(fun parent_dir ->
-          Out_channel.fprintf
+          Stdlib.Printf.fprintf
             flow
             "%s `mkdir -p %s`\n"
             (match[@coverage off] running_mode with
@@ -237,7 +237,7 @@ let materialize t =
              | Interactive -> "Would run"
              | Force_yes -> "Running")
             (Relative_path.to_string parent_dir));
-        Out_channel.fprintf
+        Stdlib.Printf.fprintf
           flow
           "%s file %S:\n"
           (match running_mode with
@@ -264,7 +264,7 @@ let materialize t =
             | `Always -> true
             | `Never -> false
           in
-          with_flow ~should_enable_color stdout
+          with_flow ~should_enable_color Stdlib.stdout
         | Interactive ->
           Git_pager.run ~f:(fun pager ->
             with_flow

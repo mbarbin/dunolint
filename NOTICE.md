@@ -23,3 +23,11 @@ We vendored the module `Core.Blang` from the [Core](https://github.com/janestree
 ### Notice
 
 The files we imported are in `src/dunolint-lib/vendor/blang`. We've added a notice in the files and a comment next to the code that was copied and modified, which includes `Core`'s original LICENSE, which is included in this repo at `third-party-license/janestreet/core/LICENSE.md`.
+
+## A note about Stdio
+
+A few helpers from the [Stdio](https://github.com/janestreet/stdio) project (released under `MIT`) are reproduced in our local `Stdlib` extensions to avoid taking on `stdio` as a direct dependency.
+
+### Notice
+
+The relevant file is `src/stdlib/out_channel0.ml`. It carries a notice next to the code that was copied, and `Stdio`'s original LICENSE is included in this repo at `third-party-license/janestreet/stdio/LICENSE.md`.

@@ -11,9 +11,7 @@
   -open
   Base
   -open
-  Fpath_sexp0
-  -open
-  Stdio
+  Dunolint_stdlib
   -open
   Cmdlang)
  (libraries
@@ -22,8 +20,7 @@
   cmdlang-cmdliner-err-runner
   dune-build-info
   dunolint
-  fpath-sexp0
-  stdio)
+  dunolint_stdlib)
  (instrumentation
   (backend bisect_ppx))
  (lint

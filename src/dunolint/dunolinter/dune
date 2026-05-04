@@ -10,8 +10,6 @@
   -open
   Base
   -open
-  Stdio
-  -open
   Dunolint_stdlib
   -open
   Dunolint.Std)
@@ -21,8 +19,7 @@
   dunolint_stdlib
   file-rewriter
   parsexp
-  sexps-rewriter
-  stdio)
+  sexps-rewriter)
  (instrumentation
   (backend bisect_ppx))
  (lint

@@ -11,8 +11,6 @@
   -open
   Base
   -open
-  Stdio
-  -open
   Dunolint_stdlib)
  (libraries
   base
@@ -20,7 +18,6 @@
   dunolint_cli
   dunolint_engine
   dunolint_stdlib
-  stdio
   test_helpers
   unix)
  (instrumentation

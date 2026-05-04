@@ -10,11 +10,13 @@ module Dyn = Dyn0
 module Err = Err0
 module Fpath = Fpath0
 module Fsegment = Fsegment0
+module In_channel = In_channel0
 module Int = Int0
 module List = List0
 module Loc = Loc0
 module Myers = Myers0
 module Ordering = Ordering0
+module Out_channel = Out_channel0
 module Pp = Pp0
 module Pp_tty = Pp_tty0
 module Relative_path = Relative_path0
@@ -49,6 +51,7 @@ let require_equal
 
 let print_endline = print_endline
 let print_string = print_string
+let prerr_endline = prerr_endline
 
 let () =
   Sexplib0.Sexp_conv.Exn_converter.add

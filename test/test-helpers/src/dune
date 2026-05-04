@@ -10,8 +10,6 @@
   -open
   Base
   -open
-  Stdio
-  -open
   Dunolint_stdlib)
  (libraries
   base
@@ -20,8 +18,7 @@
   dunolint_engine
   dunolint_stdlib
   dunolinter
-  sexps-rewriter
-  stdio)
+  sexps-rewriter)
  (instrumentation
   (backend bisect_ppx))
  (lint

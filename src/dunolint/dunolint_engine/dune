@@ -12,8 +12,6 @@
   -open
   Pplumbing_log
   -open
-  Stdio
-  -open
   Dunolint_stdlib
   -open
   Cmdlang
@@ -33,7 +31,6 @@
   pageantty.git-pager
   pplumbing-log
   sexps-rewriter
-  stdio
   unix)
  (instrumentation
   (backend bisect_ppx))
