@@ -4,6 +4,8 @@
 (*  SPDX-License-Identifier: LGPL-3.0-or-later WITH LGPL-3.0-linking-exception   *)
 (*********************************************************************************)
 
+module Library_name_set = Stdlib.Set.Make (Dune.Library.Name)
+
 let parse contents =
   Test_helpers.parse (module Dune_linter.Libraries) ~path:(Fpath.v "dune") contents
 ;;
@@ -156,9 +158,13 @@ let%expect_test "rewrite" =
         |}];
       let library_names =
         List.filter_map entries ~f:Dune_linter.Libraries.Entry.library_name
-        |> Set.of_list (module Dune.Library.Name)
+        |> Library_name_set.of_list
       in
-      print_s [%sexp { library_names : Set.M(Dune.Library.Name).t }];
+      print_s
+        [%sexp
+          { library_names =
+              (library_names |> Library_name_set.to_list : Dune.Library.Name.t list)
+          }];
       [%expect {| ((library_names (bar baz foo sna))) |}];
       let mem name = Dune_linter.Libraries.mem t ~library:(Dune.Library.Name.v name) in
       require (mem "foo");

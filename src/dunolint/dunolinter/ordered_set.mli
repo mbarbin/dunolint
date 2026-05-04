@@ -38,6 +38,14 @@ module Evaluator : sig
   val static : _ t
 end
 
+module With_compare : sig
+  module type S = sig
+    type t
+
+    val compare : t -> t -> int
+  end
+end
+
 val of_set : ('a, _) Set.t -> 'a t
 val of_list : 'a list -> 'a t
 val empty : 'a t
@@ -54,15 +62,15 @@ val as_set
     possible to know the set completely statically, it is still possible to
     determine whether an element belongs to it. *)
 val mem
-  :  (module Comparator.S with type t = 'a)
+  :  (module With_compare.S with type t = 'a)
   -> 'a t
   -> 'a
   -> evaluator:'a Evaluator.t
   -> bool Evaluation_result.t
 
-val insert : (module Comparator.S with type t = 'a) -> 'a t -> 'a -> 'a t
-val remove : (module Comparator.S with type t = 'a) -> 'a t -> 'a -> 'a t
+val insert : (module With_compare.S with type t = 'a) -> 'a t -> 'a -> 'a t
+val remove : (module With_compare.S with type t = 'a) -> 'a t -> 'a -> 'a t
 
 (** A canonical sort defined by dunolint when the order has no particular
     meaning. *)
-val canonical_sort : (module Comparator.S with type t = 'a) -> 'a t -> 'a t
+val canonical_sort : (module With_compare.S with type t = 'a) -> 'a t -> 'a t

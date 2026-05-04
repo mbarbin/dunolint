@@ -11,15 +11,13 @@
   -open
   Base
   -open
-  Dunolint_base
-  -open
   Dunolint_stdlib
   -open
   Dunolint.Std)
  (libraries
   base
   dune_linter
-  dunolint-lib-base
+  dunolint
   dunolint_engine
   dunolint_stdlib
   dunolinter
