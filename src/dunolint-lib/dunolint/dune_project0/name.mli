@@ -9,6 +9,8 @@ type t
 include Container_key.S with type t := t
 include Validated_string.S with type t := t
 
+val to_dyn : t -> Dyn.t
+
 module Predicate : sig
   type name := t
 

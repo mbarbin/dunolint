@@ -14,6 +14,7 @@ type t = int * int
 let compare : t -> t -> int = Stdlib.compare
 let equal : t -> t -> bool = Stdlib.( = )
 let to_string (a, b) = Printf.sprintf "%d.%d" a b
+let to_dyn t = Dyn.string (to_string t)
 let sexp_of_t t = Sexp.Atom (to_string t)
 
 let t_of_sexp sexp =
