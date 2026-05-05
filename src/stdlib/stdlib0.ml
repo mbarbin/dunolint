@@ -23,6 +23,7 @@ module Out_channel = Out_channel0
 module Pp = Pp0
 module Pp_tty = Pp_tty0
 module Relative_path = Relative_path0
+module Repr = Repr0
 module Sexp = Sexp0
 module String = String0
 module With_equal_and_sexp = With_equal_and_sexp0
