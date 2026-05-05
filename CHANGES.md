@@ -2,6 +2,7 @@
 
 ### Added
 
+- Lint custom `dune-workspace.*` files as regular dune-workspace files (#191, @mbarbin).
 - Preparatory changes for running `5.5` in CI (@mbarbin).
 - Document neocaml reformatter integration (#190, @mbarbin with review by @bbatsov).
 
@@ -20,6 +21,8 @@
 - Fix compatibility for cmdliner 2.0 (#187, @mbarbin).
 
 ### Removed
+
+- Removed `Linted_file_kind.of_string` (#191, @mbarbin).
 
 ## 0.0.20260306 (2026-03-06)
 
