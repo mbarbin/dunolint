@@ -52,17 +52,17 @@ let%expect_test "write" =
   [%expect {| (1 "\\" 2 3) |}];
   (* Insert and remove edge cases *)
   let s = Ordered_set.of_list [ 1; 2 ] in
-  let s_insert = Ordered_set.insert (module Base.Int) s 3 in
+  let s_insert = Ordered_set.insert (module Int) s 3 in
   test s_insert;
   [%expect {| (1 2 3) |}];
-  let s_remove = Ordered_set.remove (module Base.Int) s 2 in
+  let s_remove = Ordered_set.remove (module Int) s 2 in
   test s_remove;
   [%expect {| (1) |}];
   ()
 ;;
 
 let%expect_test "mem" =
-  let mem t elt ~evaluator = Ordered_set.mem (module Base.Int) t elt ~evaluator in
+  let mem t elt ~evaluator = Ordered_set.mem (module Int) t elt ~evaluator in
   let test t elt =
     let res = mem t elt ~evaluator:Ordered_set.Evaluator.static in
     print_s [%sexp (res : bool Ordered_set.Evaluation_result.t)]
@@ -201,12 +201,12 @@ let%expect_test "empty" =
 
 let%expect_test "insert and remove" =
   let show t =
-    let t = Ordered_set.canonical_sort (module Base.Int) t in
+    let t = Ordered_set.canonical_sort (module Int) t in
     let sexps = Ordered_set.write ~write_a:Int.sexp_of_t t in
     print_s [%sexp (sexps : Sexp.t list)]
   in
-  let insert t x = Ordered_set.insert (module Base.Int) t x in
-  let remove t x = Ordered_set.remove (module Base.Int) t x in
+  let insert t x = Ordered_set.insert (module Int) t x in
+  let remove t x = Ordered_set.remove (module Int) t x in
   (* Insert into empty set *)
   let t = Ordered_set.of_list [] in
   show (insert t 1);
