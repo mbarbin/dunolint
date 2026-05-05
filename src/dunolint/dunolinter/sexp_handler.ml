@@ -139,6 +139,8 @@ struct
   ;;
 end
 
+module Field_name_set = MoreLabels.Set.Make (String)
+
 let insert_new_fields ~sexps_rewriter ~indicative_field_ordering ~fields ~new_fields =
   let new_fields =
     List.map new_fields ~f:(fun (field : Sexp.t) ->
@@ -170,9 +172,9 @@ let insert_new_fields ~sexps_rewriter ~indicative_field_ordering ~fields ~new_fi
         let rec aux acc = function
           | [] -> acc
           | hd :: tl ->
-            if String.equal hd field_name then acc else aux (Set.add acc hd) tl
+            if String.equal hd field_name then acc else aux (Field_name_set.add hd acc) tl
         in
-        aux (Set.empty (module Base.String)) indicative_field_ordering
+        aux Field_name_set.empty indicative_field_ordering
       in
       let pred_field =
         let rec aux last = function
@@ -180,7 +182,9 @@ let insert_new_fields ~sexps_rewriter ~indicative_field_ordering ~fields ~new_fi
           | hd :: tl ->
             (match (hd : Sexp.t) with
              | List (Atom name :: _) ->
-               if Set.mem field_names_located_before name then aux hd tl else last
+               if Field_name_set.mem name field_names_located_before
+               then aux hd tl
+               else last
              | _ -> last)
         in
         match fields with

@@ -10,40 +10,41 @@ module Public_name = Executable__public_name
 let field_name = "executable"
 
 module Field_name = struct
-  module T0 = struct
-    type t =
-      [ `name
-      | `public_name
-      | `instrumentation
-      | `lint
-      | `preprocess
-      ]
+  type t =
+    [ `name
+    | `public_name
+    | `instrumentation
+    | `lint
+    | `preprocess
+    ]
 
-    [@@@coverage off]
+  [@@@coverage off]
 
-    let compare t1 t2 =
-      match t1 with
-      | `name | `public_name | `instrumentation | `lint | `preprocess ->
-        Repr.compare t1 t2
-    ;;
+  let compare t1 t2 =
+    match t1 with
+    | `name | `public_name | `instrumentation | `lint | `preprocess -> Repr.compare t1 t2
+  ;;
 
-    let sexp_of_t : t -> Sexp.t = function
-      | `name -> Atom "name"
-      | `public_name -> Atom "public_name"
-      | `instrumentation -> Atom "instrumentation"
-      | `lint -> Atom "lint"
-      | `preprocess -> Atom "preprocess"
-    ;;
-  end
+  let equal t1 t2 =
+    match t1 with
+    | `name | `public_name | `instrumentation | `lint | `preprocess -> Repr.equal t1 t2
+  ;;
 
-  include T0
-  include Comparable.Make (T0)
+  let sexp_of_t : t -> Sexp.t = function
+    | `name -> Atom "name"
+    | `public_name -> Atom "public_name"
+    | `instrumentation -> Atom "instrumentation"
+    | `lint -> Atom "lint"
+    | `preprocess -> Atom "preprocess"
+  ;;
 
   let hash (t : t) : int =
     match t with
     | `name | `public_name | `instrumentation | `lint | `preprocess -> Hashtbl.hash t
   ;;
 end
+
+module Field_name_table = MoreLabels.Hashtbl.Make (Field_name)
 
 type t =
   { mutable name : Name.t option
@@ -53,7 +54,7 @@ type t =
   ; mutable instrumentation : Instrumentation.t option
   ; mutable lint : Lint.t option
   ; mutable preprocess : Preprocess.t option
-  ; marked_for_removal : Hash_set.M(Field_name).t
+  ; marked_for_removal : unit Field_name_table.t
   }
 
 let sexp_of_t
@@ -83,14 +84,20 @@ let sexp_of_t
        ; Option.map lint ~f:(fun v -> Sexp.List [ Atom "lint"; Lint.sexp_of_t v ])
        ; Option.map preprocess ~f:(fun v ->
            Sexp.List [ Atom "preprocess"; Preprocess.sexp_of_t v ])
-       ; (if Hash_set.is_empty marked_for_removal
+       ; (if Field_name_table.length marked_for_removal = 0
           then None
-          else
+          else (
+            let fields =
+              marked_for_removal
+              |> Field_name_table.to_seq_keys
+              |> List.of_seq
+              |> List.sort ~compare:Field_name.compare
+            in
             Some
               (Sexp.List
                  [ Atom "marked_for_removal"
-                 ; Hash_set.sexp_of_m__t (module Field_name) marked_for_removal
-                 ]))
+                 ; List (fields |> List.map ~f:Field_name.sexp_of_t)
+                 ])))
        ])
   [@coverage off]
 ;;
@@ -135,7 +142,7 @@ let create
     ; instrumentation
     ; lint
     ; preprocess
-    ; marked_for_removal = Hash_set.create (module Field_name)
+    ; marked_for_removal = Field_name_table.create 16
     }
   in
   normalize t;
@@ -182,7 +189,7 @@ let read ~sexps_rewriter ~field =
   ; instrumentation = !instrumentation
   ; lint = !lint
   ; preprocess = !preprocess
-  ; marked_for_removal = Hash_set.create (module Field_name)
+  ; marked_for_removal = Field_name_table.create 16
   }
 ;;
 
@@ -224,7 +231,7 @@ let rewrite t ~sexps_rewriter ~field =
   (* Then we edit them in place those that are present. *)
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
   let maybe_remove state field_name field =
-    if Option.is_none state && Hash_set.mem t.marked_for_removal field_name
+    if Option.is_none state && Field_name_table.mem t.marked_for_removal field_name
     then (
       let range = Sexps_rewriter.range sexps_rewriter field in
       File_rewriter.remove file_rewriter ~range)
@@ -306,7 +313,7 @@ let enforce =
       | Not condition ->
         (match condition with
          | `has_field has_field ->
-           Hash_set.add t.marked_for_removal has_field;
+           Field_name_table.add t.marked_for_removal ~key:has_field ~data:();
            (match has_field with
             | `name -> t.name <- None
             | `public_name -> t.public_name <- None

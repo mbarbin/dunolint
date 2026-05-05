@@ -57,8 +57,6 @@
  (depends
   (ocaml
    (>= 5.3))
-  (base
-   (>= v0.17))
   (cmdlang
    (>= 0.0.9))
   (cmdlang-cmdliner-err-runner

@@ -51,15 +51,12 @@ module Trilang = struct
     ;;
   end
 
-  include
-    Sexpable.Of_sexpable
-      (S)
-      (struct
-        type t = T0.t
+  let sexp_of_t t = S.sexp_of_t (S.T t)
 
-        let to_sexpable t = S.T t
-        let of_sexpable (S.T t) = t
-      end)
+  let t_of_sexp sexp =
+    let (S.T t) = S.t_of_sexp sexp in
+    t
+  ;;
 end
 
 module T = struct

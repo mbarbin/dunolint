@@ -12,19 +12,24 @@ type 'a linter =
 type 'a t = 'a linter array
 
 let create linters ~field_name =
+  let compare_fields t1 t2 = String.compare t1.field_name t2.field_name in
   linters
   |> List.map ~f:(fun linter -> { field_name = field_name linter; linter })
-  |> List.sort ~compare:(Comparable.lift String.compare ~f:(fun t -> t.field_name))
+  |> List.sort ~compare:compare_fields
   |> Array.of_list
 ;;
 
 let lookup linters ~field_name =
-  Binary_search.binary_search
-    linters
-    ~length:Array.length
-    ~get:(fun t i -> t.(i).field_name)
-    ~compare:String.compare
-    `First_equal_to
-    field_name
-  |> Option.map ~f:(fun index -> linters.(index).linter)
+  let rec loop left right =
+    if left > right
+    then None
+    else (
+      let mid = (left + right) / 2 in
+      let entry = linters.(mid) in
+      match String.compare field_name entry.field_name |> Ordering.of_int with
+      | Eq -> Some entry.linter
+      | Lt -> loop left (mid - 1)
+      | Gt -> loop (mid + 1) right)
+  in
+  loop 0 (Array.length linters - 1)
 ;;

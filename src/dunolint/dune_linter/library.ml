@@ -12,46 +12,53 @@ module Public_name = Library__public_name
 let field_name = "library"
 
 module Field_name = struct
-  module T0 = struct
-    type t =
-      [ `name
-      | `public_name
-      | `package
-      | `inline_tests
-      | `modes
-      | `instrumentation
-      | `lint
-      | `preprocess
-      ]
+  type t =
+    [ `name
+    | `public_name
+    | `package
+    | `inline_tests
+    | `modes
+    | `instrumentation
+    | `lint
+    | `preprocess
+    ]
 
-    [@@@coverage off]
+  [@@@coverage off]
 
-    let compare t1 t2 =
-      match t1 with
-      | `name
-      | `public_name
-      | `package
-      | `inline_tests
-      | `modes
-      | `instrumentation
-      | `lint
-      | `preprocess -> Repr.compare t1 t2
-    ;;
+  let compare t1 t2 =
+    match t1 with
+    | `name
+    | `public_name
+    | `package
+    | `inline_tests
+    | `modes
+    | `instrumentation
+    | `lint
+    | `preprocess -> Repr.compare t1 t2
+  ;;
 
-    let sexp_of_t : t -> Sexp.t = function
-      | `name -> Atom "name"
-      | `public_name -> Atom "public_name"
-      | `package -> Atom "package"
-      | `inline_tests -> Atom "inline_tests"
-      | `modes -> Atom "modes"
-      | `instrumentation -> Atom "instrumentation"
-      | `lint -> Atom "lint"
-      | `preprocess -> Atom "preprocess"
-    ;;
-  end
+  let equal t1 t2 =
+    match t1 with
+    | `name
+    | `public_name
+    | `package
+    | `inline_tests
+    | `modes
+    | `instrumentation
+    | `lint
+    | `preprocess -> Repr.equal t1 t2
+  ;;
 
-  include T0
-  include Comparable.Make (T0)
+  let sexp_of_t : t -> Sexp.t = function
+    | `name -> Atom "name"
+    | `public_name -> Atom "public_name"
+    | `package -> Atom "package"
+    | `inline_tests -> Atom "inline_tests"
+    | `modes -> Atom "modes"
+    | `instrumentation -> Atom "instrumentation"
+    | `lint -> Atom "lint"
+    | `preprocess -> Atom "preprocess"
+  ;;
 
   let hash (t : t) : int =
     match t with
@@ -66,6 +73,8 @@ module Field_name = struct
   ;;
 end
 
+module Field_name_table = MoreLabels.Hashtbl.Make (Field_name)
+
 type t =
   { mutable name : Name.t option
   ; mutable public_name : Public_name.t option
@@ -78,7 +87,7 @@ type t =
   ; mutable instrumentation : Instrumentation.t option
   ; mutable lint : Lint.t option
   ; mutable preprocess : Preprocess.t option
-  ; marked_for_removal : Hash_set.M(Field_name).t
+  ; marked_for_removal : unit Field_name_table.t
   }
 
 let sexp_of_t
@@ -125,14 +134,20 @@ let sexp_of_t
        ; Option.map lint ~f:(fun v -> Sexp.List [ Atom "lint"; Lint.sexp_of_t v ])
        ; Option.map preprocess ~f:(fun v ->
            Sexp.List [ Atom "preprocess"; Preprocess.sexp_of_t v ])
-       ; (if Hash_set.is_empty marked_for_removal
+       ; (if Field_name_table.length marked_for_removal = 0
           then None
-          else
+          else (
+            let fields =
+              marked_for_removal
+              |> Field_name_table.to_seq_keys
+              |> List.of_seq
+              |> List.sort ~compare:Field_name.compare
+            in
             Some
               (Sexp.List
                  [ Atom "marked_for_removal"
-                 ; Hash_set.sexp_of_m__t (module Field_name) marked_for_removal
-                 ]))
+                 ; List (fields |> List.map ~f:Field_name.sexp_of_t)
+                 ])))
        ])
   [@coverage off]
 ;;
@@ -154,7 +169,26 @@ let indicative_field_ordering =
 let name t = t.name
 let flags t = t.flags
 
+let check_libraries_to_open_via_flags_exn libraries =
+  let seen = Hashtbl.create 16 in
+  let duplicates = ref [] in
+  List.iter libraries ~f:(fun library ->
+    if Hashtbl.mem seen library
+    then duplicates := library :: !duplicates
+    else Hashtbl.add seen library ());
+  match !duplicates with
+  | [] -> ()
+  | _ ->
+    let dups = List.dedup_and_sort !duplicates ~compare:String.compare in
+    raise
+      (Invalid_argument
+         (Printf.sprintf
+            "Library: duplicate entries [%s] in [libraries_to_open_via_flags]."
+            (String.concat ~sep:"; " (List.map dups ~f:(Printf.sprintf "%S")))))
+;;
+
 let set_libraries_to_open_via_flags t ~libraries_to_open_via_flags =
+  check_libraries_to_open_via_flags_exn libraries_to_open_via_flags;
   t.libraries_to_open_via_flags <- libraries_to_open_via_flags
 ;;
 
@@ -209,10 +243,12 @@ let open_via_flags_groups sexps =
   List.rev (aux [] sexps)
 ;;
 
+module String_map = MoreLabels.Map.Make (String)
+
 let order_open_via_flags_sections sexps ~to_open_via_flags =
   let order_spec =
     List.mapi to_open_via_flags ~f:(fun i module_name -> module_name, i)
-    |> Map.of_alist_exn (module Base.String)
+    |> String_map.of_list
   in
   sexps
   |> open_via_flags_groups
@@ -221,7 +257,7 @@ let order_open_via_flags_sections sexps ~to_open_via_flags =
     | Open_via_flags_sorted _ -> assert false
     | Other _ -> t
     | Open_via_flags { module_name } ->
-      (match Map.find order_spec module_name with
+      (match String_map.find_opt module_name order_spec with
        | None -> t
        | Some index -> Item.Open_via_flags_sorted { module_name; index }))
   |> List.group ~break:(fun t1 t2 -> Item.kind t1 <> Item.kind t2)
@@ -230,7 +266,8 @@ let order_open_via_flags_sections sexps ~to_open_via_flags =
     | [] -> assert false
     | (Item.Open_via_flags _ | Other _) :: _ -> group
     | Open_via_flags_sorted _ :: _ ->
-      List.sort group ~compare:(Comparable.lift Int.compare ~f:Item.index_exn))
+      let compare_index i1 i2 = Int.compare (Item.index_exn i1) (Item.index_exn i2) in
+      List.sort group ~compare:compare_index)
   |> List.concat
   |> List.concat_map ~f:Item.to_flags
 ;;
@@ -238,11 +275,11 @@ let order_open_via_flags_sections sexps ~to_open_via_flags =
 let open_via_flags t ~libraries_to_open_via_flags =
   let flags = Flags.flags t.flags in
   let existing_open_via_flags =
-    let hset = Hash_set.create (module String) in
+    let hset = Hashtbl.create 16 in
     let rec iter_list = function
       | [] -> ()
       | Sexp.Atom "-open" :: Atom module_name :: rest ->
-        Hash_set.add hset module_name;
+        Hashtbl.add hset module_name ();
         iter_list rest
       | hd :: tl ->
         iter_one hd;
@@ -262,7 +299,7 @@ let open_via_flags t ~libraries_to_open_via_flags =
   in
   let to_add =
     List.filter to_open_via_flags ~f:(fun module_name ->
-      not (Hash_set.mem existing_open_via_flags module_name))
+      not (Hashtbl.mem existing_open_via_flags module_name))
   in
   let flags =
     match to_add with
@@ -309,13 +346,14 @@ let create
   let modes = Option.map modes ~f:(fun modes -> Modes.create ~modes) in
   let flags = Flags.create ~flags in
   let libraries = Libraries.create ~libraries in
-  let marked_for_removal = Hash_set.create (module Field_name) in
+  check_libraries_to_open_via_flags_exn libraries_to_open_via_flags;
+  let marked_for_removal = Field_name_table.create 16 in
   let inline_tests =
     match inline_tests with
     | None -> None
     | Some true -> Some ()
     | Some false ->
-      Hash_set.add marked_for_removal `inline_tests;
+      Field_name_table.add marked_for_removal ~key:`inline_tests ~data:();
       None
   in
   let t =
@@ -387,7 +425,7 @@ let read ~sexps_rewriter ~field =
   ; instrumentation = !instrumentation
   ; lint = !lint
   ; preprocess = !preprocess
-  ; marked_for_removal = Hash_set.create (module Field_name)
+  ; marked_for_removal = Field_name_table.create 16
   }
 ;;
 
@@ -436,7 +474,7 @@ let rewrite t ~sexps_rewriter ~field =
   (* For those which are not missing, we edit them in place. *)
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
   let maybe_remove state field_name field =
-    if Option.is_none state && Hash_set.mem t.marked_for_removal field_name
+    if Option.is_none state && Field_name_table.mem t.marked_for_removal field_name
     then (
       let range = Sexps_rewriter.range sexps_rewriter field in
       File_rewriter.remove file_rewriter ~range)
@@ -551,7 +589,7 @@ let enforce =
       | Not condition ->
         (match condition with
          | `has_field has_field ->
-           Hash_set.add t.marked_for_removal has_field;
+           Field_name_table.add t.marked_for_removal ~key:has_field ~data:();
            (match has_field with
             | `name -> t.name <- None
             | `public_name -> t.public_name <- None

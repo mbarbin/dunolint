@@ -6,6 +6,8 @@
 
 let src = Logs.Src.create "dunolint" ~doc:"dunolint"
 
+module Path_table = MoreLabels.Hashtbl.Make (Relative_path)
+
 module Load_result = struct
   type t =
     | Absent
@@ -13,13 +15,13 @@ module Load_result = struct
     | Error of Err.t
 end
 
-type t = Load_result.t Hashtbl.M(Relative_path).t
+type t = Load_result.t Path_table.t
 
-let create () : t = Hashtbl.create (module Relative_path)
+let create () : t = Path_table.create 16
 
 let load_config_in_dir (t : t) ~dir : Load_result.t =
   let config_path = Relative_path.extend dir (Fsegment.v "dunolint") in
-  match Hashtbl.find t config_path with
+  match Path_table.find_opt t config_path with
   | Some result -> result
   | None ->
     let result : Load_result.t =
@@ -67,6 +69,6 @@ let load_config_in_dir (t : t) ~dir : Load_result.t =
             Error err)
            [@coverage off])
     in
-    Hashtbl.set t ~key:config_path ~data:result;
+    Path_table.add t ~key:config_path ~data:result;
     result
 ;;

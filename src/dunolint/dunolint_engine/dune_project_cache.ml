@@ -13,13 +13,15 @@ module Load_result = struct
         (Dune_project_context.t, Dune_project_context.Invalid_dune_project.t) Result.t
 end
 
-type t = Load_result.t Hashtbl.M(Relative_path).t
+module Path_table = MoreLabels.Hashtbl.Make (Relative_path)
 
-let create () : t = Hashtbl.create (module Relative_path)
+type t = Load_result.t Path_table.t
+
+let create () : t = Path_table.create 16
 
 let load_dune_project_in_dir (t : t) ~dir : Load_result.t =
   let file_path = Relative_path.extend dir (Fsegment.v "dune-project") in
-  match Hashtbl.find t file_path with
+  match Path_table.find_opt t file_path with
   | Some load_result -> load_result
   | None ->
     let parsing_result =
@@ -72,6 +74,6 @@ let load_dune_project_in_dir (t : t) ~dir : Load_result.t =
         Err.emit err ~level:Info;
         Present (Error (Dune_project_context.Invalid_dune_project.acknowledge err))
     in
-    Hashtbl.set t ~key:file_path ~data:load_result;
+    Path_table.add t ~key:file_path ~data:load_result;
     load_result
 ;;

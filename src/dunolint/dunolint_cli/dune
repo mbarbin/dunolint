@@ -8,8 +8,6 @@
   -warn-error
   +a
   -open
-  Base
-  -open
   Pplumbing_log
   -open
   Pplumbing_log_cli
@@ -20,7 +18,6 @@
   -open
   Dunolint.Std)
  (libraries
-  base
   cmdlang
   dunolint-lib
   dunolint.dune_linter
