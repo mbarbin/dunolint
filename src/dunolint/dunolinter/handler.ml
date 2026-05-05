@@ -43,7 +43,7 @@ let emit_error_and_resume a ~loc ~f =
              ++ Pp.space
              ++ Pp_tty.tag
                   Details
-                  (Pp.verbatim (Sexp.to_string_hum [%sexp (condition : condition)])))
+                  (Pp.verbatim (Sexp.to_string_hum (condition |> sexp_of_condition))))
         ; Pp.text
             "Dunolint is able to suggest automatic modifications to satisfy linting \
              rules when a strategy is implemented, however in this case there is none \
