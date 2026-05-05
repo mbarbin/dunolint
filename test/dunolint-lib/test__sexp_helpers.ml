@@ -14,7 +14,14 @@ type test_predicate =
   | `ctx of string
   | `variadic of string list
   ]
-[@@deriving sexp_of]
+
+let sexp_of_test_predicate : test_predicate -> Sexp.t = function
+  | `foo s -> List [ Atom "foo"; sexp_of_string s ]
+  | `bar i -> List [ Atom "bar"; sexp_of_int i ]
+  | `nullary -> Atom "nullary"
+  | `ctx s -> List [ Atom "ctx"; sexp_of_string s ]
+  | `variadic ss -> List [ Atom "variadic"; sexp_of_list sexp_of_string ss ]
+;;
 
 let test_variant_spec : test_predicate Sexp_helpers.Variant_spec.t =
   [ { atom = "foo"; conv = Unary (fun sexp -> `foo (string_of_sexp sexp)) }

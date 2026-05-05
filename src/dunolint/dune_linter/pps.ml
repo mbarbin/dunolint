@@ -13,7 +13,16 @@ module Arg = struct
         { name : string
         ; param : string option
         }
-  [@@deriving equal]
+
+  let equal t1 t2 =
+    Repr.phys_equal t1 t2
+    ||
+    match t1, t2 with
+    | Pp n1, Pp n2 -> Dune.Pp.Name.equal n1 n2
+    | Flag { name = n1; param = p1 }, Flag { name = n2; param = p2 } ->
+      String.equal n1 n2 && Option.equal String.equal p1 p2
+    | (Pp _ | Flag _), _ -> false
+  ;;
 
   let sexp_of_t : t -> Sexp.t = function
     | Pp pp_name -> List [ Atom "Pp"; Dune.Pp.Name.sexp_of_t pp_name ]

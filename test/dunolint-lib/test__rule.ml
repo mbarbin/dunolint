@@ -12,7 +12,25 @@ module Trilang = struct
       | True
       | False
       | Undefined
-    [@@deriving equal, sexp]
+
+    let equal t1 t2 =
+      match t1 with
+      | True | False | Undefined -> Repr.equal t1 t2
+    ;;
+
+    let sexp_of_t : t -> Sexp.t = function
+      | True -> Atom "True"
+      | False -> Atom "False"
+      | Undefined -> Atom "Undefined"
+    ;;
+
+    let t_of_sexp : Sexp.t -> t = function
+      | Atom "True" -> True
+      | Atom "False" -> False
+      | Atom "Undefined" -> Undefined
+      | sexp ->
+        Sexplib0.Sexp_conv.of_sexp_error "Trilang.T0.t_of_sexp: invalid trilang" sexp
+    ;;
   end
 
   include T0
@@ -20,7 +38,17 @@ module Trilang = struct
   module S = struct
     [@@@coverage off]
 
-    type t = T of T0.t [@@deriving sexp]
+    type t = T of T0.t
+
+    let sexp_of_t : t -> Sexp.t = function
+      | T t0 -> List [ Atom "T"; T0.sexp_of_t t0 ]
+    ;;
+
+    let t_of_sexp : Sexp.t -> t = function
+      | List [ Atom "T"; sexp ] -> T (T0.t_of_sexp sexp)
+      | sexp ->
+        Sexplib0.Sexp_conv.of_sexp_error "Trilang.S.t_of_sexp: invalid wrapper" sexp
+    ;;
   end
 
   include
@@ -35,7 +63,15 @@ module Trilang = struct
 end
 
 module T = struct
-  type t = (Trilang.t, int) Dunolint.Rule.Stable.V1.t [@@deriving sexp]
+  type t = (Trilang.t, int) Dunolint.Rule.Stable.V1.t
+
+  let sexp_of_t (t : t) : Sexp.t =
+    Dunolint.Rule.Stable.V1.sexp_of_t Trilang.sexp_of_t Int.sexp_of_t t
+  ;;
+
+  let t_of_sexp (sexp : Sexp.t) : t =
+    Dunolint.Rule.Stable.V1.t_of_sexp Trilang.t_of_sexp Int.t_of_sexp sexp
+  ;;
 
   let equal t1 t2 = Dunolint.Rule.Stable.V1.equal Trilang.equal Int.equal t1 t2
 end

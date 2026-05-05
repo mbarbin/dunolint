@@ -18,9 +18,14 @@ module Field_name = struct
       | `lint
       | `preprocess
       ]
-    [@@deriving compare]
 
     [@@@coverage off]
+
+    let compare t1 t2 =
+      match t1 with
+      | `name | `public_name | `instrumentation | `lint | `preprocess ->
+        Repr.compare t1 t2
+    ;;
 
     let sexp_of_t : t -> Sexp.t = function
       | `name -> Atom "name"

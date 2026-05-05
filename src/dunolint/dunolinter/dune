@@ -29,5 +29,4 @@
   linter_intf
   sexp_handler_intf
   stanza_linter_intf)
- (preprocess
-  (pps -unused-code-warnings=force ppx_compare ppx_sexp_conv)))
+ (preprocess no_preprocessing))

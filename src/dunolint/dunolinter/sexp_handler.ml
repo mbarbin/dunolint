@@ -7,7 +7,7 @@
 module type S = Sexp_handler_intf.S
 
 let replace_field ~sexps_rewriter ~field ~new_field =
-  if not ([%equal: Sexp.t] field new_field)
+  if not (Sexp.equal field new_field)
   then (
     let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
     File_rewriter.replace

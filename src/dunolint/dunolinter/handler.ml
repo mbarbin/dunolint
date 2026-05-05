@@ -26,7 +26,7 @@ let enforce_failure
   =
   Stdlib.Effect.perform
     (Enforce_failure
-       { condition; sexp_of_condition = [%sexp_of: Predicate.t Blang.t]; loc })
+       { condition; sexp_of_condition = Blang.sexp_of_t Predicate.sexp_of_t; loc })
 ;;
 
 let emit_error_and_resume a ~loc ~f =
