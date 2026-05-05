@@ -41,7 +41,10 @@
 module Char = struct
   include Char
 
-  let is_uppercase_ascii c = equal c (uppercase_ascii c)
+  let is_uppercase_ascii = function
+    | 'A' .. 'Z' -> true
+    | _ -> false
+  ;;
 end
 
 module List = struct
