@@ -23,7 +23,31 @@ module Field_name = struct
       | `lint
       | `preprocess
       ]
-    [@@deriving compare, sexp_of]
+
+    [@@@coverage off]
+
+    let compare t1 t2 =
+      match t1 with
+      | `name
+      | `public_name
+      | `package
+      | `inline_tests
+      | `modes
+      | `instrumentation
+      | `lint
+      | `preprocess -> Repr.compare t1 t2
+    ;;
+
+    let sexp_of_t : t -> Sexp.t = function
+      | `name -> Atom "name"
+      | `public_name -> Atom "public_name"
+      | `package -> Atom "package"
+      | `inline_tests -> Atom "inline_tests"
+      | `modes -> Atom "modes"
+      | `instrumentation -> Atom "instrumentation"
+      | `lint -> Atom "lint"
+      | `preprocess -> Atom "preprocess"
+    ;;
   end
 
   include T0

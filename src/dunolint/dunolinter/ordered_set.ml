@@ -10,7 +10,16 @@ type 'a t =
   | Union of 'a t list
   | Diff of 'a t * 'a t
   | Include of string
-[@@deriving sexp_of]
+
+let rec sexp_of_t : 'a. ('a -> Sexp.t) -> 'a t -> Sexp.t =
+  fun sexp_of_a t : Sexp.t ->
+  match t with
+  | Element a -> List [ Atom "Element"; sexp_of_a a ]
+  | Standard -> Atom "Standard"
+  | Union ts -> List [ Atom "Union"; List (List.map ts ~f:(sexp_of_t sexp_of_a)) ]
+  | Diff (t1, t2) -> List [ Atom "Diff"; sexp_of_t sexp_of_a t1; sexp_of_t sexp_of_a t2 ]
+  | Include s -> List [ Atom "Include"; Atom s ]
+;;
 
 let maybe_wrap_sexps = function
   | [ a ] -> a
@@ -70,7 +79,12 @@ module Evaluation_result = struct
   type 'a t =
     | Known of 'a
     | Unknown
-  [@@deriving sexp_of]
+
+  let sexp_of_t sexp_of_a (t : 'a t) : Sexp.t =
+    match t with
+    | Known a -> List [ Atom "Known"; sexp_of_a a ]
+    | Unknown -> Atom "Unknown"
+  ;;
 
   let return a = Known a
 

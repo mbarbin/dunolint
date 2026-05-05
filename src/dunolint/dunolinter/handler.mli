@@ -23,7 +23,9 @@ type _ Stdlib.Effect.t +=
             execution, perhaps this error shall be fatal. *)
 
 module type Predicate = sig
-  type t [@@deriving sexp_of]
+  type t
+
+  val sexp_of_t : t -> Sexp.t
 end
 
 val enforce_failure

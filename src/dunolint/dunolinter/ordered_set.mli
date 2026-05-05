@@ -10,7 +10,8 @@ type 'a t =
   | Union of 'a t list
   | Diff of 'a t * 'a t
   | Include of string
-[@@deriving sexp_of]
+
+val sexp_of_t : ('a -> Sexp.t) -> 'a t -> Sexp.t
 
 val read
   :  read_element:(sexps_rewriter:Sexps_rewriter.t -> Sexp.t -> 'a)
@@ -24,7 +25,8 @@ module Evaluation_result : sig
   type 'a t =
     | Known of 'a
     | Unknown
-  [@@deriving sexp_of]
+
+  val sexp_of_t : ('a -> Sexp.t) -> 'a t -> Sexp.t
 end
 
 module Evaluator : sig

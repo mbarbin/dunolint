@@ -6,7 +6,9 @@
 
 module type S = sig
   type predicate
-  type t [@@deriving sexp_of]
+  type t
+
+  val sexp_of_t : t -> Sexp.t
 
   include Sexp_handler_intf.S with type t := t
   include Linter_intf.S with type t := t and type predicate := predicate

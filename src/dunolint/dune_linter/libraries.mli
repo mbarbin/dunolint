@@ -25,7 +25,9 @@ include
 module Entry : sig
   (** An entry in the [libraries] field. These are usually atoms referring to
       library names, but occasionally these can be more complex constructs. *)
-  type t [@@deriving sexp_of]
+  type t
+
+  val sexp_of_t : t -> Sexp.t
 
   (** {1 Builders} *)
 

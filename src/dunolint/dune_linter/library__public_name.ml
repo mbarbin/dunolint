@@ -4,7 +4,11 @@
 (*  SPDX-License-Identifier: LGPL-3.0-or-later WITH LGPL-3.0-linking-exception   *)
 (*********************************************************************************)
 
-type t = { mutable public_name : Dune.Library.Public_name.t } [@@deriving sexp_of]
+type t = { mutable public_name : Dune.Library.Public_name.t }
+
+let sexp_of_t { public_name } : Sexp.t =
+  List [ List [ Atom "public_name"; Dune.Library.Public_name.sexp_of_t public_name ] ]
+;;
 
 let field_name = "public_name"
 

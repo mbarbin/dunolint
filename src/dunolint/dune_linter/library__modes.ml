@@ -5,10 +5,18 @@
 (*********************************************************************************)
 
 module Ordered_set = struct
-  type t = Dune.Compilation_mode.t Dunolinter.Ordered_set.t [@@deriving sexp_of]
+  type t = Dune.Compilation_mode.t Dunolinter.Ordered_set.t
+
+  let sexp_of_t (t : t) : Sexp.t =
+    Dunolinter.Ordered_set.sexp_of_t Dune.Compilation_mode.sexp_of_t t
+  ;;
 end
 
-type t = { mutable modes : Ordered_set.t } [@@deriving sexp_of]
+type t = { mutable modes : Ordered_set.t }
+
+let sexp_of_t { modes } : Sexp.t =
+  List [ List [ Atom "modes"; Ordered_set.sexp_of_t modes ] ]
+;;
 
 let field_name = "modes"
 

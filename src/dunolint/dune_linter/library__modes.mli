@@ -5,7 +5,9 @@
 (*_********************************************************************************)
 
 module Ordered_set : sig
-  type t = Dune.Compilation_mode.t Dunolinter.Ordered_set.t [@@deriving sexp_of]
+  type t = Dune.Compilation_mode.t Dunolinter.Ordered_set.t
+
+  val sexp_of_t : t -> Sexp.t
 end
 
 type t

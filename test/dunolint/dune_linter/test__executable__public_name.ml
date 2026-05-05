@@ -22,7 +22,7 @@ let%expect_test "read/write" =
   test {| (public_name (pre (hello_suf))) |};
   [%expect
     {|
-    Internal Error: (Of_sexp_error (_ ((invalid_sexp (pre (hello_suf))))))
+    Internal Error: (Of_sexp_error (invalid_sexp (pre (hello_suf))))
     <backtrace disabled in tests>
     [125]
     |}];

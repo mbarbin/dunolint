@@ -130,7 +130,6 @@ type ('predicate, 'invariant) t =
   | `return
   | `cond of ('predicate Blang.t * ('predicate, 'invariant) t) list
   ]
-[@@deriving compare, equal, sexp]
 ```
 
 ### Evaluation

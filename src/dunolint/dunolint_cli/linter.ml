@@ -14,7 +14,11 @@ let raise_config_not_applicable_err ~(path : Relative_path.t) ~location =
     ~loc:(Loc.of_file ~path:(path :> Fpath.t))
     ~exit_code:Err.Exit_code.internal_error
     [ Pp.text "Path is not within config location."
-    ; Err.sexp [%sexp { path : Relative_path.t; location : Relative_path.t }]
+    ; Err.sexp
+        (List
+           [ List [ Atom "path"; path |> Relative_path.sexp_of_t ]
+           ; List [ Atom "location"; location |> Relative_path.sexp_of_t ]
+           ])
     ] [@coverage off]
 ;;
 

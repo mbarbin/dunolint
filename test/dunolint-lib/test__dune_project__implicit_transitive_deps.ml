@@ -45,8 +45,8 @@ let%expect_test "all" =
 
 let%expect_test "of_sexp" =
   let test sexp =
-    let t = [%of_sexp: Dune_project.Implicit_transitive_deps.Value.t] sexp in
-    let s = [%sexp (t : Dune_project.Implicit_transitive_deps.Value.t)] in
+    let t = Dune_project.Implicit_transitive_deps.Value.t_of_sexp sexp in
+    let s = Dune_project.Implicit_transitive_deps.Value.sexp_of_t t in
     require_equal (module Sexp) sexp s
   in
   test (Atom "true");

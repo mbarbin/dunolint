@@ -13,7 +13,9 @@ type _ Stdlib.Effect.t +=
       -> unit Stdlib.Effect.t
 
 module type Predicate = sig
-  type t [@@deriving sexp_of]
+  type t
+
+  val sexp_of_t : t -> Sexp.t
 end
 
 let enforce_failure
@@ -24,7 +26,7 @@ let enforce_failure
   =
   Stdlib.Effect.perform
     (Enforce_failure
-       { condition; sexp_of_condition = [%sexp_of: Predicate.t Blang.t]; loc })
+       { condition; sexp_of_condition = Blang.sexp_of_t Predicate.sexp_of_t; loc })
 ;;
 
 let emit_error_and_resume a ~loc ~f =
@@ -41,7 +43,7 @@ let emit_error_and_resume a ~loc ~f =
              ++ Pp.space
              ++ Pp_tty.tag
                   Details
-                  (Pp.verbatim (Sexp.to_string_hum [%sexp (condition : condition)])))
+                  (Pp.verbatim (Sexp.to_string_hum (condition |> sexp_of_condition))))
         ; Pp.text
             "Dunolint is able to suggest automatic modifications to satisfy linting \
              rules when a strategy is implemented, however in this case there is none \
