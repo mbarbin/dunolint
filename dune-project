@@ -49,11 +49,7 @@
   (base
    (>= v0.16))
   (dunolint-lib
-   (= :version))
-  (re
-   (>= 1.8.0))
-  (sexplib0
-   (>= v0.16))))
+   (= :version))))
 
 (package
  (name dunolint)

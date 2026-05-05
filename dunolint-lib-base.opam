@@ -12,8 +12,6 @@ depends: [
   "ocaml" {>= "4.14"}
   "base" {>= "v0.16"}
   "dunolint-lib" {= version}
-  "re" {>= "1.8.0"}
-  "sexplib0" {>= "v0.16"}
   "odoc" {with-doc}
 ]
 build: [

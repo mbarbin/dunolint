@@ -19,6 +19,7 @@
   dunolint_stdlib
   file-rewriter
   parsexp
+  sexplib0
   sexps-rewriter)
  (instrumentation
   (backend bisect_ppx))
