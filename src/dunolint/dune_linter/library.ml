@@ -169,7 +169,26 @@ let indicative_field_ordering =
 let name t = t.name
 let flags t = t.flags
 
+let check_libraries_to_open_via_flags_exn libraries =
+  let seen = Hashtbl.create 16 in
+  let duplicates = ref [] in
+  List.iter libraries ~f:(fun library ->
+    if Hashtbl.mem seen library
+    then duplicates := library :: !duplicates
+    else Hashtbl.add seen library ());
+  match !duplicates with
+  | [] -> ()
+  | _ ->
+    let dups = List.dedup_and_sort !duplicates ~compare:String.compare in
+    raise
+      (Invalid_argument
+         (Printf.sprintf
+            "Library: duplicate entries [%s] in [libraries_to_open_via_flags]."
+            (String.concat ~sep:"; " (List.map dups ~f:(Printf.sprintf "%S")))))
+;;
+
 let set_libraries_to_open_via_flags t ~libraries_to_open_via_flags =
+  check_libraries_to_open_via_flags_exn libraries_to_open_via_flags;
   t.libraries_to_open_via_flags <- libraries_to_open_via_flags
 ;;
 
@@ -327,6 +346,7 @@ let create
   let modes = Option.map modes ~f:(fun modes -> Modes.create ~modes) in
   let flags = Flags.create ~flags in
   let libraries = Libraries.create ~libraries in
+  check_libraries_to_open_via_flags_exn libraries_to_open_via_flags;
   let marked_for_removal = Field_name_table.create 16 in
   let inline_tests =
     match inline_tests with

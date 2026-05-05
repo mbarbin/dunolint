@@ -332,6 +332,28 @@ let%expect_test "libraries_to_open_via_flags" =
   ()
 ;;
 
+let%expect_test "libraries_to_open_via_flags duplicates" =
+  require_does_raise (fun () ->
+    Dune_linter.Library.create ~libraries_to_open_via_flags:[ "a"; "b"; "a" ] ());
+  [%expect
+    {|
+    (Invalid_argument
+     "Library: duplicate entries [\"a\"] in [libraries_to_open_via_flags].")
+    |}];
+  (* All duplicates are reported, deduplicated and sorted. *)
+  let t = Dune_linter.Library.create () in
+  require_does_raise (fun () ->
+    Dune_linter.Library.set_libraries_to_open_via_flags
+      t
+      ~libraries_to_open_via_flags:[ "b"; "a"; "c"; "b"; "a"; "a" ]);
+  [%expect
+    {|
+    (Invalid_argument
+     "Library: duplicate entries [\"a\"; \"b\"] in [libraries_to_open_via_flags].")
+    |}];
+  ()
+;;
+
 module Predicate = struct
   (* Aliased here so we remember to add new tests when this type is modified. *)
   type t = Dune.Library.Predicate.t as 'a
