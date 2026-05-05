@@ -37,4 +37,5 @@ let main =
 module Private = struct
   module Common_helpers = Common_helpers
   module Linter = Linter
+  module Recognize_linted_file = Recognize_linted_file
 end

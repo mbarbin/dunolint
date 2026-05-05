@@ -66,14 +66,14 @@ let pp_tty_switch switch = Pp_tty.kwd (module String) ("--" ^ switch)
 
 let select_linter ~path =
   let filename = Fpath.filename path in
-  match Dunolint.Linted_file_kind.of_string filename with
-  | Ok linted_file_kind ->
+  match Recognize_linted_file.recognize (Fsegment.v filename) with
+  | Some linted_file_kind ->
     (match linted_file_kind with
      | `dune -> (module Dune_linter : Dunolinter.S)
      | `dune_project -> (module Dune_project_linter : Dunolinter.S)
      | `dune_workspace -> (module Dune_workspace_linter : Dunolinter.S)
      | `dunolint -> (module Dunolint_linter : Dunolinter.S))
-  | Error (`Msg _msg) ->
+  | None ->
     Err.raise
       Pp.O.
         [ Pp.text "Cannot infer the file kind from the filename "

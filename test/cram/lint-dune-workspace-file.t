@@ -171,3 +171,69 @@ But the subdir dune-workspace matches the path predicate and gets version enforc
 
   $ (cd path-test && dunolint tools lint-file subdir/dune-workspace)
   (lang dune 3.20)
+
+Custom dune-workspace files prefixed with [dune-workspace.] (e.g.
+[dune-workspace.ci] or [dune-workspace.5.3]) are linted as regular
+dune-workspace files. This convention is used in dune-pkg workflows, see
+https://github.com/mbarbin/dunolint/issues/191.
+
+  $ mkdir -p prefix-test
+  $ touch prefix-test/dune-workspace
+  $ cat > prefix-test/dunolint <<'EOF'
+  > (lang dunolint 1.0)
+  > (rule (enforce (dune_workspace (dune_lang_version (= 3.19)))))
+  > EOF
+
+  $ cat > prefix-test/dune-workspace.5.3 <<'EOF'
+  > (lang dune 3.17)
+  > EOF
+
+  $ cat > prefix-test/dune-workspace.ci <<'EOF'
+  > (lang dune 3.17)
+  > EOF
+
+[dune-workspace-not-linted] is a witness for the negative case: the basename
+does not match the recognition pattern (no [.] separator after
+[dune-workspace]), so its contents must be left untouched even though they
+are otherwise valid dune-workspace syntax.
+
+  $ cat > prefix-test/dune-workspace-not-linted <<'EOF'
+  > (lang dune 3.17)
+  > EOF
+
+A custom dune-workspace file is selected by the [tools lint-file] command:
+
+  $ (cd prefix-test && dunolint tools lint-file dune-workspace.5.3)
+  (lang dune 3.19)
+
+  $ (cd prefix-test && dunolint tools lint-file dune-workspace.ci)
+  (lang dune 3.19)
+
+Custom dune-workspace files are also picked up by [dunolint lint] during
+workspace traversal. Note that [dune-workspace-not-linted] is not included.
+
+  $ dunolint lint --dry-run --below prefix-test/
+  dry-run: Would edit file "prefix-test/dune-workspace.5.3":
+  @@ -1,1 +1,1 @@
+  -|(lang dune 3.17)
+  +|(lang dune 3.19)
+  
+  dry-run: Would edit file "prefix-test/dune-workspace.ci":
+  @@ -1,1 +1,1 @@
+  -|(lang dune 3.17)
+  +|(lang dune 3.19)
+
+Run for real and verify the witness file is left unchanged on disk:
+
+  $ dunolint lint --below prefix-test/
+  Editing file "prefix-test/dune-workspace.5.3":
+  @@ -1,1 +1,1 @@
+  -|(lang dune 3.17)
+  +|(lang dune 3.19)
+  
+  Editing file "prefix-test/dune-workspace.ci":
+  @@ -1,1 +1,1 @@
+  -|(lang dune 3.17)
+  +|(lang dune 3.19)
+  $ cat prefix-test/dune-workspace-not-linted
+  (lang dune 3.17)
