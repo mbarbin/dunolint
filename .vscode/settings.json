@@ -36,6 +36,7 @@
         "getcwd",
         "getenv",
         "Hashtbl",
+        "hovbox",
         "hset",
         "hvbox",
         "intf",
