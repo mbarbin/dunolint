@@ -162,16 +162,10 @@
    (>= 0.0.16))
   (pplumbing-pp-tty
    (>= 0.0.16))
-  (ppx_compare
-   (>= v0.17))
   (ppx_expect
-   (>= v0.17))
-  (ppx_sexp_conv
    (>= v0.17))
   (ppx_sexp_value
    (>= v0.17))
-  (ppxlib
-   (>= 0.35.0))
   (re
    (>= 1.8.0))
   (sexplib0
@@ -208,11 +202,7 @@
    (= :version))
   (dunolint-lib-base
    (= :version))
-  (ppx_compare
-   (>= v0.17))
   (ppx_expect
-   (>= v0.17))
-  (ppx_sexp_conv
    (>= v0.17))
   (ppx_sexp_value
    (>= v0.17))))
@@ -244,8 +234,6 @@
    (>= v0.17))
   (ppx_js_style
    (>= v0.17))
-  (ppxlib
-   (>= 0.35.0))
   (volgo
    (>= 0.0.21))
   (volgo-git-unix

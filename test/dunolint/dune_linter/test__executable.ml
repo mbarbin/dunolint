@@ -48,7 +48,7 @@ let%expect_test "read/write" =
   test {| (executable (name (invalid field))) |};
   [%expect
     {|
-    Internal Error: (Of_sexp_error (_ ((invalid_sexp (invalid field)))))
+    Internal Error: (Of_sexp_error (invalid_sexp (invalid field)))
     <backtrace disabled in tests>
     [125]
     |}];

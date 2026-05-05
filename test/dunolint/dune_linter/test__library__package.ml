@@ -51,7 +51,7 @@ let%expect_test "read/write" =
   test {| (package (foo bar)) |};
   [%expect
     {|
-    Internal Error: (Of_sexp_error (_ ((invalid_sexp (foo bar)))))
+    Internal Error: (Of_sexp_error (invalid_sexp (foo bar)))
     <backtrace disabled in tests>
     [125]
     |}];
