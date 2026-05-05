@@ -20,6 +20,8 @@ module Field_name = struct
       ]
     [@@deriving compare]
 
+    [@@@coverage off]
+
     let sexp_of_t : t -> Sexp.t = function
       | `name -> Atom "name"
       | `public_name -> Atom "public_name"
