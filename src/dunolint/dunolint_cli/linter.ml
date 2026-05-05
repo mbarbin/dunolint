@@ -163,10 +163,11 @@ let visit_directory ~dunolint_engine ~context ~parent_dir ~files =
   | true -> Dunolint_engine.Visitor_decision.Skip_subtree
   | false ->
     List.iter files ~f:(fun file ->
-      match Dunolint.Linted_file_kind.of_string file with
-      | Error (`Msg _) -> ()
-      | Ok linted_file_kind ->
-        let path = Relative_path.extend parent_dir (Fsegment.v file) in
+      let basename = Fsegment.v file in
+      match Recognize_linted_file.recognize basename with
+      | None -> ()
+      | Some linted_file_kind ->
+        let path = Relative_path.extend parent_dir basename in
         if not (should_skip_file ~context ~path)
         then (
           let lint_file m = lint_file m ~dunolint_engine ~context ~path in

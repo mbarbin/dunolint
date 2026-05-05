@@ -2,13 +2,27 @@
 
 ### Added
 
+- Lint custom `dune-workspace.*` files as regular dune-workspace files (#191, @mbarbin).
+- Preparatory changes for running `5.5` in CI (@mbarbin).
+- Document neocaml reformatter integration (#190, @mbarbin with review by @bbatsov).
+
 ### Changed
+
+- Reduce project dependencies (#192, #193, #194, #195, #196, #197, @mbarbin).
+- Upgrade CIs dependencies (@mbarbin).
+- Improve doc and use mdexp (#188, #189, @mbarbin).
+- Use `Myers` instead of `Patdiff` for computing and showing diffs (#186, @mbarbin).
+- Release artifacts are now distributed only compressed (#182, @mbarbin).
 
 ### Deprecated
 
 ### Fixed
 
+- Fix compatibility for cmdliner 2.0 (#187, @mbarbin).
+
 ### Removed
+
+- Removed `Linted_file_kind.of_string` (#191, @mbarbin).
 
 ## 0.0.20260306 (2026-03-06)
 

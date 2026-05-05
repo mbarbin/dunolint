@@ -42,14 +42,6 @@ let to_string = function
   | `dunolint -> "dunolint"
 ;;
 
-let of_string = function
-  | "dune" -> Ok `dune
-  | "dune-project" -> Ok `dune_project
-  | "dune-workspace" -> Ok `dune_workspace
-  | "dunolint" -> Ok `dunolint
-  | str -> Error (`Msg (Printf.sprintf "Invalid linted file kind: %S" str))
-;;
-
 let to_comparable_int = function
   | `dune -> 0
   | `dune_project -> 1
