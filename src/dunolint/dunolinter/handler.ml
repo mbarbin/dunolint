@@ -13,7 +13,9 @@ type _ Stdlib.Effect.t +=
       -> unit Stdlib.Effect.t
 
 module type Predicate = sig
-  type t [@@deriving sexp_of]
+  type t
+
+  val sexp_of_t : t -> Sexp.t
 end
 
 let enforce_failure

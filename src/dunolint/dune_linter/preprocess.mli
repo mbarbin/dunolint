@@ -23,7 +23,8 @@ module State : sig
     | No_preprocessing
     | Pps of Pps.t
     | Unhandled of Sexp.t
-  [@@deriving sexp_of]
+
+  val sexp_of_t : t -> Sexp.t
 end
 
 val state : t -> State.t

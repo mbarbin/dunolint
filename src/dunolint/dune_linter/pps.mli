@@ -17,7 +17,9 @@ module Arg : sig
         { name : string
         ; param : string option
         }
-  [@@deriving equal, sexp_of]
+
+  val equal : t -> t -> bool
+  val sexp_of_t : t -> Sexp.t
 end
 
 val create : args:Arg.t list -> t

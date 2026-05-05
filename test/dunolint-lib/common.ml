@@ -5,7 +5,11 @@
 (*********************************************************************************)
 
 module type Roundtripable = sig
-  type t [@@deriving equal, sexp]
+  type t
+
+  val equal : t -> t -> bool
+  val sexp_of_t : t -> Sexp.t
+  val t_of_sexp : Sexp.t -> t
 end
 
 let test_roundtrip (type a) (module M : Roundtripable with type t = a) (a : a) =
@@ -17,7 +21,11 @@ let test_roundtrip (type a) (module M : Roundtripable with type t = a) (a : a) =
 ;;
 
 module type Predicate = sig
-  type t [@@deriving equal, sexp]
+  type t
+
+  val equal : t -> t -> bool
+  val sexp_of_t : t -> Sexp.t
+  val t_of_sexp : Sexp.t -> t
 end
 
 let test_predicate (type a) (module M : Predicate with type t = a) predicate =
