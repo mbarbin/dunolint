@@ -69,6 +69,7 @@
         "Printexc",
         "ptag",
         "rfindi",
+        "Roundtripable",
         "rstrip",
         "runtest",
         "sexp",
