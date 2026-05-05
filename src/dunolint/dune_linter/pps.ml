@@ -192,9 +192,10 @@ module Section = struct
   ;;
 
   let sorted_entries t =
-    List.sort
-      t.entries
-      ~compare:(Comparable.lift Mutable_arg.order_by_name_and_application ~f:Entry.arg)
+    let compare a b =
+      Mutable_arg.order_by_name_and_application (Entry.arg a) (Entry.arg b)
+    in
+    List.sort t.entries ~compare
   ;;
 end
 

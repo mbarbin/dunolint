@@ -133,8 +133,10 @@ let exists_library_name t ~f =
 
 let mem t ~library = exists_library_name t ~f:(Dune.Library.Name.equal library)
 
+module Library_name_table = Hashtbl.Make (Dune.Library.Name)
+
 let dedup_and_sort t =
-  let names = Hash_set.create (module Dune.Library.Name) in
+  let names = Library_name_table.create 16 in
   List.iter t.sections ~f:(fun section ->
     let entries =
       List.dedup_and_sort section.entries ~compare:Entry.For_sort.compare
@@ -142,19 +144,20 @@ let dedup_and_sort t =
         match entry with
         | Unhandled _ -> true
         | Re_export { name; _ } | Library { name; _ } ->
-          let present = Hash_set.mem names name in
-          Hash_set.add names name;
+          let present = Library_name_table.mem names name in
+          Library_name_table.add names name ();
           not present)
     in
     section.entries <- entries)
 ;;
 
 let add_entries t ~entries =
-  let names = Hash_set.create (module Dune.Library.Name) in
+  let names = Library_name_table.create 16 in
   List.iter t.sections ~f:(fun section ->
     List.iter section.entries ~f:(function
       | Unhandled _ -> ()
-      | Re_export { name; _ } | Library { name; _ } -> Hash_set.add names name));
+      | Re_export { name; _ } | Library { name; _ } ->
+        Library_name_table.add names name ()));
   let section =
     match List.last t.sections with
     | Some section -> section
@@ -173,10 +176,10 @@ let add_entries t ~entries =
             using an unhandled entry built via the [Private.Entry] module. *)
          None
        | Re_export { name; _ } | Library { name; _ } ->
-         if Hash_set.mem names name
+         if Library_name_table.mem names name
          then None
          else (
-           Hash_set.add names name;
+           Library_name_table.add names name ();
            Some entry))
 ;;
 

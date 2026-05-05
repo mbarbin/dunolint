@@ -8,13 +8,10 @@
   -warn-error
   +a
   -open
-  Base
-  -open
   Dunolint_stdlib
   -open
   Dunolint.Std)
  (libraries
-  base
   dunolint
   dunolint_stdlib
   dunolinter
