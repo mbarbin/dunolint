@@ -11,6 +11,14 @@ let rules = ref []
 type dune_rule = (Dunolint.Predicate.t, Dunolint.Condition.t) Dunolint.Rule.t
 
 let rule cs = rules := `rule (cs : dune_rule) :: !rules
+let skip_paths globs = rules := `skip_paths (List.map globs ~f:Dunolint.Glob.v) :: !rules
+
+let () =
+  (* Documentation pages discuss dune-workspace files and use names like
+     [dune-workspace.md] which match the [dune-workspace.<suffix>] recognition
+     pattern. They are not actual build files and must not be linted. *)
+  skip_paths [ "doc/**/*.md" ]
+;;
 
 let () =
   rule
