@@ -4,7 +4,7 @@
 (*  SPDX-License-Identifier: LGPL-3.0-or-later WITH LGPL-3.0-linking-exception   *)
 (*********************************************************************************)
 
-module Library_name_set = Stdlib.Set.Make (Dune.Library.Name)
+module Library_name_set = Stdlib.MoreLabels.Set.Make (Dune.Library.Name)
 
 let parse contents =
   Test_helpers.parse (module Dune_linter.Libraries) ~path:(Fpath.v "dune") contents

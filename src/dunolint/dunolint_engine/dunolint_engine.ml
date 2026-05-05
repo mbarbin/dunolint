@@ -25,11 +25,13 @@ module Edited_file = struct
     }
 end
 
+module Path_table = MoreLabels.Hashtbl.Make (Relative_path)
+
 type t =
   { running_mode : Running_mode.t
   ; config_cache : Config_cache.t
   ; dune_project_cache : Dune_project_cache.t
-  ; edited_files : Edited_file.t Hashtbl.M(Relative_path).t
+  ; edited_files : Edited_file.t Path_table.t
   ; root_configs : Dunolint.Config.t list
   }
 
@@ -37,7 +39,7 @@ let create ?(root_configs = []) ~running_mode () =
   { running_mode
   ; config_cache = Config_cache.create ()
   ; dune_project_cache = Dune_project_cache.create ()
-  ; edited_files = Hashtbl.create (module Relative_path)
+  ; edited_files = Path_table.create 32
   ; root_configs
   }
 ;;
@@ -69,7 +71,7 @@ let file_exists ~path =
 let lint_file ?autoformat_file ?create_file ?rewrite_file t ~path =
   Log.info ~src (fun () ->
     Pp.O.[ Pp.text "Linting file " ++ Pp_tty.path (module Relative_path) path ]);
-  let edited_file = Hashtbl.find t.edited_files path in
+  let edited_file = Path_table.find_opt t.edited_files path in
   let file_exists = file_exists ~path in
   match
     if file_exists || Option.is_some edited_file
@@ -104,7 +106,7 @@ let lint_file ?autoformat_file ?create_file ?rewrite_file t ~path =
       match edited_file with
       | Some edited_file -> edited_file.new_contents <- new_contents
       | None ->
-        Hashtbl.set
+        Path_table.add
           t.edited_files
           ~key:path
           ~data:{ Edited_file.path; original_contents = previous_contents; new_contents })
@@ -210,7 +212,8 @@ let rec mkdirs path =
 let materialize t =
   let running_mode = t.running_mode in
   let edited_files =
-    Hashtbl.to_alist t.edited_files
+    Path_table.to_seq t.edited_files
+    |> List.of_seq
     |> List.sort ~compare:(fun (p1, _) (p2, _) -> Relative_path.compare p1 p2)
     |> List.map ~f:snd
   in
@@ -461,7 +464,7 @@ let run ?root_configs ~running_mode f =
     match running_mode with
     | Dry_run | Force_yes | Interactive -> ()
     | Check ->
-      if not (Hashtbl.is_empty t.edited_files)
+      if Path_table.length t.edited_files > 0
       then (
         if Err.error_count () = 0 then print_endline "";
         Err.error

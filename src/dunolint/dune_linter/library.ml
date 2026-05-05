@@ -73,7 +73,7 @@ module Field_name = struct
   ;;
 end
 
-module Field_name_table = Hashtbl.Make (Field_name)
+module Field_name_table = MoreLabels.Hashtbl.Make (Field_name)
 
 type t =
   { mutable name : Name.t option
@@ -224,7 +224,7 @@ let open_via_flags_groups sexps =
   List.rev (aux [] sexps)
 ;;
 
-module String_map = Map.Make (String)
+module String_map = MoreLabels.Map.Make (String)
 
 let order_open_via_flags_sections sexps ~to_open_via_flags =
   let order_spec =
@@ -333,7 +333,7 @@ let create
     | None -> None
     | Some true -> Some ()
     | Some false ->
-      Field_name_table.replace marked_for_removal `inline_tests ();
+      Field_name_table.add marked_for_removal ~key:`inline_tests ~data:();
       None
   in
   let t =
@@ -569,7 +569,7 @@ let enforce =
       | Not condition ->
         (match condition with
          | `has_field has_field ->
-           Field_name_table.replace t.marked_for_removal has_field ();
+           Field_name_table.add t.marked_for_removal ~key:has_field ~data:();
            (match has_field with
             | `name -> t.name <- None
             | `public_name -> t.public_name <- None

@@ -10,7 +10,7 @@ let sexpable_param (type a) (module M : Sexpable.S with type t = a) =
 
     let of_string str =
       try Ok (Parsexp.Single.parse_string_exn str |> M.t_of_sexp) with
-      | exn -> Error (`Msg (Exn.to_string exn))
+      | exn -> Error (`Msg (Printexc.to_string exn))
     ;;
 
     let to_string t =
@@ -79,7 +79,7 @@ let root =
   | Some root -> Some (resolve_root_path root)
   | None ->
     (* Fall back to environment variable if flag is not provided. *)
-    (match Sys.getenv "DUNE_ROOT" with
+    (match Sys.getenv_opt "DUNE_ROOT" with
      | None -> None
      | Some dune_root ->
        (match Fpath.of_string dune_root with

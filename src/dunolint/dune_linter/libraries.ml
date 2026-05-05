@@ -133,7 +133,7 @@ let exists_library_name t ~f =
 
 let mem t ~library = exists_library_name t ~f:(Dune.Library.Name.equal library)
 
-module Library_name_table = Hashtbl.Make (Dune.Library.Name)
+module Library_name_table = MoreLabels.Hashtbl.Make (Dune.Library.Name)
 
 let dedup_and_sort t =
   let names = Library_name_table.create 16 in
@@ -145,7 +145,7 @@ let dedup_and_sort t =
         | Unhandled _ -> true
         | Re_export { name; _ } | Library { name; _ } ->
           let present = Library_name_table.mem names name in
-          Library_name_table.add names name ();
+          Library_name_table.add names ~key:name ~data:();
           not present)
     in
     section.entries <- entries)
@@ -157,7 +157,7 @@ let add_entries t ~entries =
     List.iter section.entries ~f:(function
       | Unhandled _ -> ()
       | Re_export { name; _ } | Library { name; _ } ->
-        Library_name_table.add names name ()));
+        Library_name_table.add names ~key:name ~data:()));
   let section =
     match List.last t.sections with
     | Some section -> section
@@ -179,7 +179,7 @@ let add_entries t ~entries =
          if Library_name_table.mem names name
          then None
          else (
-           Library_name_table.add names name ();
+           Library_name_table.add names ~key:name ~data:();
            Some entry))
 ;;
 
@@ -187,7 +187,7 @@ let add_libraries t ~libraries =
   add_entries t ~entries:(List.map libraries ~f:Entry.library)
 ;;
 
-module Library_name_set = Stdlib.Set.Make (Dune.Library.Name)
+module Library_name_set = MoreLabels.Set.Make (Dune.Library.Name)
 
 let remove_libraries t ~libraries =
   let libraries_to_remove = Library_name_set.of_list libraries in

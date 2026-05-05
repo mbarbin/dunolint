@@ -44,7 +44,7 @@ module Field_name = struct
   ;;
 end
 
-module Field_name_table = Hashtbl.Make (Field_name)
+module Field_name_table = MoreLabels.Hashtbl.Make (Field_name)
 
 type t =
   { mutable name : Name.t option
@@ -313,7 +313,7 @@ let enforce =
       | Not condition ->
         (match condition with
          | `has_field has_field ->
-           Field_name_table.add t.marked_for_removal has_field ();
+           Field_name_table.add t.marked_for_removal ~key:has_field ~data:();
            (match has_field with
             | `name -> t.name <- None
             | `public_name -> t.public_name <- None

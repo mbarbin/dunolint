@@ -40,6 +40,8 @@
 module Source_filename = struct
   let dune_project = "dune-project"
   let dune_workspace = "dune-workspace"
+
+  module Set = MoreLabels.Set.Make (String)
 end
 
 type t = Absolute_path.t
@@ -60,9 +62,9 @@ module Candidate_kind = struct
   let lowest_priority = Int.max_value
 
   let of_dir_contents files =
-    if Set.mem files Source_filename.dune_workspace
+    if Source_filename.Set.mem Source_filename.dune_workspace files
     then Some `Dune_workspace
-    else if Set.mem files Source_filename.dune_project
+    else if Source_filename.Set.mem Source_filename.dune_project files
     then Some `Dune_project
     else None
   ;;
@@ -99,7 +101,7 @@ let find () =
        candidate)
       [@coverage off]
     | files ->
-      let files = Set.of_list (module Base.String) (Array.to_list files) in
+      let files = Source_filename.Set.of_list (Array.to_list files) in
       let candidate =
         let candidate_priority =
           match candidate with
