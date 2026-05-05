@@ -4,7 +4,11 @@
 (*  SPDX-License-Identifier: LGPL-3.0-or-later WITH LGPL-3.0-linking-exception   *)
 (*********************************************************************************)
 
-type t = { mutable backend : Dune.Instrumentation.Backend.t } [@@deriving sexp_of]
+type t = { mutable backend : Dune.Instrumentation.Backend.t }
+
+let sexp_of_t { backend } : Sexp.t =
+  List [ List [ Atom "backend"; Dune.Instrumentation.Backend.sexp_of_t backend ] ]
+;;
 
 let create ~backend = { backend }
 let backend t = t.backend

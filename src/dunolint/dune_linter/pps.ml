@@ -13,7 +13,22 @@ module Arg = struct
         { name : string
         ; param : string option
         }
-  [@@deriving equal, sexp_of]
+  [@@deriving equal]
+
+  let sexp_of_t : t -> Sexp.t = function
+    | Pp pp_name -> List [ Atom "Pp"; Dune.Pp.Name.sexp_of_t pp_name ]
+    | Flag { name; param } ->
+      List
+        [ Atom "Flag"
+        ; List [ Atom "name"; Atom name ]
+        ; List
+            [ Atom "param"
+            ; (match param with
+               | None -> List []
+               | Some s -> List [ Atom s ])
+            ]
+        ]
+  ;;
 end
 
 module Mutable_arg = struct
@@ -22,7 +37,11 @@ module Mutable_arg = struct
       [ `pp of Dune.Pp.Name.t
       | `driver
       ]
-    [@@deriving sexp_of]
+
+    let sexp_of_t : t -> Sexp.t = function
+      | `pp pp_name -> List [ Atom "pp"; Dune.Pp.Name.sexp_of_t pp_name ]
+      | `driver -> Atom "driver"
+    ;;
   end
 
   type t =
@@ -32,7 +51,23 @@ module Mutable_arg = struct
         ; mutable param : string option
         ; mutable applies_to : Applies_to.t
         }
-  [@@deriving sexp_of]
+
+  let sexp_of_t : t -> Sexp.t = function
+    | Pp { pp_name } ->
+      List [ Atom "Pp"; List [ Atom "pp_name"; Dune.Pp.Name.sexp_of_t pp_name ] ]
+    | Flag { name; param; applies_to } ->
+      List
+        [ Atom "Flag"
+        ; List [ Atom "name"; Atom name ]
+        ; List
+            [ Atom "param"
+            ; (match param with
+               | None -> List []
+               | Some s -> List [ Atom s ])
+            ]
+        ; List [ Atom "applies_to"; Applies_to.sexp_of_t applies_to ]
+        ]
+  ;;
 
   let order_by_name_and_application t1 t2 =
     match t1, t2 with
@@ -103,7 +138,18 @@ module Entry = struct
     { arg : Mutable_arg.t
     ; eol_comment : string option
     }
-  [@@deriving sexp_of]
+
+  let sexp_of_t { arg; eol_comment } : Sexp.t =
+    List
+      [ List [ Atom "arg"; Mutable_arg.sexp_of_t arg ]
+      ; List
+          [ Atom "eol_comment"
+          ; (match eol_comment with
+             | None -> List []
+             | Some s -> List [ Atom s ])
+          ]
+      ]
+  ;;
 
   let arg t = t.arg
 
@@ -130,7 +176,11 @@ module Entry = struct
 end
 
 module Section = struct
-  type t = { mutable entries : Entry.t list } [@@deriving sexp_of]
+  type t = { mutable entries : Entry.t list }
+
+  let sexp_of_t { entries } : Sexp.t =
+    List [ List [ Atom "entries"; List (List.map entries ~f:Entry.sexp_of_t) ] ]
+  ;;
 
   let sorted_entries t =
     List.sort
@@ -139,7 +189,11 @@ module Section = struct
   ;;
 end
 
-type t = { mutable sections : Section.t list } [@@deriving sexp_of]
+type t = { mutable sections : Section.t list }
+
+let sexp_of_t { sections } : Sexp.t =
+  List [ List [ Atom "sections"; List (List.map sections ~f:Section.sexp_of_t) ] ]
+;;
 
 let create ~args =
   match

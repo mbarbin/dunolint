@@ -6,7 +6,11 @@
 
 let field_name = "include_subdirs"
 
-type t = { mutable mode : Dune.Include_subdirs.Mode.t } [@@deriving sexp_of]
+type t = { mutable mode : Dune.Include_subdirs.Mode.t }
+
+let sexp_of_t { mode } : Sexp.t =
+  List [ List [ Atom "mode"; Dune.Include_subdirs.Mode.sexp_of_t mode ] ]
+;;
 
 let create ~mode = { mode }
 let mode t = t.mode

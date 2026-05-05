@@ -19,8 +19,8 @@ module Entry : sig
         { name : Dune.Library.Name.t
         ; source : string
         }
-  [@@deriving sexp_of]
 
+  val sexp_of_t : t -> Sexp.t
   val library : Dune.Library.Name.t -> t
   val re_export : Dune.Library.Name.t -> t
   val unhandled : original_index:int -> sexp:Sexp.t -> t
@@ -44,7 +44,28 @@ end = struct
         { name : Dune.Library.Name.t
         ; source : string
         }
-  [@@deriving sexp_of]
+
+  let sexp_of_t : t -> Sexp.t = function
+    | Unhandled { original_index; sexp; source } ->
+      List
+        [ Atom "Unhandled"
+        ; List [ Atom "original_index"; Atom (Int.to_string original_index) ]
+        ; List [ Atom "sexp"; sexp ]
+        ; List [ Atom "source"; Atom source ]
+        ]
+    | Re_export { name; source } ->
+      List
+        [ Atom "Re_export"
+        ; List [ Atom "name"; Dune.Library.Name.sexp_of_t name ]
+        ; List [ Atom "source"; Atom source ]
+        ]
+    | Library { name; source } ->
+      List
+        [ Atom "Library"
+        ; List [ Atom "name"; Dune.Library.Name.sexp_of_t name ]
+        ; List [ Atom "source"; Atom source ]
+        ]
+  ;;
 
   let library name = Library { name; source = Dune.Library.Name.to_string name }
 
@@ -80,10 +101,18 @@ end = struct
 end
 
 module Section = struct
-  type t = { mutable entries : Entry.t list } [@@deriving sexp_of]
+  type t = { mutable entries : Entry.t list }
+
+  let sexp_of_t { entries } : Sexp.t =
+    List [ List [ Atom "entries"; List (List.map entries ~f:Entry.sexp_of_t) ] ]
+  ;;
 end
 
-type t = { mutable sections : Section.t list } [@@deriving sexp_of]
+type t = { mutable sections : Section.t list }
+
+let sexp_of_t { sections } : Sexp.t =
+  List [ List [ Atom "sections"; List (List.map sections ~f:Section.sexp_of_t) ] ]
+;;
 
 let create ~libraries =
   match List.map libraries ~f:Entry.library with

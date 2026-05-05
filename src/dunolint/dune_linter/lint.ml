@@ -4,7 +4,9 @@
 (*  SPDX-License-Identifier: LGPL-3.0-or-later WITH LGPL-3.0-linking-exception   *)
 (*********************************************************************************)
 
-type t = { pps : Pps.t } [@@deriving sexp_of]
+type t = { pps : Pps.t }
+
+let sexp_of_t { pps } : Sexp.t = List [ List [ Atom "pps"; Pps.sexp_of_t pps ] ]
 
 let create ?pps () =
   { pps =

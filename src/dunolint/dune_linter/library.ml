@@ -23,7 +23,18 @@ module Field_name = struct
       | `lint
       | `preprocess
       ]
-    [@@deriving compare, sexp_of]
+    [@@deriving compare]
+
+    let sexp_of_t : t -> Sexp.t = function
+      | `name -> Atom "name"
+      | `public_name -> Atom "public_name"
+      | `package -> Atom "package"
+      | `inline_tests -> Atom "inline_tests"
+      | `modes -> Atom "modes"
+      | `instrumentation -> Atom "instrumentation"
+      | `lint -> Atom "lint"
+      | `preprocess -> Atom "preprocess"
+    ;;
   end
 
   include T0

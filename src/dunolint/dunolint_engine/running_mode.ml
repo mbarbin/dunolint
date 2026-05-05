@@ -12,7 +12,14 @@ module T = struct
     | Check
     | Force_yes
     | Interactive
-  [@@deriving compare, equal, sexp_of]
+  [@@deriving compare, equal]
+
+  let sexp_of_t : t -> Sexp.t = function
+    | Dry_run -> Atom "Dry_run"
+    | Check -> Atom "Check"
+    | Force_yes -> Atom "Force_yes"
+    | Interactive -> Atom "Interactive"
+  ;;
 end
 
 include T

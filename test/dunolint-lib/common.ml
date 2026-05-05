@@ -30,7 +30,11 @@ end
 
 let test_predicate (type a) (module M : Predicate with type t = a) predicate =
   let module B = struct
-    type t = M.t Blang.t [@@deriving equal, sexp]
+    type t = M.t Blang.t
+
+    let equal t1 t2 = Blang.equal M.equal t1 t2
+    let sexp_of_t t = Blang.sexp_of_t M.sexp_of_t t
+    let t_of_sexp sexp = Blang.t_of_sexp M.t_of_sexp sexp
   end
   in
   test_roundtrip (module B) predicate;

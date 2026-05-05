@@ -4,8 +4,9 @@
 (*  SPDX-License-Identifier: LGPL-3.0-or-later WITH LGPL-3.0-linking-exception   *)
 (*********************************************************************************)
 
-type t = { mutable flags : Sexp.t list } [@@deriving sexp_of]
+type t = { mutable flags : Sexp.t list }
 
+let sexp_of_t { flags } : Sexp.t = List [ List [ Atom "flags"; List flags ] ]
 let field_name = "flags"
 let create ~flags = { flags }
 let is_empty { flags } = List.is_empty flags

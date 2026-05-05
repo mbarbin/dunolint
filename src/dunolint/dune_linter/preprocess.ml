@@ -9,11 +9,17 @@ module State = struct
     | No_preprocessing
     | Pps of Pps.t
     | Unhandled of Sexp.t
-  [@@deriving sexp_of]
+
+  let sexp_of_t : t -> Sexp.t = function
+    | No_preprocessing -> Atom "No_preprocessing"
+    | Pps pps -> List [ Atom "Pps"; Pps.sexp_of_t pps ]
+    | Unhandled sexp -> List [ Atom "Unhandled"; sexp ]
+  ;;
 end
 
-type t = { mutable state : State.t } [@@deriving sexp_of]
+type t = { mutable state : State.t }
 
+let sexp_of_t { state } : Sexp.t = List [ List [ Atom "state"; State.sexp_of_t state ] ]
 let state t = t.state
 let set_state t ~state = t.state <- state
 
