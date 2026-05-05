@@ -2,11 +2,22 @@
 
 ### Added
 
+- Preparatory changes for running `5.5` in CI (@mbarbin).
+- Document neocaml reformatter integration (#190, @mbarbin with review by @bbatsov).
+
 ### Changed
+
+- Reduce project dependencies (#192, #193, #194, #195, #196, #197, @mbarbin).
+- Upgrade CIs dependencies (@mbarbin).
+- Improve doc and use mdexp (#188, #189, @mbarbin).
+- Use `Myers` instead of `Patdiff` for computing and showing diffs (#186, @mbarbin).
+- Release artifacts are now distributed only compressed (#182, @mbarbin).
 
 ### Deprecated
 
 ### Fixed
+
+- Fix compatibility for cmdliner 2.0 (#187, @mbarbin).
 
 ### Removed
 
