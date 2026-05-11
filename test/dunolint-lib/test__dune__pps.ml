@@ -165,8 +165,8 @@ let%expect_test "Flag.t_of_sexp - out of order fields" =
   let test str =
     let sexp = Parsexp.Single.parse_string_exn str in
     match Dune.Pps.Predicate.Flag.t_of_sexp sexp with
-    | t -> print_s [%sexp (t : Dune.Pps.Predicate.Flag.t)]
-    | exception exn -> print_s [%sexp (exn : Exn.t)]
+    | t -> print_s (t |> Dune.Pps.Predicate.Flag.sexp_of_t)
+    | exception exn -> print_s (exn |> Exn.sexp_of_t)
   in
   (* In order. *)
   test "((name -a) (param any) (applies_to any))";
@@ -190,8 +190,8 @@ let%expect_test "Pp_with_flag.t_of_sexp - out of order fields" =
   let test str =
     let sexp = Parsexp.Single.parse_string_exn str in
     match Dune.Pps.Predicate.Pp_with_flag.t_of_sexp sexp with
-    | t -> print_s [%sexp (t : Dune.Pps.Predicate.Pp_with_flag.t)]
-    | exception exn -> print_s [%sexp (exn : Exn.t)]
+    | t -> print_s (t |> Dune.Pps.Predicate.Pp_with_flag.sexp_of_t)
+    | exception exn -> print_s (exn |> Exn.sexp_of_t)
   in
   (* In order. *)
   test "((pp ppx_a) (flag -f) (param any))";

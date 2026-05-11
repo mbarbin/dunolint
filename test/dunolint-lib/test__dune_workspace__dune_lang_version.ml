@@ -27,7 +27,7 @@ let%expect_test "of_sexp" =
   let test sexp =
     match Dune_workspace.Dune_lang_version.t_of_sexp sexp with
     | t -> print_endline (Dune_workspace.Dune_lang_version.to_string t)
-    | exception exn -> print_s [%sexp (exn : Exn.t)]
+    | exception exn -> print_s (exn |> Exn.sexp_of_t)
   in
   test (Atom "3.17");
   [%expect {| 3.17 |}];
@@ -64,42 +64,42 @@ let%expect_test "of_sexp" =
 let%expect_test "predicate eq" =
   let version = Dune_workspace.Dune_lang_version.create (3, 17) in
   let predicate = `eq version in
-  print_s [%sexp (predicate : Dune_workspace.Dune_lang_version.Predicate.t)];
+  print_s (predicate |> Dune_workspace.Dune_lang_version.Predicate.sexp_of_t);
   [%expect {| (= 3.17) |}]
 ;;
 
 let%expect_test "predicate neq" =
   let version = Dune_workspace.Dune_lang_version.create (3, 17) in
   let predicate = `neq version in
-  print_s [%sexp (predicate : Dune_workspace.Dune_lang_version.Predicate.t)];
+  print_s (predicate |> Dune_workspace.Dune_lang_version.Predicate.sexp_of_t);
   [%expect {| (!= 3.17) |}]
 ;;
 
 let%expect_test "predicate gte" =
   let version = Dune_workspace.Dune_lang_version.create (3, 17) in
   let predicate = `gte version in
-  print_s [%sexp (predicate : Dune_workspace.Dune_lang_version.Predicate.t)];
+  print_s (predicate |> Dune_workspace.Dune_lang_version.Predicate.sexp_of_t);
   [%expect {| (>= 3.17) |}]
 ;;
 
 let%expect_test "predicate gt" =
   let version = Dune_workspace.Dune_lang_version.create (3, 17) in
   let predicate = `gt version in
-  print_s [%sexp (predicate : Dune_workspace.Dune_lang_version.Predicate.t)];
+  print_s (predicate |> Dune_workspace.Dune_lang_version.Predicate.sexp_of_t);
   [%expect {| (> 3.17) |}]
 ;;
 
 let%expect_test "predicate lte" =
   let version = Dune_workspace.Dune_lang_version.create (4, 0) in
   let predicate = `lte version in
-  print_s [%sexp (predicate : Dune_workspace.Dune_lang_version.Predicate.t)];
+  print_s (predicate |> Dune_workspace.Dune_lang_version.Predicate.sexp_of_t);
   [%expect {| (<= 4.0) |}]
 ;;
 
 let%expect_test "predicate lt" =
   let version = Dune_workspace.Dune_lang_version.create (4, 0) in
   let predicate = `lt version in
-  print_s [%sexp (predicate : Dune_workspace.Dune_lang_version.Predicate.t)];
+  print_s (predicate |> Dune_workspace.Dune_lang_version.Predicate.sexp_of_t);
   [%expect {| (< 4.0) |}]
 ;;
 
@@ -108,8 +108,8 @@ let%expect_test "Predicate.t_of_sexp" =
     let sexp = Parsexp.Single.parse_string_exn str in
     match Dune_workspace.Dune_lang_version.Predicate.t_of_sexp sexp with
     | predicate ->
-      print_s [%sexp (predicate : Dune_workspace.Dune_lang_version.Predicate.t)]
-    | exception exn -> print_s [%sexp (exn : Exn.t)]
+      print_s (predicate |> Dune_workspace.Dune_lang_version.Predicate.sexp_of_t)
+    | exception exn -> print_s (exn |> Exn.sexp_of_t)
   in
   test "(= 3.17)";
   [%expect {| (= 3.17) |}];
@@ -156,8 +156,8 @@ let%expect_test "equal comparison" =
   let v1 = Dune_workspace.Dune_lang_version.create (3, 17) in
   let v2 = Dune_workspace.Dune_lang_version.create (3, 17) in
   let v3 = Dune_workspace.Dune_lang_version.create (4, 0) in
-  print_s [%sexp (Dune_workspace.Dune_lang_version.equal v1 v2 : bool)];
-  print_s [%sexp (Dune_workspace.Dune_lang_version.equal v1 v3 : bool)];
+  print_s (Dune_workspace.Dune_lang_version.equal v1 v2 |> Bool.sexp_of_t);
+  print_s (Dune_workspace.Dune_lang_version.equal v1 v3 |> Bool.sexp_of_t);
   [%expect
     {|
     true
@@ -169,9 +169,9 @@ let%expect_test "compare versions" =
   let v1 = Dune_workspace.Dune_lang_version.create (3, 0) in
   let v2 = Dune_workspace.Dune_lang_version.create (3, 17) in
   let v3 = Dune_workspace.Dune_lang_version.create (4, 0) in
-  print_s [%sexp (Dune_workspace.Dune_lang_version.compare v1 v2 : int)];
-  print_s [%sexp (Dune_workspace.Dune_lang_version.compare v2 v3 : int)];
-  print_s [%sexp (Dune_workspace.Dune_lang_version.compare v2 v2 : int)];
+  print_s (Dune_workspace.Dune_lang_version.compare v1 v2 |> Int.sexp_of_t);
+  print_s (Dune_workspace.Dune_lang_version.compare v2 v3 |> Int.sexp_of_t);
+  print_s (Dune_workspace.Dune_lang_version.compare v2 v2 |> Int.sexp_of_t);
   [%expect
     {|
     -1
@@ -187,6 +187,6 @@ let%expect_test "sort versions" =
   let sorted_versions =
     List.sort unsorted_versions ~compare:Dune_workspace.Dune_lang_version.compare
   in
-  print_s [%sexp (sorted_versions : Dune_workspace.Dune_lang_version.t list)];
+  print_s (sorted_versions |> sexp_of_list Dune_workspace.Dune_lang_version.sexp_of_t);
   [%expect {| (3.0 3.10 3.17 3.19 4.0 4.1) |}]
 ;;

@@ -47,7 +47,7 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let _, t = parse {| (lang dunolint 1.0) |} in
-  print_s [%sexp (t : Dunolint_linter.Dunolint_lang_version.t)];
+  print_s (t |> Dunolint_linter.Dunolint_lang_version.sexp_of_t);
   [%expect {| ((dunolint_lang_version 1.0)) |}];
   ()
 ;;
@@ -67,17 +67,15 @@ let%expect_test "rewrite" =
   (* Exercising some getters and setters. *)
   rewrite {| (lang dunolint 1.0) |} ~f:(fun t ->
     print_s
-      [%sexp
-        (Dunolint_linter.Dunolint_lang_version.dunolint_lang_version t
-         : Dunolint0.Dunolint_lang_version.t)];
+      (Dunolint_linter.Dunolint_lang_version.dunolint_lang_version t
+       |> Dunolint0.Dunolint_lang_version.sexp_of_t);
     [%expect {| 1.0 |}];
     Dunolint_linter.Dunolint_lang_version.set_dunolint_lang_version
       t
       ~dunolint_lang_version:(Dunolint0.Dunolint_lang_version.create (2, 5));
     print_s
-      [%sexp
-        (Dunolint_linter.Dunolint_lang_version.dunolint_lang_version t
-         : Dunolint0.Dunolint_lang_version.t)];
+      (Dunolint_linter.Dunolint_lang_version.dunolint_lang_version t
+       |> Dunolint0.Dunolint_lang_version.sexp_of_t);
     [%expect {| 2.5 |}];
     ());
   [%expect {| (lang dunolint 2.5) |}];

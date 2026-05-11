@@ -27,9 +27,7 @@ let parse
     | Sexp.Of_sexp_error (_, sexp) ->
       (* We redact the message because it is contains paths to source files, which
          makes it inconvenient when relocating the code in sub repos. *)
-      raise_s
-        (List [ Atom "Of_sexp_error"; List [ Atom "invalid_sexp"; sexp ] ])
-      [@coverage off]
+      Code_error.raise "Of_sexp_error" [ "invalid_sexp", sexp ] [@coverage off]
   in
   (sexps_rewriter, field), t
 ;;

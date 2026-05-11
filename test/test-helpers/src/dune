@@ -8,11 +8,8 @@
   -warn-error
   +a
   -open
-  Base
-  -open
   Dunolint_stdlib)
  (libraries
-  base
   dunolint
   dunolint_cli
   dunolint_engine

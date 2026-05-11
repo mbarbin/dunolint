@@ -11,10 +11,10 @@ let%expect_test "extended_range" =
     let { Loc.Range.start; stop } =
       Comment_handler.extended_range ~original_contents ~range
     in
-    print_s [%sexp (String.sub original_contents ~pos:start ~len:(stop - start) : string)]
+    print_dyn (Dyn.string (String.sub original_contents ~pos:start ~len:(stop - start)))
   in
   test "foo" ~range:{ start = 0; stop = 3 };
-  [%expect {| foo |}];
+  [%expect {| "foo" |}];
   test "foo     " ~range:{ start = 0; stop = 3 };
   [%expect {| "foo     " |}];
   test "foo     ; Hello comment" ~range:{ start = 0; stop = 3 };

@@ -37,7 +37,7 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let _, t = parse {| (lint (pps ppx_js_style)) |} in
-  print_s [%sexp (t : Dune_linter.Lint.t)];
+  print_s (t |> Dune_linter.Lint.sexp_of_t);
   [%expect
     {|
     ((pps

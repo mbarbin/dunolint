@@ -13,7 +13,7 @@ module type Roundtripable = sig
 end
 
 let test_roundtrip (type a) (module M : Roundtripable with type t = a) (a : a) =
-  let sexp = [%sexp (a : M.t)] in
+  let sexp = a |> M.sexp_of_t in
   let a' = M.t_of_sexp sexp in
   require_equal (module M) a a';
   print_s sexp;

@@ -11,13 +11,13 @@ let%expect_test "equal" =
   let p2 : Dune_workspace.Predicate.t = `dune_lang_version (Blang.base (`gte v3_0)) in
   let p3 : Dune_workspace.Predicate.t = `dune_lang_version (Blang.base (`gte v3_17)) in
   (* Same value, different references. *)
-  print_s [%sexp (Dune_workspace.Predicate.equal p1 p2 : bool)];
+  print_s (Dune_workspace.Predicate.equal p1 p2 |> Bool.sexp_of_t);
   [%expect {| true |}];
   (* Physical equality. *)
-  print_s [%sexp (Dune_workspace.Predicate.equal p1 p1 : bool)];
+  print_s (Dune_workspace.Predicate.equal p1 p1 |> Bool.sexp_of_t);
   [%expect {| true |}];
   (* Different values. *)
-  print_s [%sexp (Dune_workspace.Predicate.equal p1 p3 : bool)];
+  print_s (Dune_workspace.Predicate.equal p1 p3 |> Bool.sexp_of_t);
   [%expect {| false |}];
   ()
 ;;

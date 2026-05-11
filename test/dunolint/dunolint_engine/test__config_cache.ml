@@ -43,15 +43,15 @@ let%expect_test "config cache" =
         ~path:(Relative_path.v "test-config-cache/lib/subdir/file1.ml")
     in
     let configs1 = Dunolint_engine.Context.configs ctx1 in
-    print_s [%sexp (List.length configs1 : int)];
+    print_dyn (Dyn.int (List.length configs1));
     [%expect {| 2 |}];
     (* Verify the configs are at the expected locations. *)
     List.iter configs1 ~f:(fun { config = _; location } ->
-      print_s [%sexp (location : Relative_path.t)]);
+      print_dyn (Relative_path.to_dyn location));
     [%expect
       {|
-      test-config-cache/
-      test-config-cache/lib/
+      "test-config-cache/"
+      "test-config-cache/lib/"
       |}];
     (* Build context for a second file in the same directory.
        The cached configs should be used, giving the same result. *)
@@ -61,7 +61,7 @@ let%expect_test "config cache" =
         ~path:(Relative_path.v "test-config-cache/lib/subdir/file2.ml")
     in
     let configs2 = Dunolint_engine.Context.configs ctx2 in
-    print_s [%sexp (List.length configs2 : int)];
+    print_dyn (Dyn.int (List.length configs2));
     [%expect {| 2 |}];
     (* Verify that the configs are physically the same (from cache). *)
     List.iter2 configs1 configs2 ~f:(fun c1 c2 ->
@@ -73,7 +73,7 @@ let%expect_test "config cache" =
         ~path:(Relative_path.v "test-config-cache/lib/subdir/file3.ml")
     in
     let configs3 = Dunolint_engine.Context.configs ctx3 in
-    print_s [%sexp (List.length configs3 : int)];
+    print_dyn (Dyn.int (List.length configs3));
     [%expect {| 2 |}];
     (* Verify that configs from ctx3 are also physically the same as ctx1. *)
     List.iter2 configs1 configs3 ~f:(fun c1 c3 ->
@@ -84,7 +84,7 @@ let%expect_test "config cache" =
       Dunolint_engine.build_context t ~path:(Relative_path.v "test-config-cache/lib/dune")
     in
     let configs4 = Dunolint_engine.Context.configs ctx4 in
-    print_s [%sexp (List.length configs4 : int)];
+    print_dyn (Dyn.int (List.length configs4));
     [%expect {| 2 |}];
     (* Verify that configs from ctx4 are also physically the same as ctx1. *)
     List.iter2 configs1 configs4 ~f:(fun c1 c4 ->
@@ -97,11 +97,11 @@ let%expect_test "config cache" =
         ~path:(Relative_path.v "test-config-cache/dune-project")
     in
     let configs5 = Dunolint_engine.Context.configs ctx5 in
-    print_s [%sexp (List.length configs5 : int)];
+    print_dyn (Dyn.int (List.length configs5));
     [%expect {| 1 |}];
     List.iter configs5 ~f:(fun { config = _; location } ->
-      print_s [%sexp (location : Relative_path.t)]);
-    [%expect {| test-config-cache/ |}];
+      print_dyn (Relative_path.to_dyn location));
+    [%expect {| "test-config-cache/" |}];
     (* Verify that the single config from ctx5 is physically the same as the
        first config from ctx1 (both are the root config from the cache). *)
     let ctx1_prefix = List.take configs1 (List.length configs5) in

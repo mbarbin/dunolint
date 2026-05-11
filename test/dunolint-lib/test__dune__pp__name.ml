@@ -8,8 +8,9 @@ open Dunolint.Config.Std
 
 let%expect_test "of_string" =
   let test str =
-    print_s
-      [%sexp (Dune.Pp.Name.of_string str : (Dune.Pp.Name.t, [ `Msg of string ]) Result.t)]
+    match Dune.Pp.Name.of_string str with
+    | Ok name -> print_s (List [ Atom "Ok"; Dune.Pp.Name.sexp_of_t name ])
+    | Error (`Msg msg) -> print_s (List [ Atom "Error"; List [ Atom "Msg"; Atom msg ] ])
   in
   test "";
   [%expect {| (Error (Msg "\"\": invalid Pp_name")) |}];
@@ -31,7 +32,8 @@ let%expect_test "of_string" =
 let%expect_test "compare" =
   let test vs =
     let vs = List.map vs ~f:Dune.Pp.Name.v in
-    print_s [%sexp (List.sort vs ~compare:Dune.Pp.Name.compare : Dune.Pp.Name.t list)]
+    print_s
+      (List.sort vs ~compare:Dune.Pp.Name.compare |> sexp_of_list Dune.Pp.Name.sexp_of_t)
   in
   test [ "a"; "b" ];
   [%expect {| (a b) |}];

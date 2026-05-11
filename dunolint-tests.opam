@@ -10,7 +10,6 @@ bug-reports: "https://github.com/mbarbin/dunolint/issues"
 depends: [
   "ocaml" {>= "5.3"}
   "dune" {>= "3.17" & >= "3.20"}
-  "base" {>= "v0.17"}
   "cmdlang" {>= "0.0.9"}
   "cmdlang-cmdliner-err-runner" {>= "0.0.16"}
   "cmdlang-stdlib-runner" {>= "0.0.9"}
@@ -31,7 +30,6 @@ depends: [
   "pplumbing-log-cli" {>= "0.0.16"}
   "pplumbing-pp-tty" {>= "0.0.16"}
   "ppx_expect" {>= "v0.17"}
-  "ppx_sexp_value" {>= "v0.17"}
   "re" {>= "1.8.0"}
   "sexplib0" {>= "v0.17"}
   "sexps-rewriter" {>= "0.0.3"}

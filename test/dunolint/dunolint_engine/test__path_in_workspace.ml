@@ -51,21 +51,21 @@ let%expect_test "check_escape_path_exn - escaping paths raise" =
 let%expect_test "parent - basic cases" =
   let test path_str =
     let path = Relative_path.v path_str in
-    print_s [%sexp (Relative_path.parent path : Relative_path.t option)]
+    print_dyn (Dyn.option Relative_path.to_dyn (Relative_path.parent path))
   in
   (* Empty path has no parent *)
   test "./";
-  [%expect {| () |}];
+  [%expect {| None |}];
   (* Single file has empty parent *)
   test "file.ml";
-  [%expect {| (./) |}];
+  [%expect {| Some "./" |}];
   (* Directory path *)
   test "a/b/c.ml";
-  [%expect {| (a/b/) |}];
+  [%expect {| Some "a/b/" |}];
   test "a/b/";
-  [%expect {| (a/) |}];
+  [%expect {| Some "a/" |}];
   test "a/";
-  [%expect {| (./) |}]
+  [%expect {| Some "./" |}]
 ;;
 
 let%expect_test "parent - escaping paths raise" =
@@ -126,22 +126,22 @@ let%expect_test "chop_prefix - basic cases" =
   let test ~path ~prefix =
     let path = Relative_path.v path in
     let prefix = Relative_path.v prefix in
-    print_s [%sexp (Relative_path.chop_prefix path ~prefix : Relative_path.t option)]
+    print_dyn (Dyn.option Relative_path.to_dyn (Relative_path.chop_prefix path ~prefix))
   in
   (* Exact prefix *)
   test ~path:"a/b/c.ml" ~prefix:"a/";
-  [%expect {| (b/c.ml) |}];
+  [%expect {| Some "b/c.ml" |}];
   test ~path:"a/b/c.ml" ~prefix:"a/b/";
-  [%expect {| (c.ml) |}];
+  [%expect {| Some "c.ml" |}];
   (* Empty prefix returns original *)
   test ~path:"a/b/c.ml" ~prefix:"./";
-  [%expect {| (a/b/c.ml) |}];
+  [%expect {| Some "a/b/c.ml" |}];
   (* Not a prefix *)
   test ~path:"a/b/c.ml" ~prefix:"x/";
-  [%expect {| () |}];
+  [%expect {| None |}];
   (* Partial segment is not a prefix *)
   test ~path:"foo/bar-baz" ~prefix:"foo/bar";
-  [%expect {| () |}]
+  [%expect {| None |}]
 ;;
 
 let%expect_test "ancestors_autoloading_dirs - from documentation" =
@@ -168,13 +168,22 @@ let%expect_test "ancestors_autoloading_dirs - ordering" =
   let test path_str =
     let path = Relative_path.v path_str in
     let ancestors = Path_in_workspace.ancestors_autoloading_dirs ~path in
-    print_s [%sexp { path : Relative_path.t; ancestors : Relative_path.t list }]
+    print_dyn
+      (Dyn.record
+         [ "path", Relative_path.to_dyn path
+         ; "ancestors", Dyn.list Relative_path.to_dyn ancestors
+         ])
   in
   (* Verify ordering from root to deepest *)
   test "a/b/c/d/e.ml";
-  [%expect {| ((path a/b/c/d/e.ml) (ancestors (./ a/ a/b/ a/b/c/ a/b/c/d/))) |}];
+  [%expect
+    {|
+    { path = "a/b/c/d/e.ml"
+    ; ancestors = [ "./"; "a/"; "a/b/"; "a/b/c/"; "a/b/c/d/" ]
+    }
+    |}];
   test "x/y.ml";
-  [%expect {| ((path x/y.ml) (ancestors (./ x/))) |}]
+  [%expect {| { path = "x/y.ml"; ancestors = [ "./"; "x/" ] } |}]
 ;;
 
 let%expect_test "ancestors_autoloading_dirs - escaping paths raise" =
@@ -228,35 +237,36 @@ let%expect_test "ancestors_autoloading_dirs - complex paths" =
 
 let%expect_test "paths_to_check_for_skip_predicates - matches CLI behavior" =
   let test path =
-    print_s
-      [%sexp
-        (Path_in_workspace.paths_to_check_for_skip_predicates ~path:(Relative_path.v path)
-         : Relative_path.t list)]
+    print_dyn
+      (Dyn.list
+         Relative_path.to_dyn
+         (Path_in_workspace.paths_to_check_for_skip_predicates
+            ~path:(Relative_path.v path)))
   in
   (* Root and normalization *)
   test "./";
-  [%expect {| () |}];
+  [%expect {| [] |}];
   test ".";
-  [%expect {| () |}];
+  [%expect {| [] |}];
   (* File in root - includes the file itself *)
   test "foo";
-  [%expect {| (foo) |}];
+  [%expect {| [ "foo" ] |}];
   (* Directory in root - includes itself *)
   test "foo/";
-  [%expect {| (foo/) |}];
+  [%expect {| [ "foo/" ] |}];
   (* File - returns parents and the file itself *)
   test "foo/bar";
-  [%expect {| (foo/ foo/bar) |}];
+  [%expect {| [ "foo/"; "foo/bar" ] |}];
   test "foo/bar/bin";
-  [%expect {| (foo/ foo/bar/ foo/bar/bin) |}];
+  [%expect {| [ "foo/"; "foo/bar/"; "foo/bar/bin" ] |}];
   (* Directory - includes itself AND parents *)
   test "foo/bar/bin/";
-  [%expect {| (foo/ foo/bar/ foo/bar/bin/) |}];
+  [%expect {| [ "foo/"; "foo/bar/"; "foo/bar/bin/" ] |}];
   (* More files *)
   test "foo/bar/bin/baz";
-  [%expect {| (foo/ foo/bar/ foo/bar/bin/ foo/bar/bin/baz) |}];
+  [%expect {| [ "foo/"; "foo/bar/"; "foo/bar/bin/"; "foo/bar/bin/baz" ] |}];
   test "foo/bar/.";
-  [%expect {| (foo/ foo/bar/) |}];
+  [%expect {| [ "foo/"; "foo/bar/" ] |}];
   ()
 ;;
 

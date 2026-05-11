@@ -55,7 +55,7 @@ let%expect_test "read/write" =
 let%expect_test "sexp_of" =
   let test str =
     let _, t = parse str in
-    print_s [%sexp (t : Dune_linter.Flags.t)]
+    print_s (t |> Dune_linter.Flags.sexp_of_t)
   in
   test
     {|
@@ -90,16 +90,16 @@ let%expect_test "rewrite" =
   [%expect {| (flags :standard -open Foo) |}];
   (* Exercising some getters and setters. *)
   rewrite {| (flags) |} ~f:(fun t ->
-    print_s [%sexp (Dune_linter.Flags.is_empty t : bool)];
+    print_s (Dune_linter.Flags.is_empty t |> Bool.sexp_of_t);
     [%expect {| true |}];
-    print_s [%sexp (Dune_linter.Flags.flags t : Sexp.t list)];
+    print_s (Sexp.List (Dune_linter.Flags.flags t));
     [%expect {| () |}];
     ());
   [%expect {| (flags) |}];
   rewrite {| (flags :standard -open Foo) |} ~f:(fun t ->
-    print_s [%sexp (Dune_linter.Flags.is_empty t : bool)];
+    print_s (Dune_linter.Flags.is_empty t |> Bool.sexp_of_t);
     [%expect {| false |}];
-    print_s [%sexp (Dune_linter.Flags.flags t : Sexp.t list)];
+    print_s (Sexp.List (Dune_linter.Flags.flags t));
     [%expect {| (:standard -open Foo) |}];
     ());
   [%expect {| (flags :standard -open Foo) |}];
@@ -107,7 +107,7 @@ let%expect_test "rewrite" =
      present on disk at the end of the rewritten position. That is a leftover
      from another system, and should be revisited. *)
   rewrite {| (flags :standard -open Foo) |} ~f:(fun t ->
-    Dune_linter.Flags.set_flags t ~flags:[ [%sexp "foo"]; [%sexp Some "bar"] ];
+    Dune_linter.Flags.set_flags t ~flags:[ Atom "foo"; List [ Atom "Some"; Atom "bar" ] ];
     ());
   [%expect {| (flags foo (Some bar) Foo) |}];
   (* Exercising flags insertion. *)

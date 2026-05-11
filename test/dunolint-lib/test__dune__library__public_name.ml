@@ -48,10 +48,9 @@ open Dunolint.Config.Std
 
 let%expect_test "of_string" =
   let test str =
-    print_s
-      [%sexp
-        (Dune.Library.Public_name.of_string str
-         : (Dune.Library.Public_name.t, [ `Msg of string ]) Result.t)]
+    match Dune.Library.Public_name.of_string str with
+    | Ok name -> print_s (List [ Atom "Ok"; Dune.Library.Public_name.sexp_of_t name ])
+    | Error (`Msg msg) -> print_s (List [ Atom "Error"; List [ Atom "Msg"; Atom msg ] ])
   in
   test "";
   [%expect {| (Error (Msg "\"\": invalid Dunolint.Library.Public_name")) |}];

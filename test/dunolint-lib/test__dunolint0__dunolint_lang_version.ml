@@ -27,7 +27,7 @@ let%expect_test "of_sexp" =
   let test sexp =
     match Dunolint0.Dunolint_lang_version.t_of_sexp sexp with
     | t -> print_endline (Dunolint0.Dunolint_lang_version.to_string t)
-    | exception exn -> print_s [%sexp (exn : Exn.t)]
+    | exception exn -> print_s (exn |> Exn.sexp_of_t)
   in
   test (Atom "1.0");
   [%expect {| 1.0 |}];
@@ -64,42 +64,42 @@ let%expect_test "of_sexp" =
 let%expect_test "predicate eq" =
   let version = Dunolint0.Dunolint_lang_version.create (1, 0) in
   let predicate = `eq version in
-  print_s [%sexp (predicate : Dunolint0.Dunolint_lang_version.Predicate.t)];
+  print_s (predicate |> Dunolint0.Dunolint_lang_version.Predicate.sexp_of_t);
   [%expect {| (= 1.0) |}]
 ;;
 
 let%expect_test "predicate neq" =
   let version = Dunolint0.Dunolint_lang_version.create (1, 0) in
   let predicate = `neq version in
-  print_s [%sexp (predicate : Dunolint0.Dunolint_lang_version.Predicate.t)];
+  print_s (predicate |> Dunolint0.Dunolint_lang_version.Predicate.sexp_of_t);
   [%expect {| (!= 1.0) |}]
 ;;
 
 let%expect_test "predicate gte" =
   let version = Dunolint0.Dunolint_lang_version.create (1, 5) in
   let predicate = `gte version in
-  print_s [%sexp (predicate : Dunolint0.Dunolint_lang_version.Predicate.t)];
+  print_s (predicate |> Dunolint0.Dunolint_lang_version.Predicate.sexp_of_t);
   [%expect {| (>= 1.5) |}]
 ;;
 
 let%expect_test "predicate gt" =
   let version = Dunolint0.Dunolint_lang_version.create (1, 5) in
   let predicate = `gt version in
-  print_s [%sexp (predicate : Dunolint0.Dunolint_lang_version.Predicate.t)];
+  print_s (predicate |> Dunolint0.Dunolint_lang_version.Predicate.sexp_of_t);
   [%expect {| (> 1.5) |}]
 ;;
 
 let%expect_test "predicate lte" =
   let version = Dunolint0.Dunolint_lang_version.create (2, 0) in
   let predicate = `lte version in
-  print_s [%sexp (predicate : Dunolint0.Dunolint_lang_version.Predicate.t)];
+  print_s (predicate |> Dunolint0.Dunolint_lang_version.Predicate.sexp_of_t);
   [%expect {| (<= 2.0) |}]
 ;;
 
 let%expect_test "predicate lt" =
   let version = Dunolint0.Dunolint_lang_version.create (2, 0) in
   let predicate = `lt version in
-  print_s [%sexp (predicate : Dunolint0.Dunolint_lang_version.Predicate.t)];
+  print_s (predicate |> Dunolint0.Dunolint_lang_version.Predicate.sexp_of_t);
   [%expect {| (< 2.0) |}]
 ;;
 
@@ -108,8 +108,8 @@ let%expect_test "Predicate.t_of_sexp" =
     let sexp = Parsexp.Single.parse_string_exn str in
     match Dunolint0.Dunolint_lang_version.Predicate.t_of_sexp sexp with
     | predicate ->
-      print_s [%sexp (predicate : Dunolint0.Dunolint_lang_version.Predicate.t)]
-    | exception exn -> print_s [%sexp (exn : Exn.t)]
+      print_s (predicate |> Dunolint0.Dunolint_lang_version.Predicate.sexp_of_t)
+    | exception exn -> print_s (exn |> Exn.sexp_of_t)
   in
   test "(= 1.0)";
   [%expect {| (= 1.0) |}];
@@ -156,8 +156,8 @@ let%expect_test "equal comparison" =
   let v1 = Dunolint0.Dunolint_lang_version.create (1, 0) in
   let v2 = Dunolint0.Dunolint_lang_version.create (1, 0) in
   let v3 = Dunolint0.Dunolint_lang_version.create (1, 5) in
-  print_s [%sexp (Dunolint0.Dunolint_lang_version.equal v1 v2 : bool)];
-  print_s [%sexp (Dunolint0.Dunolint_lang_version.equal v1 v3 : bool)];
+  print_s (Dunolint0.Dunolint_lang_version.equal v1 v2 |> Bool.sexp_of_t);
+  print_s (Dunolint0.Dunolint_lang_version.equal v1 v3 |> Bool.sexp_of_t);
   [%expect
     {|
     true
@@ -169,9 +169,9 @@ let%expect_test "compare versions" =
   let v1 = Dunolint0.Dunolint_lang_version.create (1, 0) in
   let v2 = Dunolint0.Dunolint_lang_version.create (1, 5) in
   let v3 = Dunolint0.Dunolint_lang_version.create (2, 0) in
-  print_s [%sexp (Dunolint0.Dunolint_lang_version.compare v1 v2 : int)];
-  print_s [%sexp (Dunolint0.Dunolint_lang_version.compare v2 v3 : int)];
-  print_s [%sexp (Dunolint0.Dunolint_lang_version.compare v2 v2 : int)];
+  print_s (Dunolint0.Dunolint_lang_version.compare v1 v2 |> Int.sexp_of_t);
+  print_s (Dunolint0.Dunolint_lang_version.compare v2 v3 |> Int.sexp_of_t);
+  print_s (Dunolint0.Dunolint_lang_version.compare v2 v2 |> Int.sexp_of_t);
   [%expect
     {|
     -1
@@ -187,6 +187,6 @@ let%expect_test "sort versions" =
   let sorted_versions =
     List.sort unsorted_versions ~compare:Dunolint0.Dunolint_lang_version.compare
   in
-  print_s [%sexp (sorted_versions : Dunolint0.Dunolint_lang_version.t list)];
+  print_s (sorted_versions |> sexp_of_list Dunolint0.Dunolint_lang_version.sexp_of_t);
   [%expect {| (1.0 1.2 1.5 1.10 2.0 2.1) |}]
 ;;

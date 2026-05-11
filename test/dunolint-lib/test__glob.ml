@@ -9,8 +9,8 @@ module Glob = Dunolint.Glob
 let%expect_test "v" =
   let test str =
     match Glob.v str with
-    | exception Invalid_argument s -> print_s [%sexp Invalid_argument (s : string)]
-    | glob -> print_s [%sexp (glob : Glob.t)]
+    | exception Invalid_argument s -> print_s (List [ Atom "Invalid_argument"; Atom s ])
+    | glob -> print_s (glob |> Glob.sexp_of_t)
   in
   test "";
   [%expect {| "" |}];
@@ -23,7 +23,8 @@ let%expect_test "v" =
 
 let%expect_test "equal" =
   let test str1 str2 =
-    print_s [%sexp `equals, (Glob.equal (Glob.v str1) (Glob.v str2) : bool)]
+    print_s
+      (List [ Atom "equals"; Bool.sexp_of_t (Glob.equal (Glob.v str1) (Glob.v str2)) ])
   in
   test "" "";
   [%expect {| (equals true) |}];
@@ -48,7 +49,7 @@ let%expect_test "roundtrip" =
 ;;
 
 let%expect_test "test" =
-  let test g str = print_s [%sexp `is_match, (Glob.test g str : bool)] in
+  let test g str = print_s (List [ Atom "is_match"; Bool.sexp_of_t (Glob.test g str) ]) in
   let g = Glob.v "const" in
   test g "const";
   [%expect {| (is_match true) |}];
@@ -131,7 +132,7 @@ let%expect_test "test" =
 let%expect_test "sort" =
   let test vs =
     let vs = List.map vs ~f:Glob.v |> List.sort ~compare:Glob.compare in
-    print_s [%sexp (vs : Glob.t list)]
+    print_s (vs |> sexp_of_list Glob.sexp_of_t)
   in
   test [ "c"; "b/*"; "a/**" ];
   [%expect {| (a/** b/* c) |}];

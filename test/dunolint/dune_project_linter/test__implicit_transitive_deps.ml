@@ -35,7 +35,7 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let _, t = parse {| (implicit_transitive_deps true) |} in
-  print_s [%sexp (t : Dune_project_linter.Implicit_transitive_deps.t)];
+  print_s (t |> Dune_project_linter.Implicit_transitive_deps.sexp_of_t);
   [%expect {| ((value true)) |}];
   ()
 ;;
@@ -57,15 +57,13 @@ let%expect_test "rewrite" =
   (* Exercising some getters and setters. *)
   rewrite {| (implicit_transitive_deps true) |} ~f:(fun t ->
     print_s
-      [%sexp
-        (Dune_project_linter.Implicit_transitive_deps.value t
-         : Dune_project_linter.Implicit_transitive_deps.Value.t)];
+      (Dune_project_linter.Implicit_transitive_deps.value t
+       |> Dune_project_linter.Implicit_transitive_deps.Value.sexp_of_t);
     [%expect {| true |}];
     Dune_project_linter.Implicit_transitive_deps.set_value t ~value:`False;
     print_s
-      [%sexp
-        (Dune_project_linter.Implicit_transitive_deps.value t
-         : Dune_project_linter.Implicit_transitive_deps.Value.t)];
+      (Dune_project_linter.Implicit_transitive_deps.value t
+       |> Dune_project_linter.Implicit_transitive_deps.Value.sexp_of_t);
     [%expect {| false |}];
     ());
   [%expect {| (implicit_transitive_deps false) |}];

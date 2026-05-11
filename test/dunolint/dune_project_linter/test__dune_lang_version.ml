@@ -47,7 +47,7 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let _, t = parse {| (lang dune 3.20) |} in
-  print_s [%sexp (t : Dune_project_linter.Dune_lang_version.t)];
+  print_s (t |> Dune_project_linter.Dune_lang_version.sexp_of_t);
   [%expect {| ((dune_lang_version 3.20)) |}];
   ()
 ;;
@@ -67,17 +67,15 @@ let%expect_test "rewrite" =
   (* Exercising some getters and setters. *)
   rewrite {| (lang dune 3.20) |} ~f:(fun t ->
     print_s
-      [%sexp
-        (Dune_project_linter.Dune_lang_version.dune_lang_version t
-         : Dune_project.Dune_lang_version.t)];
+      (Dune_project_linter.Dune_lang_version.dune_lang_version t
+       |> Dune_project.Dune_lang_version.sexp_of_t);
     [%expect {| 3.20 |}];
     Dune_project_linter.Dune_lang_version.set_dune_lang_version
       t
       ~dune_lang_version:(Dune_project.Dune_lang_version.create (4, 10));
     print_s
-      [%sexp
-        (Dune_project_linter.Dune_lang_version.dune_lang_version t
-         : Dune_project.Dune_lang_version.t)];
+      (Dune_project_linter.Dune_lang_version.dune_lang_version t
+       |> Dune_project.Dune_lang_version.sexp_of_t);
     [%expect {| 4.10 |}];
     ());
   [%expect {| (lang dune 4.10) |}];

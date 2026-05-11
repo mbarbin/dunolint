@@ -71,7 +71,7 @@ let%expect_test "predicate" =
 (* Deprecated EDSL helpers - test serialization only (no roundtrip, since
    parsing normalizes to [mem]). *)
 let%expect_test "predicate - deprecated EDSL helpers" =
-  let test p = print_s [%sexp (p : Dune.Library.Modes.Predicate.t Blang.t)] in
+  let test p = print_s (p |> Blang.sexp_of_t Dune.Library.Modes.Predicate.sexp_of_t) in
   test ((has_modes [@alert "-deprecated"]) []);
   [%expect {| (has_modes ()) |}];
   test ((has_modes [@alert "-deprecated"]) [ `best ]);
@@ -91,8 +91,8 @@ let%expect_test "Predicate.t_of_sexp" =
   let test str =
     let sexp = Parsexp.Single.parse_string_exn str in
     match Dune.Library.Modes.Predicate.t_of_sexp sexp with
-    | predicate -> print_s [%sexp (predicate : Dune.Library.Modes.Predicate.t)]
-    | exception exn -> print_s [%sexp (exn : Exn.t)]
+    | predicate -> print_s (predicate |> Dune.Library.Modes.Predicate.sexp_of_t)
+    | exception exn -> print_s (exn |> Exn.sexp_of_t)
   in
   test "(mem byte)";
   [%expect {| (mem byte) |}];

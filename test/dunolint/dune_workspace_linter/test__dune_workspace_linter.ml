@@ -30,9 +30,9 @@ let%expect_test "lint" =
   in
   print_diff t;
   [%expect {||}];
-  print_s [%sexp (Dune_workspace_linter.path t : Relative_path.t)];
-  [%expect {| dune-workspace |}];
-  print_s [%sexp (List.length (Dune_workspace_linter.original_sexps t) : int)];
+  print_dyn (Relative_path.to_dyn (Dune_workspace_linter.path t));
+  [%expect {| "dune-workspace" |}];
+  print_dyn (Dyn.int (List.length (Dune_workspace_linter.original_sexps t)));
   [%expect {| 2 |}];
   (* We can use the low-level sexps-rewriter API if we wish. *)
   let sexps_rewriter = Dune_workspace_linter.sexps_rewriter t in
@@ -59,9 +59,8 @@ let%expect_test "lint" =
     | Dune_workspace_linter.Dune_lang_version s ->
       (* Test the dune_lang_version stanza API and bump to [3.20]. *)
       print_s
-        [%sexp
-          (Dune_workspace_linter.Dune_lang_version.dune_lang_version s
-           : Dune_workspace.Dune_lang_version.t)];
+        (Dune_workspace_linter.Dune_lang_version.dune_lang_version s
+         |> Dune_workspace.Dune_lang_version.sexp_of_t);
       [%expect {| 3.17 |}];
       Dune_workspace_linter.Dune_lang_version.set_dune_lang_version
         s
@@ -104,7 +103,7 @@ let%expect_test "lint" =
       (match
          eval ~path ~predicate:Dunolint.Config.Std.(`path (glob "dune-workspace"))
        with
-       | True -> print_s [%sexp "path matched"]
+       | True -> print_s (Atom "path matched")
        | False | Undefined -> assert false);
       [%expect {| "path matched" |}]);
   (* You can also use the enforcement construct from the OCaml API. *)

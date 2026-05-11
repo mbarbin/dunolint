@@ -33,7 +33,7 @@ open Dunolint.Config.Std
 
 let%expect_test "all" =
   List.iter Dune_project.Implicit_transitive_deps.Value.all ~f:(fun value ->
-    print_s [%sexp (value : Dune_project.Implicit_transitive_deps.Value.t)]);
+    print_s (value |> Dune_project.Implicit_transitive_deps.Value.sexp_of_t));
   [%expect
     {|
     true
@@ -86,7 +86,7 @@ let%expect_test "sort" =
     List.sort ts ~compare:Dune_project.Implicit_transitive_deps.Value.compare
   in
   let test ts =
-    print_s [%sexp (sort ts : Dune_project.Implicit_transitive_deps.Value.t list)]
+    print_s (sort ts |> sexp_of_list Dune_project.Implicit_transitive_deps.Value.sexp_of_t)
   in
   test [ `False; `True; `False_if_hidden_includes_supported ];
   [%expect {| (true false false-if-hidden-includes-supported) |}];

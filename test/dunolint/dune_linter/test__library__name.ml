@@ -28,7 +28,7 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let _, t = parse {| (name lib_name) |} in
-  print_s [%sexp (t : Dune_linter.Library.Name.t)];
+  print_s (t |> Dune_linter.Library.Name.sexp_of_t);
   [%expect {| ((name lib_name)) |}];
   ()
 ;;
@@ -174,7 +174,7 @@ let%expect_test "rewrite" =
   [%expect {| (name mylib) |}];
   (* Exercising some getters and setters. *)
   rewrite {| (name mylib) |} ~f:(fun t ->
-    print_s [%sexp (Dune_linter.Library.Name.name t : Dune.Library.Name.t)];
+    print_s (Dune_linter.Library.Name.name t |> Dune.Library.Name.sexp_of_t);
     [%expect {| mylib |}];
     ());
   [%expect {| (name mylib) |}];

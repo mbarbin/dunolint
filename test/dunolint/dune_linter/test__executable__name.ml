@@ -28,7 +28,7 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let _, t = parse {| (name exe_name) |} in
-  print_s [%sexp (t : Dune_linter.Executable.Name.t)];
+  print_s (t |> Dune_linter.Executable.Name.sexp_of_t);
   [%expect {| ((name exe_name)) |}];
   ()
 ;;

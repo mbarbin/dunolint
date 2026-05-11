@@ -17,7 +17,7 @@ let rewrite original_contents ~sections =
     ~field_name
     ~sexps_rewriter
     ~field
-    ~write_arg:Fn.id
+    ~write_arg:Fun.id
     ~sections;
   print_endline (Sexps_rewriter.contents sexps_rewriter)
 ;;

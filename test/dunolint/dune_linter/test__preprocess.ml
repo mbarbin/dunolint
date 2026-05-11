@@ -43,10 +43,10 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let _, t = parse {| (preprocess no_preprocessing) |} in
-  print_s [%sexp (t : Dune_linter.Preprocess.t)];
+  print_s (t |> Dune_linter.Preprocess.sexp_of_t);
   [%expect {| ((state No_preprocessing)) |}];
   let _, t = parse {| (preprocess (pps ppx_sexp_conv)) |} in
-  print_s [%sexp (t : Dune_linter.Preprocess.t)];
+  print_s (t |> Dune_linter.Preprocess.sexp_of_t);
   [%expect
     {|
     ((state
@@ -55,7 +55,7 @@ let%expect_test "sexp_of" =
          (((entries (((arg (Pp (pp_name ppx_sexp_conv))) (eol_comment ())))))))))))
     |}];
   let _, t = parse {| (preprocess (something else)) |} in
-  print_s [%sexp (t : Dune_linter.Preprocess.t)];
+  print_s (t |> Dune_linter.Preprocess.sexp_of_t);
   [%expect {| ((state (Unhandled (something else)))) |}];
   ()
 ;;
@@ -82,7 +82,7 @@ let%expect_test "rewrite" =
   [%expect {| (preprocess no_preprocessing) |}];
   (* Exercising some getters and setters. *)
   rewrite {| (preprocess no_preprocessing) |} ~f:(fun t ->
-    print_s [%sexp (Dune_linter.Preprocess.state t : Dune_linter.Preprocess.State.t)];
+    print_s (Dune_linter.Preprocess.state t |> Dune_linter.Preprocess.State.sexp_of_t);
     [%expect {| No_preprocessing |}];
     Dune_linter.Preprocess.set_state t ~state:(Unhandled (Atom "foo")));
   [%expect {| (preprocess no_preprocessing) |}];

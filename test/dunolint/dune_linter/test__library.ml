@@ -69,7 +69,7 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let _, t = parse {| (library (name mylib)) |} in
-  print_s [%sexp (t : Dune_linter.Library.t)];
+  print_s (t |> Dune_linter.Library.sexp_of_t);
   [%expect {| ((name ((name mylib)))) |}];
   ()
 ;;
@@ -158,9 +158,11 @@ let%expect_test "rewrite" =
       (libraries foo bar))
     |}
     ~f:(fun t ->
-      print_s [%sexp (Dune_linter.Library.name t : Dune_linter.Library.Name.t option)];
+      print_s
+        (Dune_linter.Library.name t
+         |> Sexplib0.Sexp_conv.sexp_of_option Dune_linter.Library.Name.sexp_of_t);
       [%expect {| (((name mylib))) |}];
-      print_s [%sexp (Dune_linter.Library.flags t : Dune_linter.Flags.t)];
+      print_s (Dune_linter.Library.flags t |> Dune_linter.Flags.sexp_of_t);
       [%expect {| ((flags (:standard -open Base))) |}];
       (* The open via flags only adds open for libraries that are dependencies.
          For example here, [-open Foo] is added but [sna] is not a dependency so
@@ -177,7 +179,9 @@ let%expect_test "rewrite" =
      (libraries bar foo))
     |}];
   rewrite {| (library) |} ~f:(fun t ->
-    print_s [%sexp (Dune_linter.Library.name t : Dune_linter.Library.Name.t option)];
+    print_s
+      (Dune_linter.Library.name t
+       |> Sexplib0.Sexp_conv.sexp_of_option Dune_linter.Library.Name.sexp_of_t);
     [%expect {| () |}];
     ());
   [%expect {| (library) |}];

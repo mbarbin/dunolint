@@ -43,10 +43,10 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let _, t = parse {| (instrumentation (backend bisect_ppx)) |} in
-  print_s [%sexp (t : Dune_linter.Instrumentation.t)];
+  print_s (t |> Dune_linter.Instrumentation.sexp_of_t);
   [%expect {| ((backend bisect_ppx)) |}];
   let _, t = parse {| (instrumentation (backend ppx_windtrap --coverage)) |} in
-  print_s [%sexp (t : Dune_linter.Instrumentation.t)];
+  print_s (t |> Dune_linter.Instrumentation.sexp_of_t);
   [%expect {| ((backend (ppx_windtrap --coverage))) |}];
   ()
 ;;
@@ -64,7 +64,7 @@ let%expect_test "rewrite" =
   (* Exercising some getters and setters. *)
   rewrite {| (instrumentation (backend other_backend)) |} ~f:(fun t ->
     print_s
-      [%sexp (Dune_linter.Instrumentation.backend t : Dune.Instrumentation.Backend.t)];
+      (Dune_linter.Instrumentation.backend t |> Dune.Instrumentation.Backend.sexp_of_t);
     [%expect {| other_backend |}];
     Dune_linter.Instrumentation.set_backend
       t

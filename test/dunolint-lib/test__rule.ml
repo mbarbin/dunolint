@@ -140,8 +140,8 @@ let%expect_test "t_of_sexp - invalid cond clause" =
   let test str =
     let sexp = Parsexp.Single.parse_string_exn str in
     match T.t_of_sexp sexp with
-    | t -> print_s [%sexp (t : T.t)]
-    | exception exn -> print_s [%sexp (exn : Exn.t)]
+    | t -> print_s (t |> T.sexp_of_t)
+    | exception exn -> print_s (exn |> Exn.sexp_of_t)
   in
   (* Valid [cond]. *)
   test "(cond (true (enforce 1)))";
@@ -172,8 +172,8 @@ let%expect_test "t_of_sexp - invalid cond clause" =
 
 let%expect_test "eval" =
   let test t =
-    let result = (Dunolint.Rule.eval t ~f:Fn.id :> T.t) in
-    print_s [%sexp (result : T.t)]
+    let result = (Dunolint.Rule.eval t ~f:Fun.id :> T.t) in
+    print_s (result |> T.sexp_of_t)
   in
   test (`enforce 42);
   [%expect {| (enforce 42) |}];
