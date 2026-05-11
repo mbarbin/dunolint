@@ -4,15 +4,6 @@
 (*  SPDX-License-Identifier: MIT OR LGPL-3.0-or-later WITH LGPL-3.0-linking-exception  *)
 (***************************************************************************************)
 
-include Stdlib.Option
+type t = exn
 
-let iter t ~f = iter f t
-let map t ~f = map f t
-
-let value_map t ~default ~f =
-  match t with
-  | None -> default
-  | Some v -> f v
-;;
-
-let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_option
+let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_exn

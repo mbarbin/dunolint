@@ -115,7 +115,7 @@ open Dunolint.Config.Std
 
 let%expect_test "create" =
   let t = Dunolint.Config.create () in
-  print_s [%sexp (t : Dunolint.Config.t)];
+  print_s (t |> Dunolint.Config.sexp_of_t);
   [%expect {| (stanzas (lang dunolint 1.0)) |}];
   require_equal (module Dunolint.Config) t t;
   [%expect {||}];
@@ -124,12 +124,14 @@ let%expect_test "create" =
 
 let%expect_test "empty v1" =
   let t = Dunolint.Config.V1.create [] in
-  print_s [%sexp (Dunolint.Config.V1.skip_paths t : Dunolint.Glob.t list list)];
+  print_s
+    (Dunolint.Config.V1.skip_paths t
+     |> sexp_of_list (sexp_of_list Dunolint.Glob.sexp_of_t));
   [%expect {| () |}];
-  print_s [%sexp (Dunolint.Config.V1.rules t : Dunolint.Config.Rule.t list)];
+  print_s (Dunolint.Config.V1.rules t |> sexp_of_list Dunolint.Config.Rule.sexp_of_t);
   [%expect {| () |}];
   let t = Dunolint.Config.v1 t in
-  print_s [%sexp (t : Dunolint.Config.t)];
+  print_s (t |> Dunolint.Config.sexp_of_t);
   [%expect {| (stanzas (lang dunolint 1.0)) |}];
   require_equal (module Dunolint.Config) t t;
   [%expect {||}];
@@ -148,15 +150,15 @@ let%expect_test "non-empty-v1" =
     match Dunolint.Config.Private.view t with
     | `v1 v1 -> v1
   in
-  print_s [%sexp (Dunolint.Config.V1.rules v1 : Dunolint.Config.Rule.t list)];
+  print_s (Dunolint.Config.V1.rules v1 |> sexp_of_list Dunolint.Config.Rule.sexp_of_t);
   [%expect {| ((enforce (dune (has_field instrumentation)))) |}];
-  print_s [%sexp (v1 : Dunolint.Config.V1.t)];
+  print_s (v1 |> Dunolint.Config.V1.sexp_of_t);
   [%expect
     {|
     ((stanzas
       ((skip_paths .git/) (rule (enforce (dune (has_field instrumentation)))))))
     |}];
-  print_s [%sexp (t : Dunolint.Config.t)];
+  print_s (t |> Dunolint.Config.sexp_of_t);
   [%expect
     {|
     (stanzas (lang dunolint 1.0) (skip_paths .git/)
@@ -167,7 +169,7 @@ let%expect_test "non-empty-v1" =
   let rules = Dunolint.Config.V1.rules v1 in
   let t' = Dunolint.Config.create ~rules () in
   (* t and t' are different because t includes skip_paths. *)
-  print_s [%sexp (Dunolint.Config.equal t t' : bool)];
+  print_s (Dunolint.Config.equal t t' |> Bool.sexp_of_t);
   [%expect {| false |}];
   ()
 ;;

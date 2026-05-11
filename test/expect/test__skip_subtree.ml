@@ -98,11 +98,13 @@ let%expect_test "config skip_subtree in nested directory" =
      the test that relates to the execution with v1 as reference. *)
   let () =
     let glob = Dunolint.Glob.v "**" in
-    let test str = print_s [%sexp { is_match = (Dunolint.Glob.test glob str : bool) }] in
+    let test str =
+      print_dyn (Dyn.record [ "is_match", Dyn.bool (Dunolint.Glob.test glob str) ])
+    in
     test "./";
-    [%expect {| ((is_match false)) |}];
+    [%expect {| { is_match = false } |}];
     test "dune-project";
-    [%expect {| ((is_match true)) |}]
+    [%expect {| { is_match = true } |}]
   in
   Out_channel.write_all
     "dune-project"

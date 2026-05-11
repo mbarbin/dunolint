@@ -36,7 +36,7 @@ let%expect_test "read/write" =
 let%expect_test "sexp_of" =
   let test str =
     let _, t = parse str in
-    print_s [%sexp (t : Dune_linter.Pps.t)]
+    print_s (t |> Dune_linter.Pps.sexp_of_t)
   in
   test {| (pps --driver ppx_deriving --flag --opt=param) |};
   [%expect
@@ -107,7 +107,7 @@ let%expect_test "sexp_of" =
 let%expect_test "parse" =
   let test list =
     let t = Dune_linter.Pps.parse ~loc:Loc.none list in
-    print_s [%sexp (t : Dune_linter.Pps.t)]
+    print_s (t |> Dune_linter.Pps.sexp_of_t)
   in
   test [ "--driver"; "ppx_deriving"; "--flag"; "--opt=param" ];
   [%expect

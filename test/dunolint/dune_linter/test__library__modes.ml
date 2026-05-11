@@ -13,10 +13,10 @@ let%expect_test "read/write" =
     Err.For_test.protect (fun () ->
       let _, t = parse contents in
       print_s
-        [%sexp
-          { t : Dune_linter.Library.Modes.t
-          ; field = (Dune_linter.Library.Modes.write t : Sexp.t)
-          }])
+        (List
+           [ List [ Atom "t"; Dune_linter.Library.Modes.sexp_of_t t ]
+           ; List [ Atom "field"; Dune_linter.Library.Modes.write t ]
+           ]))
   in
   test {| (modes) |};
   [%expect {| ((t ((modes (Union ())))) (field (modes))) |}];
@@ -82,7 +82,7 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let _, t = parse {| (modes byte native) |} in
-  print_s [%sexp (t : Dune_linter.Library.Modes.t)];
+  print_s (t |> Dune_linter.Library.Modes.sexp_of_t);
   [%expect {| ((modes (Union ((Element byte) (Element native))))) |}];
   ()
 ;;
@@ -109,7 +109,7 @@ let%expect_test "rewrite" =
     print_s (Dune_linter.Library.Modes.write t);
     [%expect {| (modes byte native) |}];
     let modes = Dune_linter.Library.Modes.modes t in
-    print_s [%sexp (modes : Dune_linter.Library.Modes.Ordered_set.t)];
+    print_s (modes |> Dune_linter.Library.Modes.Ordered_set.sexp_of_t);
     [%expect {| (Union ((Element byte) (Element native))) |}];
     ());
   [%expect {| (modes byte native) |}];

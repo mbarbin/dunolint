@@ -16,23 +16,24 @@ type test_predicate =
   ]
 
 let sexp_of_test_predicate : test_predicate -> Sexp.t = function
-  | `foo s -> List [ Atom "foo"; sexp_of_string s ]
-  | `bar i -> List [ Atom "bar"; sexp_of_int i ]
+  | `foo s -> List [ Atom "foo"; String.sexp_of_t s ]
+  | `bar i -> List [ Atom "bar"; Int.sexp_of_t i ]
   | `nullary -> Atom "nullary"
-  | `ctx s -> List [ Atom "ctx"; sexp_of_string s ]
-  | `variadic ss -> List [ Atom "variadic"; sexp_of_list sexp_of_string ss ]
+  | `ctx s -> List [ Atom "ctx"; String.sexp_of_t s ]
+  | `variadic ss -> List [ Atom "variadic"; sexp_of_list String.sexp_of_t ss ]
 ;;
 
 let test_variant_spec : test_predicate Sexp_helpers.Variant_spec.t =
-  [ { atom = "foo"; conv = Unary (fun sexp -> `foo (string_of_sexp sexp)) }
-  ; { atom = "bar"; conv = Unary (fun sexp -> `bar (int_of_sexp sexp)) }
+  [ { atom = "foo"; conv = Unary (fun sexp -> `foo (String.t_of_sexp sexp)) }
+  ; { atom = "bar"; conv = Unary (fun sexp -> `bar (Int.t_of_sexp sexp)) }
   ; { atom = "nullary"; conv = Nullary `nullary }
   ; { atom = "ctx"
-    ; conv = Unary_with_context (fun ~context:_ ~arg -> `ctx (string_of_sexp arg))
+    ; conv = Unary_with_context (fun ~context:_ ~arg -> `ctx (String.t_of_sexp arg))
     }
   ; { atom = "variadic"
     ; conv =
-        Variadic (fun ~context:_ ~fields -> `variadic (List.map fields ~f:string_of_sexp))
+        Variadic
+          (fun ~context:_ ~fields -> `variadic (List.map fields ~f:String.t_of_sexp))
     }
   ]
 ;;
@@ -43,8 +44,8 @@ let%expect_test "parse_variant" =
     match
       Sexp_helpers.parse_variant test_variant_spec ~error_source:"test_predicate" sexp
     with
-    | predicate -> print_s [%sexp (predicate : test_predicate)]
-    | exception exn -> print_s [%sexp (exn : Exn.t)]
+    | predicate -> print_s (predicate |> sexp_of_test_predicate)
+    | exception exn -> print_s (exn |> Exn.sexp_of_t)
   in
   (* Success cases. *)
   test "(foo hello)";
@@ -195,10 +196,10 @@ module Test_record = struct
          (Field
             { name = "name"
             ; kind = Required
-            ; conv = string_of_sexp
+            ; conv = String.t_of_sexp
             ; rest =
                 Field
-                  { name = "value"; kind = Required; conv = int_of_sexp; rest = Empty }
+                  { name = "value"; kind = Required; conv = Int.t_of_sexp; rest = Empty }
             })
        ~index_of_field:(function
          | "name" -> 0
@@ -212,8 +213,8 @@ module Test_record = struct
 
   let sexp_of_t { name; value } : Sexp.t =
     List
-      [ List [ Atom "name"; sexp_of_string name ]
-      ; List [ Atom "value"; sexp_of_int value ]
+      [ List [ Atom "name"; String.sexp_of_t name ]
+      ; List [ Atom "value"; Int.sexp_of_t value ]
       ]
   ;;
 end
@@ -234,8 +235,8 @@ let%expect_test "parse_inline_record" =
         ~tag
         ~fields
     with
-    | record -> print_s [%sexp (record : Test_record.t)]
-    | exception exn -> print_s [%sexp (exn : Exn.t)]
+    | record -> print_s (record |> Test_record.sexp_of_t)
+    | exception exn -> print_s (exn |> Exn.sexp_of_t)
   in
   (* Success case: inline record fields (no extra parens). *)
   test "(cons (name hello) (value 42))";

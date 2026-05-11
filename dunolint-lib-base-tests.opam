@@ -10,11 +10,9 @@ bug-reports: "https://github.com/mbarbin/dunolint/issues"
 depends: [
   "dune" {>= "3.17"}
   "ocaml" {>= "5.3"}
-  "base" {>= "v0.17"}
   "dunolint-lib" {= version}
   "dunolint-lib-base" {= version}
   "ppx_expect" {>= "v0.17"}
-  "ppx_sexp_value" {>= "v0.17"}
   "odoc" {with-doc}
 ]
 build: [

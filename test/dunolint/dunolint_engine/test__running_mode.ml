@@ -11,13 +11,17 @@ let eval_args args =
       ~summary:"Test eval-stdlib-runner."
   in
   match Cmdlang_stdlib_runner.eval command ~argv:(Array.of_list ("dunolint" :: args)) with
-  | Ok t -> print_s [%sexp (t : Dunolint_engine.Running_mode.t)]
+  | Ok t -> print_s (t |> Dunolint_engine.Running_mode.sexp_of_t)
   | Error (`Help msg) -> print_endline msg [@coverage off]
   | Error (`Bad msg) ->
     (Stdlib.print_string msg;
-     print_s [%sexp "Evaluation Failed", { exit_code = (2 : int) }])
+     print_s
+       (List
+          [ Atom "Evaluation Failed"
+          ; List [ List [ Atom "exit_code"; Int.sexp_of_t 2 ] ]
+          ]))
     [@coverage off]
-  | exception e -> print_s [%sexp "Evaluation Raised", (e : Exn.t)]
+  | exception e -> print_s (List [ Atom "Evaluation Raised"; Exn.sexp_of_t e ])
 ;;
 
 let%expect_test "running modes" =
@@ -49,7 +53,7 @@ let%expect_test "running modes" =
 let%expect_test "create" =
   (* The API lets you create config programmatically. *)
   let t = Dunolint_engine.Running_mode.Dry_run in
-  print_s [%sexp (t : Dunolint_engine.Running_mode.t)];
+  print_s (t |> Dunolint_engine.Running_mode.sexp_of_t);
   [%expect {| Dry_run |}];
   ()
 ;;

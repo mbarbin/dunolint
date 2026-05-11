@@ -47,7 +47,7 @@ let%expect_test "read/write" =
 let%expect_test "sexp_of" =
   let test str =
     let _, t = parse str in
-    print_s [%sexp (t : Dune_linter.Libraries.t)]
+    print_s (t |> Dune_linter.Libraries.sexp_of_t)
   in
   test
     {|
@@ -143,10 +143,10 @@ let%expect_test "rewrite" =
  (invalid sexp))
 |}
     ~f:(fun t ->
-      print_s [%sexp (Dune_linter.Libraries.is_empty t : bool)];
+      print_s (Dune_linter.Libraries.is_empty t |> Bool.sexp_of_t);
       [%expect {| false |}];
       let entries = Dune_linter.Libraries.entries t in
-      print_s [%sexp (entries : Dune_linter.Libraries.Entry.t list)];
+      print_s (entries |> sexp_of_list Dune_linter.Libraries.Entry.sexp_of_t);
       [%expect
         {|
         ((Library (name foo) (source "foo ;; this is a comment for foo."))
@@ -161,10 +161,14 @@ let%expect_test "rewrite" =
         |> Library_name_set.of_list
       in
       print_s
-        [%sexp
-          { library_names =
-              (library_names |> Library_name_set.to_list : Dune.Library.Name.t list)
-          }];
+        (List
+           [ List
+               [ Atom "library_names"
+               ; library_names
+                 |> Library_name_set.to_list
+                 |> sexp_of_list Dune.Library.Name.sexp_of_t
+               ]
+           ]);
       [%expect {| ((library_names (bar baz foo sna))) |}];
       let mem name = Dune_linter.Libraries.mem t ~library:(Dune.Library.Name.v name) in
       require (mem "foo");
@@ -206,7 +210,7 @@ let%expect_test "rewrite" =
           [ Dune_linter.Libraries.Entry.re_export (Dune.Library.Name.v "sna")
           ; Dune_linter.Libraries.Private.Entry.unhandled
               ~original_index:42
-              ~sexp:[%sexp Unhandled_constructs_are_not_inserted]
+              ~sexp:(Atom "Unhandled_constructs_are_not_inserted")
           ];
       ());
   [%expect
@@ -716,8 +720,10 @@ let%expect_test "entries" =
     | Some library_name ->
       require_equal (module Dune.Library.Name) library_name my_lib;
       print_s
-        [%sexp
-          { entry : Dune_linter.Libraries.Entry.t; library_name : Dune.Library.Name.t }]
+        (List
+           [ List [ Atom "entry"; entry |> Dune_linter.Libraries.Entry.sexp_of_t ]
+           ; List [ Atom "library_name"; library_name |> Dune.Library.Name.sexp_of_t ]
+           ])
   in
   library_name (Dune_linter.Libraries.Entry.library my_lib);
   [%expect {| ((entry (Library (name my_lib) (source my_lib))) (library_name my_lib)) |}];

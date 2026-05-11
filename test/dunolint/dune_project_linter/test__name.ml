@@ -31,7 +31,7 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let _, t = parse {| (name my_project) |} in
-  print_s [%sexp (t : Dune_project_linter.Name.t)];
+  print_s (t |> Dune_project_linter.Name.sexp_of_t);
   [%expect {| ((name my_project)) |}];
   ()
 ;;
@@ -48,7 +48,7 @@ let%expect_test "rewrite" =
   [%expect {| (name my_project) |}];
   (* Exercising some getters. *)
   rewrite {| (name other_project) |} ~f:(fun t ->
-    print_s [%sexp (Dune_project_linter.Name.name t : Dune_project.Name.t)];
+    print_s (Dune_project_linter.Name.name t |> Dune_project.Name.sexp_of_t);
     [%expect {| other_project |}];
     ());
   [%expect {| (name other_project) |}];

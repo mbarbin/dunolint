@@ -2,11 +2,11 @@
  (name dunolint_base_test)
  (package dunolint-lib-base-tests)
  (inline_tests)
- (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a -open Base)
- (libraries base dunolint dunolint_base)
+ (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a)
+ (libraries dunolint dunolint_base)
  (instrumentation
   (backend bisect_ppx))
  (lint
   (pps ppx_js_style -allow-let-operators -check-doc-comments))
  (preprocess
-  (pps ppx_expect ppx_sexp_value)))
+  (pps ppx_expect)))

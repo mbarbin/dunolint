@@ -6,7 +6,7 @@
 
 let%expect_test "all" =
   List.iter Dunolint.Linted_file_kind.all ~f:(fun linted_file_kind ->
-    let sexp = [%sexp (linted_file_kind : Dunolint.Linted_file_kind.t)] in
+    let sexp = linted_file_kind |> Dunolint.Linted_file_kind.sexp_of_t in
     let t = Dunolint.Linted_file_kind.t_of_sexp sexp in
     require_equal (module Dunolint.Linted_file_kind) linted_file_kind t;
     print_s sexp);
@@ -36,7 +36,7 @@ let%expect_test "to_string" =
 
 let%expect_test "sort" =
   let sort ts = List.sort ts ~compare:Dunolint.Linted_file_kind.compare in
-  let test ts = print_s [%sexp (sort ts : Dunolint.Linted_file_kind.t list)] in
+  let test ts = print_s (sort ts |> sexp_of_list Dunolint.Linted_file_kind.sexp_of_t) in
   test [ `dune_project; `dune ];
   [%expect {| (dune dune_project) |}];
   require

@@ -11,13 +11,13 @@ let%expect_test "equal" =
   let p2 : Dunolint0.Predicate.t = `dunolint_lang_version (Blang.base (`gte v1_0)) in
   let p3 : Dunolint0.Predicate.t = `dunolint_lang_version (Blang.base (`gte v1_5)) in
   (* Same value, different references. *)
-  print_s [%sexp (Dunolint0.Predicate.equal p1 p2 : bool)];
+  print_s (Dunolint0.Predicate.equal p1 p2 |> Bool.sexp_of_t);
   [%expect {| true |}];
   (* Physical equality. *)
-  print_s [%sexp (Dunolint0.Predicate.equal p1 p1 : bool)];
+  print_s (Dunolint0.Predicate.equal p1 p1 |> Bool.sexp_of_t);
   [%expect {| true |}];
   (* Different values. *)
-  print_s [%sexp (Dunolint0.Predicate.equal p1 p3 : bool)];
+  print_s (Dunolint0.Predicate.equal p1 p3 |> Bool.sexp_of_t);
   [%expect {| false |}];
   ()
 ;;

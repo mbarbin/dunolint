@@ -59,8 +59,8 @@ let%expect_test "lint" =
     ~f:(fun linter ->
       Dune_project_linter.visit linter ~f:(fun stanza ->
         (* The API has a few getters. *)
-        print_s [%sexp (Dunolinter.path stanza : Relative_path.t)];
-        [%expect {| dune-project |}];
+        print_dyn (Relative_path.to_dyn (Dunolinter.path stanza));
+        [%expect {| "dune-project" |}];
         (* The intended use is to match on the actual stanza. *)
         match Dunolinter.match_stanza stanza with
         | Dune_project_linter.Generate_opam_files _ ->
@@ -69,9 +69,8 @@ let%expect_test "lint" =
         | Dune_project_linter.Implicit_transitive_deps s ->
           (* And use the typed getters and setters of the stanza you care about. *)
           print_s
-            [%sexp
-              (Dune_project_linter.Implicit_transitive_deps.value s
-               : Dune_project_linter.Implicit_transitive_deps.Value.t)];
+            (Dune_project_linter.Implicit_transitive_deps.value s
+             |> Dune_project_linter.Implicit_transitive_deps.Value.sexp_of_t);
           [%expect {| true |}];
           (* If you use setters, the side effect on the memory value is done
              right away, but actual sexp rewrite is going to be registered and only
@@ -105,8 +104,8 @@ let%expect_test "lint" =
       (* It is also possible to access the linter value that holds the stanzas
          and using it directly. Here we'll illustrate this use case with an
          example involving access to the low-level sexps-rewriter. *)
-      print_s [%sexp (Dune_project_linter.path linter : Relative_path.t)];
-      [%expect {| dune-project |}];
+      print_dyn (Relative_path.to_dyn (Dune_project_linter.path linter));
+      [%expect {| "dune-project" |}];
       let sexps_rewriter = Dune_project_linter.sexps_rewriter linter in
       Sexps_rewriter.visit sexps_rewriter ~f:(fun sexp ~range ~file_rewriter ->
         match sexp with
@@ -205,8 +204,8 @@ let%expect_test "create-files" =
       (* It is also possible to access the linter value that holds the stanzas
          and using it directly. Here we'll illustrate this use case with an
          example involving simple getters. *)
-      print_s [%sexp (Dune_linter.path linter : Relative_path.t)];
-      [%expect {| lib/a/dune |}];
+      print_dyn (Relative_path.to_dyn (Dune_linter.path linter));
+      [%expect {| "lib/a/dune" |}];
       ());
   Err.For_test.protect (fun () -> Dunolint_engine.materialize t);
   [%expect
@@ -236,7 +235,7 @@ let%expect_test "lint-absent-files" =
   [%expect {||}];
   Err.For_test.protect (fun () -> Dunolint_engine.materialize t);
   [%expect {||}];
-  print_s [%sexp (Stdlib.Sys.file_exists "absent/file/dune" : bool)];
+  print_dyn (Dyn.bool (Stdlib.Sys.file_exists "absent/file/dune"));
   [%expect {| false |}]
 ;;
 

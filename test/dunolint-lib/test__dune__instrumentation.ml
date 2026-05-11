@@ -63,7 +63,7 @@ let%expect_test "Backend.t_of_sexp - error cases" =
       Dune.Instrumentation.Backend.t_of_sexp (Parsexp.Single.parse_string_exn sexp_str)
     with
     | _ -> assert false
-    | exception e -> print_s [%sexp (e : exn)]
+    | exception e -> print_s (e |> Exn.sexp_of_t)
   in
   (* Empty list. *)
   test "()";
@@ -80,7 +80,7 @@ let%expect_test "Predicate.t_of_sexp - error cases" =
       Dune.Instrumentation.Predicate.t_of_sexp (Parsexp.Single.parse_string_exn sexp_str)
     with
     | _ -> assert false
-    | exception e -> print_s [%sexp (e : exn)]
+    | exception e -> print_s (e |> Exn.sexp_of_t)
   in
   (* Backend with no name (empty fields). *)
   test "(backend)";
@@ -131,10 +131,10 @@ open Dunolint.Config.Std
 
 let%expect_test "of_string" =
   let test str =
-    print_s
-      [%sexp
-        (Dune.Instrumentation.Backend.Name.of_string str
-         : (Dune.Instrumentation.Backend.Name.t, [ `Msg of string ]) Result.t)]
+    match Dune.Instrumentation.Backend.Name.of_string str with
+    | Ok name ->
+      print_s (List [ Atom "Ok"; Dune.Instrumentation.Backend.Name.sexp_of_t name ])
+    | Error (`Msg msg) -> print_s (List [ Atom "Error"; List [ Atom "Msg"; Atom msg ] ])
   in
   test "";
   [%expect {| (Error (Msg "\"\": invalid Dunolint.Instrumentation.Backend.Name")) |}];

@@ -57,7 +57,7 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let _, t = parse {| (executable (name main)) |} in
-  print_s [%sexp (t : Dune_linter.Executable.t)];
+  print_s (t |> Dune_linter.Executable.sexp_of_t);
   [%expect {| ((name ((name main)))) |}];
   ()
 ;;
@@ -125,7 +125,7 @@ let%expect_test "rewrite" =
     |}];
   (* Exercising some getters and setters. *)
   rewrite {| (executable (name main) (flags :standard -open Base)) |} ~f:(fun t ->
-    print_s [%sexp (Dune_linter.Executable.flags t : Dune_linter.Flags.t)];
+    print_s (Dune_linter.Executable.flags t |> Dune_linter.Flags.sexp_of_t);
     [%expect {| ((flags (:standard -open Base))) |}];
     ());
   [%expect {| (executable (name main) (flags :standard -open Base)) |}];

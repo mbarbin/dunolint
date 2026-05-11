@@ -9,13 +9,10 @@
   -warn-error
   +a
   -open
-  Base
-  -open
   Dunolint_stdlib
   -open
   Dunolint.Std)
  (libraries
-  base
   dunolint
   dunolint_stdlib
   dunolinter
@@ -28,4 +25,4 @@
  (lint
   (pps ppx_js_style -allow-let-operators -check-doc-comments))
  (preprocess
-  (pps ppx_expect ppx_sexp_value)))
+  (pps ppx_expect)))

@@ -37,7 +37,7 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let _, t = parse {| (generate_opam_files) |} in
-  print_s [%sexp (t : Dune_project_linter.Generate_opam_files.t)];
+  print_s (t |> Dune_project_linter.Generate_opam_files.sexp_of_t);
   [%expect {| ((args ())) |}];
   ()
 ;;

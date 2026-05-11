@@ -60,7 +60,7 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let _, t = parse {| (package my_package) |} in
-  print_s [%sexp (t : Dune_linter.Library.Package.t)];
+  print_s (t |> Dune_linter.Library.Package.sexp_of_t);
   [%expect {| ((name my_package)) |}];
   ()
 ;;

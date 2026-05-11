@@ -6,7 +6,7 @@
 
 let%expect_test "all" =
   List.iter Dune.Compilation_mode.all ~f:(fun compilation_mode ->
-    print_s [%sexp (compilation_mode : Dune.Compilation_mode.t)]);
+    print_s (compilation_mode |> Dune.Compilation_mode.sexp_of_t));
   [%expect
     {|
     byte

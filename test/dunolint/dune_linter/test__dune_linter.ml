@@ -43,9 +43,9 @@ let%expect_test "lint" =
   in
   print_diff t;
   [%expect {||}];
-  print_s [%sexp (Dune_linter.path t : Relative_path.t)];
-  [%expect {| path/to/dune |}];
-  print_s [%sexp (List.length (Dune_linter.original_sexps t) : int)];
+  print_dyn (Relative_path.to_dyn (Dune_linter.path t));
+  [%expect {| "path/to/dune" |}];
+  print_dyn (Dyn.int (List.length (Dune_linter.original_sexps t)));
   [%expect {| 6 |}];
   (* We can use the low-level sexps-rewriter API if we wish. *)
   let sexps_rewriter = Dune_linter.sexps_rewriter t in
@@ -78,7 +78,7 @@ let%expect_test "lint" =
     match Dunolinter.match_stanza stanza with
     | Dune_linter.Include_subdirs s ->
       (* And use the typed getters and setters of the stanza you care about. *)
-      print_s [%sexp (Dune_linter.Include_subdirs.mode s : Dune.Include_subdirs.Mode.t)];
+      print_s (Dune_linter.Include_subdirs.mode s |> Dune.Include_subdirs.Mode.sexp_of_t);
       [%expect {| unqualified |}];
       (* If you use setters, the side effect on the memory value is done right
          away, but actual sexp rewrite is going to be registered and only
@@ -120,7 +120,7 @@ let%expect_test "lint" =
                dune (library (name (equals (Dunolint.Dune.Library.Name.v "bar"))))));
       (* Test eval with path predicate. *)
       (match eval ~path ~predicate:Dunolint.Config.Std.(`path (glob "path/to/dune")) with
-       | True -> print_s [%sexp "path matched"]
+       | True -> print_s (Atom "path matched")
        | False | Undefined -> assert false);
       [%expect {| "path matched" |}]);
   print_diff t;

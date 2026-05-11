@@ -32,7 +32,7 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let _, t = parse {| (include_subdirs unqualified) |} in
-  print_s [%sexp (t : Dune_linter.Include_subdirs.t)];
+  print_s (t |> Dune_linter.Include_subdirs.sexp_of_t);
   [%expect {| ((mode unqualified)) |}];
   ()
 ;;
@@ -49,10 +49,10 @@ let%expect_test "rewrite" =
   [%expect {| (include_subdirs no) |}];
   (* Exercising some getters and setters. *)
   rewrite {| (include_subdirs qualified) |} ~f:(fun t ->
-    print_s [%sexp (Dune_linter.Include_subdirs.mode t : Dune.Include_subdirs.Mode.t)];
+    print_s (Dune_linter.Include_subdirs.mode t |> Dune.Include_subdirs.Mode.sexp_of_t);
     [%expect {| qualified |}];
     Dune_linter.Include_subdirs.set_mode t ~mode:`unqualified;
-    print_s [%sexp (Dune_linter.Include_subdirs.mode t : Dune.Include_subdirs.Mode.t)];
+    print_s (Dune_linter.Include_subdirs.mode t |> Dune.Include_subdirs.Mode.sexp_of_t);
     [%expect {| unqualified |}];
     ());
   [%expect {| (include_subdirs unqualified) |}];

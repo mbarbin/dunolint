@@ -36,9 +36,9 @@ let%expect_test "lint" =
   in
   print_diff t;
   [%expect {||}];
-  print_s [%sexp (Dune_project_linter.path t : Relative_path.t)];
-  [%expect {| path/to/dune-project |}];
-  print_s [%sexp (List.length (Dune_project_linter.original_sexps t) : int)];
+  print_dyn (Relative_path.to_dyn (Dune_project_linter.path t));
+  [%expect {| "path/to/dune-project" |}];
+  print_dyn (Dyn.int (List.length (Dune_project_linter.original_sexps t)));
   [%expect {| 5 |}];
   (* We can use the low-level sexps-rewriter API if we wish. *)
   let sexps_rewriter = Dune_project_linter.sexps_rewriter t in
@@ -64,9 +64,8 @@ let%expect_test "lint" =
     | Dune_project_linter.Implicit_transitive_deps s ->
       (* And use the typed getters and setters of the stanza you care about. *)
       print_s
-        [%sexp
-          (Dune_project_linter.Implicit_transitive_deps.value s
-           : Dune_project_linter.Implicit_transitive_deps.Value.t)];
+        (Dune_project_linter.Implicit_transitive_deps.value s
+         |> Dune_project_linter.Implicit_transitive_deps.Value.sexp_of_t);
       [%expect {| true |}];
       (* If you use setters, the side effect on the memory value is done right
          away, but actual sexp rewrite is going to be registered and only
@@ -77,9 +76,8 @@ let%expect_test "lint" =
     | Dune_project_linter.Dune_lang_version s ->
       (* Test the dune_lang_version stanza API and bump to [3.20]. *)
       print_s
-        [%sexp
-          (Dune_project_linter.Dune_lang_version.dune_lang_version s
-           : Dune_project.Dune_lang_version.t)];
+        (Dune_project_linter.Dune_lang_version.dune_lang_version s
+         |> Dune_project.Dune_lang_version.sexp_of_t);
       [%expect {| 3.17 |}];
       Dune_project_linter.Dune_lang_version.set_dune_lang_version
         s
@@ -130,7 +128,7 @@ let%expect_test "lint" =
       (match
          eval ~path ~predicate:Dunolint.Config.Std.(`path (glob "path/to/dune-project"))
        with
-       | True -> print_s [%sexp "path matched"]
+       | True -> print_s (Atom "path matched")
        | False | Undefined -> assert false);
       [%expect {| "path matched" |}]);
   print_diff t;

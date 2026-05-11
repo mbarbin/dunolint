@@ -116,8 +116,6 @@
    (>= 5.3))
   (dune
    (>= 3.20))
-  (base
-   (>= v0.17))
   (cmdlang
    (>= 0.0.9))
   (cmdlang-cmdliner-err-runner
@@ -158,8 +156,6 @@
    (>= 0.0.16))
   (ppx_expect
    (>= v0.17))
-  (ppx_sexp_value
-   (>= v0.17))
   (re
    (>= 1.8.0))
   (sexplib0
@@ -190,15 +186,11 @@
  (depends
   (ocaml
    (>= 5.3))
-  (base
-   (>= v0.17))
   (dunolint-lib
    (= :version))
   (dunolint-lib-base
    (= :version))
   (ppx_expect
-   (>= v0.17))
-  (ppx_sexp_value
    (>= v0.17))))
 
 (package

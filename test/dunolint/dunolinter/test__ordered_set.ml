@@ -9,7 +9,7 @@ module Ordered_set = Dunolinter.Ordered_set
 let%expect_test "write" =
   let test t =
     let sexps = Ordered_set.write ~write_a:Int.sexp_of_t t in
-    print_s [%sexp (sexps : Sexp.t list)]
+    print_s (Sexp.List sexps)
   in
   (* Empty set *)
   test (Ordered_set.of_list []);
@@ -65,7 +65,7 @@ let%expect_test "mem" =
   let mem t elt ~evaluator = Ordered_set.mem (module Int) t elt ~evaluator in
   let test t elt =
     let res = mem t elt ~evaluator:Ordered_set.Evaluator.static in
-    print_s [%sexp (res : bool Ordered_set.Evaluation_result.t)]
+    print_s (res |> Ordered_set.Evaluation_result.sexp_of_t Bool.sexp_of_t)
   in
   (* Default static evaluator: only Element and Union of Elements are Known *)
   test (Element 1) 1;
@@ -191,7 +191,7 @@ let%expect_test "mem" =
 let%expect_test "empty" =
   let show t =
     let sexps = Ordered_set.write ~write_a:Int.sexp_of_t t in
-    print_s [%sexp (sexps : Sexp.t list)]
+    print_s (Sexp.List sexps)
   in
   (* empty *)
   show Ordered_set.empty;
@@ -203,7 +203,7 @@ let%expect_test "insert and remove" =
   let show t =
     let t = Ordered_set.canonical_sort (module Int) t in
     let sexps = Ordered_set.write ~write_a:Int.sexp_of_t t in
-    print_s [%sexp (sexps : Sexp.t list)]
+    print_s (Sexp.List sexps)
   in
   let insert t x = Ordered_set.insert (module Int) t x in
   let remove t x = Ordered_set.remove (module Int) t x in

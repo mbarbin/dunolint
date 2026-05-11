@@ -31,7 +31,7 @@ let%expect_test "read/write" =
 
 let%expect_test "sexp_of" =
   let _, t = parse {| (public_name pub_name) |} in
-  print_s [%sexp (t : Dune_linter.Library.Public_name.t)];
+  print_s (t |> Dune_linter.Library.Public_name.sexp_of_t);
   [%expect {| ((public_name pub_name)) |}];
   ()
 ;;

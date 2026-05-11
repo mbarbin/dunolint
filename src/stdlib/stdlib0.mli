@@ -7,10 +7,12 @@
 (** Extending [Stdlib] for use in the project. *)
 
 module Absolute_path = Absolute_path0
+module Bool = Bool0
 module Char = Char0
 module Code_error = Code_error0
 module Dyn = Dyn0
 module Err = Err0
+module Exn = Exn0
 module Fpath = Fpath0
 module Fsegment = Fsegment0
 module In_channel = In_channel0

@@ -7,7 +7,7 @@
 module Trilang = Dunolint.Trilang
 
 let%expect_test "all" =
-  List.iter Trilang.all ~f:(fun t -> print_s [%sexp (t : Trilang.t)]);
+  List.iter Trilang.all ~f:(fun t -> print_s (t |> Trilang.sexp_of_t));
   [%expect
     {|
     True
@@ -26,7 +26,7 @@ let%expect_test "const" =
 ;;
 
 let%expect_test "eval" =
-  let test a = print_s [%sexp (Trilang.eval a ~f:Fn.id : Trilang.t)] in
+  let test a = print_s (Trilang.eval a ~f:Fun.id |> Trilang.sexp_of_t) in
   test Blang.true_;
   [%expect {| True |}];
   test Blang.false_;
@@ -44,10 +44,14 @@ let%expect_test "eval" =
     [ a, b, Blang.and_ [ Blang.base a; Blang.base b ] ]
   in
   List.iter and_table ~f:(fun (a, b, expr) ->
-    let result = Trilang.eval expr ~f:Fn.id in
+    let result = Trilang.eval expr ~f:Fun.id in
     let and_ = Trilang.Private.and_ a b in
     require_equal (module Trilang) result and_;
-    print_s [%sexp { expr : Trilang.t Blang.t; eval = (result : Trilang.t) }]);
+    print_s
+      (List
+         [ List [ Atom "expr"; Blang.sexp_of_t Trilang.sexp_of_t expr ]
+         ; List [ Atom "eval"; Trilang.sexp_of_t result ]
+         ]));
   [%expect
     {|
     ((expr (and True True)) (eval True))
@@ -67,10 +71,14 @@ let%expect_test "eval" =
     [ a, b, Blang.or_ [ Blang.base a; Blang.base b ] ]
   in
   List.iter or_table ~f:(fun (a, b, expr) ->
-    let result = Trilang.eval expr ~f:Fn.id in
+    let result = Trilang.eval expr ~f:Fun.id in
     let or_ = Trilang.Private.or_ a b in
     require_equal (module Trilang) result or_;
-    print_s [%sexp { expr : Trilang.t Blang.t; eval = (result : Trilang.t) }]);
+    print_s
+      (List
+         [ List [ Atom "expr"; Blang.sexp_of_t Trilang.sexp_of_t expr ]
+         ; List [ Atom "eval"; Trilang.sexp_of_t result ]
+         ]));
   [%expect
     {|
     ((expr (or True True)) (eval True))
@@ -90,8 +98,10 @@ let%expect_test "eval" =
   in
   List.iter not_table ~f:(fun expr ->
     print_s
-      [%sexp
-        { expr : Trilang.t Blang.t; eval = (Trilang.eval expr ~f:Fn.id : Trilang.t) }]);
+      (List
+         [ List [ Atom "expr"; Blang.sexp_of_t Trilang.sexp_of_t expr ]
+         ; List [ Atom "eval"; Trilang.sexp_of_t (Trilang.eval expr ~f:Fun.id) ]
+         ]));
   [%expect
     {|
     ((expr (not True)) (eval False))
@@ -105,8 +115,10 @@ let%expect_test "eval" =
   in
   List.iter if_table ~f:(fun expr ->
     print_s
-      [%sexp
-        { expr : Trilang.t Blang.t; eval = (Trilang.eval expr ~f:Fn.id : Trilang.t) }]);
+      (List
+         [ List [ Atom "expr"; Blang.sexp_of_t Trilang.sexp_of_t expr ]
+         ; List [ Atom "eval"; Trilang.sexp_of_t (Trilang.eval expr ~f:Fun.id) ]
+         ]));
   [%expect
     {|
     ((expr (if True True False)) (eval True))
@@ -117,7 +129,7 @@ let%expect_test "eval" =
 ;;
 
 let%expect_test "disjunction" =
-  let test ts = print_s [%sexp (Trilang.disjunction ts : Trilang.t)] in
+  let test ts = print_s (Trilang.disjunction ts |> Trilang.sexp_of_t) in
   test [];
   [%expect {| False |}];
   test [ True ];
@@ -136,7 +148,7 @@ let%expect_test "disjunction" =
 ;;
 
 let%expect_test "conjunction" =
-  let test ts = print_s [%sexp (Trilang.conjunction ts : Trilang.t)] in
+  let test ts = print_s (Trilang.conjunction ts |> Trilang.sexp_of_t) in
   test [];
   [%expect {| True |}];
   test [ True ];

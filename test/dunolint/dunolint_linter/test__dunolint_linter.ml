@@ -32,9 +32,9 @@ let%expect_test "lint" =
   in
   print_diff t;
   [%expect {||}];
-  print_s [%sexp (Dunolint_linter.path t : Relative_path.t)];
+  print_s (Dunolint_linter.path t |> Relative_path.sexp_of_t);
   [%expect {| path/to/dunolint |}];
-  print_s [%sexp (List.length (Dunolint_linter.original_sexps t) : int)];
+  print_s (List.length (Dunolint_linter.original_sexps t) |> Int.sexp_of_t);
   [%expect {| 3 |}];
   (* There's a typed API to access the supported stanza. *)
   Dunolint_linter.visit t ~f:(fun stanza ->
@@ -42,9 +42,8 @@ let%expect_test "lint" =
     | Dunolint_linter.Dunolint_lang_version s ->
       (* And use the typed getters and setters of the stanza you care about. *)
       print_s
-        [%sexp
-          (Dunolint_linter.Dunolint_lang_version.dunolint_lang_version s
-           : Dunolint0.Dunolint_lang_version.t)];
+        (Dunolint_linter.Dunolint_lang_version.dunolint_lang_version s
+         |> Dunolint0.Dunolint_lang_version.sexp_of_t);
       [%expect {| 1.0 |}];
       (* If you use setters, the side effect on the memory value is done right
          away, but actual sexp rewrite is going to be registered and only
@@ -90,7 +89,7 @@ let%expect_test "lint" =
       (match
          eval ~path ~predicate:Dunolint.Config.Std.(`path (glob "path/to/dunolint"))
        with
-       | True -> print_s [%sexp "path matched"]
+       | True -> print_s (Atom "path matched")
        | False | Undefined -> assert false);
       [%expect {| "path matched" |}]);
   (* You can also use the enforcement construct from the OCaml API. *)

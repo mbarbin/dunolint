@@ -4,15 +4,7 @@
 (*  SPDX-License-Identifier: MIT OR LGPL-3.0-or-later WITH LGPL-3.0-linking-exception  *)
 (***************************************************************************************)
 
-include Stdlib.Option
+include Stdlib.Bool
 
-let iter t ~f = iter f t
-let map t ~f = map f t
-
-let value_map t ~default ~f =
-  match t with
-  | None -> default
-  | Some v -> f v
-;;
-
-let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_option
+let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_bool
+let t_of_sexp = Sexplib0.Sexp_conv.bool_of_sexp
