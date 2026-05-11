@@ -12,7 +12,7 @@
   Dunolint_stdlib
   -open
   Dunolint.Std)
- (libraries dunolint dunolint_stdlib parsexp)
+ (libraries dunolint dunolint_stdlib parsexp sexplib0)
  (instrumentation
   (backend bisect_ppx))
  (lint

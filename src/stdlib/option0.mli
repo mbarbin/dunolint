@@ -11,3 +11,4 @@ end
 val iter : 'a t -> f:('a -> unit) -> unit
 val map : 'a t -> f:('a -> 'b) -> 'b t
 val value_map : 'a t -> default:'b -> f:('a -> 'b) -> 'b
+val sexp_of_t : ('a -> Sexplib0.Sexp.t) -> 'a t -> Sexplib0.Sexp.t

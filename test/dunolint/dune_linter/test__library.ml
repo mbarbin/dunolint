@@ -159,8 +159,7 @@ let%expect_test "rewrite" =
     |}
     ~f:(fun t ->
       print_s
-        (Dune_linter.Library.name t
-         |> Sexplib0.Sexp_conv.sexp_of_option Dune_linter.Library.Name.sexp_of_t);
+        (Dune_linter.Library.name t |> Option.sexp_of_t Dune_linter.Library.Name.sexp_of_t);
       [%expect {| (((name mylib))) |}];
       print_s (Dune_linter.Library.flags t |> Dune_linter.Flags.sexp_of_t);
       [%expect {| ((flags (:standard -open Base))) |}];
@@ -180,8 +179,7 @@ let%expect_test "rewrite" =
     |}];
   rewrite {| (library) |} ~f:(fun t ->
     print_s
-      (Dune_linter.Library.name t
-       |> Sexplib0.Sexp_conv.sexp_of_option Dune_linter.Library.Name.sexp_of_t);
+      (Dune_linter.Library.name t |> Option.sexp_of_t Dune_linter.Library.Name.sexp_of_t);
     [%expect {| () |}];
     ());
   [%expect {| (library) |}];
