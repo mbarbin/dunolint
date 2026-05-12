@@ -98,10 +98,21 @@ let () =
 ;;
 
 let () =
+  (* Libraries under [src/] either expose themselves publicly through a prefixed
+     [public_name] or remain private to their package via a [(package _)] field.
+     The rules below accept either shape so that sub-libraries which are not
+     part of dunolint's public API (and therefore not exposed once the package
+     is installed) can opt out of having a [public_name]. *)
   rule
     (cond
        [ ( path (glob "src/dunolint-lib/vendor/**")
-         , enforce (dune (library (public_name (is_prefix "dunolint-lib.")))) )
+         , enforce
+             (dune
+                (library
+                   (or_
+                      [ public_name (is_prefix "dunolint-lib.")
+                      ; package (equals (Dune.Package.Name.v "dunolint-lib"))
+                      ]))) )
        ; ( path (glob "src/dunolint-lib/dunolint/*")
          , enforce
              (dune
@@ -114,7 +125,13 @@ let () =
                    (public_name (equals (Dune.Library.Public_name.v "dunolint-lib-base")))))
          )
        ; ( path (or_ [ glob "src/dunolint/**"; glob "src/stdlib/**" ])
-         , enforce (dune (library (public_name (is_prefix "dunolint.")))) )
+         , enforce
+             (dune
+                (library
+                   (or_
+                      [ public_name (is_prefix "dunolint.")
+                      ; package (equals (Dune.Package.Name.v "dunolint"))
+                      ]))) )
        ; ( true_
          , enforce
              (dune (library (if_present (`public_name (is_prefix "dunolint-dev."))))) )
