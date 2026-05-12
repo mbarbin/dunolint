@@ -75,7 +75,7 @@ let () =
 let () =
   (* Under [test/] and [dunolint-config/] we prefer using the [(package _)]
      stanza rather than having public names that are not going to be used by any
-     depending code. All these libraries belong to [dunolint-tests]. *)
+     depending code. All these libraries are tests internals. *)
   rule
     (cond
        [ ( path (glob "test/dunolint-lib-base/*")
