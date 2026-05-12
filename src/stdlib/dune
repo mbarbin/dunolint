@@ -1,6 +1,6 @@
 (library
  (name dunolint_stdlib)
- (public_name dunolint.stdlib)
+ (package dunolint)
  (flags
   :standard
   -w

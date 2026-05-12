@@ -2,11 +2,7 @@
  (name dunolint_base)
  (public_name dunolint-lib-base)
  (flags :standard -w +a-4-40-41-42-44-45-48-66 -warn-error +a -open Base)
- (libraries
-  base
-  dunolint-lib
-  dunolint-lib.vendor_blang
-  dunolint-lib.vendor_vcs)
+ (libraries base dunolint-lib dunolint_vendor_blang dunolint_vendor_vcs)
  (instrumentation
   (backend bisect_ppx))
  (lint

@@ -18,10 +18,10 @@
  (libraries
   cmdlang
   dunolint-lib
-  dunolint.dune_linter
-  dunolint.dune_project_linter
-  dunolint.dunolinter
-  dunolint.vendor_prompt
+  dune_linter
+  dune_project_linter
+  dunolinter
+  dunolint_vendor_prompt
   dunolint_stdlib
   file-rewriter
   logs

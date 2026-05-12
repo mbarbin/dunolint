@@ -1,6 +1,6 @@
 (library
  (name dunolint_cli)
- (public_name dunolint.dunolint_cli)
+ (package dunolint)
  (flags
   :standard
   -w
@@ -20,12 +20,12 @@
  (libraries
   cmdlang
   dunolint-lib
-  dunolint.dune_linter
-  dunolint.dune_project_linter
-  dunolint.dune_workspace_linter
-  dunolint.dunolint_engine
-  dunolint.dunolint_linter
-  dunolint.dunolinter
+  dune_linter
+  dune_project_linter
+  dune_workspace_linter
+  dunolint_engine
+  dunolint_linter
+  dunolinter
   dunolint_stdlib
   parsexp
   pplumbing-log
