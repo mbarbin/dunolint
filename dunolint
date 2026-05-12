@@ -41,13 +41,20 @@
 (rule
  (cond
   ((path (glob src/dunolint-lib/vendor/**))
-   (enforce (dune (library (public_name (is_prefix dunolint-lib.))))))
+   (enforce
+    (dune
+     (library
+      (or (public_name (is_prefix dunolint-lib.))
+       (package (equals dunolint-lib)))))))
   ((path (glob src/dunolint-lib/dunolint/*))
    (enforce (dune (library (public_name (equals dunolint-lib))))))
   ((path (glob src/dunolint-lib-base/**))
    (enforce (dune (library (public_name (equals dunolint-lib-base))))))
   ((path (or (glob src/dunolint/**) (glob src/stdlib/**)))
-   (enforce (dune (library (public_name (is_prefix dunolint.))))))
+   (enforce
+    (dune
+     (library
+      (or (public_name (is_prefix dunolint.)) (package (equals dunolint)))))))
   (true
    (enforce
     (dune (library (if_present (public_name (is_prefix dunolint-dev.)))))))))

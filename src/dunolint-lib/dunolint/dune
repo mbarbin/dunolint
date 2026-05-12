@@ -11,12 +11,7 @@
   Sexplib0
   -open
   Sexplib0.Sexp_conv)
- (libraries
-  dunolint-lib.vendor_blang
-  dunolint-lib.vendor_vcs
-  dyn
-  re
-  sexplib0)
+ (libraries dunolint_vendor_blang dunolint_vendor_vcs dyn re sexplib0)
  (modules
   (:standard \ stdlib_compat4xx stdlib_compat5xx))
  (instrumentation

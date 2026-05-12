@@ -14,7 +14,7 @@
   Dunolint.Std)
  (libraries
   dunolint
-  dunolint.dunolint_linter
+  dunolint_linter
   dunolint_stdlib
   dunolinter
   file-rewriter
