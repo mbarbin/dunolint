@@ -8,10 +8,8 @@
   -warn-error
   +a
   -open
-  Dunolint_stdlib
-  -open
-  Cmdlang)
- (libraries cmdlang dunolint dunolint_stdlib)
+  Dunolint_stdlib)
+ (libraries dunolint dunolint_stdlib)
  (instrumentation
   (backend bisect_ppx))
  (lint

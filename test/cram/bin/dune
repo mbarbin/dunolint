@@ -9,11 +9,8 @@
   -warn-error
   +a
   -open
-  Dunolint_stdlib
-  -open
-  Cmdlang)
+  Dunolint_stdlib)
  (libraries
-  cmdlang
   cmdlang-cmdliner-err-runner
   dune-build-info
   dunolint

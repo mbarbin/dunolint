@@ -12,11 +12,8 @@
   -open
   Dunolint_stdlib
   -open
-  Cmdlang
-  -open
   Dunolint.Std)
  (libraries
-  cmdlang
   dune_linter
   dune_project_linter
   dunolint-lib

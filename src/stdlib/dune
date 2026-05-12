@@ -14,6 +14,7 @@
   -open
   Sexplib0.Sexp_conv)
  (libraries
+  cmdlang
   dunolint_myers
   dyn
   fpath-sexp0

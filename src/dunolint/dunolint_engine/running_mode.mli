@@ -14,4 +14,4 @@ val equal : t -> t -> bool
 val compare : t -> t -> int
 val sexp_of_t : t -> Sexp.t
 val default : t
-val arg : t Cmdlang.Command.Arg.t
+val arg : t Command.Arg.t
