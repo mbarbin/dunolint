@@ -19,14 +19,14 @@
   Dunolint.Std)
  (libraries
   cmdlang
-  dunolint-lib
   dune_linter
   dune_project_linter
   dune_workspace_linter
+  dunolint-lib
   dunolint_engine
   dunolint_linter
-  dunolinter
   dunolint_stdlib
+  dunolinter
   parsexp
   pplumbing-log
   pplumbing-log-cli

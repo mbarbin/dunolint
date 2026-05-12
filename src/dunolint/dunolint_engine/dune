@@ -17,12 +17,12 @@
   Dunolint.Std)
  (libraries
   cmdlang
-  dunolint-lib
   dune_linter
   dune_project_linter
-  dunolinter
-  dunolint_vendor_prompt
+  dunolint-lib
   dunolint_stdlib
+  dunolint_vendor_prompt
+  dunolinter
   file-rewriter
   logs
   pageantty.git-pager
