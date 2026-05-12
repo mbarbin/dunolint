@@ -2,12 +2,14 @@
 
 ### Added
 
+- Add `AI-declaration.md` file (84c62c0, @mbarbin).
 - Lint custom `dune-workspace.*` files as regular dune-workspace files (#198, @mbarbin).
 - Preparatory changes for running `5.5` in CI (@mbarbin).
 - Document neocaml reformatter integration (#190, @mbarbin with review by @bbatsov).
 
 ### Changed
 
+- Expose `cmdlang.Command` as part of the local stdlib (#203, #mbarbin).
 - Reduce project dependencies (#192, #193, #194, #195, #196, #197, #201, @mbarbin).
 - Upgrade CIs dependencies (@mbarbin).
 - Improve doc and use mdexp (#188, #189, @mbarbin).
@@ -22,6 +24,7 @@
 
 ### Removed
 
+- Make some internal sub-pkg libraries private(#202, @mbarbin).
 - Removed `Linted_file_kind.of_string` (#198, @mbarbin).
 
 ## 0.0.20260306 (2026-03-06)
