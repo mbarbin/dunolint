@@ -1,4 +1,4 @@
-(lang dune 3.17)
+(lang dune 3.20)
 
 (name dunolint)
 
@@ -34,7 +34,7 @@
   (ocaml
    (>= 4.14))
   (dyn
-   (>= 3.17))
+   (>= 3.20))
   (re
    (>= 1.8.0))
   (sexplib0
@@ -62,11 +62,11 @@
   (cmdlang-cmdliner-err-runner
    (>= 0.0.16))
   (dune-build-info
-   (>= 3.17))
+   (>= 3.20))
   (dunolint-lib
    (= :version))
   (dyn
-   (>= 3.17))
+   (>= 3.20))
   (file-rewriter
    (>= 0.0.3))
   (fmt
@@ -80,7 +80,7 @@
   (logs
    (>= 0.7.0))
   (ordering
-   (>= 3.17))
+   (>= 3.20))
   (pageantty
    (>= 0.0.3))
   (parsexp
