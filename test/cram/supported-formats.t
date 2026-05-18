@@ -137,7 +137,7 @@ When unwrapped, the errors for the inner parsing are located.
   [123]
 
 There was a short period of time where dune lang versions were allowed to be
-tuples, but we haved dropped the support for this. Now expeced "MAJOR.MINOR".
+tuples, but we haved dropped the support for this. Now expected "MAJOR.MINOR".
 
   $ cat > dunolint <<EOF
   > (lang dunolint 1.0)

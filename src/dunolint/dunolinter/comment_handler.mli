@@ -25,7 +25,7 @@
 val extended_range : original_contents:string -> range:Loc.Range.t -> Loc.Range.t
 
 (** A convenient wrapper for [extended_range] that specializes to sexp arguments
-    found when rewritting sexps with [Sexps_rewriter]. *)
+    found when rewriting sexps with [Sexps_rewriter]. *)
 val sexp_extended_range : sexps_rewriter:Sexps_rewriter.t -> arg:Sexp.t -> Loc.Range.t
 
 (** A convenient wrapper that extracts and returns the substring matching the

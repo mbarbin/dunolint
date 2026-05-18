@@ -36,7 +36,7 @@ module Error_context : sig
       keyword looked up by name, we give the list of known ones so as to allow
       messages like: "Did you mean X?".
 
-      The way we integrate this with the raising mecanism of [Sexplib0] is to
+      The way we integrate this with the raising mechanism of [Sexplib0] is to
       embed the context into the exception type defined below, and have such
       exception be the first argument to the [Of_sexp_error (e, _)] error. *)
 
