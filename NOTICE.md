@@ -39,3 +39,19 @@ A few helpers from the [Base](https://github.com/janestreet/base) project (relea
 ### Notice
 
 The relevant files are `src/stdlib/char0.ml` and `src/stdlib/string0.ml`. Each carries a notice at the top of the file, and the copied functions are clearly indicated next to the code. `Base`'s original LICENSE is included in this repo at `third-party-license/janestreet/base/LICENSE.md`.
+
+## A note about ocaml-merge3 (Myers diff)
+
+The Myers shortest-edit-script computation is vendored from the [ocaml-merge3](https://tangled.org/gazagnaire.org/ocaml-merge3) project by Thomas Gazagnaire (released under `ISC`). Only the pure diff computation is vendored; the parts unused by this project are not included.
+
+### Notice
+
+The relevant file is `src/myers/merge3.ml`. It carries a notice at the top documenting the exact provenance and list of changes (see also `src/myers/vendor.json`). `ocaml-merge3`'s original LICENSE is included in this repo at `third-party-license/gazagnaire/ocaml-merge3/LICENSE`.
+
+## A note about Windtrap
+
+The unified-diff renderer is vendored from the [windtrap](https://github.com/invariant-hq/windtrap) project by Invariant Systems (released under `ISC`), with minor changes to the rendering of diffs.
+
+### Notice
+
+The relevant file is `src/myers/myers.ml`. It carries a notice at the top documenting the exact provenance and list of changes (see also `src/myers/vendor.json`). `windtrap`'s original LICENSE is included in this repo at `third-party-license/invariant-hq/windtrap/LICENSE`.
