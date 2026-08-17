@@ -46,7 +46,7 @@ The Myers shortest-edit-script computation is vendored from the [ocaml-merge3](h
 
 ### Notice
 
-The relevant file is `src/myers/merge3.ml`. It carries a notice at the top documenting the exact provenance and list of changes (see also `src/myers/vendor.json`). `ocaml-merge3`'s original LICENSE is included in this repo at `third-party-license/gazagnaire/ocaml-merge3/LICENSE`.
+The relevant file is `src/merge3/merge3.ml`. It carries a notice at the top documenting the exact provenance and list of changes (see also `src/merge3/vendor.json`). `ocaml-merge3`'s original LICENSE is included in this repo at `third-party-license/gazagnaire/ocaml-merge3/LICENSE.md`.
 
 ## A note about Windtrap
 
