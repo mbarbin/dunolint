@@ -47,6 +47,7 @@ let () =
        [ ( path
              (or_
                 [ glob "src/stdlib/**"
+                ; glob "src/merge3/**"
                 ; glob "src/myers/**"
                 ; glob "src/dunolint/vendor/**"
                 ; glob "src/dunolint-lib/**"
