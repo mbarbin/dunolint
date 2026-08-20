@@ -9,7 +9,7 @@ let (_ : string) =
   {|
 +++
 title = "Comments in `libraries`"
-weight = 1
+weight = 2
 +++
 |}
 ;;

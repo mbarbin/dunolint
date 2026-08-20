@@ -1,6 +1,6 @@
 +++
 title = "Canonical Ordering"
-weight = 4
+weight = 5
 +++
 
 ## The Philosophy
@@ -64,4 +64,4 @@ If you value consistency and automation over manual control, dunolint's canonica
 
 - [Default Rules Reference](@/reference/default-rules.md) - What gets sorted by default
 - [Comments in Libraries](@/explanation/linting-equilibrium/comments-in-libraries.md) - How comments interact with sorting
-- [Linting Equilibrium](@/explanation/linting-equilibrium/_index.md) - Finding balance with linting tools
+- [Linting Equilibrium](@/explanation/linting-equilibrium/linting-equilibrium.md) - Finding balance with linting tools

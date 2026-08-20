@@ -1,6 +1,6 @@
 +++
 title = "Current State"
-weight = 1
+weight = 2
 +++
 
 The project is currently in the early stages of development, and there is little code and features at this point.
