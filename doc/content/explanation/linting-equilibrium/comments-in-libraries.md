@@ -1,6 +1,6 @@
 +++
 title = "Comments in `libraries`"
-weight = 1
+weight = 2
 +++
 
 The `libraries` dependencies listed in `library` stanzas are sorted

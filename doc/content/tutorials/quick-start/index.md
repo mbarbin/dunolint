@@ -67,4 +67,4 @@ anything you add later.
 
 - [Install dunolint](@/guides/installation.md) in your project
 - Learn the [configuration language](@/reference/config/_index.md)
-- Understand dunolint's [design principles](@/explanation/_index.md)
+- Understand dunolint's [design principles](@/explanation/architecture.md)

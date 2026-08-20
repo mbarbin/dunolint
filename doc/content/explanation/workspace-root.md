@@ -1,6 +1,6 @@
 +++
 title = "Workspace Root"
-weight = 2
+weight = 3
 +++
 
 Dunolint uses the same workspace root detection logic as Dune, ensuring consistent behavior across the toolchain.
