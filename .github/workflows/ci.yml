@@ -48,10 +48,6 @@ jobs:
           cache-readonly: ${{ github.ref != 'refs/heads/main' }}
           steps: install-dune enable-pkg lazy-update-depexts install-gpatch install-depexts
 
-      # Setting implicit_transitive_deps based on the compiler version.
-      - name: Edit dune-project
-        run: sed -i 's/(implicit_transitive_deps [^)]*)/(implicit_transitive_deps false)/' dune-project
-
       - name: Build and Run tests
         run: |
           mkdir $BISECT_DIR
@@ -76,11 +72,6 @@ jobs:
 
       - name: Lint dunolint
         run: ./dunolint.sh
-
-      # Before checking for uncommitted changes we need to restore changes
-      # potentially made to the dune-project file.
-      - name: Restore dune-project
-        run: git restore dune-project
 
       - name: Check for uncommitted changes
         run: git diff --exit-code

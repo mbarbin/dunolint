@@ -8,20 +8,20 @@ homepage: "https://github.com/mbarbin/dunolint"
 doc: "https://mbarbin.github.io/dunolint/"
 bug-reports: "https://github.com/mbarbin/dunolint/issues"
 depends: [
-  "dune" {>= "3.17"}
+  "dune" {>= "3.20"}
   "ocaml" {>= "5.3"}
   "cmdlang" {>= "0.0.9"}
   "cmdlang-cmdliner-err-runner" {>= "0.0.16"}
-  "dune-build-info" {>= "3.17"}
+  "dune-build-info" {>= "3.20"}
   "dunolint-lib" {= version}
-  "dyn" {>= "3.17"}
+  "dyn" {>= "3.20"}
   "file-rewriter" {>= "0.0.3"}
   "fmt" {>= "0.9.0"}
   "fpath" {>= "0.7.3"}
   "fpath-sexp0" {>= "0.4.0"}
   "loc" {>= "0.3.3"}
   "logs" {>= "0.7.0"}
-  "ordering" {>= "3.17"}
+  "ordering" {>= "3.20"}
   "pageantty" {>= "0.0.3"}
   "parsexp" {>= "v0.17"}
   "pp" {>= "2.0.0"}
