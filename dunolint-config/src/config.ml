@@ -178,7 +178,8 @@ let ppx_js_style = Dune.Pp.Name.v "ppx_js_style"
 let () =
   rule
     (cond
-       [ path (or_ [ glob "src/dunolint-lib/vendor/blang/**" ]), return
+       [ ( path (or_ [ glob "src/dunolint-lib/vendor/blang/**"; glob "src/merge3/*" ])
+         , return )
        ; ( true_
          , enforce
              (dune

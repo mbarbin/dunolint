@@ -78,7 +78,9 @@
   (true (enforce (dune (instrumentation (backend bisect_ppx)))))))
 
 (rule
- (cond ((path (glob src/dunolint-lib/vendor/blang/**)) return)
+ (cond
+  ((path (or (glob src/dunolint-lib/vendor/blang/**) (glob src/merge3/*)))
+   return)
   (true
    (enforce
     (dune
