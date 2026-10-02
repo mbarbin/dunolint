@@ -563,16 +563,17 @@ let enforce_internal ((sexps_rewriter, field), t) conditions =
     Dune_linter.Library.rewrite t ~sexps_rewriter ~field)
 ;;
 
-let enforce (((sexps_rewriter, _), _) as input) conditions =
-  Sexps_rewriter.reset sexps_rewriter;
-  enforce_internal input conditions;
-  print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
-;;
-
 let format_dune_file ~new_contents =
   Dunolint_engine.format_dune_file
     ~dune_lang_version:(Dune_project.Dune_lang_version.create (3, 17))
     ~new_contents
+;;
+
+let enforce (((sexps_rewriter, _), _) as input) conditions =
+  Sexps_rewriter.reset sexps_rewriter;
+  enforce_internal input conditions;
+  let changed = format_dune_file ~new_contents:(Sexps_rewriter.contents sexps_rewriter) in
+  print_string changed
 ;;
 
 let enforce_diff (((sexps_rewriter, _), _) as input) conditions =
@@ -593,17 +594,33 @@ let%expect_test "enforce" =
   [%expect {| (library) |}];
   let t = parse {| (library (name mylib)) |} in
   enforce t [];
-  [%expect {| (library (name mylib)) |}];
+  [%expect
+    {|
+    (library
+     (name mylib))
+    |}];
   (* Enforcing the equality with the current value has no effect. *)
   enforce t [ name (equals (Dune.Library.Name.v "mylib")) ];
-  [%expect {| (library (name mylib)) |}];
+  [%expect
+    {|
+    (library
+     (name mylib))
+    |}];
   (* Enforcing the equality with a new value changes it. *)
   enforce t [ name (equals (Dune.Library.Name.v "better-name")) ];
-  [%expect {| (library (name better-name)) |}];
+  [%expect
+    {|
+    (library
+     (name better-name))
+    |}];
   let t = parse {| (library (name mylib)) |} in
   (* Enforcing the non-equality with another value has no effect. *)
   enforce t [ name (not_ (equals (Dune.Library.Name.v "not_equal"))) ];
-  [%expect {| (library (name mylib)) |}];
+  [%expect
+    {|
+    (library
+     (name mylib))
+    |}];
   (* Enforcing the negation of a current equality triggers an error.
      Dunolint is not going to automatically invent a new name, this
      requires the user's intervention. *)
@@ -615,7 +632,12 @@ let%expect_test "enforce" =
      in dunolint adding a new public_name field. *)
   let t = parse {| (library (name mylib)) |} in
   enforce t [ public_name (equals (Dune.Library.Public_name.v "my-public-lib")) ];
-  [%expect {| (library (name mylib) (public_name my-public-lib)) |}];
+  [%expect
+    {|
+    (library
+     (name mylib)
+     (public_name my-public-lib))
+    |}];
   let t = parse {| (library (name mylib)) |} in
   (* When the field is absent and the condition cannot provide an initial value
      (e.g., negation, is_prefix, is_suffix), enforcement fails. The user must
@@ -631,11 +653,21 @@ let%expect_test "enforce" =
      in dunolint adding a new package field. *)
   let t = parse {| (library (name mylib)) |} in
   enforce t [ package (equals (Dune.Package.Name.v "my-pkg")) ];
-  [%expect {| (library (name mylib) (package my-pkg)) |}];
+  [%expect
+    {|
+    (library
+     (name mylib)
+     (package my-pkg))
+    |}];
   (* When there is a package field, enforcing a different value changes it. *)
   let t = parse {| (library (name mylib) (package old-pkg)) |} in
   enforce t [ package (equals (Dune.Package.Name.v "new-pkg")) ];
-  [%expect {| (library (name mylib) (package new-pkg)) |}];
+  [%expect
+    {|
+    (library
+     (name mylib)
+     (package new-pkg))
+    |}];
   (* When the field is absent and the condition cannot provide an initial value,
      enforcement fails. *)
   let t = parse {| (library (name mylib)) |} in
@@ -650,11 +682,21 @@ let%expect_test "enforce" =
      dunolint creating a new field. *)
   let t = parse {| (library (name mylib)) |} in
   enforce t [ modes (mem [ `native ]) ];
-  [%expect {| (library (name mylib) (modes native)) |}];
+  [%expect
+    {|
+    (library
+     (name mylib)
+     (modes native))
+    |}];
   (* Otherwise the mode is edited in place. *)
   let t = parse {| (library (name mylib) (modes byte)) |} in
   enforce t [ modes (mem [ `native ]) ];
-  [%expect {| (library (name mylib) (modes byte native)) |}];
+  [%expect
+    {|
+    (library
+     (name mylib)
+     (modes byte native))
+    |}];
   (* Currently adding a field is only possible if some are already present. *)
   let t = parse {| (library) |} in
   require_does_raise (fun () -> enforce t [ name (equals (Dune.Library.Name.v "mylib")) ]);
@@ -896,7 +938,11 @@ let%expect_test "undefined conditions" =
   [%expect {||}];
   (* When a condition is undefined, the entire if-then-else is ignored. *)
   test [ if_ (name (is_prefix "hey")) (name (equals main)) (name (is_suffix "ho")) ];
-  [%expect {| (library (public_name my-cli)) |}];
+  [%expect
+    {|
+    (library
+     (public_name my-cli))
+    |}];
   (* Same behavior for package conditions. *)
   test
     [ if_
@@ -904,7 +950,11 @@ let%expect_test "undefined conditions" =
         (package (equals (Dune.Package.Name.v "my-pkg")))
         (package (is_suffix "-other"))
     ];
-  [%expect {| (library (public_name my-cli)) |}];
+  [%expect
+    {|
+    (library
+     (public_name my-cli))
+    |}];
   (* Beware of static code simplifications performed by Blang though! In the
      following example, the [if_] is rewritten as a [And _] sequence. Since
      [is_prefix] is now at a positive enforcing position but cannot provide
@@ -926,9 +976,17 @@ let%expect_test "non base negations" =
     enforce t cond
   in
   test [ not_ (name (or_ [ is_prefix "hey"; is_suffix "ho" ])) ];
-  [%expect {| (library (public_name my-cli)) |}];
+  [%expect
+    {|
+    (library
+     (public_name my-cli))
+    |}];
   test [ not_ (or_ [ name (is_prefix "hey"); name (is_suffix "ho") ]) ];
-  [%expect {| (library (public_name my-cli)) |}];
+  [%expect
+    {|
+    (library
+     (public_name my-cli))
+    |}];
   ()
 ;;
 
@@ -938,23 +996,49 @@ let%expect_test "has_field_auto_initialize" =
   (* [inline_tests] field can be auto-initialized. *)
   let t = parse init in
   enforce t [ has_field `inline_tests ];
-  [%expect {| (library (name my-lib) (inline_tests)) |}];
+  [%expect
+    {|
+    (library
+     (name my-lib)
+     (inline_tests))
+    |}];
   (* [instrumentation] field can be auto-initialized. *)
   let t = parse init in
   enforce t [ has_field `instrumentation ];
-  [%expect {| (library (name my-lib) (instrumentation (backend bisect_ppx))) |}];
+  [%expect
+    {|
+    (library
+     (name my-lib)
+     (instrumentation
+      (backend bisect_ppx)))
+    |}];
   (* [lint] field can be auto-initialized. *)
   let t = parse init in
   enforce t [ has_field `lint ];
-  [%expect {| (library (name my-lib) (lint (pps))) |}];
+  [%expect
+    {|
+    (library
+     (name my-lib)
+     (lint (pps)))
+    |}];
   (* [preprocess] field can be auto-initialized. *)
   let t = parse init in
   enforce t [ has_field `preprocess ];
-  [%expect {| (library (name my-lib) (preprocess no_preprocessing)) |}];
+  [%expect
+    {|
+    (library
+     (name my-lib)
+     (preprocess no_preprocessing))
+    |}];
   (* [modes] field can be auto-initialized. *)
   let t = parse init in
   enforce t [ has_field `modes ];
-  [%expect {| (library (name my-lib) (modes best)) |}];
+  [%expect
+    {|
+    (library
+     (name my-lib)
+     (modes best))
+    |}];
   ()
 ;;
 
@@ -964,19 +1048,41 @@ let%expect_test "field_conditions" =
   (* [instrumentation] condition auto-creates field *)
   let t = parse init in
   enforce t [ instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx")) ];
-  [%expect {| (library (name my-lib) (instrumentation (backend bisect_ppx))) |}];
+  [%expect
+    {|
+    (library
+     (name my-lib)
+     (instrumentation
+      (backend bisect_ppx)))
+    |}];
   (* [lint] condition auto-creates field. *)
   let t = parse init in
   enforce t [ lint (pps (pp (Dune.Pp.Name.v "ppx_linter"))) ];
-  [%expect {| (library (name my-lib) (lint (pps ppx_linter))) |}];
+  [%expect
+    {|
+    (library
+     (name my-lib)
+     (lint
+      (pps ppx_linter)))
+    |}];
   (* [preprocess] condition auto-creates field. *)
   let t = parse init in
   enforce t [ preprocess no_preprocessing ];
-  [%expect {| (library (name my-lib) (preprocess no_preprocessing)) |}];
+  [%expect
+    {|
+    (library
+     (name my-lib)
+     (preprocess no_preprocessing))
+    |}];
   (* [modes] condition auto-creates field. *)
   let t = parse init in
   enforce t [ modes (mem [ `byte ]) ];
-  [%expect {| (library (name my-lib) (modes byte)) |}];
+  [%expect
+    {|
+    (library
+     (name my-lib)
+     (modes byte))
+    |}];
   ()
 ;;
 
@@ -1453,7 +1559,11 @@ let%expect_test "if_present vs direct enforcement comparison" =
   (* With [if_present]: the same predicate is gracefully skipped. *)
   let t = parse init_no_public_name in
   enforce t [ if_present (`public_name (is_prefix "lib.")) ];
-  [%expect {| (library (name mylib)) |}];
+  [%expect
+    {|
+    (library
+     (name mylib))
+    |}];
   (* Same comparison for [is_suffix] on public_name. *)
   let t = parse init_no_public_name in
   require_does_raise (fun () -> enforce t [ public_name (is_suffix ".lib") ]);
@@ -1464,7 +1574,11 @@ let%expect_test "if_present vs direct enforcement comparison" =
     |}];
   let t = parse init_no_public_name in
   enforce t [ if_present (`public_name (is_suffix ".lib")) ];
-  [%expect {| (library (name mylib)) |}];
+  [%expect
+    {|
+    (library
+     (name mylib))
+    |}];
   (* Same comparison for package field. *)
   let init_no_package = {| (library (name mylib)) |} in
   let t = parse init_no_package in
@@ -1476,7 +1590,11 @@ let%expect_test "if_present vs direct enforcement comparison" =
     |}];
   let t = parse init_no_package in
   enforce t [ if_present (`package (is_prefix "pkg-")) ];
-  [%expect {| (library (name mylib)) |}];
+  [%expect
+    {|
+    (library
+     (name mylib))
+    |}];
   ()
 ;;
 
@@ -1493,7 +1611,11 @@ let%expect_test "if_present with blang combinations" =
         ; if_present (`package (is_prefix "pkg-"))
         ]
     ];
-  [%expect {| (library (name mylib)) |}];
+  [%expect
+    {|
+    (library
+     (name mylib))
+    |}];
   (* [and_] where one field is present and one is absent. *)
   let t = parse init_with_public_name in
   enforce_diff
@@ -1520,7 +1642,11 @@ let%expect_test "if_present with blang combinations" =
         ; name (equals (Dune.Library.Name.v "other-name"))
         ]
     ];
-  [%expect {| (library (name mylib)) |}];
+  [%expect
+    {|
+    (library
+     (name mylib))
+    |}];
   (* [if_present] with [and_] inside - both inner conditions apply. *)
   let t = parse init_with_public_name in
   enforce_diff
@@ -1601,14 +1727,29 @@ let%expect_test "libraries predicate - enforce via library" =
   let t = parse {| (library (name mylib) (libraries base)) |} in
   (* Enforcing presence of existing library has no effect. *)
   enforce t [ libraries (mem [ Dune.Library.Name.v "base" ]) ];
-  [%expect {| (library (name mylib) (libraries base)) |}];
+  [%expect
+    {|
+    (library
+     (name mylib)
+     (libraries base))
+    |}];
   (* Enforcing presence of new library adds it. *)
   let t = parse {| (library (name mylib) (libraries base)) |} in
   enforce t [ libraries (mem [ Dune.Library.Name.v "core" ]) ];
-  [%expect {| (library (name mylib) (libraries base core)) |}];
+  [%expect
+    {|
+    (library
+     (name mylib)
+     (libraries base core))
+    |}];
   (* Enforcing absence of existing library removes it. *)
   let t = parse {| (library (name mylib) (libraries base core)) |} in
   enforce t [ libraries (not_ (mem [ Dune.Library.Name.v "core" ])) ];
-  [%expect {| (library (name mylib) (libraries base)) |}];
+  [%expect
+    {|
+    (library
+     (name mylib)
+     (libraries base))
+    |}];
   ()
 ;;

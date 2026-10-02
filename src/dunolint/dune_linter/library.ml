@@ -105,51 +105,55 @@ let sexp_of_t
       ; marked_for_removal
       }
   =
-  Sexp.List
-    (List.filter_opt
-       [ Option.map name ~f:(fun v -> Sexp.List [ Atom "name"; Name.sexp_of_t v ])
-       ; Option.map public_name ~f:(fun v ->
-           Sexp.List [ Atom "public_name"; Public_name.sexp_of_t v ])
-       ; Option.map package ~f:(fun v ->
-           Sexp.List [ Atom "package"; Package.sexp_of_t v ])
-       ; Option.map inline_tests ~f:(fun () -> Sexp.List [ Atom "inline_tests" ])
-       ; Option.map modes ~f:(fun v -> Sexp.List [ Atom "modes"; Modes.sexp_of_t v ])
-       ; (if Flags.is_empty flags
-          then None
-          else Some (Sexp.List [ Atom "flags"; Flags.sexp_of_t flags ]))
-       ; (if Libraries.is_empty libraries
-          then None
-          else Some (Sexp.List [ Atom "libraries"; Libraries.sexp_of_t libraries ]))
-       ; (if List.is_empty libraries_to_open_via_flags
-          then None
-          else
-            Some
-              (Sexp.List
+  let opt field ~f =
+    match field with
+    | None -> []
+    | Some field -> [ f field ]
+  in
+  (Sexp.List
+     (List.concat
+        [ opt name ~f:(fun v -> Sexp.List [ Atom "name"; Name.sexp_of_t v ])
+        ; opt public_name ~f:(fun v ->
+            Sexp.List [ Atom "public_name"; Public_name.sexp_of_t v ])
+        ; opt package ~f:(fun v -> Sexp.List [ Atom "package"; Package.sexp_of_t v ])
+        ; opt inline_tests ~f:(fun () -> Sexp.List [ Atom "inline_tests" ])
+        ; opt modes ~f:(fun v -> Sexp.List [ Atom "modes"; Modes.sexp_of_t v ])
+        ; (if Flags.is_empty flags
+           then []
+           else [ Sexp.List [ Atom "flags"; Flags.sexp_of_t flags ] ])
+        ; (if Libraries.is_empty libraries
+           then []
+           else [ Sexp.List [ Atom "libraries"; Libraries.sexp_of_t libraries ] ])
+        ; (if List.is_empty libraries_to_open_via_flags
+           then []
+           else
+             [ Sexp.List
                  [ Atom "libraries_to_open_via_flags"
                  ; Sexp.List
                      (List.map libraries_to_open_via_flags ~f:(fun s -> Sexp.Atom s))
-                 ]))
-       ; Option.map instrumentation ~f:(fun v ->
-           Sexp.List [ Atom "instrumentation"; Instrumentation.sexp_of_t v ])
-       ; Option.map lint ~f:(fun v -> Sexp.List [ Atom "lint"; Lint.sexp_of_t v ])
-       ; Option.map preprocess ~f:(fun v ->
-           Sexp.List [ Atom "preprocess"; Preprocess.sexp_of_t v ])
-       ; (if Field_name_table.length marked_for_removal = 0
-          then None
-          else (
-            let fields =
-              marked_for_removal
-              |> Field_name_table.to_seq_keys
-              |> List.of_seq
-              |> List.sort ~compare:Field_name.compare
-            in
-            Some
-              (Sexp.List
+                 ]
+             ])
+        ; opt instrumentation ~f:(fun v ->
+            Sexp.List [ Atom "instrumentation"; Instrumentation.sexp_of_t v ])
+        ; opt lint ~f:(fun v -> Sexp.List [ Atom "lint"; Lint.sexp_of_t v ])
+        ; opt preprocess ~f:(fun v ->
+            Sexp.List [ Atom "preprocess"; Preprocess.sexp_of_t v ])
+        ; (if Field_name_table.length marked_for_removal = 0
+           then []
+           else (
+             let fields =
+               marked_for_removal
+               |> Field_name_table.to_seq_keys
+               |> List.of_seq
+               |> List.sort ~compare:Field_name.compare
+             in
+             [ Sexp.List
                  [ Atom "marked_for_removal"
                  ; List (fields |> List.map ~f:Field_name.sexp_of_t)
-                 ])))
-       ])
-  [@coverage off]
+                 ]
+             ]))
+        ])
+  [@coverage off])
 ;;
 
 let indicative_field_ordering =
@@ -445,17 +449,22 @@ let write_fields
        } as t)
   =
   normalize t;
-  List.filter_opt
-    [ Option.map name ~f:Name.write
-    ; Option.map public_name ~f:Public_name.write
-    ; Option.map package ~f:Package.write
-    ; Option.map inline_tests ~f:(fun () -> Sexp.List [ Atom "inline_tests" ])
-    ; Option.map modes ~f:Modes.write
-    ; (if Flags.is_empty flags then None else Some (Flags.write flags))
-    ; (if Libraries.is_empty libraries then None else Some (Libraries.write libraries))
-    ; Option.map instrumentation ~f:Instrumentation.write
-    ; Option.map lint ~f:Lint.write
-    ; Option.map preprocess ~f:Preprocess.write
+  let opt field ~f =
+    match field with
+    | None -> []
+    | Some field -> [ f field ]
+  in
+  List.concat
+    [ opt name ~f:Name.write
+    ; opt public_name ~f:Public_name.write
+    ; opt package ~f:Package.write
+    ; opt inline_tests ~f:(fun () -> Sexp.List [ Atom "inline_tests" ])
+    ; opt modes ~f:Modes.write
+    ; (if Flags.is_empty flags then [] else [ Flags.write flags ])
+    ; (if Libraries.is_empty libraries then [] else [ Libraries.write libraries ])
+    ; opt instrumentation ~f:Instrumentation.write
+    ; opt lint ~f:Lint.write
+    ; opt preprocess ~f:Preprocess.write
     ]
 ;;
 
@@ -470,7 +479,10 @@ let rewrite t ~sexps_rewriter ~field =
     ~sexps_rewriter
     ~indicative_field_ordering
     ~fields
-    ~new_fields;
+    ~new_fields
+    ~overlaps:(fun ~field_name ~present_args:_ ~new_args:_ ->
+      match field_name with
+      | _ -> true);
   (* For those which are not missing, we edit them in place. *)
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
   let maybe_remove state field_name field =
