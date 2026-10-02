@@ -62,6 +62,13 @@ let%expect_test "insert" =
     ~new_fields:[ Sexp.List [ Atom "d"; Atom "d" ] ];
   [%expect {| ((a a) (d d) ((c) c) (b b)) |}];
   (* With custom overlaps. *)
+  (* By default new fields with names already present are considered overlapping and
+     are not inserted. One can customize the [overlap] function to change that. *)
+  insert
+    {| (a a) (b b1) (b b2) (c c) |}
+    ~indicative_field_ordering:[ "a"; "b"; "c" ]
+    ~new_fields:[ Sexp.List [ Atom "b"; Atom "b-new" ] ];
+  [%expect {| ((a a) (b b1) (b b2) (c c)) |}];
   (* When there are several instances of the same field, the new one is inserted
      after the last one of them. *)
   insert
