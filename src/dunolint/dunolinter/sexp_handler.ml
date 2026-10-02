@@ -175,14 +175,15 @@ let insert_new_fields
   List.iter new_fields ~f:(fun (visited, field_name, new_field, _) ->
     if not !visited
     then (
-      (* To compute the place of insertion we skip input fields as long as they
-         appear prior to this field. When we can no longer, we insert after the
-         last one. *)
+      (* To compute the place of insertion we skip input fields as long as they appear
+         prior to this field, or are other instances of this field. When we can
+         no longer, we insert after the last one. *)
       let field_names_located_before =
         let rec aux acc = function
           | [] -> acc
           | hd :: tl ->
-            if String.equal hd field_name then acc else aux (Field_name_set.add hd acc) tl
+            let acc = Field_name_set.add hd acc in
+            if String.equal hd field_name then acc else aux acc tl
         in
         aux Field_name_set.empty indicative_field_ordering
       in
