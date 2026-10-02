@@ -78,13 +78,14 @@ let%expect_test "insert" =
     ~overlaps:(fun ~field_name:_ ~present_args:_ ~new_args:_ -> false);
   [%expect {| ((a a) (b b1) (b b2) (b b-new) (c c)) |}];
   insert
-    {| (a a) (b b) (c c) |}
-    ~indicative_field_ordering:[ "a"; "b"; "c" ]
+    {| (a a) (b b) (c c) (e e) (f f) |}
+    ~indicative_field_ordering:[ "a"; "b"; "c"; "d"; "e"; "f" ]
     ~new_fields:
       [ Sexp.List [ Atom "a"; Atom "a-new" ]
       ; Sexp.List [ Atom "b"; Atom "b-new" ]
       ; Sexp.List [ Atom "c"; Atom "c-new" ]
       ; Sexp.List [ Atom "d"; Atom "d-new" ]
+      ; Sexp.List [ Atom "e"; Atom "e-new" ]
       ]
     ~overlaps:(fun ~field_name ~present_args ~new_args:_ ->
       match field_name with
@@ -94,6 +95,6 @@ let%expect_test "insert" =
           | Atom "c" -> true
           | _ -> false)
       | _ -> true);
-  [%expect {| ((a a) (a a-new) (b b) (b b-new) (c c) (d d-new)) |}];
+  [%expect {| ((a a) (a a-new) (b b) (b b-new) (c c) (d d-new) (e e) (f f)) |}];
   ()
 ;;
