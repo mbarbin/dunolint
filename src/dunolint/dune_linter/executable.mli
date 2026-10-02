@@ -14,7 +14,7 @@ val create
   -> ?public_name:Dune.Executable.Public_name.t
   -> ?flags:Sexp.t list
   -> ?libraries:Dune.Library.Name.t list
-  -> ?instrumentation:Instrumentation.t
+  -> ?instrumentations:Instrumentation.t list
   -> ?lint:Lint.t
   -> ?preprocess:Preprocess.t
   -> unit

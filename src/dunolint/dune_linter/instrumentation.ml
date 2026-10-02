@@ -4,15 +4,30 @@
 (*  SPDX-License-Identifier: LGPL-3.0-or-later WITH LGPL-3.0-linking-exception   *)
 (*********************************************************************************)
 
-type t = { mutable backend : Dune.Instrumentation.Backend.t }
+type t =
+  { mutable backend : Dune.Instrumentation.Backend.t
+  ; mutable is_pinned : bool
+  }
 
-let sexp_of_t { backend } : Sexp.t =
+let sexp_of_t { backend; is_pinned = _ } : Sexp.t =
   List [ List [ Atom "backend"; Dune.Instrumentation.Backend.sexp_of_t backend ] ]
 ;;
 
-let create ~backend = { backend }
+let create ~backend = { backend; is_pinned = true }
 let backend t = t.backend
-let set_backend t ~backend = t.backend <- backend
+let is_pinned t = t.is_pinned
+
+let has_backend_name t ~name =
+  Dune.Instrumentation.Backend.Name.equal
+    name
+    (Dune.Instrumentation.Backend.name t.backend)
+;;
+
+let set_backend t ~backend =
+  t.backend <- backend;
+  t.is_pinned <- true
+;;
+
 let field_name = "instrumentation"
 
 let read ~sexps_rewriter ~field =
@@ -26,7 +41,7 @@ let read ~sexps_rewriter ~field =
              ~flags:(List.map flag_sexps ~f:Dune.Instrumentation.Backend.Flag.t_of_sexp))
       | _ -> None)
   with
-  | Some backend -> create ~backend
+  | Some backend -> { backend; is_pinned = false }
   | None ->
     let loc = Sexps_rewriter.loc sexps_rewriter field in
     Err.raise
@@ -114,9 +129,9 @@ let rewrite t ~sexps_rewriter ~field =
 type predicate = Dune.Instrumentation.Predicate.t
 
 let eval t ~predicate =
-  match (predicate : predicate) with
-  | `backend backend ->
-    Dune.Instrumentation.Backend.equal backend t.backend |> Dunolint.Trilang.const
+  (match (predicate : predicate) with
+   | `backend backend -> Dune.Instrumentation.Backend.equal backend t.backend)
+  |> Dunolint.Trilang.const
 ;;
 
 let enforce =
@@ -127,7 +142,7 @@ let enforce =
       match predicate with
       | Not (`backend _) -> Eval
       | T (`backend backend) ->
-        t.backend <- backend;
+        set_backend t ~backend;
         Ok)
 ;;
 
@@ -139,5 +154,5 @@ let initialize ~condition =
         Some backend)
     |> Option.value ~default:default_backend
   in
-  { backend }
+  { backend; is_pinned = false }
 ;;

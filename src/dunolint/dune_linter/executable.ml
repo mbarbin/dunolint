@@ -51,7 +51,7 @@ type t =
   ; mutable public_name : Public_name.t option
   ; flags : Flags.t
   ; libraries : Libraries.t
-  ; mutable instrumentation : Instrumentation.t option
+  ; mutable instrumentations : Instrumentation.t list
   ; mutable lint : Lint.t option
   ; mutable preprocess : Preprocess.t option
   ; marked_for_removal : unit Field_name_table.t
@@ -62,7 +62,7 @@ let sexp_of_t
       ; public_name
       ; flags
       ; libraries
-      ; instrumentation
+      ; instrumentations
       ; lint
       ; preprocess
       ; marked_for_removal
@@ -84,7 +84,7 @@ let sexp_of_t
         ; (if Libraries.is_empty libraries
            then []
            else [ Sexp.List [ Atom "libraries"; Libraries.sexp_of_t libraries ] ])
-        ; opt instrumentation ~f:(fun v ->
+        ; List.map instrumentations ~f:(fun v ->
             Sexp.List [ Atom "instrumentation"; Instrumentation.sexp_of_t v ])
         ; opt lint ~f:(fun v -> Sexp.List [ Atom "lint"; Lint.sexp_of_t v ])
         ; opt preprocess ~f:(fun v ->
@@ -128,7 +128,7 @@ let create
       ?public_name
       ?(flags = [])
       ?(libraries = [])
-      ?instrumentation
+      ?(instrumentations = [])
       ?lint
       ?preprocess
       ()
@@ -144,7 +144,7 @@ let create
     ; public_name
     ; flags
     ; libraries
-    ; instrumentation
+    ; instrumentations
     ; lint
     ; preprocess
     ; marked_for_removal = Field_name_table.create 16
@@ -160,7 +160,7 @@ let read ~sexps_rewriter ~field =
   let public_name = ref None in
   let flags = ref None in
   let libraries = ref None in
-  let instrumentation = ref None in
+  let instrumentations = ref [] in
   let lint = ref None in
   let preprocess = ref None in
   List.iter fields ~f:(fun field ->
@@ -172,7 +172,7 @@ let read ~sexps_rewriter ~field =
     | List (Atom "libraries" :: _) ->
       libraries := Some (Libraries.read ~sexps_rewriter ~field)
     | List (Atom "instrumentation" :: _) ->
-      instrumentation := Some (Instrumentation.read ~sexps_rewriter ~field)
+      instrumentations := Instrumentation.read ~sexps_rewriter ~field :: !instrumentations
     | List (Atom "lint" :: _) -> lint := Some (Lint.read ~sexps_rewriter ~field)
     | List (Atom "preprocess" :: _) ->
       preprocess := Some (Preprocess.read ~sexps_rewriter ~field)
@@ -191,7 +191,7 @@ let read ~sexps_rewriter ~field =
   ; public_name = !public_name
   ; flags
   ; libraries
-  ; instrumentation = !instrumentation
+  ; instrumentations = List.rev !instrumentations
   ; lint = !lint
   ; preprocess = !preprocess
   ; marked_for_removal = Field_name_table.create 16
@@ -203,7 +203,7 @@ let write_fields
        ; public_name
        ; flags
        ; libraries
-       ; instrumentation
+       ; instrumentations
        ; lint
        ; preprocess
        ; marked_for_removal = _
@@ -220,7 +220,7 @@ let write_fields
     ; opt public_name ~f:Public_name.write
     ; (if Flags.is_empty flags then [] else [ Flags.write flags ])
     ; (if Libraries.is_empty libraries then [] else [ Libraries.write libraries ])
-    ; opt instrumentation ~f:Instrumentation.write
+    ; List.map instrumentations ~f:Instrumentation.write
     ; opt lint ~f:Lint.write
     ; opt preprocess ~f:Preprocess.write
     ]
@@ -238,16 +238,22 @@ let rewrite t ~sexps_rewriter ~field =
     ~indicative_field_ordering
     ~fields
     ~new_fields
-    ~overlaps:(fun ~field_name ~present_args:_ ~new_args:_ ->
+    ~overlaps:(fun ~field_name ~present_args ~new_args ->
       match field_name with
+      | "instrumentation" ->
+        Instrumentation_entries.insertion_overlaps ~present_args ~new_args
       | _ -> true);
   (* Then we edit them in place those that are present. *)
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
+  let remove field =
+    let range = Sexps_rewriter.range sexps_rewriter field in
+    File_rewriter.remove file_rewriter ~range
+  in
+  let remove_if_marked field_name field =
+    if Field_name_table.mem t.marked_for_removal field_name then remove field
+  in
   let maybe_remove state field_name field =
-    if Option.is_none state && Field_name_table.mem t.marked_for_removal field_name
-    then (
-      let range = Sexps_rewriter.range sexps_rewriter field in
-      File_rewriter.remove file_rewriter ~range)
+    if Option.is_none state then remove_if_marked field_name field
   in
   List.iter fields ~f:(fun field ->
     match (field : Sexp.t) with
@@ -259,10 +265,11 @@ let rewrite t ~sexps_rewriter ~field =
       maybe_remove t.public_name `public_name field
     | List (Atom "flags" :: _) -> Flags.rewrite t.flags ~sexps_rewriter ~field
     | List (Atom "libraries" :: _) -> Libraries.rewrite t.libraries ~sexps_rewriter ~field
-    | List (Atom "instrumentation" :: _) ->
-      Option.iter t.instrumentation ~f:(fun t ->
-        Instrumentation.rewrite t ~sexps_rewriter ~field);
-      maybe_remove t.instrumentation `instrumentation field
+    | List (Atom "instrumentation" :: args) ->
+      (match Instrumentation_entries.rewrite t.instrumentations ~args with
+       | `Remove_if_marked -> remove_if_marked `instrumentation field
+       | `Remove -> remove field
+       | `Rewrite_with t -> Instrumentation.rewrite t ~sexps_rewriter ~field)
     | List (Atom "lint" :: _) ->
       Option.iter t.lint ~f:(fun t -> Lint.rewrite t ~sexps_rewriter ~field);
       maybe_remove t.lint `lint field
@@ -288,11 +295,7 @@ let eval t ~predicate =
        Dunolint.Trilang.eval condition ~f:(fun predicate ->
          Public_name.eval public_name ~predicate))
   | `instrumentation condition ->
-    (match t.instrumentation with
-     | None -> Dunolint.Trilang.Undefined
-     | Some instrumentation ->
-       Dunolint.Trilang.eval condition ~f:(fun predicate ->
-         Instrumentation.eval instrumentation ~predicate))
+    Instrumentation_entries.eval t.instrumentations ~condition
   | `libraries condition ->
     Dunolint.Trilang.eval condition ~f:(fun predicate ->
       Libraries.eval t.libraries ~predicate)
@@ -312,7 +315,7 @@ let eval t ~predicate =
      | `name -> Option.is_some t.name
      | `public_name -> Option.is_some t.public_name
      | `lint -> Option.is_some t.lint
-     | `instrumentation -> Option.is_some t.instrumentation
+     | `instrumentation -> not (List.is_empty t.instrumentations)
      | `preprocess -> Option.is_some t.preprocess)
     |> Dunolint.Trilang.const
 ;;
@@ -330,7 +333,7 @@ let enforce =
            (match has_field with
             | `name -> t.name <- None
             | `public_name -> t.public_name <- None
-            | `instrumentation -> t.instrumentation <- None
+            | `instrumentation -> t.instrumentations <- []
             | `lint -> t.lint <- None
             | `preprocess -> t.preprocess <- None);
            Ok
@@ -392,22 +395,19 @@ let enforce =
               Public_name.enforce public_name ~condition;
               Ok))
       | T (`has_field `instrumentation) ->
-        (match t.instrumentation with
-         | Some _ -> Ok
-         | None ->
-           t.instrumentation <- Some (Instrumentation.initialize ~condition:Blang.true_);
+        (match t.instrumentations with
+         | _ :: _ -> Ok
+         | [] ->
+           t.instrumentations <- [ Instrumentation.initialize ~condition:Blang.true_ ];
            Ok)
       | T (`instrumentation condition) ->
-        let instrumentation =
-          match t.instrumentation with
-          | Some instrumentation -> instrumentation
-          | None ->
-            let instrumentation = Instrumentation.initialize ~condition in
-            t.instrumentation <- Some instrumentation;
-            instrumentation
-        in
-        Instrumentation.enforce instrumentation ~condition;
-        Ok
+        Instrumentation_entries.enforce
+          t.instrumentations
+          ~condition
+          ~insert_instrumentation:(fun instrumentation ->
+            t.instrumentations <- t.instrumentations @ [ instrumentation ]);
+        (* We accept the enforcement only if it is stable through further evaluation. *)
+        Eval
       | T (`libraries condition) ->
         Libraries.enforce t.libraries ~condition;
         Ok

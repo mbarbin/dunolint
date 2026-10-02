@@ -84,7 +84,7 @@ type t =
   ; flags : Flags.t
   ; libraries : Libraries.t
   ; mutable libraries_to_open_via_flags : string list
-  ; mutable instrumentation : Instrumentation.t option
+  ; mutable instrumentations : Instrumentation.t list
   ; mutable lint : Lint.t option
   ; mutable preprocess : Preprocess.t option
   ; marked_for_removal : unit Field_name_table.t
@@ -99,7 +99,7 @@ let sexp_of_t
       ; flags
       ; libraries
       ; libraries_to_open_via_flags
-      ; instrumentation
+      ; instrumentations
       ; lint
       ; preprocess
       ; marked_for_removal
@@ -133,7 +133,7 @@ let sexp_of_t
                      (List.map libraries_to_open_via_flags ~f:(fun s -> Sexp.Atom s))
                  ]
              ])
-        ; opt instrumentation ~f:(fun v ->
+        ; List.map instrumentations ~f:(fun v ->
             Sexp.List [ Atom "instrumentation"; Instrumentation.sexp_of_t v ])
         ; opt lint ~f:(fun v -> Sexp.List [ Atom "lint"; Lint.sexp_of_t v ])
         ; opt preprocess ~f:(fun v ->
@@ -337,7 +337,7 @@ let create
       ?(flags = [])
       ?(libraries = [])
       ?(libraries_to_open_via_flags = [])
-      ?instrumentation
+      ?(instrumentations = [])
       ?lint
       ?preprocess
       ()
@@ -369,7 +369,7 @@ let create
     ; flags
     ; libraries
     ; libraries_to_open_via_flags
-    ; instrumentation
+    ; instrumentations
     ; lint
     ; preprocess
     ; marked_for_removal
@@ -388,7 +388,7 @@ let read ~sexps_rewriter ~field =
   let modes = ref None in
   let flags = ref None in
   let libraries = ref None in
-  let instrumentation = ref None in
+  let instrumentations = ref [] in
   let lint = ref None in
   let preprocess = ref None in
   List.iter fields ~f:(fun field ->
@@ -403,7 +403,7 @@ let read ~sexps_rewriter ~field =
     | List (Atom "libraries" :: _) ->
       libraries := Some (Libraries.read ~sexps_rewriter ~field)
     | List (Atom "instrumentation" :: _) ->
-      instrumentation := Some (Instrumentation.read ~sexps_rewriter ~field)
+      instrumentations := Instrumentation.read ~sexps_rewriter ~field :: !instrumentations
     | List (Atom "lint" :: _) -> lint := Some (Lint.read ~sexps_rewriter ~field)
     | List (Atom "preprocess" :: _) ->
       preprocess := Some (Preprocess.read ~sexps_rewriter ~field)
@@ -426,7 +426,7 @@ let read ~sexps_rewriter ~field =
   ; flags
   ; libraries
   ; libraries_to_open_via_flags = []
-  ; instrumentation = !instrumentation
+  ; instrumentations = List.rev !instrumentations
   ; lint = !lint
   ; preprocess = !preprocess
   ; marked_for_removal = Field_name_table.create 16
@@ -442,7 +442,7 @@ let write_fields
        ; flags
        ; libraries
        ; libraries_to_open_via_flags = _
-       ; instrumentation
+       ; instrumentations
        ; lint
        ; preprocess
        ; marked_for_removal = _
@@ -462,7 +462,7 @@ let write_fields
     ; opt modes ~f:Modes.write
     ; (if Flags.is_empty flags then [] else [ Flags.write flags ])
     ; (if Libraries.is_empty libraries then [] else [ Libraries.write libraries ])
-    ; opt instrumentation ~f:Instrumentation.write
+    ; List.map instrumentations ~f:Instrumentation.write
     ; opt lint ~f:Lint.write
     ; opt preprocess ~f:Preprocess.write
     ]
@@ -480,16 +480,22 @@ let rewrite t ~sexps_rewriter ~field =
     ~indicative_field_ordering
     ~fields
     ~new_fields
-    ~overlaps:(fun ~field_name ~present_args:_ ~new_args:_ ->
+    ~overlaps:(fun ~field_name ~present_args ~new_args ->
       match field_name with
+      | "instrumentation" ->
+        Instrumentation_entries.insertion_overlaps ~present_args ~new_args
       | _ -> true);
   (* For those which are not missing, we edit them in place. *)
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
+  let remove field =
+    let range = Sexps_rewriter.range sexps_rewriter field in
+    File_rewriter.remove file_rewriter ~range
+  in
+  let remove_if_marked field_name field =
+    if Field_name_table.mem t.marked_for_removal field_name then remove field
+  in
   let maybe_remove state field_name field =
-    if Option.is_none state && Field_name_table.mem t.marked_for_removal field_name
-    then (
-      let range = Sexps_rewriter.range sexps_rewriter field in
-      File_rewriter.remove file_rewriter ~range)
+    if Option.is_none state then remove_if_marked field_name field
   in
   List.iter fields ~f:(fun field ->
     match (field : Sexp.t) with
@@ -508,10 +514,11 @@ let rewrite t ~sexps_rewriter ~field =
       maybe_remove t.modes `modes field
     | List (Atom "flags" :: _) -> Flags.rewrite t.flags ~sexps_rewriter ~field
     | List (Atom "libraries" :: _) -> Libraries.rewrite t.libraries ~sexps_rewriter ~field
-    | List (Atom "instrumentation" :: _) ->
-      Option.iter t.instrumentation ~f:(fun t ->
-        Instrumentation.rewrite t ~sexps_rewriter ~field);
-      maybe_remove t.instrumentation `instrumentation field
+    | List (Atom "instrumentation" :: args) ->
+      (match Instrumentation_entries.rewrite t.instrumentations ~args with
+       | `Remove_if_marked -> remove_if_marked `instrumentation field
+       | `Remove -> remove field
+       | `Rewrite_with t -> Instrumentation.rewrite t ~sexps_rewriter ~field)
     | List (Atom "lint" :: _) ->
       Option.iter t.lint ~f:(fun t -> Lint.rewrite t ~sexps_rewriter ~field);
       maybe_remove t.lint `lint field
@@ -560,11 +567,7 @@ let eval t ~predicate =
      | Some modes ->
        Dunolint.Trilang.eval condition ~f:(fun predicate -> Modes.eval modes ~predicate))
   | `instrumentation condition ->
-    (match t.instrumentation with
-     | None -> Dunolint.Trilang.Undefined
-     | Some instrumentation ->
-       Dunolint.Trilang.eval condition ~f:(fun predicate ->
-         Instrumentation.eval instrumentation ~predicate))
+    Instrumentation_entries.eval t.instrumentations ~condition
   | `libraries condition ->
     Dunolint.Trilang.eval condition ~f:(fun predicate ->
       Libraries.eval t.libraries ~predicate)
@@ -586,7 +589,7 @@ let eval t ~predicate =
      | `package -> Option.is_some t.package
      | `inline_tests -> Option.is_some t.inline_tests
      | `modes -> Option.is_some t.modes
-     | `instrumentation -> Option.is_some t.instrumentation
+     | `instrumentation -> not (List.is_empty t.instrumentations)
      | `lint -> Option.is_some t.lint
      | `preprocess -> Option.is_some t.preprocess)
     |> Dunolint.Trilang.const
@@ -608,7 +611,7 @@ let enforce =
             | `package -> t.package <- None
             | `inline_tests -> t.inline_tests <- None
             | `modes -> t.modes <- None
-            | `instrumentation -> t.instrumentation <- None
+            | `instrumentation -> t.instrumentations <- []
             | `lint -> t.lint <- None
             | `preprocess -> t.preprocess <- None);
            Ok
@@ -730,22 +733,19 @@ let enforce =
            then t.modes <- Some modes);
         Ok
       | T (`has_field `instrumentation) ->
-        (match t.instrumentation with
-         | Some _ -> Ok
-         | None ->
-           t.instrumentation <- Some (Instrumentation.initialize ~condition:Blang.true_);
+        (match t.instrumentations with
+         | _ :: _ -> Ok
+         | [] ->
+           t.instrumentations <- [ Instrumentation.initialize ~condition:Blang.true_ ];
            Ok)
       | T (`instrumentation condition) ->
-        let instrumentation =
-          match t.instrumentation with
-          | Some instrumentation -> instrumentation
-          | None ->
-            let instrumentation = Instrumentation.initialize ~condition in
-            t.instrumentation <- Some instrumentation;
-            instrumentation
-        in
-        Instrumentation.enforce instrumentation ~condition;
-        Ok
+        Instrumentation_entries.enforce
+          t.instrumentations
+          ~condition
+          ~insert_instrumentation:(fun instrumentation ->
+            t.instrumentations <- t.instrumentations @ [ instrumentation ]);
+        (* We accept the enforcement only if it is stable through further evaluation. *)
+        Eval
       | T (`has_field `lint) ->
         (match t.lint with
          | Some _ -> Ok

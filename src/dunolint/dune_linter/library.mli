@@ -20,7 +20,7 @@ val create
   -> ?flags:Sexp.t list
   -> ?libraries:Dune.Library.Name.t list
   -> ?libraries_to_open_via_flags:string list
-  -> ?instrumentation:Instrumentation.t
+  -> ?instrumentations:Instrumentation.t list
   -> ?lint:Lint.t
   -> ?preprocess:Preprocess.t
   -> unit

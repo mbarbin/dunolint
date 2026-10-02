@@ -647,6 +647,76 @@ let%expect_test "field_conditions" =
   ()
 ;;
 
+let%expect_test "inconsistent_and_conditions" =
+  let init = {| (executable (name my-exec)) |} in
+  let t = parse init in
+  enforce
+    t
+    [ and_
+        [ instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx"))
+        ; instrumentation (backend (Dune.Instrumentation.Backend.v "landmarks"))
+        ]
+    ];
+  [%expect
+    {|
+    (executable
+     (name my-exec)
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
+    |}];
+  let t = parse init in
+  require_does_raise (fun () ->
+    enforce
+      t
+      [ instrumentation
+          (and_
+             [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
+             ; backend (Dune.Instrumentation.Backend.v "landmarks")
+             ])
+      ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (instrumentation (and (backend bisect_ppx) (backend landmarks)))))
+    |}];
+  let init = {| (executable (name my-exec) (instrumentation (backend other))) |} in
+  let t = parse init in
+  enforce
+    t
+    [ and_
+        [ instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx"))
+        ; instrumentation (backend (Dune.Instrumentation.Backend.v "landmarks"))
+        ]
+    ];
+  [%expect
+    {|
+    (executable
+     (name my-exec)
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
+    |}];
+  let t = parse init in
+  require_does_raise (fun () ->
+    enforce
+      t
+      [ instrumentation
+          (and_
+             [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
+             ; backend (Dune.Instrumentation.Backend.v "landmarks")
+             ])
+      ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (instrumentation (and (backend bisect_ppx) (backend landmarks)))))
+    |}];
+  ()
+;;
+
 let%expect_test "remove_fields" =
   (* Test removing fields via [not has_field]. *)
   let init =
