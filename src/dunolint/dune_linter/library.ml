@@ -479,7 +479,10 @@ let rewrite t ~sexps_rewriter ~field =
     ~sexps_rewriter
     ~indicative_field_ordering
     ~fields
-    ~new_fields;
+    ~new_fields
+    ~overlaps:(fun ~field_name ~present_args:_ ~new_args:_ ->
+      match field_name with
+      | _ -> true);
   (* For those which are not missing, we edit them in place. *)
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
   let maybe_remove state field_name field =

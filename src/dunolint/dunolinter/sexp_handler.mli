@@ -104,6 +104,8 @@ val insert_new_fields
   -> indicative_field_ordering:string list
   -> fields:Sexp.t list
   -> new_fields:Sexp.t list
+  -> overlaps:
+       (field_name:string -> present_args:Sexp.t list -> new_args:Sexp.t list -> bool)
   -> unit
 
 (** Wrap [M.read] with an exception handler that improves the error message and

@@ -141,28 +141,38 @@ end
 
 module Field_name_set = MoreLabels.Set.Make (String)
 
-let insert_new_fields ~sexps_rewriter ~indicative_field_ordering ~fields ~new_fields =
+let insert_new_fields
+      ~sexps_rewriter
+      ~indicative_field_ordering
+      ~fields
+      ~new_fields
+      ~overlaps
+  =
   let new_fields =
     List.map new_fields ~f:(fun (field : Sexp.t) ->
-      let name =
+      let name, args =
         match field with
-        | List (Atom name :: _) -> name
+        | List (Atom name :: args) -> name, args
         | _ ->
           Err.raise
             [ Pp.text "Unexpected field shape"; Pp.text (Sexp.to_string_hum field) ]
           [@coverage off]
       in
-      ref false, name, field)
+      ref false, name, field, args)
   in
   let file_rewriter = Sexps_rewriter.file_rewriter sexps_rewriter in
   (* We insert all missing fields. *)
   List.iter fields ~f:(fun field ->
     match (field : Sexp.t) with
-    | List (Atom field :: _) ->
-      List.iter new_fields ~f:(fun (visited, field_name, _) ->
-        if String.equal field field_name then visited := true)
+    | List (Atom field :: present_args) ->
+      List.iter new_fields ~f:(fun (visited, field_name, _, new_args) ->
+        if
+          (not !visited)
+          && String.equal field field_name
+          && overlaps ~field_name ~present_args ~new_args
+        then visited := true)
     | _ -> ());
-  List.iter new_fields ~f:(fun (visited, field_name, new_field) ->
+  List.iter new_fields ~f:(fun (visited, field_name, new_field, _) ->
     if not !visited
     then (
       (* To compute the place of insertion we skip input fields as long as they
