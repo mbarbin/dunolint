@@ -266,16 +266,17 @@ let enforce_internal ((sexps_rewriter, field), t) conditions =
     Dune_linter.Executable.rewrite t ~sexps_rewriter ~field)
 ;;
 
-let enforce (((sexps_rewriter, _), _) as input) conditions =
-  Sexps_rewriter.reset sexps_rewriter;
-  enforce_internal input conditions;
-  print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
-;;
-
 let format_dune_file ~new_contents =
   Dunolint_engine.format_dune_file
     ~dune_lang_version:(Dune_project.Dune_lang_version.create (3, 17))
     ~new_contents
+;;
+
+let enforce (((sexps_rewriter, _), _) as input) conditions =
+  Sexps_rewriter.reset sexps_rewriter;
+  enforce_internal input conditions;
+  let changed = format_dune_file ~new_contents:(Sexps_rewriter.contents sexps_rewriter) in
+  print_string changed
 ;;
 
 let enforce_diff (((sexps_rewriter, _), _) as input) conditions =
@@ -296,17 +297,33 @@ let%expect_test "enforce" =
   [%expect {| (executable) |}];
   let t = parse {| (executable (name main)) |} in
   enforce t [];
-  [%expect {| (executable (name main)) |}];
+  [%expect
+    {|
+    (executable
+     (name main))
+    |}];
   (* Enforcing the equality with the current value has no effect. *)
   enforce t [ name (equals (Dune.Executable.Name.v "main")) ];
-  [%expect {| (executable (name main)) |}];
+  [%expect
+    {|
+    (executable
+     (name main))
+    |}];
   (* Enforcing the equality with a new value changes it. *)
   enforce t [ name (equals (Dune.Executable.Name.v "better-name")) ];
-  [%expect {| (executable (name better-name)) |}];
+  [%expect
+    {|
+    (executable
+     (name better-name))
+    |}];
   let t = parse {| (executable (name main)) |} in
   (* Enforcing the non-equality with another value has no effect. *)
   enforce t [ name (not_ (equals (Dune.Executable.Name.v "not_equal"))) ];
-  [%expect {| (executable (name main)) |}];
+  [%expect
+    {|
+    (executable
+     (name main))
+    |}];
   (* Enforcing the negation of a current equality triggers an error.
      Dunolint is not going to automatically invent a new name, this
      requires the user's intervention. *)
@@ -318,7 +335,12 @@ let%expect_test "enforce" =
      in dunolint adding a new public_name field. *)
   let t = parse {| (executable (name main)) |} in
   enforce t [ public_name (equals (Dune.Executable.Public_name.v "my-cli")) ];
-  [%expect {| (executable (name main) (public_name my-cli)) |}];
+  [%expect
+    {|
+    (executable
+     (name main)
+     (public_name my-cli))
+    |}];
   let t = parse {| (executable (name main)) |} in
   (* When the field is absent and the condition cannot provide an initial value
      (e.g., negation, is_prefix, is_suffix), enforcement fails. The user must
@@ -520,7 +542,11 @@ let%expect_test "undefined conditions" =
   [%expect {||}];
   (* When a condition is undefined, the entire if-then-else is ignored. *)
   test [ if_ (name (is_prefix "hey")) (name (equals main)) (name (is_suffix "ho")) ];
-  [%expect {| (executable (public_name my-cli)) |}];
+  [%expect
+    {|
+    (executable
+     (public_name my-cli))
+    |}];
   (* Beware of static code simplifications performed by Blang though! In the
      following example, the [if_] is rewritten as a [And _] sequence. Since
      [is_prefix] is now at a positive enforcing position but cannot provide
@@ -542,9 +568,17 @@ let%expect_test "non base negations" =
     enforce t cond
   in
   test [ not_ (name (or_ [ is_prefix "hey"; is_suffix "ho" ])) ];
-  [%expect {| (executable (public_name my-cli)) |}];
+  [%expect
+    {|
+    (executable
+     (public_name my-cli))
+    |}];
   test [ not_ (or_ [ name (is_prefix "hey"); name (is_suffix "ho") ]) ];
-  [%expect {| (executable (public_name my-cli)) |}];
+  [%expect
+    {|
+    (executable
+     (public_name my-cli))
+    |}];
   ()
 ;;
 
@@ -554,15 +588,31 @@ let%expect_test "has_field_auto_initialize" =
   (* [instrumentation] field can be auto-initialized. *)
   let t = parse init in
   enforce t [ has_field `instrumentation ];
-  [%expect {| (executable (name my-exe) (instrumentation (backend bisect_ppx))) |}];
+  [%expect
+    {|
+    (executable
+     (name my-exe)
+     (instrumentation
+      (backend bisect_ppx)))
+    |}];
   (* [lint] field can be auto-initialized. *)
   let t = parse init in
   enforce t [ has_field `lint ];
-  [%expect {| (executable (name my-exe) (lint (pps))) |}];
+  [%expect
+    {|
+    (executable
+     (name my-exe)
+     (lint (pps)))
+    |}];
   (* [preprocess] field can be auto-initialized. *)
   let t = parse init in
   enforce t [ has_field `preprocess ];
-  [%expect {| (executable (name my-exe) (preprocess no_preprocessing)) |}];
+  [%expect
+    {|
+    (executable
+     (name my-exe)
+     (preprocess no_preprocessing))
+    |}];
   ()
 ;;
 
@@ -572,15 +622,32 @@ let%expect_test "field_conditions" =
   (* [instrumentation] condition auto-creates field. *)
   let t = parse init in
   enforce t [ instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx")) ];
-  [%expect {| (executable (name my-exe) (instrumentation (backend bisect_ppx))) |}];
+  [%expect
+    {|
+    (executable
+     (name my-exe)
+     (instrumentation
+      (backend bisect_ppx)))
+    |}];
   (* [lint] condition auto-creates field. *)
   let t = parse init in
   enforce t [ lint (pps (pp (Dune.Pp.Name.v "ppx_linter"))) ];
-  [%expect {| (executable (name my-exe) (lint (pps ppx_linter))) |}];
+  [%expect
+    {|
+    (executable
+     (name my-exe)
+     (lint
+      (pps ppx_linter)))
+    |}];
   (* [preprocess] condition auto-creates field. *)
   let t = parse init in
   enforce t [ preprocess no_preprocessing ];
-  [%expect {| (executable (name my-exe) (preprocess no_preprocessing)) |}];
+  [%expect
+    {|
+    (executable
+     (name my-exe)
+     (preprocess no_preprocessing))
+    |}];
   ()
 ;;
 
@@ -793,14 +860,29 @@ let%expect_test "libraries predicate - enforce" =
   let t = parse {| (executable (name main) (libraries base)) |} in
   (* Enforcing presence of existing library has no effect. *)
   enforce t [ libraries (mem [ Dune.Library.Name.v "base" ]) ];
-  [%expect {| (executable (name main) (libraries base)) |}];
+  [%expect
+    {|
+    (executable
+     (name main)
+     (libraries base))
+    |}];
   (* Enforcing presence of new library adds it. *)
   let t = parse {| (executable (name main) (libraries base)) |} in
   enforce t [ libraries (mem [ Dune.Library.Name.v "core" ]) ];
-  [%expect {| (executable (name main) (libraries base core)) |}];
+  [%expect
+    {|
+    (executable
+     (name main)
+     (libraries base core))
+    |}];
   (* Enforcing absence of existing library removes it. *)
   let t = parse {| (executable (name main) (libraries base core)) |} in
   enforce t [ libraries (not_ (mem [ Dune.Library.Name.v "core" ])) ];
-  [%expect {| (executable (name main) (libraries base)) |}];
+  [%expect
+    {|
+    (executable
+     (name main)
+     (libraries base))
+    |}];
   ()
 ;;
