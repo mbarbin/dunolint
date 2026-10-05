@@ -10,6 +10,9 @@ let original_contents =
   {|
 (lang dune 3.17)
 
+;; [Dunolinter.linter] returns [Unhandled] for unhandled constructs.
+(unhandled arg)
+
 ;; Atoms are ignored by dunolint (probably doesn't exists in dune).
 atom
 |}
@@ -33,7 +36,7 @@ let%expect_test "lint" =
   print_dyn (Relative_path.to_dyn (Dune_workspace_linter.path t));
   [%expect {| "dune-workspace" |}];
   print_dyn (Dyn.int (List.length (Dune_workspace_linter.original_sexps t)));
-  [%expect {| 2 |}];
+  [%expect {| 3 |}];
   (* We can use the low-level sexps-rewriter API if we wish. *)
   let sexps_rewriter = Dune_workspace_linter.sexps_rewriter t in
   Sexps_rewriter.visit sexps_rewriter ~f:(fun sexp ~range ~file_rewriter ->
@@ -49,8 +52,8 @@ let%expect_test "lint" =
     -|(lang dune 3.17)
     +|(lang dune 3.19)
 
-      ;; Atoms are ignored by dunolint (probably doesn't exists in dune).
-      atom
+      ;; [Dunolinter.linter] returns [Unhandled] for unhandled constructs.
+      (unhandled arg)
     |}];
   Sexps_rewriter.reset (Dune_workspace_linter.sexps_rewriter t);
   (* There's a typed API to access the supported stanza. *)
@@ -75,14 +78,14 @@ let%expect_test "lint" =
     -|(lang dune 3.17)
     +|(lang dune 3.20)
 
-      ;; Atoms are ignored by dunolint (probably doesn't exists in dune).
-      atom
+      ;; [Dunolinter.linter] returns [Unhandled] for unhandled constructs.
+      (unhandled arg)
     |}];
   (* You can also mix and match the typed API with the predicate language. *)
   Sexps_rewriter.reset sexps_rewriter;
   Dune_workspace_linter.visit t ~f:(fun stanza ->
     match Dunolinter.linter stanza with
-    | Unhandled -> () [@coverage off]
+    | Unhandled -> ()
     | T { eval; enforce = _ } ->
       (match
          eval
@@ -110,7 +113,7 @@ let%expect_test "lint" =
   Sexps_rewriter.reset sexps_rewriter;
   Dune_workspace_linter.visit t ~f:(fun stanza ->
     match Dunolinter.linter stanza with
-    | Unhandled -> () [@coverage off]
+    | Unhandled -> ()
     | T { eval = _; enforce } ->
       let apply condition = enforce ~path ~condition in
       let () =
@@ -141,8 +144,8 @@ let%expect_test "lint" =
     -|(lang dune 3.17)
     +|(lang dune 4.5)
 
-      ;; Atoms are ignored by dunolint (probably doesn't exists in dune).
-      atom
+      ;; [Dunolinter.linter] returns [Unhandled] for unhandled constructs.
+      (unhandled arg)
     |}];
   ()
 ;;
