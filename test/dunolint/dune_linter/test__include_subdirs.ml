@@ -213,3 +213,28 @@ let%expect_test "Linter.enforce" =
   [%expect {| (include_subdirs qualified) |}];
   ()
 ;;
+
+let%expect_test "Linter.enforce stanza" =
+  let _, t = parse {| (include_subdirs unqualified) |} in
+  let apply condition =
+    Dunolinter.Handler.raise ~f:(fun () ->
+      Dune_linter.Include_subdirs.Linter.enforce t ~condition)
+  in
+  let open Dunolint.Config.Std in
+  (* Enforcing [stanza] invariants that are satisfied has no effect. *)
+  apply (stanza (Blang.base `include_subdirs));
+  apply (not_ (stanza (Blang.base `library)));
+  [%expect {||}];
+  (* The linter doesn't change the kind of a stanza, thus enforcing an unsatisfied
+     [stanza] invariant should report a failure. *)
+  (* BUG: The positive form is ignored when unsatisfied. *)
+  apply (stanza (Blang.base `library));
+  [%expect {||}];
+  require_does_raise (fun () -> apply (not_ (stanza (Blang.base `include_subdirs))));
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (stanza include_subdirs))))
+    |}];
+  ()
+;;

@@ -1753,3 +1753,28 @@ let%expect_test "libraries predicate - enforce via library" =
     |}];
   ()
 ;;
+
+let%expect_test "Linter.enforce stanza" =
+  let _, t = parse {| (library (name foo)) |} in
+  let apply condition =
+    Dunolinter.Handler.raise ~f:(fun () ->
+      Dune_linter.Library.Linter.enforce t ~condition)
+  in
+  let open Dunolint.Config.Std in
+  (* Enforcing [stanza] invariants that are satisfied has no effect. *)
+  apply (stanza (Blang.base `library));
+  apply (not_ (stanza (Blang.base `executable)));
+  [%expect {||}];
+  (* The linter doesn't change the kind of a stanza, thus enforcing an unsatisfied
+     [stanza] invariant should report a failure. *)
+  (* BUG: The positive form is ignored when unsatisfied. *)
+  apply (stanza (Blang.base `executable));
+  [%expect {||}];
+  require_does_raise (fun () -> apply (not_ (stanza (Blang.base `library))));
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (stanza library))))
+    |}];
+  ()
+;;
