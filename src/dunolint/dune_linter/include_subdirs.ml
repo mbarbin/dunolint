@@ -81,22 +81,25 @@ module Linter = struct
       (module Dune.Predicate)
       ~eval
       ~enforce:(fun t predicate ->
-        match predicate with
-        | Not _ -> Eval
-        | T dune ->
-          (* Coverage is disabled due to many patOr, pending better bisect_ppx
-             integration. *)
-          (match[@coverage off] dune with
-           | `include_subdirs condition ->
-             Top.enforce t ~condition;
-             Ok
-           | `stanza _ ->
-             (* The linter doesn't change stanza kinds, [stanza] invariants are only
-                checked. *)
-             Eval
-           | `executable _
-           | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name)
-           | `instrumentation _ | `libraries _ | `library _ | `lint _ | `preprocess _ ->
-             Unapplicable))
+        (* Coverage is disabled due to many patOr, pending better bisect_ppx
+           integration. *)
+        match[@coverage off] predicate with
+        | T (`include_subdirs condition) ->
+          Top.enforce t ~condition;
+          Ok
+        | Not (`include_subdirs _) -> Eval
+        | T (`stanza _) | Not (`stanza _) ->
+          (* The linter doesn't change stanza kinds, [stanza] invariants are only
+             checked. *)
+          Eval
+        | T
+            ( `executable _
+            | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name)
+            | `instrumentation _ | `libraries _ | `library _ | `lint _ | `preprocess _ )
+        | Not
+            ( `executable _
+            | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name)
+            | `instrumentation _ | `libraries _ | `library _ | `lint _ | `preprocess _ )
+          -> Unapplicable)
   ;;
 end

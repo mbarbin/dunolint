@@ -818,21 +818,25 @@ module Linter = struct
         (* Coverage is disabled due to many patOr, pending better bisect_ppx
            integration. *)
         match[@coverage off] predicate with
-        | Not _ -> Eval
-        | T (`stanza _) ->
-          (* The linter doesn't change stanza kinds, [stanza] invariants are only
-             checked. *)
-          Eval
-        | T (`include_subdirs _ | `executable _) -> Unapplicable
         | T (`library condition) ->
           Top.enforce t ~condition;
           Ok
+        | Not (`library _) -> Eval
         | T
             (( `has_field (`instrumentation | `lint | `name | `preprocess | `public_name)
              | `instrumentation _ | `libraries _ | `lint _ | `preprocess _ ) as predicate)
           ->
           Top.enforce t ~condition:(Blang.base predicate);
-          Ok)
+          Ok
+        | Not
+            ( `has_field (`instrumentation | `lint | `name | `preprocess | `public_name)
+            | `instrumentation _ | `libraries _ | `lint _ | `preprocess _ ) -> Eval
+        | T (`stanza _) | Not (`stanza _) ->
+          (* The linter doesn't change stanza kinds, [stanza] invariants are only
+             checked. *)
+          Eval
+        | T (`include_subdirs _ | `executable _) | Not (`include_subdirs _ | `executable _)
+          -> Unapplicable)
   ;;
 end
 
