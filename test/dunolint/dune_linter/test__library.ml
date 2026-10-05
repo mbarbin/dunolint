@@ -969,6 +969,21 @@ let%expect_test "undefined conditions" =
   ()
 ;;
 
+let%expect_test "if with a constant branch" =
+  let t = parse {| (library (name main) (public_name my-cli)) |} in
+  (* BUG: The [if_] is rewritten as an [Or _] expression, which is only checked rather
+     than enforced. Thus no automatic fix is suggested. *)
+  require_does_raise (fun () ->
+    enforce t [ if_ (has_field `public_name) (public_name (is_prefix "my-lib.")) true_ ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition
+      (or (not (has_field public_name)) (public_name (is_prefix my-lib.)))))
+    |}];
+  ()
+;;
+
 let%expect_test "non base negations" =
   let init = {| (library (public_name my-cli)) |} in
   let test cond =

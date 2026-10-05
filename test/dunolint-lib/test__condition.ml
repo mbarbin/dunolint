@@ -36,3 +36,18 @@ let%expect_test "sexp" =
     |}];
   ()
 ;;
+
+let%expect_test "sexp of if with a constant branch" =
+  let test str =
+    print_s
+      (Dunolint.Condition.sexp_of_t
+         (Dunolint.Condition.t_of_sexp (Parsexp.Single.parse_string_exn str)))
+  in
+  (* BUG: When parsed, conditionals with a constant branch are rewritten as [and] or
+     [or] expressions. *)
+  test "(if (path (glob src/*)) (dune (has_field lint)) true)";
+  [%expect {| (or (not (path (glob src/*))) (dune (has_field lint))) |}];
+  test "(if (path (glob src/*)) (dune (has_field lint)) false)";
+  [%expect {| (and (path (glob src/*)) (dune (has_field lint))) |}];
+  ()
+;;

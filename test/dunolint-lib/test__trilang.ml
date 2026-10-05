@@ -128,6 +128,44 @@ let%expect_test "eval" =
   ()
 ;;
 
+let%expect_test "eval if with a constant branch" =
+  (* BUG: [Blang.if_] rewrites conditionals with a constant branch as [and] or [or]
+     expressions, which are not equivalent in the three-valued logic. When the condition
+     is [Undefined], the evaluation of an [if] should be [Undefined]. *)
+  let table =
+    let ( let* ) x f = List.concat_map x ~f in
+    let* b = Trilang.all in
+    let undefined = Blang.base Trilang.Undefined in
+    [ Blang.if_ undefined Blang.true_ (Blang.base b)
+    ; Blang.if_ undefined Blang.false_ (Blang.base b)
+    ; Blang.if_ undefined (Blang.base b) Blang.true_
+    ; Blang.if_ undefined (Blang.base b) Blang.false_
+    ]
+  in
+  List.iter table ~f:(fun expr ->
+    print_s
+      (List
+         [ List [ Atom "expr"; Blang.sexp_of_t Trilang.sexp_of_t expr ]
+         ; List [ Atom "eval"; Trilang.sexp_of_t (Trilang.eval expr ~f:Fun.id) ]
+         ]));
+  [%expect
+    {|
+    ((expr (or Undefined True)) (eval True))
+    ((expr (and (not Undefined) True)) (eval Undefined))
+    ((expr (or (not Undefined) True)) (eval True))
+    ((expr (and Undefined True)) (eval Undefined))
+    ((expr (or Undefined False)) (eval Undefined))
+    ((expr (and (not Undefined) False)) (eval False))
+    ((expr (or (not Undefined) False)) (eval Undefined))
+    ((expr (and Undefined False)) (eval False))
+    ((expr (or Undefined Undefined)) (eval Undefined))
+    ((expr (and (not Undefined) Undefined)) (eval Undefined))
+    ((expr (or (not Undefined) Undefined)) (eval Undefined))
+    ((expr (and Undefined Undefined)) (eval Undefined))
+    |}];
+  ()
+;;
+
 let%expect_test "disjunction" =
   let test ts = print_s (Trilang.disjunction ts |> Trilang.sexp_of_t) in
   test [];
