@@ -67,14 +67,15 @@ module Linter = struct
         ~eval:(fun t ~predicate -> eval t ~path ~predicate)
         ~enforce:(fun t predicate ->
           match predicate with
-          | Not _ -> Eval
-          | T (`path _) ->
-            (* The linter doesn't change paths, [path] invariants are only checked. *)
-            Eval
-          | T (`dune_project _ | `dune_workspace _ | `dunolint _) -> Unapplicable
           | T (`dune condition) ->
             M.enforce t ~condition;
-            Ok)
+            Ok
+          | Not (`dune _) -> Eval
+          | T (`path _) | Not (`path _) ->
+            (* The linter doesn't change paths, [path] invariants are only checked. *)
+            Eval
+          | T (`dune_project _ | `dune_workspace _ | `dunolint _)
+          | Not (`dune_project _ | `dune_workspace _ | `dunolint _) -> Unapplicable)
         m
         ~condition
     in
