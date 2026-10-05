@@ -16,6 +16,9 @@ let original_contents =
 
 (generate_opam_files)
 
+;; [Dunolinter.linter] returns [Unhandled] for unhandled constructs.
+(unhandled arg)
+
 ;; Atoms are ignored by dunolint (probably doesn't exists in dune).
 atom
 |}
@@ -39,7 +42,7 @@ let%expect_test "lint" =
   print_dyn (Relative_path.to_dyn (Dune_project_linter.path t));
   [%expect {| "path/to/dune-project" |}];
   print_dyn (Dyn.int (List.length (Dune_project_linter.original_sexps t)));
-  [%expect {| 5 |}];
+  [%expect {| 6 |}];
   (* We can use the low-level sexps-rewriter API if we wish. *)
   let sexps_rewriter = Dune_project_linter.sexps_rewriter t in
   Sexps_rewriter.visit sexps_rewriter ~f:(fun sexp ~range ~file_rewriter ->
@@ -102,7 +105,7 @@ let%expect_test "lint" =
   (* You can also mix and match the typed API with the predicate language. *)
   Dune_project_linter.visit t ~f:(fun stanza ->
     match Dunolinter.linter stanza with
-    | Unhandled -> () [@coverage off]
+    | Unhandled -> ()
     | T { eval; enforce = _ } ->
       (match
          eval
@@ -145,14 +148,14 @@ let%expect_test "lint" =
 
     -|(generate_opam_files)
 
-      ;; Atoms are ignored by dunolint (probably doesn't exists in dune).
-      atom
+      ;; [Dunolinter.linter] returns [Unhandled] for unhandled constructs.
+      (unhandled arg)
     |}];
   (* You can also use the enforcement construct from the OCaml API. *)
   Sexps_rewriter.reset sexps_rewriter;
   Dune_project_linter.visit t ~f:(fun stanza ->
     match Dunolinter.linter stanza with
-    | Unhandled -> () [@coverage off]
+    | Unhandled -> ()
     | T { eval = _; enforce } ->
       let apply condition = enforce ~path ~condition in
       let () =
