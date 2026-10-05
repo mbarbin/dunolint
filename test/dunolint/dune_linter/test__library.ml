@@ -1807,12 +1807,12 @@ let%expect_test "Linter.enforce negated shorthand" =
     (library
      (name foo))
     |}];
-  (* BUG: The shorthand form is not delegated, thus no automatic fix is suggested. *)
-  require_does_raise (fun () -> test (not_ (has_field `lint)));
+  (* Same with the shorthand form. *)
+  test (not_ (has_field `lint));
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (not (has_field lint))))
+    (library
+     (name foo))
     |}];
   ()
 ;;

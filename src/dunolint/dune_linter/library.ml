@@ -829,8 +829,11 @@ module Linter = struct
           Top.enforce t ~condition:(Blang.base predicate);
           Ok
         | Not
-            ( `has_field (`instrumentation | `lint | `name | `preprocess | `public_name)
-            | `instrumentation _ | `libraries _ | `lint _ | `preprocess _ ) -> Eval
+            (( `has_field (`instrumentation | `lint | `name | `preprocess | `public_name)
+             | `instrumentation _ | `libraries _ | `lint _ | `preprocess _ ) as predicate)
+          ->
+          Top.enforce t ~condition:(Blang.not_ (Blang.base predicate));
+          Ok
         | T (`stanza _) | Not (`stanza _) ->
           (* The linter doesn't change stanza kinds, [stanza] invariants are only
              checked. *)
