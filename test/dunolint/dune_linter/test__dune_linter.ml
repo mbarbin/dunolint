@@ -4,7 +4,7 @@
 (*  SPDX-License-Identifier: LGPL-3.0-or-later WITH LGPL-3.0-linking-exception   *)
 (*********************************************************************************)
 
-(* A test showing how to use the [Dune_project_linter] as a library. *)
+(* A test showing how to use the [Dune_linter] as a library. *)
 
 let original_contents =
   {|
