@@ -695,3 +695,5 @@ When enforced, *dunolint* suggests to either replace or initiate a `pps` field b
 `(stanza KIND)` defines a predicate that evaluates to *true* iif the fragment is located within a stanza of the specified kind.
 
 Supported kinds: *include_subdirs*, *library*, *executable*, *executables*.
+
+To restrict an invariant to stanzas of a given kind, prefer the selector of that kind, such as `(dune (library (has_field preprocess)))`. Avoid using the *stanza* predicate in enforced invariants: *dunolint* won't change the kind of a stanza, so such invariants would never be fixed automatically. They would only be checked, and a violation would be reported for every stanza of a different kind.

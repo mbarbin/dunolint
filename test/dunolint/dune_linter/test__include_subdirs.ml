@@ -226,10 +226,10 @@ let%expect_test "Linter.enforce stanza" =
   apply (not_ (stanza (Blang.base `library)));
   [%expect {||}];
   (* The linter doesn't change the kind of a stanza, thus enforcing an unsatisfied
-     [stanza] invariant should report a failure. *)
-  (* BUG: The positive form is ignored when unsatisfied. *)
-  apply (stanza (Blang.base `library));
-  [%expect {||}];
+     [stanza] invariant reports a failure. *)
+  require_does_raise (fun () -> apply (stanza (Blang.base `library)));
+  [%expect
+    {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (stanza library))) |}];
   require_does_raise (fun () -> apply (not_ (stanza (Blang.base `include_subdirs))));
   [%expect
     {|

@@ -819,7 +819,11 @@ module Linter = struct
            integration. *)
         match[@coverage off] predicate with
         | Not _ -> Eval
-        | T (`include_subdirs _ | `executable _ | `stanza _) -> Unapplicable
+        | T (`stanza _) ->
+          (* The linter doesn't change stanza kinds, [stanza] invariants are only
+             checked. *)
+          Eval
+        | T (`include_subdirs _ | `executable _) -> Unapplicable
         | T (`library condition) ->
           Top.enforce t ~condition;
           Ok

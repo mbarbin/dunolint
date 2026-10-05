@@ -90,13 +90,13 @@ module Linter = struct
            | `include_subdirs condition ->
              Top.enforce t ~condition;
              Ok
+           | `stanza _ ->
+             (* The linter doesn't change stanza kinds, [stanza] invariants are only
+                checked. *)
+             Eval
            | `executable _
            | `has_field (`instrumentation | `lint | `name | `preprocess | `public_name)
-           | `instrumentation _
-           | `libraries _
-           | `library _
-           | `lint _
-           | `preprocess _
-           | `stanza _ -> Unapplicable))
+           | `instrumentation _ | `libraries _ | `library _ | `lint _ | `preprocess _ ->
+             Unapplicable))
   ;;
 end
