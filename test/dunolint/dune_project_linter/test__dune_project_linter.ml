@@ -251,18 +251,19 @@ let%expect_test "enforce path" =
       apply (not_ (path (glob "other/**")));
       [%expect {||}];
       (* The linter doesn't change the path of a file, thus enforcing an unsatisfied
-         [path] invariant should report a failure. This is the case for the negated
-         form. *)
+         [path] invariant reports a failure. *)
+      require_does_raise (fun () -> apply (path (glob "other/**")));
+      [%expect
+        {|
+        (Dunolinter.Handler.Enforce_failure (loc _)
+         (condition (path (glob other/**))))
+        |}];
       require_does_raise (fun () -> apply (not_ (path (glob "path/to/**"))));
       [%expect
         {|
         (Dunolinter.Handler.Enforce_failure (loc _)
          (condition (not (path (glob path/to/**)))))
         |}];
-      (* BUG: The positive form is ignored when unsatisfied, rather than reporting a
-         failure. *)
-      apply (path (glob "other/**"));
-      [%expect {||}];
       ());
   ()
 ;;
