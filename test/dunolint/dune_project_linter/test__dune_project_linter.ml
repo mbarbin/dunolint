@@ -206,3 +206,28 @@ let%expect_test "lint" =
     |}];
   ()
 ;;
+
+let%expect_test "eval selectors of other files" =
+  let path = Relative_path.v "path/to/dune-project" in
+  let t =
+    match Dune_project_linter.create ~path ~original_contents with
+    | Ok t -> t
+    | Error _ -> assert false
+  in
+  (* Selectors of other kinds of files evaluate to [Undefined]. *)
+  Dune_project_linter.visit t ~f:(fun stanza ->
+    match Dunolinter.linter stanza with
+    | Unhandled -> ()
+    | T { eval; enforce = _ } ->
+      List.iter
+        Dunolint.Config.Std.
+          [ `dune (library (name (equals (Dune.Library.Name.v "foo"))))
+          ; `dune_workspace
+              (dune_lang_version (eq (Dune_workspace.Dune_lang_version.create (3, 17))))
+          ; `dunolint
+              (dunolint_lang_version (eq (Dunolint0.Dunolint_lang_version.create (1, 0))))
+          ]
+        ~f:(fun predicate -> Test_helpers.is_undefined (eval ~path ~predicate)));
+  [%expect {||}];
+  ()
+;;

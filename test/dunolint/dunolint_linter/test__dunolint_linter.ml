@@ -159,3 +159,27 @@ let%expect_test "visit with invalid stanza" =
     |}];
   ()
 ;;
+
+let%expect_test "eval selectors of other files" =
+  let path = Relative_path.v "path/to/dunolint" in
+  let t =
+    match Dunolint_linter.create ~path ~original_contents with
+    | Ok t -> t
+    | Error _ -> assert false
+  in
+  (* Selectors of other kinds of files evaluate to [Undefined]. *)
+  Dunolint_linter.visit t ~f:(fun stanza ->
+    match Dunolinter.linter stanza with
+    | Unhandled -> ()
+    | T { eval; enforce = _ } ->
+      List.iter
+        Dunolint.Config.Std.
+          [ `dune (library (name (equals (Dune.Library.Name.v "foo"))))
+          ; `dune_project (name (equals (Dune_project.Name.v "foo")))
+          ; `dune_workspace
+              (dune_lang_version (eq (Dune_workspace.Dune_lang_version.create (3, 17))))
+          ]
+        ~f:(fun predicate -> Test_helpers.is_undefined (eval ~path ~predicate)));
+  [%expect {||}];
+  ()
+;;
