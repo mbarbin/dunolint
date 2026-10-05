@@ -1787,3 +1787,32 @@ let%expect_test "Linter.enforce stanza" =
     |}];
   ()
 ;;
+
+let%expect_test "Linter.enforce negated shorthand" =
+  let test condition =
+    let (sexps_rewriter, field), t =
+      parse {| (library (name foo) (lint (pps ppx_linter))) |}
+    in
+    Dunolinter.Handler.raise ~f:(fun () ->
+      Dune_linter.Library.Linter.enforce t ~condition;
+      Dune_linter.Library.rewrite t ~sexps_rewriter ~field);
+    print_string (format_dune_file ~new_contents:(Sexps_rewriter.contents sexps_rewriter))
+  in
+  let open Dunolint.Config.Std in
+  (* Enforcing a negated predicate under the [library] selector is delegated to the
+     library linter, which removes the field. *)
+  test (library (not_ (has_field `lint)));
+  [%expect
+    {|
+    (library
+     (name foo))
+    |}];
+  (* BUG: The shorthand form is not delegated, thus no automatic fix is suggested. *)
+  require_does_raise (fun () -> test (not_ (has_field `lint)));
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (has_field lint))))
+    |}];
+  ()
+;;
