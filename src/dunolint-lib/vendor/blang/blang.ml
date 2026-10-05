@@ -14,6 +14,9 @@
   - Remove part of the module that is not required by the project.
 
   - Remove dependency to ppx.
+
+  - Keep [if_] expressions with a constant branch, rather than rewriting them as [And] or
+    [Or] expressions, which are not equivalent in the three-valued logic used by dunolint.
 *)
 
 (* The MIT License
@@ -198,13 +201,7 @@ end = struct
     match a with
     | True -> b
     | False -> c
-    | _ ->
-      (match b, c with
-       | True, _ -> orelse a c
-       | _, False -> andalso a b
-       | _, True -> orelse (not_ a) b
-       | False, _ -> andalso (not_ a) c
-       | _ -> If (a, b, c))
+    | _ -> If (a, b, c)
   ;;
 end
 

@@ -955,31 +955,25 @@ let%expect_test "undefined conditions" =
     (library
      (public_name my-cli))
     |}];
-  (* Beware of static code simplifications performed by Blang though! In the
-     following example, the [if_] is rewritten as a [And _] sequence. Since
-     [is_prefix] is now at a positive enforcing position but cannot provide
-     an initial value for the absent field, enforcement fails. *)
-  require_does_raise (fun () ->
-    test [ if_ (name (is_prefix "hey")) (name (equals main)) false_ ]);
+  (* Same when one of the branches is constant. *)
+  test [ if_ (name (is_prefix "hey")) (name (equals main)) false_ ];
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (name (is_prefix hey))))
+    (library
+     (public_name my-cli))
     |}];
   ()
 ;;
 
 let%expect_test "if with a constant branch" =
   let t = parse {| (library (name main) (public_name my-cli)) |} in
-  (* BUG: The [if_] is rewritten as an [Or _] expression, which is only checked rather
-     than enforced. Thus no automatic fix is suggested. *)
-  require_does_raise (fun () ->
-    enforce t [ if_ (has_field `public_name) (public_name (is_prefix "my-lib.")) true_ ]);
+  (* The [if_] is enforced conditionally, even when one of its branches is constant. *)
+  enforce t [ if_ (has_field `public_name) (public_name (is_prefix "my-lib.")) true_ ];
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition
-      (or (not (has_field public_name)) (public_name (is_prefix my-lib.)))))
+    (library
+     (name main)
+     (public_name my-lib.my-cli))
     |}];
   ()
 ;;

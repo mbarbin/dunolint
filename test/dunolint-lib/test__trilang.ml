@@ -129,9 +129,8 @@ let%expect_test "eval" =
 ;;
 
 let%expect_test "eval if with a constant branch" =
-  (* BUG: [Blang.if_] rewrites conditionals with a constant branch as [and] or [or]
-     expressions, which are not equivalent in the three-valued logic. When the condition
-     is [Undefined], the evaluation of an [if] should be [Undefined]. *)
+  (* When the condition is [Undefined], the evaluation of an [if] is [Undefined], even
+     when one of its branches is constant. *)
   let table =
     let ( let* ) x f = List.concat_map x ~f in
     let* b = Trilang.all in
@@ -150,18 +149,18 @@ let%expect_test "eval if with a constant branch" =
          ]));
   [%expect
     {|
-    ((expr (or Undefined True)) (eval True))
-    ((expr (and (not Undefined) True)) (eval Undefined))
-    ((expr (or (not Undefined) True)) (eval True))
-    ((expr (and Undefined True)) (eval Undefined))
-    ((expr (or Undefined False)) (eval Undefined))
-    ((expr (and (not Undefined) False)) (eval False))
-    ((expr (or (not Undefined) False)) (eval Undefined))
-    ((expr (and Undefined False)) (eval False))
-    ((expr (or Undefined Undefined)) (eval Undefined))
-    ((expr (and (not Undefined) Undefined)) (eval Undefined))
-    ((expr (or (not Undefined) Undefined)) (eval Undefined))
-    ((expr (and Undefined Undefined)) (eval Undefined))
+    ((expr (if Undefined true True)) (eval Undefined))
+    ((expr (if Undefined false True)) (eval Undefined))
+    ((expr (if Undefined True true)) (eval Undefined))
+    ((expr (if Undefined True false)) (eval Undefined))
+    ((expr (if Undefined true False)) (eval Undefined))
+    ((expr (if Undefined false False)) (eval Undefined))
+    ((expr (if Undefined False true)) (eval Undefined))
+    ((expr (if Undefined False false)) (eval Undefined))
+    ((expr (if Undefined true Undefined)) (eval Undefined))
+    ((expr (if Undefined false Undefined)) (eval Undefined))
+    ((expr (if Undefined Undefined true)) (eval Undefined))
+    ((expr (if Undefined Undefined false)) (eval Undefined))
     |}];
   ()
 ;;

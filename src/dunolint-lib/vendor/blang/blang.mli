@@ -12,6 +12,9 @@
   List of changes:
 
   - Remove part of the API that is not required by the project.
+
+  - Keep [if_] expressions with a constant branch, rather than rewriting them as [And] or
+    [Or] expressions, which are not equivalent in the three-valued logic used by dunolint.
 *)
 
 (*_ The MIT License
@@ -103,7 +106,8 @@ module type Constructors = sig
   (** n-ary [Or] *)
   val or_ : 'a t list -> 'a t
 
-  (** [if_ if then else] *)
+  (** [if_ if then else]. Only a constant condition is simplified away, constant branches
+      are kept. *)
   val if_ : 'a t -> 'a t -> 'a t -> 'a t
 end
 

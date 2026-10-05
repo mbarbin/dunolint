@@ -547,16 +547,12 @@ let%expect_test "undefined conditions" =
     (executable
      (public_name my-cli))
     |}];
-  (* Beware of static code simplifications performed by Blang though! In the
-     following example, the [if_] is rewritten as a [And _] sequence. Since
-     [is_prefix] is now at a positive enforcing position but cannot provide
-     an initial value for the absent field, enforcement fails. *)
-  require_does_raise (fun () ->
-    test [ if_ (name (is_prefix "hey")) (name (equals main)) false_ ]);
+  (* Same when one of the branches is constant. *)
+  test [ if_ (name (is_prefix "hey")) (name (equals main)) false_ ];
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (name (is_prefix hey))))
+    (executable
+     (public_name my-cli))
     |}];
   ()
 ;;
