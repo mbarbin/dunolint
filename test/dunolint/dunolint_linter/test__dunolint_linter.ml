@@ -12,6 +12,9 @@ let original_contents =
 
 (rule (enforce (dune (has_field instrumentation))))
 
+;; [Dunolinter.linter] returns [Unhandled] for unhandled constructs.
+(unhandled arg)
+
 ;; Atoms are ignored by dunolint (probably doesn't exists in dunolint).
 atom
 |}
@@ -35,7 +38,7 @@ let%expect_test "lint" =
   print_s (Dunolint_linter.path t |> Relative_path.sexp_of_t);
   [%expect {| path/to/dunolint |}];
   print_s (List.length (Dunolint_linter.original_sexps t) |> Int.sexp_of_t);
-  [%expect {| 3 |}];
+  [%expect {| 4 |}];
   (* There's a typed API to access the supported stanza. *)
   Dunolint_linter.visit t ~f:(fun stanza ->
     match Dunolinter.match_stanza stanza with
@@ -68,7 +71,7 @@ let%expect_test "lint" =
   Sexps_rewriter.reset sexps_rewriter;
   Dunolint_linter.visit t ~f:(fun stanza ->
     match Dunolinter.linter stanza with
-    | Unhandled -> () [@coverage off]
+    | Unhandled -> ()
     | T { eval; enforce = _ } ->
       (match
          eval
@@ -96,7 +99,7 @@ let%expect_test "lint" =
   Sexps_rewriter.reset sexps_rewriter;
   Dunolint_linter.visit t ~f:(fun stanza ->
     match Dunolinter.linter stanza with
-    | Unhandled -> () [@coverage off]
+    | Unhandled -> ()
     | T { eval = _; enforce } ->
       let apply condition = enforce ~path ~condition in
       let () =
