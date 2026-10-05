@@ -155,7 +155,6 @@ let%expect_test "lint" =
         apply
           (dune_workspace
              (dune_lang_version (eq (Dune_workspace.Dune_lang_version.create (3, 17)))));
-        apply (path (glob "path/"));
         apply (not_ (dune_project (name (equals (Dune_project.Name.v "bar")))));
         apply
           (not_
@@ -181,5 +180,94 @@ let%expect_test "lint" =
 
       ;; [Dunolinter.linter] returns [Unhandled] for unhandled constructs.
     |}];
+  ()
+;;
+
+let%expect_test "eval selectors of other files" =
+  let path = Relative_path.v "path/to/dune" in
+  let t =
+    match Dune_linter.create ~path ~original_contents with
+    | Ok t -> t
+    | Error _ -> assert false
+  in
+  (* Selectors of other kinds of files evaluate to [Undefined]. *)
+  Dune_linter.visit t ~f:(fun stanza ->
+    match Dunolinter.linter stanza with
+    | Unhandled -> ()
+    | T { eval; enforce = _ } ->
+      List.iter
+        Dunolint.Config.Std.
+          [ `dune_project (name (equals (Dune_project.Name.v "foo")))
+          ; `dune_workspace
+              (dune_lang_version (eq (Dune_workspace.Dune_lang_version.create (3, 17))))
+          ; `dunolint
+              (dunolint_lang_version (eq (Dunolint0.Dunolint_lang_version.create (1, 0))))
+          ]
+        ~f:(fun predicate -> Test_helpers.is_undefined (eval ~path ~predicate)));
+  [%expect {||}];
+  ()
+;;
+
+let%expect_test "enforce path" =
+  let path = Relative_path.v "path/to/dune" in
+  let t =
+    match Dune_linter.create ~path ~original_contents with
+    | Ok t -> t
+    | Error _ -> assert false
+  in
+  Dune_linter.visit t ~f:(fun stanza ->
+    match Dunolinter.linter stanza with
+    | Unhandled -> ()
+    | T { eval = _; enforce } ->
+      let apply condition =
+        Dunolinter.Handler.raise ~f:(fun () -> enforce ~path ~condition)
+      in
+      let open Dunolint.Config.Std in
+      (* Enforcing [path] invariants that are satisfied has no effect. *)
+      apply (path (glob "path/to/**"));
+      apply (not_ (path (glob "other/**")));
+      [%expect {||}];
+      (* The linter doesn't change the path of a file, thus enforcing an unsatisfied
+         [path] invariant reports a failure. *)
+      require_does_raise (fun () -> apply (path (glob "other/**")));
+      [%expect
+        {|
+        (Dunolinter.Handler.Enforce_failure (loc _)
+         (condition (path (glob other/**))))
+        |}];
+      require_does_raise (fun () -> apply (not_ (path (glob "path/to/**"))));
+      [%expect
+        {|
+        (Dunolinter.Handler.Enforce_failure (loc _)
+         (condition (not (path (glob path/to/**)))))
+        |}];
+      ());
+  ()
+;;
+
+let%expect_test "enforce negated selector" =
+  let path = Relative_path.v "path/to/dune" in
+  let t =
+    match Dune_linter.create ~path ~original_contents with
+    | Ok t -> t
+    | Error _ -> assert false
+  in
+  Dune_linter.visit t ~f:(fun stanza ->
+    match Dunolinter.linter stanza with
+    | Unhandled -> ()
+    | T { eval = _; enforce } ->
+      let apply condition =
+        Dunolinter.Handler.raise ~f:(fun () -> enforce ~path ~condition)
+      in
+      let open Dunolint.Config.Std in
+      (* Enforcing a negated invariant that is satisfied has no effect. *)
+      apply (not_ (dune false_));
+      [%expect {||}];
+      (* Enforcing an unsatisfied negated invariant that cannot be fixed reports a
+         failure. *)
+      require_does_raise (fun () -> apply (not_ (dune true_)));
+      [%expect
+        {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (dune true)))) |}];
+      ());
   ()
 ;;

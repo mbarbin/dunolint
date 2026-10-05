@@ -144,6 +144,8 @@ In addition to them, the following selectors are common to all fragments:
 
 The *path* selector refers to either the path of the directory currently visited by the linter, or the path of the files containing the fragment currently being linted, depending on the context.
 
+The *path* selector is meant to be used in conditions, to select the rules that apply to a fragment (see the `cond` example above). Avoid using it in enforced invariants: *dunolint* won't change the path of a file, so such invariants would never be fixed automatically. They would only be checked, and a violation would be reported for every fragment of every file whose path doesn't satisfy them.
+
 #### glob
 
 `(glob GLOB)` defines a predicate whose domain is the selected path, based on the evaluation of the GLOB pattern against the string representation of the path.
