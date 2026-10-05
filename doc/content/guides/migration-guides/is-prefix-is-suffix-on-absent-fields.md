@@ -33,14 +33,14 @@ If your intent was to only check the prefix when `public_name` exists (and allow
 
 The `if_present` wrapper applies the constraint only when the field exists. When the field is absent, the condition is satisfied and no enforcement failure occurs.
 
-**Alternative:** For more complex conditions, you can use the explicit `if_` construct with `has_field`:
+**Alternative:** For more complex conditions, you can use the explicit `if` construct with `has_field`:
 
 ```dune
 (rule
  (enforce
   (dune
    (library
-    (if_ (has_field public_name)
-         (public_name (is_prefix "mylib."))
-         true_)))))
+    (if (has_field public_name)
+        (public_name (is_prefix "mylib."))
+        true)))))
 ```
