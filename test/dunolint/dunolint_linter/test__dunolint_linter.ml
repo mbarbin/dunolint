@@ -219,3 +219,33 @@ let%expect_test "enforce path" =
       ());
   ()
 ;;
+
+let%expect_test "enforce negated selector" =
+  let path = Relative_path.v "path/to/dunolint" in
+  let t =
+    match Dunolint_linter.create ~path ~original_contents with
+    | Ok t -> t
+    | Error _ -> assert false
+  in
+  Dunolint_linter.visit t ~f:(fun stanza ->
+    match Dunolinter.linter stanza with
+    | Unhandled -> ()
+    | T { eval = _; enforce } ->
+      let apply condition =
+        Dunolinter.Handler.raise ~f:(fun () -> enforce ~path ~condition)
+      in
+      let open Dunolint.Config.Std in
+      (* Enforcing a negated invariant that is satisfied has no effect. *)
+      apply (not_ (dunolint false_));
+      [%expect {||}];
+      (* Enforcing an unsatisfied negated invariant that cannot be fixed reports a
+         failure. *)
+      require_does_raise (fun () -> apply (not_ (dunolint true_)));
+      [%expect
+        {|
+        (Dunolinter.Handler.Enforce_failure (loc _)
+         (condition (not (dunolint true))))
+        |}];
+      ());
+  ()
+;;
