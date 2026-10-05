@@ -22,6 +22,7 @@ let original_contents =
   (name foo)
   (libraries a b c))
 
+;; [Dunolinter.linter] returns [Unhandled] for unhandled constructs.
 (unhandled 41)
 
 ;; Atoms are ignored by dunolint (probably doesn't exists in dune).
@@ -62,10 +63,10 @@ let%expect_test "lint" =
   print_diff t;
   [%expect
     {|
-    @@ -13,7 +13,7 @@
-        (name foo)
+    @@ -14,7 +14,7 @@
         (libraries a b c))
 
+      ;; [Dunolinter.linter] returns [Unhandled] for unhandled constructs.
     -|(unhandled 41)
     +|(unhandled 42)
 
@@ -102,7 +103,7 @@ let%expect_test "lint" =
   Sexps_rewriter.reset sexps_rewriter;
   Dune_linter.visit t ~f:(fun stanza ->
     match Dunolinter.linter stanza with
-    | Unhandled -> () [@coverage off]
+    | Unhandled -> ()
     | T { eval; enforce } ->
       (match
          eval
@@ -140,7 +141,7 @@ let%expect_test "lint" =
   Sexps_rewriter.reset sexps_rewriter;
   Dune_linter.visit t ~f:(fun stanza ->
     match Dunolinter.linter stanza with
-    | Unhandled -> () [@coverage off]
+    | Unhandled -> ()
     | T { eval = _; enforce } ->
       let () =
         let apply condition = enforce ~path ~condition in
@@ -178,7 +179,7 @@ let%expect_test "lint" =
     +|  (name my-exec)
         (libraries a b c))
 
-      (unhandled 41)
+      ;; [Dunolinter.linter] returns [Unhandled] for unhandled constructs.
     |}];
   ()
 ;;
