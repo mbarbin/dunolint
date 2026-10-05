@@ -155,7 +155,6 @@ let%expect_test "lint" =
         apply
           (dune_workspace
              (dune_lang_version (eq (Dune_workspace.Dune_lang_version.create (3, 17)))));
-        apply (path (glob "path/"));
         apply (not_ (dune_project (name (equals (Dune_project.Name.v "bar")))));
         apply
           (not_
@@ -206,5 +205,41 @@ let%expect_test "eval selectors of other files" =
           ]
         ~f:(fun predicate -> Test_helpers.is_undefined (eval ~path ~predicate)));
   [%expect {||}];
+  ()
+;;
+
+let%expect_test "enforce path" =
+  let path = Relative_path.v "path/to/dune" in
+  let t =
+    match Dune_linter.create ~path ~original_contents with
+    | Ok t -> t
+    | Error _ -> assert false
+  in
+  Dune_linter.visit t ~f:(fun stanza ->
+    match Dunolinter.linter stanza with
+    | Unhandled -> ()
+    | T { eval = _; enforce } ->
+      let apply condition =
+        Dunolinter.Handler.raise ~f:(fun () -> enforce ~path ~condition)
+      in
+      let open Dunolint.Config.Std in
+      (* Enforcing [path] invariants that are satisfied has no effect. *)
+      apply (path (glob "path/to/**"));
+      apply (not_ (path (glob "other/**")));
+      [%expect {||}];
+      (* The linter doesn't change the path of a file, thus enforcing an unsatisfied
+         [path] invariant should report a failure. This is the case for the negated
+         form. *)
+      require_does_raise (fun () -> apply (not_ (path (glob "path/to/**"))));
+      [%expect
+        {|
+        (Dunolinter.Handler.Enforce_failure (loc _)
+         (condition (not (path (glob path/to/**)))))
+        |}];
+      (* BUG: The positive form is ignored when unsatisfied, rather than reporting a
+         failure. *)
+      apply (path (glob "other/**"));
+      [%expect {||}];
+      ());
   ()
 ;;
