@@ -26,6 +26,14 @@ let%expect_test "Predicate.equal" =
   (* Empty list. *)
   require (equal (`mem []) (`mem []));
   [%expect {||}];
+  (* Other variants. *)
+  let base = Dune.Library.Name.v "base" in
+  require (equal (`present [ base ]) (`present [ base ]));
+  require (equal (`absent [ base ]) (`absent [ base ]));
+  require (not (equal (`present [ base ]) (`absent [ base ])));
+  require (not (equal (`absent [ base ]) (`mem [ base ])));
+  require (not (equal (`mem [ base ]) (`present [ base ])));
+  [%expect {||}];
   ()
 ;;
 
@@ -46,6 +54,10 @@ let%expect_test "predicate" =
        ; Dune.Library.Name.v "my-lib.sub-lib"
        ]);
   [%expect {| (mem base core my-lib.sub-lib) |}];
+  test (present [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]);
+  [%expect {| (present base core) |}];
+  test (absent [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]);
+  [%expect {| (absent base core) |}];
   ()
 ;;
 
@@ -70,6 +82,28 @@ let%expect_test "Predicate.t_of_sexp" =
       ("The construct [mem] must be written within parentheses."
        (suggestion "Replace by: (mem ARG...)")))
      (invalid_sexp mem))
+    |}];
+  test "(present base)";
+  [%expect {| (present base) |}];
+  test "(present)";
+  [%expect
+    {|
+    (Of_sexp_error
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [present] expects one or more arguments."
+       (suggestion "Replace by: (present ARG...)")))
+     (invalid_sexp (present)))
+    |}];
+  test "(absent base)";
+  [%expect {| (absent base) |}];
+  test "(absent)";
+  [%expect
+    {|
+    (Of_sexp_error
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [absent] expects one or more arguments."
+       (suggestion "Replace by: (absent ARG...)")))
+     (invalid_sexp (absent)))
     |}];
   ()
 ;;

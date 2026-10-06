@@ -252,6 +252,12 @@ type predicate = Dune.Libraries.Predicate.t
 
 let eval t ~predicate =
   match (predicate : predicate) with
+  | `present libraries ->
+    Dunolint.Trilang.const
+      (Nonempty_list.for_all libraries ~f:(fun library -> mem t ~library))
+  | `absent libraries ->
+    Dunolint.Trilang.const
+      (Nonempty_list.for_all libraries ~f:(fun library -> not (mem t ~library)))
   | `mem libraries ->
     Dunolint.Trilang.const (List.for_all libraries ~f:(fun library -> mem t ~library))
 ;;
@@ -262,12 +268,22 @@ let enforce =
     ~eval
     ~enforce:(fun t predicate ->
       match predicate with
+      | T (`present libraries) | Not (`absent ([ _ ] as libraries)) ->
+        add_libraries t ~libraries:(Nonempty_list.to_list libraries);
+        Ok
+      | T (`absent libraries) | Not (`present ([ _ ] as libraries)) ->
+        remove_libraries t ~libraries:(Nonempty_list.to_list libraries);
+        Ok
       | T (`mem libraries) ->
         add_libraries t ~libraries;
         Ok
       | Not (`mem libraries) ->
         remove_libraries t ~libraries;
-        Ok)
+        Ok
+      | Not (`present (_ :: _ :: _)) | Not (`absent (_ :: _ :: _)) ->
+        (* With more than one library, the negation only requires one of them to be
+           absent (or present), which doesn't determine which ones to remove (or add). *)
+        Eval)
 ;;
 
 module Private = struct

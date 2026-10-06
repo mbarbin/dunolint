@@ -55,6 +55,11 @@ let has_mode t ~mode =
 
 let eval t ~predicate =
   match (predicate : predicate) with
+  | `present modes ->
+    Dunolint.Trilang.const (Nonempty_list.for_all modes ~f:(fun mode -> has_mode t ~mode))
+  | `absent modes ->
+    Dunolint.Trilang.const
+      (Nonempty_list.for_all modes ~f:(fun mode -> not (has_mode t ~mode)))
   | `mem modes | `has_modes modes ->
     Dunolint.Trilang.const (List.for_all modes ~f:(fun mode -> has_mode t ~mode))
   | `has_mode mode -> Dunolint.Trilang.const (has_mode t ~mode)
@@ -92,6 +97,12 @@ let enforce =
     ~eval
     ~enforce:(fun t predicate ->
       match predicate with
+      | T (`present modes) | Not (`absent ([ _ ] as modes)) ->
+        Nonempty_list.iter modes ~f:(fun mode -> insert_mode t ~mode);
+        Ok
+      | T (`absent modes) | Not (`present ([ _ ] as modes)) ->
+        Nonempty_list.iter modes ~f:(fun mode -> remove_mode t ~mode);
+        Ok
       | T (`mem modes) | T (`has_modes modes) ->
         List.iter modes ~f:(fun mode -> insert_mode t ~mode);
         Ok
@@ -101,6 +112,10 @@ let enforce =
       | Not (`mem modes) | Not (`has_modes modes) ->
         List.iter modes ~f:(fun mode -> remove_mode t ~mode);
         Ok
+      | Not (`present (_ :: _ :: _)) | Not (`absent (_ :: _ :: _)) ->
+        (* With more than one mode, the negation only requires one of them to be absent
+           (or present), which doesn't determine which ones to remove (or add). *)
+        Eval
       | Not (`has_mode mode) ->
         remove_mode t ~mode;
         Ok)

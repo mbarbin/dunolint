@@ -496,7 +496,12 @@ let%expect_test "enforce" =
 module Predicate = struct
   (* Aliased here so we remember to add new tests when this type is modified. *)
   type t = Dune.Libraries.Predicate.t as 'a
-    constraint 'a = [ `mem of Dune.Library.Name.t list ]
+    constraint
+      'a =
+      [ `present of Dune.Library.Name.t Dunolint.Nonempty_list.t
+      | `absent of Dune.Library.Name.t Dunolint.Nonempty_list.t
+      | `mem of Dune.Library.Name.t list
+      ]
 end
 
 open Dunolint.Config.Std
@@ -542,6 +547,67 @@ let%expect_test "eval" =
   Test_helpers.is_false
     (Dune_linter.Libraries.eval t_empty ~predicate:(`mem [ Dune.Library.Name.v "foo" ]));
   [%expect {||}];
+  ()
+;;
+
+let%expect_test "eval - present and absent" =
+  let eval t predicate = Dune_linter.Libraries.eval t ~predicate in
+  let lib = Dune.Library.Name.v in
+  let _, t = parse {| (libraries foo bar) |} in
+  Test_helpers.is_true (eval t (`present [ lib "foo"; lib "bar" ]));
+  Test_helpers.is_false (eval t (`present [ lib "foo"; lib "qux" ]));
+  [%expect {||}];
+  (* [absent] holds when none of the libraries is present. *)
+  Test_helpers.is_true (eval t (`absent [ lib "qux" ]));
+  Test_helpers.is_true (eval t (`absent [ lib "qux"; lib "baz" ]));
+  Test_helpers.is_false (eval t (`absent [ lib "foo" ]));
+  Test_helpers.is_false (eval t (`absent [ lib "qux"; lib "foo" ]));
+  [%expect {||}];
+  ()
+;;
+
+let%expect_test "enforce - present and absent" =
+  let enforce ((sexps_rewriter, field), t) conditions =
+    Sexps_rewriter.reset sexps_rewriter;
+    Dunolinter.Handler.raise ~f:(fun () ->
+      List.iter conditions ~f:(fun condition ->
+        Dune_linter.Libraries.enforce t ~condition);
+      Dune_linter.Libraries.rewrite t ~sexps_rewriter ~field;
+      print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
+  in
+  let lib = Dune.Library.Name.v in
+  (* Enforcing [present] adds the missing libraries. *)
+  let t = parse {| (libraries foo) |} in
+  enforce t [ present [ lib "foo"; lib "bar" ] ];
+  [%expect {| (libraries foo bar) |}];
+  (* Enforcing [absent] removes all the listed libraries. *)
+  let t = parse {| (libraries foo bar baz) |} in
+  enforce t [ absent [ lib "foo"; lib "baz"; lib "qux" ] ];
+  [%expect {| (libraries bar) |}];
+  (* The negation of a single entry is enforced like its opposite. *)
+  let t = parse {| (libraries foo bar) |} in
+  enforce t [ not_ (present [ lib "bar" ]) ];
+  [%expect {| (libraries foo) |}];
+  enforce t [ not_ (absent [ lib "baz" ]) ];
+  [%expect {| (libraries foo baz) |}];
+  (* With more than one entry, the negation is only checked. *)
+  let t = parse {| (libraries foo bar) |} in
+  enforce
+    t
+    [ not_ (present [ lib "foo"; lib "qux" ]); not_ (absent [ lib "foo"; lib "qux" ]) ];
+  [%expect {| (libraries foo bar) |}];
+  require_does_raise (fun () -> enforce t [ not_ (present [ lib "foo"; lib "bar" ]) ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (present foo bar))))
+    |}];
+  require_does_raise (fun () -> enforce t [ not_ (absent [ lib "baz"; lib "qux" ]) ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (absent baz qux))))
+    |}];
   ()
 ;;
 

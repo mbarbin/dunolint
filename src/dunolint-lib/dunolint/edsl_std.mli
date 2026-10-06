@@ -16,6 +16,7 @@ include module type of struct
   include Blang.O
 end
 
+val absent : 'a Nonempty_list.t -> [> `absent of 'a Nonempty_list.t ] Blang.t
 val backend : 'a -> [> `backend of 'a ] Blang.t
 val cond : ('condition * 'action) list -> [> `cond of ('condition * 'action) list ]
 val dune : 'a -> [> `dune of 'a ] Blang.t
@@ -61,6 +62,7 @@ val pp_with_flag
   -> [> `pp_with_flag of Dune.Pps.Predicate.Pp_with_flag.t ] Blang.t
 
 val preprocess : 'a -> [> `preprocess of 'a ] Blang.t
+val present : 'a Nonempty_list.t -> [> `present of 'a Nonempty_list.t ] Blang.t
 val public_name : 'a -> [> `public_name of 'a ] Blang.t
 val return : [> `return ]
 val stanza : 'a -> [> `stanza of 'a ] Blang.t

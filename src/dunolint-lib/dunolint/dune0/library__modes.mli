@@ -21,22 +21,24 @@ module Predicate : sig
       what is written in the dune file, literally.
 
       So, for example even if the evaluation of the [:standard] mode includes
-      [byte], evaluating: [`mem `byte] on the input [(:standard)] returns
+      [byte], evaluating: [`present [ `byte ]] on the input [(:standard)] returns
       [false].
 
       The reason is that dunolint focuses on linting what the user writes in the
       dune files, as opposed to how dune interprets it. *)
 
   (** These names are deprecated and will be removed by a future upgrade. Do not
-      use in new code and migrate at your earliest convenience. Use [`mem]
-      instead. *)
+      use in new code and migrate at your earliest convenience. Use [`present]
+      instead, or [`absent] instead of the negation of [`mem]. *)
   type deprecated_names =
-    [ `has_mode of Compilation_mode.t
+    [ `mem of Compilation_mode.t list
+    | `has_mode of Compilation_mode.t
     | `has_modes of Compilation_mode.t list
     ]
 
   type t =
-    [ `mem of Compilation_mode.t list
+    [ `present of Compilation_mode.t Nonempty_list.t
+    | `absent of Compilation_mode.t Nonempty_list.t
     | deprecated_names
     ]
 

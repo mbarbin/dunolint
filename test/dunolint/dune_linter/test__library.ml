@@ -706,6 +706,12 @@ let%expect_test "enforce" =
     (library
      (name mylib))
     |}];
+  enforce t [ modes (absent [ `byte; `native ]) ];
+  [%expect
+    {|
+    (library
+     (name mylib))
+    |}];
   (* Currently adding a field is only possible if some are already present. *)
   let t = parse {| (library) |} in
   require_does_raise (fun () -> enforce t [ name (equals (Dune.Library.Name.v "mylib")) ]);

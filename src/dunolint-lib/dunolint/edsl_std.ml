@@ -11,6 +11,7 @@ module Dune_workspace = Dune_workspace
 module Dunolint0 = Dunolint0
 include Blang.O
 
+let absent p = Blang.base (`absent p)
 let backend p = Blang.base (`backend p)
 let cond clauses = `cond clauses
 let dune p = Blang.base (`dune p)
@@ -52,6 +53,7 @@ let pp p = Blang.base (`pp p)
 let pps p = Blang.base (`pps p)
 let pp_with_flag p = Blang.base (`pp_with_flag p)
 let preprocess p = Blang.base (`preprocess p)
+let present p = Blang.base (`present p)
 let public_name p = Blang.base (`public_name p)
 let return = `return
 let stanza p = Blang.base (`stanza p)
