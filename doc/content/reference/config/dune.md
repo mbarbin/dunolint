@@ -635,15 +635,27 @@ Stanza:
 
 Its predicates are:
 
-1. `(pp PP_NAME)`
+1. `(present PP_NAMES)`
 
-Returns *true* iif the FRAGMENT contains the PP_NAME supplied.
+Returns *true* iff all the pps specified are present in the FRAGMENT.
 
-When enforced, *dunolint* suggests to add the pp to the list of arguments, initiating the *preprocess* and *pps* field if needed.
+When enforced, *dunolint* suggests adding the pp(s) not already present to the list of arguments, initiating the *preprocess* and *pps* field if needed.
 
-**Negation**: When the negation of the predicate is enforced, *dunolint* suggests removing the pp from the list if present, along with any flags that may be associated with it.
+2. `(absent PP_NAMES)`
 
-2. `(flag (name FLAG) (param PARAM) (applies_to APPLIES_TO))`
+Returns *true* iff none of the pps specified are present in the FRAGMENT.
+
+When enforced, *dunolint* suggests removing the pp(s) present from the list, along with any flags that may be associated with them.
+
+**Negation of `present` and `absent`**: They follow the same rules as for the *libraries* selector: with a single pp, they are enforced as their opposite, and with several pps, they are only checked.
+
+Prefer `absent` over a negated `present`, and `present` over a negated `absent`: `(absent a b)` requires that none of the pps is present, and `(present a b)` that all of them are, which *dunolint* can always enforce.
+
+3. `(pp PP_NAME)`
+
+This is equivalent to `(present PP_NAME)`.
+
+4. `(flag (name FLAG) (param PARAM) (applies_to APPLIES_TO))`
 
 - PARAM: `any | none | some | (equals VALUE)`
 - APPLIES_TO: `any | driver | (pp PP_NAME)`
@@ -679,7 +691,7 @@ Param matching evaluation is pretty self explanatory, *any* matches anything, *n
 
 It is possible to enforce the `(flag _)` predicate, when the specification is unambiguous as to how to create a new flag if a matching one is not already present (for example, it can't have PARAM=any, etc.). The `(flag _)` predicate may only be negated when `PARAM=any` in which case *dunolint* will suggests removing any matching flag.
 
-3. `(pp_with_flag (pp PP_NAME) (flag FLAG) (param PARAM))`
+5. `(pp_with_flag (pp PP_NAME) (flag FLAG) (param PARAM))`
 
 This is a convenient wrapper for combining the two previous predicates into a single one, to assert the present of a pp with a flag applied to it.
 
@@ -697,8 +709,12 @@ Condition: `(dune (lint (pps PREDICATE)))`
 
 | Predicate | Result  |
 | --------- | ------- |
-| (pp ppx_js_style) | True |
-| (not (pp ppx_js_style)) | False. Suggestion: remove "ppx_js_style -check-doc-comments" |
+| (present ppx_js_style) | True |
+| (present ppx_js_style ppx_expect) | False. Suggestion: add "ppx_expect" |
+| (absent ppx_expect) | True |
+| (absent ppx_js_style ppx_expect) | False. Suggestion: remove "ppx_js_style -check-doc-comments" |
+| (not (present ppx_js_style)) | False. Suggestion: remove "ppx_js_style -check-doc-comments" |
+| (not (present ppx_js_style ppx_expect)) | True |
 | (flag (name -allow-let-operators)(param none)(applies_to (pp ppx_js_style))) | False. Suggestion: add "-allow-let-operators" right after "ppx_js_style" |
 
 ## preprocess
