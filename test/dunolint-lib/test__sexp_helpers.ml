@@ -13,6 +13,7 @@ type test_predicate =
   | `nullary
   | `ctx of string
   | `variadic of string list
+  | `nonempty of string Dunolint.Nonempty_list.t
   ]
 
 let sexp_of_test_predicate : test_predicate -> Sexp.t = function
@@ -21,6 +22,8 @@ let sexp_of_test_predicate : test_predicate -> Sexp.t = function
   | `nullary -> Atom "nullary"
   | `ctx s -> List [ Atom "ctx"; String.sexp_of_t s ]
   | `variadic ss -> List [ Atom "variadic"; sexp_of_list String.sexp_of_t ss ]
+  | `nonempty (hd :: tl) ->
+    List [ Atom "nonempty"; sexp_of_list String.sexp_of_t (hd :: tl) ]
 ;;
 
 let test_variant_spec : test_predicate Sexp_helpers.Variant_spec.t =
@@ -34,6 +37,12 @@ let test_variant_spec : test_predicate Sexp_helpers.Variant_spec.t =
     ; conv =
         Variadic
           (fun ~context:_ ~fields -> `variadic (List.map fields ~f:String.t_of_sexp))
+    }
+  ; { atom = "nonempty"
+    ; conv =
+        Nonempty
+          (fun ~context:_ ~fields:(hd :: tl) ->
+            `nonempty (String.t_of_sexp hd :: List.map tl ~f:String.t_of_sexp))
     }
   ]
 ;;
@@ -78,7 +87,8 @@ let%expect_test "parse_variant" =
     (Of_sexp_error
      (Dunolint.Sexp_helpers.Error_context.E
       ("Unknown construct [unknown]."
-       (did_you_mean? ((var unknown) (candidates foo bar nullary ctx variadic)))))
+       (did_you_mean?
+        ((var unknown) (candidates foo bar nullary ctx variadic nonempty)))))
      (invalid_sexp unknown))
     |}];
   (* Error: list with atom that doesn't match. *)
@@ -88,7 +98,8 @@ let%expect_test "parse_variant" =
     (Of_sexp_error
      (Dunolint.Sexp_helpers.Error_context.E
       ("Unknown construct [unknown]."
-       (did_you_mean? ((var unknown) (candidates foo bar nullary ctx variadic)))))
+       (did_you_mean?
+        ((var unknown) (candidates foo bar nullary ctx variadic nonempty)))))
      (invalid_sexp unknown))
     |}];
   (* Error: list with wrong number of arguments (zero). *)
@@ -195,6 +206,30 @@ let%expect_test "parse_variant" =
       ("The construct [variadic] must be written within parentheses."
        (suggestion "Replace by: (variadic ARG...)")))
      (invalid_sexp variadic))
+    |}];
+  (* Success: nonempty variadic variant with arguments. *)
+  test "(nonempty a b c)";
+  [%expect {| (nonempty (a b c)) |}];
+  test "(nonempty a)";
+  [%expect {| (nonempty (a)) |}];
+  (* Error: nonempty variadic variant with no arguments. *)
+  test "(nonempty)";
+  [%expect
+    {|
+    (Of_sexp_error
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [nonempty] expects one or more arguments."
+       (suggestion "Replace by: (nonempty ARG...)")))
+     (invalid_sexp (nonempty)))
+    |}];
+  test "nonempty";
+  [%expect
+    {|
+    (Of_sexp_error
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [nonempty] expects one or more arguments."
+       (suggestion "Replace by: (nonempty ARG...)")))
+     (invalid_sexp nonempty))
     |}];
   ()
 ;;

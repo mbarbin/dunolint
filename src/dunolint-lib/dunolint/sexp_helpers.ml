@@ -94,6 +94,7 @@ module Variant_spec = struct
     | Unary_with_context of (context:Sexp.t -> arg:Sexp.t -> 'a)
     | Unary of (Sexp.t -> 'a)
     | Variadic of (context:Sexp.t -> fields:Sexp.t list -> 'a)
+    | Nonempty of (context:Sexp.t -> fields:Sexp.t Nonempty_list.t -> 'a)
 
   type 'a case =
     { atom : string
@@ -127,11 +128,18 @@ let parse_variant (type a) (variant_spec : a Variant_spec.t) ~error_source (sexp
       ~message:(Printf.sprintf "The construct [%s] expects one argument." atom)
       ~suggestion:(Printf.sprintf "Replace by: (%s ARG)" atom)
   in
+  let expects_one_or_more_arguments atom =
+    raise
+      sexp
+      ~message:(Printf.sprintf "The construct [%s] expects one or more arguments." atom)
+      ~suggestion:(Printf.sprintf "Replace by: (%s ARG...)" atom)
+  in
   match sexp with
   | Atom atom ->
     (match find_case ~located_sexp:sexp atom with
      | { conv = Nullary value; _ } -> value
      | { conv = Unary_with_context _ | Unary _; _ } -> expects_one_argument atom
+     | { conv = Nonempty _; _ } -> expects_one_or_more_arguments atom
      | { conv = Variadic _; _ } ->
        raise
          sexp
@@ -149,7 +157,11 @@ let parse_variant (type a) (variant_spec : a Variant_spec.t) ~error_source (sexp
        (match args with
         | [ arg ] -> f ~context:sexp ~arg
         | [] | _ :: _ :: _ -> expects_one_argument atom)
-     | { conv = Variadic f; _ } -> f ~context:sexp ~fields:args)
+     | { conv = Variadic f; _ } -> f ~context:sexp ~fields:args
+     | { conv = Nonempty f; _ } ->
+       (match args with
+        | [] -> expects_one_or_more_arguments atom
+        | hd :: tl -> f ~context:sexp ~fields:(hd :: tl)))
   | List (List _ :: _) ->
     Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp
   | List [] -> Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp

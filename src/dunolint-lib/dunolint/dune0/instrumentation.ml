@@ -77,19 +77,19 @@ module Predicate = struct
   let variant_spec : t Sexp_helpers.Variant_spec.t =
     [ { atom = "backend"
       ; conv =
-          Variadic
-            (fun ~context:_ ~fields ->
-              match fields with
-              | (Atom _ as name_sexp) :: flag_sexps ->
+          Nonempty
+            (fun ~context:_ ~fields:(name_sexp :: flag_sexps) ->
+              match name_sexp with
+              | Atom _ ->
                 `backend
                   { Backend.name = Backend.Name.t_of_sexp name_sexp
                   ; flags = List.map flag_sexps ~f:Backend.Flag.t_of_sexp
                   }
-              | _ ->
-                Sexplib0.Sexp_conv_error.stag_incorrect_n_args
-                  error_source
-                  "backend"
-                  (Sexp.List []))
+              | List _ ->
+                Sexp_helpers.raise
+                  name_sexp
+                  ~message:"The construct [backend] expects the name of a backend first."
+                  ~suggestion:"Replace by: (backend NAME FLAG...)")
       }
     ]
   ;;

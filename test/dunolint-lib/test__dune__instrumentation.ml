@@ -87,16 +87,20 @@ let%expect_test "Predicate.t_of_sexp - error cases" =
   [%expect
     {|
     (Of_sexp_error
-     "instrumentation.t_of_sexp: sum tag \"backend\" has incorrect number of arguments"
-     (invalid_sexp ()))
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [backend] expects one or more arguments."
+       (suggestion "Replace by: (backend ARG...)")))
+     (invalid_sexp (backend)))
     |}];
   (* Backend starting with a list instead of an atom. *)
   test "(backend (nested thing))";
   [%expect
     {|
     (Of_sexp_error
-     "instrumentation.t_of_sexp: sum tag \"backend\" has incorrect number of arguments"
-     (invalid_sexp ()))
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [backend] expects the name of a backend first."
+       (suggestion "Replace by: (backend NAME FLAG...)")))
+     (invalid_sexp (nested thing)))
     |}];
   ()
 ;;

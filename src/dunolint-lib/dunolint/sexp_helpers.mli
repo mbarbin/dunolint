@@ -123,6 +123,9 @@ module Variant_spec : sig
     | Unary of (Sexp.t -> 'a) (** For Unary when context is not needed (most of them). *)
     | Variadic of (context:Sexp.t -> fields:Sexp.t list -> 'a)
     (** Variant with multiple arguments, e.g., [`skip_paths of Glob.t list] *)
+    | Nonempty of (context:Sexp.t -> fields:Sexp.t Nonempty_list.t -> 'a)
+    (** Variadic variant that requires at least one argument, e.g.,
+        [`present of Library.Name.t Nonempty_list.t]. *)
 
   type 'a case =
     { atom : string

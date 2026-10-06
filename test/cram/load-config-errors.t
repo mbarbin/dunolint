@@ -288,6 +288,22 @@ Missing argument.
   File "dunolint", line 3, characters 38-45:
   3 | (rule (enforce (dune (instrumentation backend))))
                                             ^^^^^^^
-  Error: The construct [backend] must be written within parentheses.
+  Error: The construct [backend] expects one or more arguments.
   Hint: Replace by: (backend ARG...)
+  [123]
+
+The name of the backend must come first.
+
+  $ cat > dunolint <<EOF
+  > (lang dunolint 1.0)
+  > 
+  > (rule (enforce (dune (instrumentation (backend (nested thing))))))
+  > EOF
+
+  $ dunolint tools config validate dunolint
+  File "dunolint", line 3, characters 47-61:
+  3 | (rule (enforce (dune (instrumentation (backend (nested thing))))))
+                                                     ^^^^^^^^^^^^^^
+  Error: The construct [backend] expects the name of a backend first.
+  Hint: Replace by: (backend NAME FLAG...)
   [123]
