@@ -158,6 +158,12 @@ let%expect_test "Predicate.equal" =
   [%expect {||}];
   require (not (equal pp_with_flag_a pp_a));
   [%expect {||}];
+  let names : _ Dunolint.Nonempty_list.t = [ Dune.Pp.Name.v "ppx_a" ] in
+  require (equal (`present names) (`present names));
+  require (equal (`absent names) (`absent names));
+  require (not (equal (`present names) (`absent names)));
+  require (not (equal (`absent names) pp_a));
+  [%expect {||}];
   ()
 ;;
 
@@ -217,6 +223,10 @@ let%expect_test "predicate" =
   let test p = Common.test_predicate (module Dune.Pps.Predicate) p in
   test (pp (Dune.Pp.Name.v "ppx_compare"));
   [%expect {| (pp ppx_compare) |}];
+  test (present [ Dune.Pp.Name.v "ppx_compare"; Dune.Pp.Name.v "ppx_sexp_conv" ]);
+  [%expect {| (present ppx_compare ppx_sexp_conv) |}];
+  test (absent [ Dune.Pp.Name.v "ppx_compare" ]);
+  [%expect {| (absent ppx_compare) |}];
   test (flag { name = "-a"; param = `any; applies_to = `any });
   [%expect {| (flag (name -a) (param any) (applies_to any)) |}];
   test (flag { name = "-a"; param = `none; applies_to = `driver });
@@ -241,5 +251,38 @@ let%expect_test "predicate" =
        });
   [%expect
     {| (pp_with_flag (pp ppx_js_style) (flag -allow-let-operators) (param none)) |}];
+  ()
+;;
+
+let%expect_test "Predicate.t_of_sexp" =
+  let test str =
+    print_s
+      (Dune.Pps.Predicate.sexp_of_t
+         (Dune.Pps.Predicate.t_of_sexp (Parsexp.Single.parse_string_exn str)))
+  in
+  test "(pp ppx_windtrap)";
+  [%expect {| (pp ppx_windtrap) |}];
+  test "(present ppx_windtrap ppx_expect)";
+  [%expect {| (present ppx_windtrap ppx_expect) |}];
+  test "(absent ppx_windtrap)";
+  [%expect {| (absent ppx_windtrap) |}];
+  require_does_raise (fun () -> test "(present)");
+  [%expect
+    {|
+    (Of_sexp_error
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [present] expects one or more arguments."
+       (suggestion "Replace by: (present ARG...)")))
+     (invalid_sexp (present)))
+    |}];
+  require_does_raise (fun () -> test "(absent)");
+  [%expect
+    {|
+    (Of_sexp_error
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [absent] expects one or more arguments."
+       (suggestion "Replace by: (absent ARG...)")))
+     (invalid_sexp (absent)))
+    |}];
   ()
 ;;

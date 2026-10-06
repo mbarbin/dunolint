@@ -55,7 +55,9 @@ module Predicate : sig
   end
 
   type t =
-    [ `pp of Pp.Name.t
+    [ `present of Pp.Name.t Nonempty_list.t
+    | `absent of Pp.Name.t Nonempty_list.t
+    | `pp of Pp.Name.t
     | `flag of Flag.t
     | `pp_with_flag of Pp_with_flag.t
     ]

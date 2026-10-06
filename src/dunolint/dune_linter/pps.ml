@@ -287,13 +287,21 @@ let exists_arg t ~f =
     List.exists entries ~f:(fun entry -> f entry.arg))
 ;;
 
+let has_pp t ~pp_name =
+  exists_arg t ~f:(function
+    | Mutable_arg.Pp { pp_name = pp_name' } -> Dune.Pp.Name.equal pp_name pp_name'
+    | Flag { name = _; param = _; applies_to = _ } -> false)
+;;
+
 let eval t ~predicate =
   match (predicate : predicate) with
-  | `pp pp_name ->
-    exists_arg t ~f:(function
-      | Mutable_arg.Pp { pp_name = pp_name' } -> Dune.Pp.Name.equal pp_name pp_name'
-      | Flag { name = _; param = _; applies_to = _ } -> false)
+  | `present pp_names ->
+    Nonempty_list.for_all pp_names ~f:(fun pp_name -> has_pp t ~pp_name)
     |> Dunolint.Trilang.const
+  | `absent pp_names ->
+    Nonempty_list.for_all pp_names ~f:(fun pp_name -> not (has_pp t ~pp_name))
+    |> Dunolint.Trilang.const
+  | `pp pp_name -> has_pp t ~pp_name |> Dunolint.Trilang.const
   | `flag { name; param = p_condition; applies_to = a_condition } ->
     exists_arg t ~f:(function
       | Mutable_arg.Pp { pp_name = _ } -> false
@@ -337,13 +345,19 @@ let filter_args t ~f =
 ;;
 
 let enforce_pp t ~pp_name =
-  let handled =
-    exists_arg t ~f:(function
-      | Mutable_arg.Pp { pp_name = pp_name' } -> Dune.Pp.Name.equal pp_name pp_name'
-      | Flag { name = _; param = _; applies_to = _ } -> false)
-  in
-  if not handled
+  if not (has_pp t ~pp_name)
   then append_args t ~entries:[ { Entry.arg = Pp { pp_name }; eol_comment = None } ]
+;;
+
+(* Remove the pps along with the flags that apply to them. *)
+let remove_pps t ~pp_names =
+  let is_removed pp_name = List.exists pp_names ~f:(Dune.Pp.Name.equal pp_name) in
+  filter_args t ~f:(function
+    | Pp { pp_name } -> not (is_removed pp_name)
+    | Flag { name = _; param = _; applies_to } ->
+      (match applies_to with
+       | `driver -> true
+       | `pp pp_name -> not (is_removed pp_name)))
 ;;
 
 let enforce_flag t ~flag:{ Dunolint.Dune.Pps.Predicate.Flag.name; param; applies_to } =
@@ -404,6 +418,16 @@ let enforce_flag t ~flag:{ Dunolint.Dune.Pps.Predicate.Flag.name; param; applies
 let enforce =
   let enforce t predicate : Dunolinter.Enforce_result.t =
     match (predicate : Dune.Pps.Predicate.t Dunolinter.Linter.Predicate.t) with
+    | T (`present pp_names) | Not (`absent ([ _ ] as pp_names)) ->
+      Nonempty_list.iter pp_names ~f:(fun pp_name -> enforce_pp t ~pp_name);
+      Ok
+    | T (`absent pp_names) | Not (`present ([ _ ] as pp_names)) ->
+      remove_pps t ~pp_names:(Nonempty_list.to_list pp_names);
+      Ok
+    | Not (`present (_ :: _ :: _)) | Not (`absent (_ :: _ :: _)) ->
+      (* With more than one pp, the negation only requires one of them to be absent (or
+         present), which doesn't determine which ones to remove (or add). *)
+      Eval
     | T (`pp pp_name) ->
       enforce_pp t ~pp_name;
       Ok
@@ -413,13 +437,8 @@ let enforce =
       enforce_flag
         t
         ~flag:{ Dunolint.Dune.Pps.Predicate.Flag.name = flag; param; applies_to = `pp pp }
-    | Not (`pp pp) ->
-      filter_args t ~f:(function
-        | Pp { pp_name } -> not (Dune.Pp.Name.equal pp_name pp)
-        | Flag { name = _; param = _; applies_to } ->
-          (match applies_to with
-           | `driver -> true
-           | `pp pp_name -> not (Dune.Pp.Name.equal pp_name pp)));
+    | Not (`pp pp_name) ->
+      remove_pps t ~pp_names:[ pp_name ];
       Ok
     | Not (`flag { name; param; applies_to = a_condition }) ->
       (match param with

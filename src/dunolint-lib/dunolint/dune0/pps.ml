@@ -205,7 +205,9 @@ module Predicate = struct
   let error_source = "pps.t"
 
   type t =
-    [ `pp of Pp.Name.t
+    [ `present of Pp.Name.t Nonempty_list.t
+    | `absent of Pp.Name.t Nonempty_list.t
+    | `pp of Pp.Name.t
     | `flag of Flag.t
     | `pp_with_flag of Pp_with_flag.t
     ]
@@ -215,14 +217,23 @@ module Predicate = struct
     then true
     else (
       match a, b with
+      | `present (a :: va), `present (b :: vb) | `absent (a :: va), `absent (b :: vb) ->
+        equal_list Pp.Name.equal (a :: va) (b :: vb)
       | `pp va, `pp vb -> Pp.Name.equal va vb
       | `flag va, `flag vb -> Flag.equal va vb
       | `pp_with_flag va, `pp_with_flag vb -> Pp_with_flag.equal va vb
-      | (`pp _ | `flag _ | `pp_with_flag _), _ -> false)
+      | (`present _ | `absent _ | `pp _ | `flag _ | `pp_with_flag _), _ -> false)
   ;;
 
   let variant_spec : t Sexp_helpers.Variant_spec.t =
-    [ { atom = "pp"; conv = Unary (fun sexp -> `pp (Pp.Name.t_of_sexp sexp)) }
+    let names (f : Pp.Name.t Nonempty_list.t -> t) =
+      Sexp_helpers.Variant_spec.Nonempty
+        (fun ~context:_ ~fields:(hd :: tl) ->
+          f (Pp.Name.t_of_sexp hd :: List.map tl ~f:Pp.Name.t_of_sexp))
+    in
+    [ { atom = "present"; conv = names (fun v -> `present v) }
+    ; { atom = "absent"; conv = names (fun v -> `absent v) }
+    ; { atom = "pp"; conv = Unary (fun sexp -> `pp (Pp.Name.t_of_sexp sexp)) }
     ; { atom = "flag"
       ; conv =
           Variadic
@@ -256,6 +267,10 @@ module Predicate = struct
 
   let sexp_of_t (t : t) : Sexp.t =
     match t with
+    | `present (hd :: tl) ->
+      List (Atom "present" :: List.map (hd :: tl) ~f:Pp.Name.sexp_of_t)
+    | `absent (hd :: tl) ->
+      List (Atom "absent" :: List.map (hd :: tl) ~f:Pp.Name.sexp_of_t)
     | `pp v -> List [ Atom "pp"; Pp.Name.sexp_of_t v ]
     | `flag v ->
       let sexps =
