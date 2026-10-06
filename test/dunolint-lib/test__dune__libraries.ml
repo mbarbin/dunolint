@@ -48,3 +48,28 @@ let%expect_test "predicate" =
   [%expect {| (mem base core my-lib.sub-lib) |}];
   ()
 ;;
+
+let%expect_test "Predicate.t_of_sexp" =
+  let test str =
+    let sexp = Parsexp.Single.parse_string_exn str in
+    match Dune.Libraries.Predicate.t_of_sexp sexp with
+    | predicate -> print_s (predicate |> Dune.Libraries.Predicate.sexp_of_t)
+    | exception exn -> print_s (exn |> Exn.sexp_of_t)
+  in
+  test "(mem base)";
+  [%expect {| (mem base) |}];
+  test "(mem base core)";
+  [%expect {| (mem base core) |}];
+  test "(mem)";
+  [%expect {| (mem) |}];
+  test "mem";
+  [%expect
+    {|
+    (Of_sexp_error
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [mem] expects one or more arguments."
+       (suggestion "Replace by: (mem ARG)")))
+     (invalid_sexp mem))
+    |}];
+  ()
+;;

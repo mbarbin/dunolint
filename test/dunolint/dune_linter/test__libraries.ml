@@ -688,6 +688,10 @@ let%expect_test "enforce - not mem" =
   let t = parse {| (libraries foo bar baz) |} in
   enforce t [ not_ (mem [ Dune.Library.Name.v "foo"; Dune.Library.Name.v "baz" ]) ];
   [%expect {| (libraries bar) |}];
+  (* Present libraries are removed even when some listed ones are already absent. *)
+  let t = parse {| (libraries foo bar baz) |} in
+  enforce t [ not_ (mem [ Dune.Library.Name.v "foo"; Dune.Library.Name.v "qux" ]) ];
+  [%expect {| (libraries bar baz) |}];
   (* Remove all libraries. *)
   let t = parse {| (libraries foo bar) |} in
   enforce t [ not_ (mem [ Dune.Library.Name.v "foo"; Dune.Library.Name.v "bar" ]) ];
