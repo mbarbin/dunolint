@@ -57,6 +57,11 @@ module Error_context = struct
   let suggestion t = t.suggestion
 end
 
+let raise ?did_you_mean ?suggestion sexp ~message =
+  let context = { Error_context.message; did_you_mean; suggestion } in
+  Stdlib.raise (Sexplib0.Sexp_conv.Of_sexp_error (Error_context.E context, sexp))
+;;
+
 let parse_inline_record
       (type a)
       (module M : T_of_sexp with type t = a)
@@ -111,23 +116,14 @@ let parse_variant (type a) (variant_spec : a Variant_spec.t) ~error_source (sexp
     with
     | Some case -> case
     | None ->
-      let context =
-        { Error_context.message = Printf.sprintf "Unknown construct [%s]." atom
-        ; did_you_mean =
-            Some { var = atom; candidates = Variant_spec.candidates variant_spec }
-        ; suggestion = None
-        }
-      in
-      raise (Sexplib0.Sexp_conv.Of_sexp_error (Error_context.E context, located_sexp))
-  in
-  let raise_with_suggestion ~message ~suggestion =
-    let context =
-      { Error_context.message; did_you_mean = None; suggestion = Some suggestion }
-    in
-    raise (Sexplib0.Sexp_conv.Of_sexp_error (Error_context.E context, sexp))
+      raise
+        located_sexp
+        ~message:(Printf.sprintf "Unknown construct [%s]." atom)
+        ~did_you_mean:{ var = atom; candidates = Variant_spec.candidates variant_spec }
   in
   let expects_one_argument atom =
-    raise_with_suggestion
+    raise
+      sexp
       ~message:(Printf.sprintf "The construct [%s] expects one argument." atom)
       ~suggestion:(Printf.sprintf "Replace by: (%s ARG)" atom)
   in
@@ -137,7 +133,8 @@ let parse_variant (type a) (variant_spec : a Variant_spec.t) ~error_source (sexp
      | { conv = Nullary value; _ } -> value
      | { conv = Unary_with_context _ | Unary _; _ } -> expects_one_argument atom
      | { conv = Variadic _; _ } ->
-       raise_with_suggestion
+       raise
+         sexp
          ~message:
            (Printf.sprintf "The construct [%s] must be written within parentheses." atom)
          ~suggestion:(Printf.sprintf "Replace by: (%s ARG...)" atom))

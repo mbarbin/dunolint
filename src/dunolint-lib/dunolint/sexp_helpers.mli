@@ -57,6 +57,15 @@ module Error_context : sig
   val suggestion : t -> string option
 end
 
+(** [raise sexp ~message] raises a parsing error located at [sexp], with a message for
+    the user, and optionally candidates for a "Did you mean?" hint and a suggestion. *)
+val raise
+  :  ?did_you_mean:Error_context.Did_you_mean.t
+  -> ?suggestion:string
+  -> Sexp.t
+  -> message:string
+  -> 'a
+
 (** {1 Parsing utils} *)
 
 (** When a record is embedded by a variant or polymorphic variant we'd like to
