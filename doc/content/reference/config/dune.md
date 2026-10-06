@@ -482,17 +482,26 @@ Stanza:
 
 The predicates of the `libraries` selector are:
 
-1. `(mem LIBRARY_NAMES)`
+1. `(present LIBRARY_NAMES)`
 
 Returns *true* iff all the library names specified are present in the list of dependencies found in the fragment.
 
-**Semantics**: The predicate `(mem a b c)` is best understood as the sequential application of individual membership checks: `(mem a) ; (mem b) ; (mem c)`, where `;` denotes conjunction (AND). Each library name is checked independently, and all must be present for the predicate to return *true*.
-
 When enforced, *dunolint* suggests adding the library name(s) not already present. New libraries are added to the last section (when sections are delimited by comments) and sorted alphabetically within that section.
 
-**Negation**: The negation `(not (mem a b c))` distributes as conjunction over the individual checks: `(not (mem a)) ; (not (mem b)) ; (not (mem c))`. This means "ensure none of the specified libraries are present" (all must be absent), not "ensure at least one is absent". When enforced, *dunolint* suggests removing all the supplied library name(s) from the fragment when present.
+2. `(absent LIBRARY_NAMES)`
 
-**Empty arguments**: Enforcing `(mem)` or `(not (mem))` with no arguments has no effect.
+Returns *true* iff none of the library names specified are present in the list of dependencies found in the fragment.
+
+When enforced, *dunolint* suggests removing the library name(s) present.
+
+**Negation of `present` and `absent`**:
+
+- With a single library name, `(not (present a))` is equivalent to `(absent a)`, and `(not (absent a))` to `(present a)`. They are enforced as such.
+- With several library names, `(not (present a b))` holds when *at least one* of them is absent, and `(not (absent a b))` holds when *at least one* of them is present. This doesn't determine which libraries to remove or add, thus such negations are only checked, and an enforcement failure is reported when they don't hold.
+
+Prefer `absent` over a negated `present`, and `present` over a negated `absent`: `(absent a b)` requires that none of the libraries is present, and `(present a b)` that all of them are, which *dunolint* can always enforce.
+
+**Empty arguments**: `present` and `absent` expect at least one library name.
 
 **Examples:**
 
@@ -507,10 +516,21 @@ Condition: `(dune (library (libraries PREDICATE)))`
 
 | Predicate | Result |
 | --------- | ------ |
-| (mem base core) | True |
-| (mem base) | True |
-| (mem async) | False. Suggestion: add *async*, keep existing values |
-| (not (mem core)) | False. Suggestion: remove *core* |
+| (present base core) | True |
+| (present base) | True |
+| (present async) | False. Suggestion: add *async*, keep existing values |
+| (absent async) | True |
+| (absent core async) | False. Suggestion: remove *core* |
+| (absent base core) | False. Suggestion: remove *base* and *core* |
+| (not (present core)) | False. Suggestion: remove *core* |
+| (not (present core async)) | True |
+| (not (present base core)) | Enforcement failure: removing either *base* or *core* would do |
+| (not (absent core)) | True |
+| (not (absent async)) | False. Suggestion: add *async*, keep existing values |
+| (not (absent core async)) | True |
+| (not (absent async lwt)) | Enforcement failure: adding either *async* or *lwt* would do |
+
+Note: the constructor `mem` is deprecated. It keeps its behavior, in particular enforcing `(not (mem a b))` removes all the supplied libraries. Replace `(mem ...)` by `(present ...)`, and `(not (mem ...))` by `(absent ...)`.
 
 ### modes
 
@@ -531,13 +551,25 @@ Compilation modes are ordered by *dunolint* as: `byte < native < best < melange`
 
 The predicates of the `modes` selector are:
 
-1. `(mem MODES)`
+1. `(present MODES)`
 
-Returns *true* iif the modes specified are all present in the list of values found in the fragment.
+Returns *true* iff the modes specified are all present in the list of values found in the fragment.
 
 When enforced, *dunolint* suggests adding the mode(s) not already present in the list of values found in the fragment.
 
-**Negation**: When the negation of the predicate *mem* is enforced, *dunolint* suggests removing the supplied mode(s) from the fragment when present.
+2. `(absent MODES)`
+
+Returns *true* iff none of the modes specified are present in the list of values found in the fragment.
+
+When enforced, *dunolint* suggests removing the mode(s) present.
+
+**Negation of `present` and `absent`**: They follow the same rules as for the *libraries* selector above: with a single mode, they are enforced as their opposite, and with several modes, they are only checked.
+
+Prefer `absent` over a negated `present`, and `present` over a negated `absent`: `(absent a b)` requires that none of the modes is present, and `(present a b)` that all of them are, which *dunolint* can always enforce.
+
+**Empty arguments**: `present` and `absent` expect at least one mode.
+
+When the stanza has no *modes* field, enforcing a condition that doesn't add any mode, such as `(absent byte)`, doesn't create the field, since an empty `(modes)` field isn't equivalent to an absent one.
 
 **Examples:**
 
@@ -551,12 +583,15 @@ Condition: `(dune (library (modes PREDICATE)))`
 
 | Predicate | Result |
 | --------- | ------ |
-| (mem byte native) | True |
-| (mem byte) | True |
-| (mem best) | False. Suggestion: add *best*, keep existing values |
-| (not (mem native)) | False. Suggestion: remove *native* |
+| (present byte native) | True |
+| (present byte) | True |
+| (present best) | False. Suggestion: add *best*, keep existing values |
+| (absent best) | True |
+| (absent native best) | False. Suggestion: remove *native* |
+| (not (present native)) | False. Suggestion: remove *native* |
+| (not (absent best)) | False. Suggestion: add *best*, keep existing values |
 
-Note: the constructors `has_mode` and `has_modes` are deprecated and to be replaced by the single variadic `mem` constructor.
+Note: the constructors `mem`, `has_mode` and `has_modes` are deprecated. They keep their behavior, in particular enforcing `(not (mem a b))` removes all the supplied modes. Replace `(mem MODES)`, `(has_mode MODE)` and `(has_modes (MODES))` by `(present MODES)`, and their negation by `(absent MODES)`.
 
 ### Fields shared with other stanzas
 
