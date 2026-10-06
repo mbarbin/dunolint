@@ -13,6 +13,7 @@ module Dune_workspace = Dune_workspace
 module Dunolint0 = Dunolint0
 module Glob = Glob
 module Linted_file_kind = Linted_file_kind
+module Nonempty_list = Nonempty_list
 module Path = Path
 module Predicate = Predicate
 module Rule = Rule
