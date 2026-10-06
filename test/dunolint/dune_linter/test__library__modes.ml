@@ -129,7 +129,9 @@ module Predicate = struct
   type t = Dune.Library.Modes.Predicate.t as 'a
     constraint
       'a =
-      [ `mem of Dune.Compilation_mode.t list
+      [ `present of Dune.Compilation_mode.t Dunolint.Nonempty_list.t
+      | `absent of Dune.Compilation_mode.t Dunolint.Nonempty_list.t
+      | `mem of Dune.Compilation_mode.t list
       | `has_mode of Dune.Compilation_mode.t (* deprecated *)
       | `has_modes of Dune.Compilation_mode.t list (* deprecated *)
       ]
@@ -140,42 +142,80 @@ open Dunolint.Config.Std
 let%expect_test "eval" =
   let _ = (`none : [ `some of Predicate.t | `none ]) in
   let _, t = parse {| (modes byte native) |} in
-  Test_helpers.is_true (Dune_linter.Library.Modes.eval t ~predicate:(`mem [ `byte ]));
-  [%expect {||}];
-  Test_helpers.is_true (Dune_linter.Library.Modes.eval t ~predicate:(`mem [ `native ]));
+  Test_helpers.is_true (Dune_linter.Library.Modes.eval t ~predicate:(`present [ `byte ]));
   [%expect {||}];
   Test_helpers.is_true
-    (Dune_linter.Library.Modes.eval t ~predicate:(`mem [ `byte; `native ]));
+    (Dune_linter.Library.Modes.eval t ~predicate:(`present [ `native ]));
   [%expect {||}];
-  Test_helpers.is_false (Dune_linter.Library.Modes.eval t ~predicate:(`mem [ `best ]));
+  Test_helpers.is_true
+    (Dune_linter.Library.Modes.eval t ~predicate:(`present [ `byte; `native ]));
+  [%expect {||}];
+  Test_helpers.is_false (Dune_linter.Library.Modes.eval t ~predicate:(`present [ `best ]));
   [%expect {||}];
   Test_helpers.is_false
-    (Dune_linter.Library.Modes.eval t ~predicate:(`mem [ `byte; `best ]));
-  [%expect {||}];
-  (* Empty list is trivially satisfied. *)
-  Test_helpers.is_true (Dune_linter.Library.Modes.eval t ~predicate:(`mem []));
+    (Dune_linter.Library.Modes.eval t ~predicate:(`present [ `byte; `best ]));
   [%expect {||}];
   let _, t = parse {| (modes :standard byte) |} in
-  Test_helpers.is_false (Dune_linter.Library.Modes.eval t ~predicate:(`mem [ `native ]));
+  Test_helpers.is_false
+    (Dune_linter.Library.Modes.eval t ~predicate:(`present [ `native ]));
   [%expect {||}];
   ()
 ;;
 
-(* {1 Deprecated predicates - coverage tests}
-
-   The following test covers the deprecated [has_mode] and [has_modes]
-   predicates. Remove this section when dropping support for deprecated
-   predicates. *)
-
-let%expect_test "eval - deprecated predicates" =
+let%expect_test "eval - present and absent" =
+  let eval t predicate = Dune_linter.Library.Modes.eval t ~predicate in
   let _, t = parse {| (modes byte native) |} in
-  Test_helpers.is_true
-    (Dune_linter.Library.Modes.eval t ~predicate:(`has_modes [ `byte; `native ]));
+  Test_helpers.is_true (eval t (`present [ `byte; `native ]));
+  Test_helpers.is_false (eval t (`present [ `byte; `best ]));
   [%expect {||}];
-  Test_helpers.is_false (Dune_linter.Library.Modes.eval t ~predicate:(`has_mode `best));
+  (* [absent] holds when none of the modes is present. *)
+  Test_helpers.is_true (eval t (`absent [ `best ]));
+  Test_helpers.is_true (eval t (`absent [ `best; `melange ]));
+  Test_helpers.is_false (eval t (`absent [ `byte ]));
+  Test_helpers.is_false (eval t (`absent [ `best; `byte ]));
   [%expect {||}];
-  Test_helpers.is_true (Dune_linter.Library.Modes.eval t ~predicate:(`has_mode `byte));
-  [%expect {||}];
+  ()
+;;
+
+let%expect_test "enforce - present and absent" =
+  let enforce ((sexps_rewriter, field), t) conditions =
+    Sexps_rewriter.reset sexps_rewriter;
+    Dunolinter.Handler.raise ~f:(fun () ->
+      List.iter conditions ~f:(fun condition ->
+        Dune_linter.Library.Modes.enforce t ~condition);
+      Dune_linter.Library.Modes.rewrite t ~sexps_rewriter ~field;
+      print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
+  in
+  (* Enforcing [present] adds the missing modes. *)
+  let t = parse {| (modes byte) |} in
+  enforce t [ present [ `byte; `native ] ];
+  [%expect {| (modes byte native) |}];
+  (* Enforcing [absent] removes all the listed modes. *)
+  let t = parse {| (modes byte native best) |} in
+  enforce t [ absent [ `native; `best; `melange ] ];
+  [%expect {| (modes byte) |}];
+  (* The negation of a single entry is enforced like its opposite. *)
+  let t = parse {| (modes byte native) |} in
+  enforce t [ not_ (present [ `native ]) ];
+  [%expect {| (modes byte) |}];
+  enforce t [ not_ (absent [ `best ]) ];
+  [%expect {| (modes byte best) |}];
+  (* With more than one entry, the negation is only checked. *)
+  let t = parse {| (modes byte native) |} in
+  enforce t [ not_ (present [ `byte; `best ]); not_ (absent [ `byte; `best ]) ];
+  [%expect {| (modes byte native) |}];
+  require_does_raise (fun () -> enforce t [ not_ (present [ `byte; `native ]) ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (present byte native))))
+    |}];
+  require_does_raise (fun () -> enforce t [ not_ (absent [ `best; `melange ]) ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (absent best melange))))
+    |}];
   ()
 ;;
 
@@ -196,57 +236,45 @@ let%expect_test "enforce" =
   enforce t [];
   [%expect {| (modes byte native) |}];
   (* Enforcing the presence of modes already present has no effect. *)
-  enforce t [ mem [ `byte; `native ] ];
+  enforce t [ present [ `byte; `native ] ];
   [%expect {| (modes byte native) |}];
   (* Enforcing the presence a new value adds it. *)
-  enforce t [ mem [ `best ] ];
+  enforce t [ present [ `best ] ];
   [%expect {| (modes byte native best) |}];
   (* Enforcing the presence of multiple new values adds them. *)
   let t = parse {| (modes byte native) |} in
-  enforce t [ mem [ `best; `melange ] ];
+  enforce t [ present [ `best; `melange ] ];
   [%expect {| (modes byte native best melange) |}];
-  (* Empty mem has no effect. *)
-  let t = parse {| (modes byte native) |} in
-  enforce t [ mem [] ];
-  [%expect {| (modes byte native) |}];
   (* Starting from empty. *)
   let t = parse {| (modes) |} in
-  enforce t [ mem [ `byte ] ];
+  enforce t [ present [ `byte ] ];
   [%expect {| (modes byte) |}];
-  (* Enforcing the negation of a mode non-present has no effect. *)
+  (* Enforcing the absence of a mode non-present has no effect. *)
   let t = parse {| (modes byte native) |} in
-  enforce t [ not_ (mem [ `best ]) ];
+  enforce t [ absent [ `best ] ];
   [%expect {| (modes byte native) |}];
-  (* Enforcing the negation of mixed present and non present mode removes the present ones. *)
-  let t = parse {| (modes byte native) |} in
-  enforce t [ not_ (mem [ `best; `native ]) ];
-  [%expect {| (modes byte) |}];
-  (* Negating mem removes multiple modes. *)
-  let t = parse {| (modes byte native best) |} in
-  enforce t [ not_ (mem [ `native; `best ]) ];
-  [%expect {| (modes byte) |}];
-  (* Enforcing [mem] adds the mode if it is missing. *)
+  (* Enforcing [present] adds the mode if it is missing. *)
   let t = parse {| (modes native) |} in
-  enforce t [ mem [ `byte ] ];
+  enforce t [ present [ `byte ] ];
   [%expect {| (modes byte native) |}];
   (* It does nothing if the mode is already present. *)
-  enforce t [ mem [ `byte ] ];
+  enforce t [ present [ `byte ] ];
   [%expect {| (modes byte native) |}];
-  (* Enforcing the negation of [mem] removes the mode if present. *)
-  enforce t [ not_ (mem [ `native ]) ];
+  (* Enforcing [absent] removes the mode if present. *)
+  enforce t [ absent [ `native ] ];
   [%expect {| (modes byte) |}];
   (* And does nothing if the mode is already absent. *)
-  enforce t [ not_ (mem [ `native ]) ];
+  enforce t [ absent [ `native ] ];
   [%expect {| (modes byte) |}];
-  enforce t [ not_ (mem [ `byte ]) ];
+  enforce t [ absent [ `byte ] ];
   [%expect {| (modes) |}];
-  enforce t [ mem [ `native ] ];
+  enforce t [ present [ `native ] ];
   [%expect {| (modes native) |}];
-  enforce t [ mem [ `best ] ];
+  enforce t [ present [ `best ] ];
   [%expect {| (modes native best) |}];
-  enforce t [ not_ (mem [ `best ]) ];
+  enforce t [ absent [ `best ] ];
   [%expect {| (modes native) |}];
-  enforce t [ not_ (mem [ `native ]) ];
+  enforce t [ absent [ `native ] ];
   [%expect {| (modes) |}];
   (* Blang. *)
   let t = parse {| (modes native) |} in
@@ -254,24 +282,22 @@ let%expect_test "enforce" =
   [%expect {| (modes native) |}];
   require_does_raise (fun () -> enforce t [ false_ ]);
   [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
-  enforce t [ and_ [ mem [ `byte ]; not_ (mem [ `native ]) ] ];
+  enforce t [ and_ [ present [ `byte ]; absent [ `native ] ] ];
   [%expect {| (modes byte) |}];
   (* [or] does not have an enforcement strategy when its invariant is
      not satisfied. *)
-  enforce t [ or_ [ mem [ `byte ]; mem [ `native ] ] ];
+  enforce t [ or_ [ present [ `byte ]; present [ `native ] ] ];
   [%expect {| (modes byte) |}];
-  require_does_raise (fun () -> enforce t [ or_ [ mem [ `best ]; mem [ `native ] ] ]);
+  require_does_raise (fun () ->
+    enforce t [ or_ [ present [ `best ]; present [ `native ] ] ]);
   [%expect
     {|
     (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (or (mem best) (mem native))))
+     (condition (or (present best) (present native))))
     |}];
   (* When defined, [if] enforces the clause that applies. *)
   let invariant =
-    if_
-      (mem [ `best ])
-      (and_ [ not_ (mem [ `byte ]); not_ (mem [ `native ]) ])
-      (mem [ `byte ])
+    if_ (present [ `best ]) (absent [ `byte; `native ]) (present [ `byte ])
   in
   let t = parse {| (modes native) |} in
   enforce t [ invariant ];
@@ -281,25 +307,47 @@ let%expect_test "enforce" =
   [%expect {| (modes best) |}];
   (* Presence unknown statically. *)
   let t = parse {| (modes :standard) |} in
-  (* Enforcing [mem] adds the mode if it is missing. *)
-  enforce t [ mem [ `byte ] ];
+  (* Enforcing [present] adds the mode if it is missing. *)
+  enforce t [ present [ `byte ] ];
   [%expect {| (modes :standard byte) |}];
   (* It shall not fail when attempting to remove a mode not known to be present
      after evaluation. *)
   let t = parse {| (modes :standard) |} in
-  enforce t [ not_ (mem [ `byte ]) ];
+  enforce t [ absent [ `byte ] ];
   [%expect {| (modes :standard) |}];
   let t = parse {| (modes :standard byte) |} in
-  enforce t [ not_ (mem [ `byte ]) ];
+  enforce t [ absent [ `byte ] ];
   [%expect {| (modes :standard) |}];
   ()
 ;;
 
-(* {1 Deprecated predicates - enforce coverage tests}
+(* {1 Deprecated predicates}
 
-   The following test covers enforcement with deprecated [has_mode] and
-   [has_modes] predicates. Remove this section when dropping support for
-   deprecated predicates. *)
+   The following tests cover the deprecated [mem], [has_mode] and [has_modes]
+   predicates. Remove this section when dropping support for deprecated
+   predicates. *)
+
+(* {2 Eval} *)
+
+let%expect_test "eval - deprecated predicates" =
+  let _, t = parse {| (modes byte native) |} in
+  Test_helpers.is_true
+    (Dune_linter.Library.Modes.eval t ~predicate:(`has_modes [ `byte; `native ]));
+  [%expect {||}];
+  Test_helpers.is_false (Dune_linter.Library.Modes.eval t ~predicate:(`has_mode `best));
+  [%expect {||}];
+  Test_helpers.is_true (Dune_linter.Library.Modes.eval t ~predicate:(`has_mode `byte));
+  [%expect {||}];
+  Test_helpers.is_true
+    (Dune_linter.Library.Modes.eval t ~predicate:(`mem [ `byte; `native ]));
+  Test_helpers.is_false (Dune_linter.Library.Modes.eval t ~predicate:(`mem [ `best ]));
+  (* Empty list is trivially satisfied. *)
+  Test_helpers.is_true (Dune_linter.Library.Modes.eval t ~predicate:(`mem []));
+  [%expect {||}];
+  ()
+;;
+
+(* {2 Enforce} *)
 
 let%expect_test "enforce - deprecated predicates" =
   let enforce ((sexps_rewriter, field), t) conditions =
@@ -323,6 +371,22 @@ let%expect_test "enforce - deprecated predicates" =
   enforce t [ (has_mode [@alert "-deprecated"]) `byte ];
   [%expect {| (modes byte native) |}];
   enforce t [ not_ ((has_mode [@alert "-deprecated"]) `native) ];
+  [%expect {| (modes byte) |}];
+  let mem = (mem [@alert "-deprecated"]) in
+  let t = parse {| (modes byte native) |} in
+  enforce t [ mem [ `byte; `best ] ];
+  [%expect {| (modes byte native best) |}];
+  (* Empty mem has no effect. *)
+  enforce t [ mem [] ];
+  [%expect {| (modes byte native best) |}];
+  (* Enforcing the negation of [mem] removes the listed modes that are present, even when
+     some are already absent. *)
+  let t = parse {| (modes byte native) |} in
+  enforce t [ not_ (mem [ `best; `native ]) ];
+  [%expect {| (modes byte) |}];
+  (* It removes all the listed modes when they are all present. *)
+  let t = parse {| (modes byte native best) |} in
+  enforce t [ not_ (mem [ `native; `best ]) ];
   [%expect {| (modes byte) |}];
   ()
 ;;

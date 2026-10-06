@@ -19,6 +19,7 @@ module Int = Int0
 module List = List0
 module Loc = Loc0
 module Myers = Myers0
+module Nonempty_list = Nonempty_list0
 module Nothing = Nothing0
 module Option = Option0
 module Ordering = Ordering0

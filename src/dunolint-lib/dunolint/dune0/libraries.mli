@@ -13,9 +13,18 @@ module Predicate : sig
   (** Predicates to check library dependencies.
 
       Example sexp syntax:
-      {v   (libraries (mem ordering yojson)) v} *)
+      {v   (libraries (present ordering yojson)) v} *)
 
-  type t = [ `mem of Library__name.t list ]
+  (** These names are deprecated and will be removed by a future upgrade. Do not
+      use in new code and migrate at your earliest convenience. Use [`present]
+      instead, or [`absent] instead of the negation of [`mem]. *)
+  type deprecated_names = [ `mem of Library__name.t list ]
+
+  type t =
+    [ `present of Library__name.t Nonempty_list.t
+    | `absent of Library__name.t Nonempty_list.t
+    | deprecated_names
+    ]
 
   val equal : t -> t -> bool
 

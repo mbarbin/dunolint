@@ -416,7 +416,7 @@ let%expect_test "eval" =
        ~predicate:(`public_name (equals (Dune.Library.Public_name.v "mylib"))));
   [%expect {||}];
   Test_helpers.is_undefined
-    (Dune_linter.Library.eval t ~predicate:(`modes (mem [ `best ])));
+    (Dune_linter.Library.eval t ~predicate:(`modes (present [ `best ])));
   [%expect {||}];
   let _, t =
     parse
@@ -428,9 +428,10 @@ let%expect_test "eval" =
 |}
   in
   Test_helpers.is_true
-    (Dune_linter.Library.eval t ~predicate:(`modes (mem [ `byte; `native ])));
+    (Dune_linter.Library.eval t ~predicate:(`modes (present [ `byte; `native ])));
   [%expect {||}];
-  Test_helpers.is_false (Dune_linter.Library.eval t ~predicate:(`modes (mem [ `best ])));
+  Test_helpers.is_false
+    (Dune_linter.Library.eval t ~predicate:(`modes (present [ `best ])));
   [%expect {||}];
   Test_helpers.is_undefined
     (Dune_linter.Library.eval
@@ -681,7 +682,7 @@ let%expect_test "enforce" =
   (* When there is no [modes], enforcing a invariant about this field results in
      dunolint creating a new field. *)
   let t = parse {| (library (name mylib)) |} in
-  enforce t [ modes (mem [ `native ]) ];
+  enforce t [ modes (present [ `native ]) ];
   [%expect
     {|
     (library
@@ -690,12 +691,27 @@ let%expect_test "enforce" =
     |}];
   (* Otherwise the mode is edited in place. *)
   let t = parse {| (library (name mylib) (modes byte)) |} in
-  enforce t [ modes (mem [ `native ]) ];
+  enforce t [ modes (present [ `native ]) ];
   [%expect
     {|
     (library
      (name mylib)
      (modes byte native))
+    |}];
+  (* Enforcing the absence of a mode when there is no [modes] field doesn't create an
+     empty one, which wouldn't be equivalent to the absent field. *)
+  let t = parse {| (library (name mylib)) |} in
+  enforce t [ modes (not_ (present [ `byte ])) ];
+  [%expect
+    {|
+    (library
+     (name mylib))
+    |}];
+  enforce t [ modes (absent [ `byte; `native ]) ];
+  [%expect
+    {|
+    (library
+     (name mylib))
     |}];
   (* Currently adding a field is only possible if some are already present. *)
   let t = parse {| (library) |} in
@@ -1085,7 +1101,7 @@ let%expect_test "field_conditions" =
     |}];
   (* [modes] condition auto-creates field. *)
   let t = parse init in
-  enforce t [ modes (mem [ `byte ]) ];
+  enforce t [ modes (present [ `byte ]) ];
   [%expect
     {|
     (library
@@ -1709,24 +1725,25 @@ let%expect_test "if_present eval semantics" =
   ()
 ;;
 
-let%expect_test "libraries predicate - mem" =
+let%expect_test "libraries predicate - present" =
   let _, t = parse {| (library (name mylib) (libraries base core)) |} in
   Test_helpers.is_true
     (Dune_linter.Library.eval
        t
-       ~predicate:(`libraries (mem [ Dune.Library.Name.v "base" ])));
+       ~predicate:(`libraries (present [ Dune.Library.Name.v "base" ])));
   [%expect {||}];
   Test_helpers.is_true
     (Dune_linter.Library.eval
        t
        ~predicate:
-         (`libraries (mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ])));
+         (`libraries (present [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ])));
   [%expect {||}];
   Test_helpers.is_false
     (Dune_linter.Library.eval
        t
        ~predicate:
-         (`libraries (mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "absent" ])));
+         (`libraries
+             (present [ Dune.Library.Name.v "base"; Dune.Library.Name.v "absent" ])));
   [%expect {||}];
   ()
 ;;
@@ -1735,7 +1752,7 @@ let%expect_test "libraries predicate - enforce via library" =
   (* This exercises the T (`libraries condition) path in Library.enforce. *)
   let t = parse {| (library (name mylib) (libraries base)) |} in
   (* Enforcing presence of existing library has no effect. *)
-  enforce t [ libraries (mem [ Dune.Library.Name.v "base" ]) ];
+  enforce t [ libraries (present [ Dune.Library.Name.v "base" ]) ];
   [%expect
     {|
     (library
@@ -1744,7 +1761,7 @@ let%expect_test "libraries predicate - enforce via library" =
     |}];
   (* Enforcing presence of new library adds it. *)
   let t = parse {| (library (name mylib) (libraries base)) |} in
-  enforce t [ libraries (mem [ Dune.Library.Name.v "core" ]) ];
+  enforce t [ libraries (present [ Dune.Library.Name.v "core" ]) ];
   [%expect
     {|
     (library
@@ -1753,7 +1770,15 @@ let%expect_test "libraries predicate - enforce via library" =
     |}];
   (* Enforcing absence of existing library removes it. *)
   let t = parse {| (library (name mylib) (libraries base core)) |} in
-  enforce t [ libraries (not_ (mem [ Dune.Library.Name.v "core" ])) ];
+  enforce t [ libraries (not_ (present [ Dune.Library.Name.v "core" ])) ];
+  [%expect
+    {|
+    (library
+     (name mylib)
+     (libraries base))
+    |}];
+  let t = parse {| (library (name mylib) (libraries base core)) |} in
+  enforce t [ libraries (absent [ Dune.Library.Name.v "core" ]) ];
   [%expect
     {|
     (library

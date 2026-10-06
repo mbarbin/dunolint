@@ -48,6 +48,11 @@ let union = function
 
 let empty = Union []
 
+let is_empty = function
+  | Union [] -> true
+  | Element _ | Standard | Union (_ :: _) | Diff _ | Include _ -> false
+;;
+
 let read ~read_element ~sexps_rewriter sexps =
   let rec one sexp =
     match (sexp : Sexp.t) with

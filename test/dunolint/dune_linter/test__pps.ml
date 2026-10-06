@@ -207,7 +207,9 @@ module Predicate = struct
   type t = Dune.Pps.Predicate.t as 'a
     constraint
       'a =
-      [ `pp of Dune.Pp.Name.t
+      [ `present of Dune.Pp.Name.t Dunolint.Nonempty_list.t
+      | `absent of Dune.Pp.Name.t Dunolint.Nonempty_list.t
+      | `pp of Dune.Pp.Name.t
       | `flag of Dune.Pps.Predicate.Flag.t
       | `pp_with_flag of Dune.Pps.Predicate.Pp_with_flag.t
       ]
@@ -616,5 +618,67 @@ let%expect_test "enforce" =
   let t = parse {| (pps ppx_o --driver=screw) |} in
   enforce t [ not_ (flag { name = "--driver"; param = `any; applies_to = `driver }) ];
   [%expect {| (pps ppx_o --driver=screw) |}];
+  ()
+;;
+
+let%expect_test "eval - present and absent" =
+  let eval t predicate = Dune_linter.Pps.eval t ~predicate in
+  let pp = Dune.Pp.Name.v in
+  let _, t = parse {| (pps ppx_jane --flag-for-jane ppx_john) |} in
+  Test_helpers.is_true (eval t (`present [ pp "ppx_jane"; pp "ppx_john" ]));
+  Test_helpers.is_false (eval t (`present [ pp "ppx_jane"; pp "ppx_eve" ]));
+  [%expect {||}];
+  (* [absent] holds when none of the pps is present. *)
+  Test_helpers.is_true (eval t (`absent [ pp "ppx_eve"; pp "ppx_other" ]));
+  Test_helpers.is_false (eval t (`absent [ pp "ppx_eve"; pp "ppx_john" ]));
+  [%expect {||}];
+  ()
+;;
+
+let%expect_test "enforce - present and absent" =
+  let enforce ((sexps_rewriter, field), t) conditions =
+    Sexps_rewriter.reset sexps_rewriter;
+    Dunolinter.Handler.raise ~f:(fun () ->
+      List.iter conditions ~f:(fun condition -> Dune_linter.Pps.enforce t ~condition);
+      Dune_linter.Pps.rewrite t ~sexps_rewriter ~field;
+      print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn))
+  in
+  let pp = Dune.Pp.Name.v in
+  (* Enforcing [present] adds the missing pps. *)
+  let t = parse {| (pps ppx_jane --flag-for-jane ppx_john) |} in
+  enforce t [ present [ pp "ppx_jane"; pp "ppx_eve" ] ];
+  [%expect {| (pps ppx_eve ppx_jane --flag-for-jane ppx_john) |}];
+  (* Enforcing [absent] removes the listed pps, along with the flags that apply to them. *)
+  let t = parse {| (pps ppx_jane --flag-for-jane ppx_john --flag-for-john ppx_eve) |} in
+  enforce t [ absent [ pp "ppx_jane"; pp "ppx_eve"; pp "ppx_other" ] ];
+  [%expect {| (pps ppx_john --flag-for-john) |}];
+  (* The negation of a single entry is enforced like its opposite. *)
+  let t = parse {| (pps ppx_jane --flag-for-jane ppx_john) |} in
+  enforce t [ not_ (present [ pp "ppx_jane" ]) ];
+  [%expect {| (pps ppx_john) |}];
+  enforce t [ not_ (absent [ pp "ppx_eve" ]) ];
+  [%expect {| (pps ppx_eve ppx_john) |}];
+  (* With more than one entry, the negation is only checked. *)
+  let t = parse {| (pps ppx_jane ppx_john) |} in
+  enforce
+    t
+    [ not_ (present [ pp "ppx_jane"; pp "ppx_eve" ])
+    ; not_ (absent [ pp "ppx_jane"; pp "ppx_eve" ])
+    ];
+  [%expect {| (pps ppx_jane ppx_john) |}];
+  require_does_raise (fun () ->
+    enforce t [ not_ (present [ pp "ppx_jane"; pp "ppx_john" ]) ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (present ppx_jane ppx_john))))
+    |}];
+  require_does_raise (fun () ->
+    enforce t [ not_ (absent [ pp "ppx_eve"; pp "ppx_other" ]) ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure (loc _)
+     (condition (not (absent ppx_eve ppx_other))))
+    |}];
   ()
 ;;

@@ -129,7 +129,7 @@ let%expect_test "Predicate.t_of_sexp" =
     {|
     (Of_sexp_error
      (Dunolint.Sexp_helpers.Error_context.E
-      ("The construct [=] expects one or more arguments."
+      ("The construct [=] expects one argument."
        (suggestion "Replace by: (= ARG)")))
      (invalid_sexp =))
     |}];
@@ -137,7 +137,9 @@ let%expect_test "Predicate.t_of_sexp" =
   [%expect
     {|
     (Of_sexp_error
-     "dune_lang_version.t_of_sexp: polymorphic variant tag \"=\" has incorrect number of arguments"
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [=] expects one argument."
+       (suggestion "Replace by: (= ARG)")))
      (invalid_sexp (= 3.17 extra)))
     |}];
   test "(unknown 3.17)";

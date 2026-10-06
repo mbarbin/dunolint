@@ -57,7 +57,8 @@ let () =
          , return )
        ; ( true_
          , enforce
-             (dune (library (libraries (mem [ Dune.Library.Name.v "dunolint_stdlib" ]))))
+             (dune
+                (library (libraries (present [ Dune.Library.Name.v "dunolint_stdlib" ]))))
          )
        ])
 ;;

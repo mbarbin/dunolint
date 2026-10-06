@@ -10,12 +10,14 @@ module Predicate = struct
   let error_source = "library.modes.t"
 
   type deprecated_names =
-    [ `has_mode of Compilation_mode.t
+    [ `mem of Compilation_mode.t list
+    | `has_mode of Compilation_mode.t
     | `has_modes of Compilation_mode.t list
     ]
 
   type t =
-    [ `mem of Compilation_mode.t list
+    [ `present of Compilation_mode.t Nonempty_list.t
+    | `absent of Compilation_mode.t Nonempty_list.t
     | deprecated_names
     ]
 
@@ -24,25 +26,40 @@ module Predicate = struct
     then true
     else (
       match a, b with
+      | `present (a :: va), `present (b :: vb) | `absent (a :: va), `absent (b :: vb) ->
+        equal_list Compilation_mode.equal (a :: va) (b :: vb)
       | `mem va, `mem vb -> equal_list Compilation_mode.equal va vb
       | `has_mode va, `has_mode vb -> Compilation_mode.equal va vb
       | `has_modes va, `has_modes vb -> equal_list Compilation_mode.equal va vb
-      | (`mem _ | `has_mode _ | `has_modes _), _ -> false)
+      | (`present _ | `absent _ | `mem _ | `has_mode _ | `has_modes _), _ -> false)
   ;;
 
   let variant_spec : t Sexp_helpers.Variant_spec.t =
-    [ { atom = "mem"
+    let modes (f : Compilation_mode.t Nonempty_list.t -> t) =
+      Sexp_helpers.Variant_spec.Nonempty
+        (fun ~context:_ ~fields:(hd :: tl) ->
+          f (Compilation_mode.t_of_sexp hd :: List.map tl ~f:Compilation_mode.t_of_sexp))
+    in
+    [ { atom = "present"; conv = modes (fun v -> `present v) }
+    ; { atom = "absent"; conv = modes (fun v -> `absent v) }
+    ; { atom = "mem"
       ; conv =
           Variadic
             (fun ~context:_ ~fields ->
               `mem (List.map fields ~f:Compilation_mode.t_of_sexp))
       }
-      (* Deprecated - parsed and normalized to [mem]. *)
+      (* Deprecated - parsed and normalized to [present] when that preserves their
+         behavior, otherwise to [mem]. *)
     ; { atom = "has_mode"
-      ; conv = Unary (fun sexp -> `mem [ Compilation_mode.t_of_sexp sexp ])
+      ; conv = Unary (fun sexp -> `present [ Compilation_mode.t_of_sexp sexp ])
       }
     ; { atom = "has_modes"
-      ; conv = Unary (fun sexp -> `mem (list_of_sexp Compilation_mode.t_of_sexp sexp))
+      ; conv =
+          Unary
+            (fun sexp ->
+              match list_of_sexp Compilation_mode.t_of_sexp sexp with
+              | [ mode ] -> `present [ mode ]
+              | ([] | _ :: _ :: _) as modes -> `mem modes)
       }
     ]
   ;;
@@ -53,6 +70,10 @@ module Predicate = struct
 
   let sexp_of_t (t : t) : Sexp.t =
     match t with
+    | `present (hd :: tl) ->
+      List (Atom "present" :: List.map (hd :: tl) ~f:Compilation_mode.sexp_of_t)
+    | `absent (hd :: tl) ->
+      List (Atom "absent" :: List.map (hd :: tl) ~f:Compilation_mode.sexp_of_t)
     | `mem v -> List (Atom "mem" :: List.map v ~f:Compilation_mode.sexp_of_t)
     | `has_mode v -> List [ Atom "has_mode"; Compilation_mode.sexp_of_t v ]
     | `has_modes v -> List [ Atom "has_modes"; sexp_of_list Compilation_mode.sexp_of_t v ]

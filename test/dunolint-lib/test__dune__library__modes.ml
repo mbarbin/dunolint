@@ -46,6 +46,11 @@ let%expect_test "Predicate.equal" =
   [%expect {||}];
   require (not (equal has_modes_a has_mode_byte));
   [%expect {||}];
+  require (equal (`present [ `byte ]) (`present [ `byte ]));
+  require (equal (`absent [ `byte ]) (`absent [ `byte ]));
+  require (not (equal (`present [ `byte ]) (`absent [ `byte ])));
+  require (not (equal (`absent [ `byte ]) mem_b));
+  [%expect {||}];
   ()
 ;;
 
@@ -53,23 +58,28 @@ open Dunolint.Config.Std
 
 let%expect_test "predicate" =
   let test p = Common.test_predicate (module Dune.Library.Modes.Predicate) p in
-  test (mem []);
+  (* Deprecated. *)
+  test ((mem [@alert "-deprecated"]) []);
   [%expect {| (mem) |}];
-  test (mem [ `best ]);
-  [%expect {| (mem best) |}];
-  test (mem [ `byte; `native; `melange ]);
+  test ((mem [@alert "-deprecated"]) [ `byte; `native; `melange ]);
   [%expect {| (mem byte native melange) |}];
-  test (mem [ `byte ]);
-  [%expect {| (mem byte) |}];
-  test (mem [ `native ]);
-  [%expect {| (mem native) |}];
-  test (mem [ `melange ]);
-  [%expect {| (mem melange) |}];
+  test (present [ `best ]);
+  [%expect {| (present best) |}];
+  test (present [ `byte ]);
+  [%expect {| (present byte) |}];
+  test (present [ `native ]);
+  [%expect {| (present native) |}];
+  test (present [ `melange ]);
+  [%expect {| (present melange) |}];
+  test (present [ `byte; `native ]);
+  [%expect {| (present byte native) |}];
+  test (absent [ `byte; `native ]);
+  [%expect {| (absent byte native) |}];
   ()
 ;;
 
 (* Deprecated EDSL helpers - test serialization only (no roundtrip, since
-   parsing normalizes to [mem]). *)
+   parsing normalizes them). *)
 let%expect_test "predicate - deprecated EDSL helpers" =
   let test p = print_s (p |> Blang.sexp_of_t Dune.Library.Modes.Predicate.sexp_of_t) in
   test ((has_modes [@alert "-deprecated"]) []);
@@ -105,13 +115,38 @@ let%expect_test "Predicate.t_of_sexp" =
     {|
     (Of_sexp_error
      (Dunolint.Sexp_helpers.Error_context.E
-      ("The construct [mem] expects one or more arguments."
-       (suggestion "Replace by: (mem ARG)")))
+      ("The construct [mem] must be written within parentheses."
+       (suggestion "Replace by: (mem ARG...)")))
      (invalid_sexp mem))
     |}];
-  (* Deprecated operators - parsed and normalized to [mem]. *)
+  test "(present byte)";
+  [%expect {| (present byte) |}];
+  test "(present)";
+  [%expect
+    {|
+    (Of_sexp_error
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [present] expects one or more arguments."
+       (suggestion "Replace by: (present ARG...)")))
+     (invalid_sexp (present)))
+    |}];
+  test "(absent byte)";
+  [%expect {| (absent byte) |}];
+  test "(absent)";
+  [%expect
+    {|
+    (Of_sexp_error
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [absent] expects one or more arguments."
+       (suggestion "Replace by: (absent ARG...)")))
+     (invalid_sexp (absent)))
+    |}];
+  (* Deprecated operators - parsed and normalized to [present] when that preserves their
+     behavior, otherwise to [mem]. *)
   test "(has_mode byte)";
-  [%expect {| (mem byte) |}];
+  [%expect {| (present byte) |}];
+  test "(has_modes (byte))";
+  [%expect {| (present byte) |}];
   test "(has_modes (byte native))";
   [%expect {| (mem byte native) |}];
   test "(has_modes ())";

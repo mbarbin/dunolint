@@ -16,6 +16,7 @@ include module type of struct
   include Blang.O
 end
 
+val absent : 'a Nonempty_list.t -> [> `absent of 'a Nonempty_list.t ] Blang.t
 val backend : 'a -> [> `backend of 'a ] Blang.t
 val cond : ('condition * 'action) list -> [> `cond of ('condition * 'action) list ]
 val dune : 'a -> [> `dune of 'a ] Blang.t
@@ -46,7 +47,6 @@ val library : 'a -> [> `library of 'a ] Blang.t
 val lint : 'a -> [> `lint of 'a ] Blang.t
 val lt : 'a -> [> `lt of 'a ] Blang.t
 val lte : 'a -> [> `lte of 'a ] Blang.t
-val mem : 'a list -> [> `mem of 'a list ] Blang.t
 val modes : 'a -> [> `modes of 'a ] Blang.t
 val name : 'a -> [> `name of 'a ] Blang.t
 val neq : 'a -> [> `neq of 'a ] Blang.t
@@ -61,6 +61,7 @@ val pp_with_flag
   -> [> `pp_with_flag of Dune.Pps.Predicate.Pp_with_flag.t ] Blang.t
 
 val preprocess : 'a -> [> `preprocess of 'a ] Blang.t
+val present : 'a Nonempty_list.t -> [> `present of 'a Nonempty_list.t ] Blang.t
 val public_name : 'a -> [> `public_name of 'a ] Blang.t
 val return : [> `return ]
 val stanza : 'a -> [> `stanza of 'a ] Blang.t
@@ -72,13 +73,17 @@ val greater_than_or_equal_to : 'a -> [> `greater_than_or_equal_to of 'a ] Blang.
 [@@migrate { repl = Rel.gte }]
 
 val has_mode : 'a -> [> `has_mode of 'a ] Blang.t
-[@@ocaml.deprecated "[since 2026-02] Use [mem]. Hint: Run [ocamlmig migrate]"]
-[@@migrate { repl = (fun p -> Rel.mem [ p ]) }]
+[@@ocaml.deprecated "[since 2026-02] Use [present]. Hint: Run [ocamlmig migrate]"]
+[@@migrate { repl = (fun p -> Rel.present [ p ]) }]
 
 val has_modes : 'a -> [> `has_modes of 'a ] Blang.t
-[@@ocaml.deprecated "[since 2026-02] Use [mem]. Hint: Run [ocamlmig migrate]"]
-[@@migrate { repl = Rel.mem }]
+[@@ocaml.deprecated
+  "[since 2026-02] Use [present], or [absent] instead of the negation of [has_modes]."]
 
 val less_than_or_equal_to : 'a -> [> `less_than_or_equal_to of 'a ] Blang.t
 [@@ocaml.deprecated "[since 2025-12] Use [lte]. Hint: Run [ocamlmig migrate]"]
 [@@migrate { repl = Rel.lte }]
+
+val mem : 'a list -> [> `mem of 'a list ] Blang.t
+[@@ocaml.deprecated
+  "[since 2026-10] Use [present], or [absent] instead of the negation of [mem]."]

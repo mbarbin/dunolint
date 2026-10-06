@@ -57,6 +57,11 @@ module Error_context = struct
   let suggestion t = t.suggestion
 end
 
+let raise ?did_you_mean ?suggestion sexp ~message =
+  let context = { Error_context.message; did_you_mean; suggestion } in
+  Stdlib.raise (Sexplib0.Sexp_conv.Of_sexp_error (Error_context.E context, sexp))
+;;
+
 let parse_inline_record
       (type a)
       (module M : T_of_sexp with type t = a)
@@ -89,6 +94,7 @@ module Variant_spec = struct
     | Unary_with_context of (context:Sexp.t -> arg:Sexp.t -> 'a)
     | Unary of (Sexp.t -> 'a)
     | Variadic of (context:Sexp.t -> fields:Sexp.t list -> 'a)
+    | Nonempty of (context:Sexp.t -> fields:Sexp.t Nonempty_list.t -> 'a)
 
   type 'a case =
     { atom : string
@@ -111,40 +117,51 @@ let parse_variant (type a) (variant_spec : a Variant_spec.t) ~error_source (sexp
     with
     | Some case -> case
     | None ->
-      let context =
-        { Error_context.message = Printf.sprintf "Unknown construct [%s]." atom
-        ; did_you_mean =
-            Some { var = atom; candidates = Variant_spec.candidates variant_spec }
-        ; suggestion = None
-        }
-      in
-      raise (Sexplib0.Sexp_conv.Of_sexp_error (Error_context.E context, located_sexp))
+      raise
+        located_sexp
+        ~message:(Printf.sprintf "Unknown construct [%s]." atom)
+        ~did_you_mean:{ var = atom; candidates = Variant_spec.candidates variant_spec }
+  in
+  let expects_one_argument atom =
+    raise
+      sexp
+      ~message:(Printf.sprintf "The construct [%s] expects one argument." atom)
+      ~suggestion:(Printf.sprintf "Replace by: (%s ARG)" atom)
+  in
+  let expects_one_or_more_arguments atom =
+    raise
+      sexp
+      ~message:(Printf.sprintf "The construct [%s] expects one or more arguments." atom)
+      ~suggestion:(Printf.sprintf "Replace by: (%s ARG...)" atom)
   in
   match sexp with
   | Atom atom ->
     (match find_case ~located_sexp:sexp atom with
      | { conv = Nullary value; _ } -> value
-     | { conv = Unary_with_context _ | Unary _ | Variadic _; _ } ->
-       let context =
-         { Error_context.message =
-             Printf.sprintf "The construct [%s] expects one or more arguments." atom
-         ; did_you_mean = None
-         ; suggestion = Some (Printf.sprintf "Replace by: (%s ARG)" atom)
-         }
-       in
-       raise (Sexplib0.Sexp_conv.Of_sexp_error (Error_context.E context, sexp)))
+     | { conv = Unary_with_context _ | Unary _; _ } -> expects_one_argument atom
+     | { conv = Nonempty _; _ } -> expects_one_or_more_arguments atom
+     | { conv = Variadic _; _ } ->
+       raise
+         sexp
+         ~message:
+           (Printf.sprintf "The construct [%s] must be written within parentheses." atom)
+         ~suggestion:(Printf.sprintf "Replace by: (%s ARG...)" atom))
   | List ((Atom atom as located_sexp) :: args) ->
     (match find_case ~located_sexp atom with
      | { conv = Nullary _; _ } -> Sexplib0.Sexp_conv_error.ptag_no_args error_source sexp
      | { conv = Unary f; _ } ->
        (match args with
         | [ arg ] -> f arg
-        | _ -> Sexplib0.Sexp_conv_error.ptag_incorrect_n_args error_source atom sexp)
+        | [] | _ :: _ :: _ -> expects_one_argument atom)
      | { conv = Unary_with_context f; _ } ->
        (match args with
         | [ arg ] -> f ~context:sexp ~arg
-        | _ -> Sexplib0.Sexp_conv_error.ptag_incorrect_n_args error_source atom sexp)
-     | { conv = Variadic f; _ } -> f ~context:sexp ~fields:args)
+        | [] | _ :: _ :: _ -> expects_one_argument atom)
+     | { conv = Variadic f; _ } -> f ~context:sexp ~fields:args
+     | { conv = Nonempty f; _ } ->
+       (match args with
+        | [] -> expects_one_or_more_arguments atom
+        | hd :: tl -> f ~context:sexp ~fields:(hd :: tl)))
   | List (List _ :: _) ->
     Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp
   | List [] -> Sexplib0.Sexp_conv_error.empty_list_invalid_poly_var error_source sexp

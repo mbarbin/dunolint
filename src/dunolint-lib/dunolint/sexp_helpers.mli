@@ -57,6 +57,15 @@ module Error_context : sig
   val suggestion : t -> string option
 end
 
+(** [raise sexp ~message] raises a parsing error located at [sexp], with a message for
+    the user, and optionally candidates for a "Did you mean?" hint and a suggestion. *)
+val raise
+  :  ?did_you_mean:Error_context.Did_you_mean.t
+  -> ?suggestion:string
+  -> Sexp.t
+  -> message:string
+  -> 'a
+
 (** {1 Parsing utils} *)
 
 (** When a record is embedded by a variant or polymorphic variant we'd like to
@@ -114,6 +123,9 @@ module Variant_spec : sig
     | Unary of (Sexp.t -> 'a) (** For Unary when context is not needed (most of them). *)
     | Variadic of (context:Sexp.t -> fields:Sexp.t list -> 'a)
     (** Variant with multiple arguments, e.g., [`skip_paths of Glob.t list] *)
+    | Nonempty of (context:Sexp.t -> fields:Sexp.t Nonempty_list.t -> 'a)
+    (** Variadic variant that requires at least one argument, e.g.,
+        [`present of Library.Name.t Nonempty_list.t]. *)
 
   type 'a case =
     { atom : string
