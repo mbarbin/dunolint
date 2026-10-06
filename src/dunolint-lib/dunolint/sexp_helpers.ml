@@ -120,30 +120,38 @@ let parse_variant (type a) (variant_spec : a Variant_spec.t) ~error_source (sexp
       in
       raise (Sexplib0.Sexp_conv.Of_sexp_error (Error_context.E context, located_sexp))
   in
+  let raise_with_suggestion ~message ~suggestion =
+    let context =
+      { Error_context.message; did_you_mean = None; suggestion = Some suggestion }
+    in
+    raise (Sexplib0.Sexp_conv.Of_sexp_error (Error_context.E context, sexp))
+  in
+  let expects_one_argument atom =
+    raise_with_suggestion
+      ~message:(Printf.sprintf "The construct [%s] expects one argument." atom)
+      ~suggestion:(Printf.sprintf "Replace by: (%s ARG)" atom)
+  in
   match sexp with
   | Atom atom ->
     (match find_case ~located_sexp:sexp atom with
      | { conv = Nullary value; _ } -> value
-     | { conv = Unary_with_context _ | Unary _ | Variadic _; _ } ->
-       let context =
-         { Error_context.message =
-             Printf.sprintf "The construct [%s] expects one or more arguments." atom
-         ; did_you_mean = None
-         ; suggestion = Some (Printf.sprintf "Replace by: (%s ARG)" atom)
-         }
-       in
-       raise (Sexplib0.Sexp_conv.Of_sexp_error (Error_context.E context, sexp)))
+     | { conv = Unary_with_context _ | Unary _; _ } -> expects_one_argument atom
+     | { conv = Variadic _; _ } ->
+       raise_with_suggestion
+         ~message:
+           (Printf.sprintf "The construct [%s] must be written within parentheses." atom)
+         ~suggestion:(Printf.sprintf "Replace by: (%s ARG...)" atom))
   | List ((Atom atom as located_sexp) :: args) ->
     (match find_case ~located_sexp atom with
      | { conv = Nullary _; _ } -> Sexplib0.Sexp_conv_error.ptag_no_args error_source sexp
      | { conv = Unary f; _ } ->
        (match args with
         | [ arg ] -> f arg
-        | _ -> Sexplib0.Sexp_conv_error.ptag_incorrect_n_args error_source atom sexp)
+        | [] | _ :: _ :: _ -> expects_one_argument atom)
      | { conv = Unary_with_context f; _ } ->
        (match args with
         | [ arg ] -> f ~context:sexp ~arg
-        | _ -> Sexplib0.Sexp_conv_error.ptag_incorrect_n_args error_source atom sexp)
+        | [] | _ :: _ :: _ -> expects_one_argument atom)
      | { conv = Variadic f; _ } -> f ~context:sexp ~fields:args)
   | List (List _ :: _) ->
     Sexplib0.Sexp_conv_error.nested_list_invalid_poly_var error_source sexp

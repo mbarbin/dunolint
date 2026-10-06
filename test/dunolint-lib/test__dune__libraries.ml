@@ -67,8 +67,8 @@ let%expect_test "Predicate.t_of_sexp" =
     {|
     (Of_sexp_error
      (Dunolint.Sexp_helpers.Error_context.E
-      ("The construct [mem] expects one or more arguments."
-       (suggestion "Replace by: (mem ARG)")))
+      ("The construct [mem] must be written within parentheses."
+       (suggestion "Replace by: (mem ARG...)")))
      (invalid_sexp mem))
     |}];
   ()

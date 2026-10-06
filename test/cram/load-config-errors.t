@@ -272,7 +272,7 @@ Located errors for invalid stanzas, or stanzas with invalid args.
   File "dunolint", line 3, characters 0-4:
   3 | rule
       ^^^^
-  Error: The construct [rule] expects one or more arguments.
+  Error: The construct [rule] expects one argument.
   Hint: Replace by: (rule ARG)
   [123]
 
@@ -288,6 +288,6 @@ Missing argument.
   File "dunolint", line 3, characters 38-45:
   3 | (rule (enforce (dune (instrumentation backend))))
                                             ^^^^^^^
-  Error: The construct [backend] expects one or more arguments.
-  Hint: Replace by: (backend ARG)
+  Error: The construct [backend] must be written within parentheses.
+  Hint: Replace by: (backend ARG...)
   [123]

@@ -58,7 +58,7 @@ let%expect_test "parse_variant" =
     {|
     (Of_sexp_error
      (Dunolint.Sexp_helpers.Error_context.E
-      ("The construct [foo] expects one or more arguments."
+      ("The construct [foo] expects one argument."
        (suggestion "Replace by: (foo ARG)")))
      (invalid_sexp foo))
     |}];
@@ -67,7 +67,7 @@ let%expect_test "parse_variant" =
     {|
     (Of_sexp_error
      (Dunolint.Sexp_helpers.Error_context.E
-      ("The construct [bar] expects one or more arguments."
+      ("The construct [bar] expects one argument."
        (suggestion "Replace by: (bar ARG)")))
      (invalid_sexp bar))
     |}];
@@ -96,7 +96,9 @@ let%expect_test "parse_variant" =
   [%expect
     {|
     (Of_sexp_error
-     "test_predicate_of_sexp: polymorphic variant tag \"foo\" has incorrect number of arguments"
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [foo] expects one argument."
+       (suggestion "Replace by: (foo ARG)")))
      (invalid_sexp (foo)))
     |}];
   (* Error: list with wrong number of arguments (too many). *)
@@ -104,14 +106,18 @@ let%expect_test "parse_variant" =
   [%expect
     {|
     (Of_sexp_error
-     "test_predicate_of_sexp: polymorphic variant tag \"foo\" has incorrect number of arguments"
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [foo] expects one argument."
+       (suggestion "Replace by: (foo ARG)")))
      (invalid_sexp (foo hello world)))
     |}];
   test "(bar 1 2 3)";
   [%expect
     {|
     (Of_sexp_error
-     "test_predicate_of_sexp: polymorphic variant tag \"bar\" has incorrect number of arguments"
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [bar] expects one argument."
+       (suggestion "Replace by: (bar ARG)")))
      (invalid_sexp (bar 1 2 3)))
     |}];
   (* Error: nested list. *)
@@ -149,8 +155,20 @@ let%expect_test "parse_variant" =
   [%expect
     {|
     (Of_sexp_error
-     "test_predicate_of_sexp: polymorphic variant tag \"ctx\" has incorrect number of arguments"
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [ctx] expects one argument."
+       (suggestion "Replace by: (ctx ARG)")))
      (invalid_sexp (ctx hello world)))
+    |}];
+  (* Error: unary_with_context variant with no arguments. *)
+  test "(ctx)";
+  [%expect
+    {|
+    (Of_sexp_error
+     (Dunolint.Sexp_helpers.Error_context.E
+      ("The construct [ctx] expects one argument."
+       (suggestion "Replace by: (ctx ARG)")))
+     (invalid_sexp (ctx)))
     |}];
   (* Error: unary_with_context variant without argument. *)
   test "ctx";
@@ -158,7 +176,7 @@ let%expect_test "parse_variant" =
     {|
     (Of_sexp_error
      (Dunolint.Sexp_helpers.Error_context.E
-      ("The construct [ctx] expects one or more arguments."
+      ("The construct [ctx] expects one argument."
        (suggestion "Replace by: (ctx ARG)")))
      (invalid_sexp ctx))
     |}];
@@ -174,8 +192,8 @@ let%expect_test "parse_variant" =
     {|
     (Of_sexp_error
      (Dunolint.Sexp_helpers.Error_context.E
-      ("The construct [variadic] expects one or more arguments."
-       (suggestion "Replace by: (variadic ARG)")))
+      ("The construct [variadic] must be written within parentheses."
+       (suggestion "Replace by: (variadic ARG...)")))
      (invalid_sexp variadic))
     |}];
   ()
