@@ -41,19 +41,22 @@ open Dunolint.Config.Std
 
 let%expect_test "predicate" =
   let test p = Common.test_predicate (module Dune.Libraries.Predicate) p in
-  test (mem []);
+  (* Deprecated. *)
+  test ((mem [@alert "-deprecated"]) []);
   [%expect {| (mem) |}];
-  test (mem [ Dune.Library.Name.v "base" ]);
-  [%expect {| (mem base) |}];
-  test (mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]);
-  [%expect {| (mem base core) |}];
   test
-    (mem
+    ((mem [@alert "-deprecated"])
+       [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]);
+  [%expect {| (mem base core) |}];
+  test (present [ Dune.Library.Name.v "base" ]);
+  [%expect {| (present base) |}];
+  test
+    (present
        [ Dune.Library.Name.v "base"
        ; Dune.Library.Name.v "core"
        ; Dune.Library.Name.v "my-lib.sub-lib"
        ]);
-  [%expect {| (mem base core my-lib.sub-lib) |}];
+  [%expect {| (present base core my-lib.sub-lib) |}];
   test (present [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]);
   [%expect {| (present base core) |}];
   test (absent [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]);

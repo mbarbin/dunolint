@@ -15,9 +15,15 @@ let%expect_test "Predicate.equal" =
   in
   let libraries_a =
     `libraries
-      (Blang.base (`mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]))
+      (Blang.base
+         (`present
+             Dunolint.Nonempty_list.
+               [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]))
   in
-  let libraries_b = `libraries (Blang.base (`mem [ Dune.Library.Name.v "base" ])) in
+  let libraries_b =
+    `libraries
+      (Blang.base (`present Dunolint.Nonempty_list.[ Dune.Library.Name.v "base" ]))
+  in
   let lint_a = `lint (Blang.base (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_a"))))) in
   let name_a = `name (Blang.base (`equals (Dune.Executable.Name.v "main"))) in
   let preprocess_a =
@@ -43,8 +49,10 @@ let%expect_test "Predicate.equal" =
   [%expect {||}];
   require
     (equal
-       (`libraries (Blang.base (`mem [ Dune.Library.Name.v "base" ])))
-       (`libraries (Blang.base (`mem [ Dune.Library.Name.v "base" ]))));
+       (`libraries
+           (Blang.base (`present Dunolint.Nonempty_list.[ Dune.Library.Name.v "base" ])))
+       (`libraries
+           (Blang.base (`present Dunolint.Nonempty_list.[ Dune.Library.Name.v "base" ]))));
   [%expect {||}];
   require
     (equal
@@ -106,10 +114,10 @@ let%expect_test "predicate" =
   test (instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx")));
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
   (* libraries predicate. *)
-  test (libraries (mem [ Dune.Library.Name.v "base" ]));
-  [%expect {| (libraries (mem base)) |}];
-  test (libraries (mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]));
-  [%expect {| (libraries (mem base core)) |}];
+  test (libraries (present [ Dune.Library.Name.v "base" ]));
+  [%expect {| (libraries (present base)) |}];
+  test (libraries (present [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]));
+  [%expect {| (libraries (present base core)) |}];
   test (lint (pps (pp (Dune.Pp.Name.v "ppx_compare"))));
   [%expect {| (lint (pps (pp ppx_compare))) |}];
   test (name (equals (Dune.Executable.Name.v "main")));

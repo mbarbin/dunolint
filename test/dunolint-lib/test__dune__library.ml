@@ -14,7 +14,7 @@ let%expect_test "Predicate.equal" =
     `instrumentation (Blang.base (`backend (Dune.Instrumentation.Backend.v "bisect_ppx")))
   in
   let lint_a = `lint (Blang.base (`pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_a"))))) in
-  let modes_a = `modes (Blang.base (`has_mode `melange)) in
+  let modes_a = `modes (Blang.base (`present Dunolint.Nonempty_list.[ `melange ])) in
   let name_a = `name (Blang.base (`equals (Dune.Library.Name.v "main"))) in
   let package_a = `package (Blang.base (`equals (Dune.Package.Name.v "pkg"))) in
   let preprocess_a =
@@ -34,9 +34,15 @@ let%expect_test "Predicate.equal" =
   in
   let libraries_a =
     `libraries
-      (Blang.base (`mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]))
+      (Blang.base
+         (`present
+             Dunolint.Nonempty_list.
+               [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]))
   in
-  let libraries_b = `libraries (Blang.base (`mem [ Dune.Library.Name.v "base" ])) in
+  let libraries_b =
+    `libraries
+      (Blang.base (`present Dunolint.Nonempty_list.[ Dune.Library.Name.v "base" ]))
+  in
   (* Physical equality. *)
   require (equal name_a name_a);
   [%expect {||}];
@@ -59,8 +65,8 @@ let%expect_test "Predicate.equal" =
   [%expect {||}];
   require
     (equal
-       (`modes (Blang.base (`has_mode `melange)))
-       (`modes (Blang.base (`has_mode `melange))));
+       (`modes (Blang.base (`present Dunolint.Nonempty_list.[ `melange ])))
+       (`modes (Blang.base (`present Dunolint.Nonempty_list.[ `melange ]))));
   [%expect {||}];
   require
     (equal
@@ -96,8 +102,10 @@ let%expect_test "Predicate.equal" =
   [%expect {||}];
   require
     (equal
-       (`libraries (Blang.base (`mem [ Dune.Library.Name.v "base" ])))
-       (`libraries (Blang.base (`mem [ Dune.Library.Name.v "base" ]))));
+       (`libraries
+           (Blang.base (`present Dunolint.Nonempty_list.[ Dune.Library.Name.v "base" ])))
+       (`libraries
+           (Blang.base (`present Dunolint.Nonempty_list.[ Dune.Library.Name.v "base" ]))));
   [%expect {||}];
   (* Same variant, different value. *)
   require (not (equal has_field_a has_field_b));
@@ -159,8 +167,8 @@ let%expect_test "predicate" =
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
   test (lint (pps (pp (Dune.Pp.Name.v "ppx_compare"))));
   [%expect {| (lint (pps (pp ppx_compare))) |}];
-  test (modes (mem [ `melange ]));
-  [%expect {| (modes (mem melange)) |}];
+  test (modes (present [ `melange ]));
+  [%expect {| (modes (present melange)) |}];
   test (name (equals (Dune.Library.Name.v "main")));
   [%expect {| (name (equals main)) |}];
   test (package (equals (Dune.Package.Name.v "my_package")));
@@ -176,9 +184,9 @@ let%expect_test "predicate" =
        (`public_name (Blang.base (`equals (Dune.Library.Public_name.v "dunolint")))));
   [%expect {| (if_present (public_name (equals dunolint))) |}];
   (* libraries predicate. *)
-  test (libraries (mem [ Dune.Library.Name.v "base" ]));
-  [%expect {| (libraries (mem base)) |}];
-  test (libraries (mem [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]));
-  [%expect {| (libraries (mem base core)) |}];
+  test (libraries (present [ Dune.Library.Name.v "base" ]));
+  [%expect {| (libraries (present base)) |}];
+  test (libraries (present [ Dune.Library.Name.v "base"; Dune.Library.Name.v "core" ]));
+  [%expect {| (libraries (present base core)) |}];
   ()
 ;;

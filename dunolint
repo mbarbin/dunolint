@@ -16,7 +16,7 @@
      (glob src/dunolint/vendor/**) (glob src/dunolint-lib/**)
      (glob src/dunolint-lib-base/**) (glob test/dunolint-lib-base/**)))
    return)
-  (true (enforce (dune (library (libraries (mem dunolint_stdlib))))))))
+  (true (enforce (dune (library (libraries (present dunolint_stdlib))))))))
 
 (rule
  (cond ((path (glob test/**/src/*)) return)

@@ -58,18 +58,19 @@ open Dunolint.Config.Std
 
 let%expect_test "predicate" =
   let test p = Common.test_predicate (module Dune.Library.Modes.Predicate) p in
-  test (mem []);
+  (* Deprecated. *)
+  test ((mem [@alert "-deprecated"]) []);
   [%expect {| (mem) |}];
-  test (mem [ `best ]);
-  [%expect {| (mem best) |}];
-  test (mem [ `byte; `native; `melange ]);
+  test ((mem [@alert "-deprecated"]) [ `byte; `native; `melange ]);
   [%expect {| (mem byte native melange) |}];
-  test (mem [ `byte ]);
-  [%expect {| (mem byte) |}];
-  test (mem [ `native ]);
-  [%expect {| (mem native) |}];
-  test (mem [ `melange ]);
-  [%expect {| (mem melange) |}];
+  test (present [ `best ]);
+  [%expect {| (present best) |}];
+  test (present [ `byte ]);
+  [%expect {| (present byte) |}];
+  test (present [ `native ]);
+  [%expect {| (present native) |}];
+  test (present [ `melange ]);
+  [%expect {| (present melange) |}];
   test (present [ `byte; `native ]);
   [%expect {| (present byte native) |}];
   test (absent [ `byte; `native ]);
