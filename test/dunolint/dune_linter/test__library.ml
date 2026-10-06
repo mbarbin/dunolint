@@ -697,15 +697,14 @@ let%expect_test "enforce" =
      (name mylib)
      (modes byte native))
     |}];
-  (* BUG: Enforcing the absence of a mode when there is no [modes] field creates an
-     empty one, which isn't equivalent to the absent field. *)
+  (* Enforcing the absence of a mode when there is no [modes] field doesn't create an
+     empty one, which wouldn't be equivalent to the absent field. *)
   let t = parse {| (library (name mylib)) |} in
   enforce t [ modes (not_ (mem [ `byte ])) ];
   [%expect
     {|
     (library
-     (name mylib)
-     (modes))
+     (name mylib))
     |}];
   (* Currently adding a field is only possible if some are already present. *)
   let t = parse {| (library) |} in

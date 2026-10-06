@@ -719,15 +719,15 @@ let enforce =
            t.modes <- Some modes;
            Ok)
       | T (`modes condition) ->
-        let modes =
-          match t.modes with
-          | Some modes -> modes
-          | None ->
-            let modes = Modes.create ~modes:Dunolinter.Ordered_set.empty in
-            t.modes <- Some modes;
-            modes
-        in
-        Modes.enforce modes ~condition;
+        (match t.modes with
+         | Some modes -> Modes.enforce modes ~condition
+         | None ->
+           let modes = Modes.create ~modes:Dunolinter.Ordered_set.empty in
+           Modes.enforce modes ~condition;
+           (* An empty [modes] field isn't equivalent to an absent one, thus it is
+              only created if enforcing the condition added some modes. *)
+           if not (Dunolinter.Ordered_set.is_empty (Modes.modes modes))
+           then t.modes <- Some modes);
         Ok
       | T (`has_field `instrumentation) ->
         (match t.instrumentation with

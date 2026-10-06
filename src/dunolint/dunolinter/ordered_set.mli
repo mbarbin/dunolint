@@ -51,6 +51,9 @@ end
 val of_list : 'a list -> 'a t
 val empty : 'a t
 
+(** [is_empty t] is [true] when [t] is the empty union, such as [empty]. *)
+val is_empty : 'a t -> bool
+
 (** Whether it is possible to determine statically if a value belongs to the
     set. This is meant to cover more cases in which, even though it is not
     possible to know the set completely statically, it is still possible to

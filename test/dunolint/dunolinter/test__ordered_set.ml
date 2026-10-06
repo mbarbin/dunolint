@@ -199,6 +199,18 @@ let%expect_test "empty" =
   ()
 ;;
 
+let%expect_test "is_empty" =
+  require (Ordered_set.is_empty Ordered_set.empty);
+  require (Ordered_set.is_empty (Ordered_set.of_list []));
+  require (not (Ordered_set.is_empty (Ordered_set.of_list [ 1 ])));
+  require (not (Ordered_set.is_empty (Ordered_set.of_list [ 1; 2 ])));
+  require (not (Ordered_set.is_empty Standard));
+  require (not (Ordered_set.is_empty (Include "foo")));
+  require (not (Ordered_set.is_empty (Diff (Ordered_set.empty, Element 1))));
+  [%expect {||}];
+  ()
+;;
+
 let%expect_test "insert and remove" =
   let show t =
     let t = Ordered_set.canonical_sort (module Int) t in
