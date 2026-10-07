@@ -89,7 +89,7 @@ let sexp_of_t
         ; opt lint ~f:(fun v -> Sexp.List [ Atom "lint"; Lint.sexp_of_t v ])
         ; opt preprocess ~f:(fun v ->
             Sexp.List [ Atom "preprocess"; Preprocess.sexp_of_t v ])
-        ; (if Field_name_table.length marked_for_removal = 0
+        ; (if Int.equal (Field_name_table.length marked_for_removal) 0
            then []
            else (
              let fields =

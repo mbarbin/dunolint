@@ -33,6 +33,10 @@ module Sexpable = Sexpable0
 module String = String0
 module With_equal_and_sexp = With_equal_and_sexp0
 
+let ( = ) : [ `Use_a_specialized_equal ] -> [ `Use_a_specialized_equal ] -> bool =
+  Stdlib.( = )
+;;
+
 let phys_equal a b = a == b
 let print pp = Format.printf "%a@." Pp.to_fmt pp
 let print_dyn dyn = print (Dyn.pp dyn)

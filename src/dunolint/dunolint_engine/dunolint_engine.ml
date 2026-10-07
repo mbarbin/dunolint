@@ -466,7 +466,7 @@ let run ?root_configs ~running_mode f =
     | Check ->
       if Path_table.length t.edited_files > 0
       then (
-        if Err.error_count () = 0 then print_endline "";
+        if Int.equal (Err.error_count ()) 0 then print_endline "";
         Err.error
           [ Pp.text "Linting check failed: Exiting with unaddressed linting errors." ])
   in
