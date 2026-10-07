@@ -152,7 +152,7 @@ let%expect_test "two backends" =
       [ not_ (instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx"))) ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (not (instrumentation (backend bisect_ppx)))))
     |}];
   (* If the expression containing the negation is verified, no changes are made. *)
@@ -435,7 +435,7 @@ let%expect_test "two backends" =
       ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (or (backend landmarks) (backend other))))
     |}];
   ()

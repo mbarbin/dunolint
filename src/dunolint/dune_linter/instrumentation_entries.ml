@@ -118,9 +118,6 @@ let enforce t ~condition =
      in the end. In this case, the failure is reported once for the whole condition. *)
   if has_failures || not (holds candidate ~condition)
   then
-    Dunolinter.Handler.enforce_failure
-      (module Dune.Instrumentation.Predicate)
-      ~loc:Loc.none
-      ~condition
+    Dunolinter.Handler.enforce_failure (module Dune.Instrumentation.Predicate) ~condition
   else t.instrumentations <- candidate.instrumentations
 ;;

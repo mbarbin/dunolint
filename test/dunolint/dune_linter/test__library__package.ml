@@ -128,10 +128,7 @@ let%expect_test "enforce" =
   require_does_raise (fun () ->
     enforce [ not_ (equals (Dune.Package.Name.v "pre_hello_suf")) ]);
   [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (not (equals pre_hello_suf))))
-    |}];
+    {| (Dunolinter.Handler.Enforce_failure (condition (not (equals pre_hello_suf)))) |}];
   (* Setting a prefix to an existing prefix has no effect. *)
   enforce [ is_prefix "pre_" ];
   [%expect {| (package pre_hello_suf) |}];
@@ -151,7 +148,7 @@ let%expect_test "enforce" =
   enforce [ true_ ];
   [%expect {| (package pre_hello_suf) |}];
   require_does_raise (fun () -> enforce [ false_ ]);
-  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition false)) |}];
   enforce [ and_ [ not_ (is_prefix "pre_"); not_ (is_suffix "_suf") ] ];
   [%expect {| (package hello) |}];
   ()
@@ -226,10 +223,7 @@ let%expect_test "enforce - has_field package (cannot add without value)" =
      [package] requires a specific package name. *)
   let t = parse_library {| (library (name my_lib)) |} in
   require_does_raise (fun () -> enforce_library t [ has_field `package ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure (loc _) (condition (has_field package)))
-    |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition (has_field package))) |}];
   (* Does nothing if already present. *)
   let t = parse_library {| (library (name my_lib) (package my-pkg)) |} in
   enforce_library t [ has_field `package ];

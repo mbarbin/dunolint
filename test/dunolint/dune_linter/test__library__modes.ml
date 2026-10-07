@@ -206,16 +206,10 @@ let%expect_test "enforce - present and absent" =
   [%expect {| (modes byte native) |}];
   require_does_raise (fun () -> enforce t [ not_ (present [ `byte; `native ]) ]);
   [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (not (present byte native))))
-    |}];
+    {| (Dunolinter.Handler.Enforce_failure (condition (not (present byte native)))) |}];
   require_does_raise (fun () -> enforce t [ not_ (absent [ `best; `melange ]) ]);
   [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (not (absent best melange))))
-    |}];
+    {| (Dunolinter.Handler.Enforce_failure (condition (not (absent best melange)))) |}];
   ()
 ;;
 
@@ -281,7 +275,7 @@ let%expect_test "enforce" =
   enforce t [ true_ ];
   [%expect {| (modes native) |}];
   require_does_raise (fun () -> enforce t [ false_ ]);
-  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition false)) |}];
   enforce t [ and_ [ present [ `byte ]; absent [ `native ] ] ];
   [%expect {| (modes byte) |}];
   (* [or] does not have an enforcement strategy when its invariant is
@@ -292,7 +286,7 @@ let%expect_test "enforce" =
     enforce t [ or_ [ present [ `best ]; present [ `native ] ] ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (or (present best) (present native))))
     |}];
   (* When defined, [if] enforces the clause that applies. *)

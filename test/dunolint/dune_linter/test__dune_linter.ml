@@ -231,14 +231,11 @@ let%expect_test "enforce path" =
          [path] invariant reports a failure. *)
       require_does_raise (fun () -> apply (path (glob "other/**")));
       [%expect
-        {|
-        (Dunolinter.Handler.Enforce_failure (loc _)
-         (condition (path (glob other/**))))
-        |}];
+        {| (Dunolinter.Handler.Enforce_failure (condition (path (glob other/**)))) |}];
       require_does_raise (fun () -> apply (not_ (path (glob "path/to/**"))));
       [%expect
         {|
-        (Dunolinter.Handler.Enforce_failure (loc _)
+        (Dunolinter.Handler.Enforce_failure
          (condition (not (path (glob path/to/**)))))
         |}];
       ());
@@ -266,8 +263,7 @@ let%expect_test "enforce negated selector" =
       (* Enforcing an unsatisfied negated invariant that cannot be fixed reports a
          failure. *)
       require_does_raise (fun () -> apply (not_ (dune true_)));
-      [%expect
-        {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (dune true)))) |}];
+      [%expect {| (Dunolinter.Handler.Enforce_failure (condition (not (dune true)))) |}];
       ());
   ()
 ;;

@@ -11,7 +11,6 @@ type _ Stdlib.Effect.t +=
   | Enforce_failure :
       { condition : 'a
       ; sexp_of_condition : 'a -> Sexp.t
-      ; loc : Loc.t
       }
       -> unit Stdlib.Effect.t
         (** A effect performed when a linter comes across a condition that is
@@ -28,11 +27,7 @@ module type Predicate = sig
   val sexp_of_t : t -> Sexp.t
 end
 
-val enforce_failure
-  :  (module Predicate with type t = 'a)
-  -> loc:Loc.t
-  -> condition:'a Blang.t
-  -> unit
+val enforce_failure : (module Predicate with type t = 'a) -> condition:'a Blang.t -> unit
 
 (** This is a special handler for the effect defined by this module,
     which will report the error, but continue the execution of linting

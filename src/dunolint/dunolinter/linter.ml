@@ -35,7 +35,7 @@ let enforce
   let check t ~condition =
     match Dunolint.Trilang.eval condition ~f:(fun predicate -> eval t ~predicate) with
     | True | Undefined -> ()
-    | False -> Handler.enforce_failure (module Handler_predicate) ~loc:Loc.none ~condition
+    | False -> Handler.enforce_failure (module Handler_predicate) ~condition
   in
   let enforce t predicate =
     match enforce t predicate with
@@ -44,7 +44,6 @@ let enforce
     | Fail ->
       Handler.enforce_failure
         (module Handler_predicate)
-        ~loc:Loc.none
         ~condition:(Predicate.to_blang predicate)
   in
   let rec aux t ~condition =

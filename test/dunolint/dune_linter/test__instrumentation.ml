@@ -337,7 +337,7 @@ let%expect_test "enforce" =
     enforce t [ not_ (backend (Dune.Instrumentation.Backend.v "other_backend")) ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (not (backend other_backend))))
     |}];
   (* Blang. *)
@@ -345,7 +345,7 @@ let%expect_test "enforce" =
   enforce t [ true_ ];
   [%expect {| (instrumentation (backend bisect_ppx)) |}];
   require_does_raise (fun () -> enforce t [ false_ ]);
-  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition false)) |}];
   enforce
     t
     [ and_
@@ -374,7 +374,7 @@ let%expect_test "enforce" =
       ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (or (backend qualified) (backend no))))
     |}];
   (* When defined, [if] enforces the clause that applies. *)
