@@ -447,7 +447,7 @@ let%expect_test "create_then_rewrite" =
   let test t str =
     let sexps_rewriter, field = Common.read str in
     Dune_linter.Library.rewrite t ~sexps_rewriter ~field;
-    print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
+    print_string (format_dune_file ~new_contents:(Sexps_rewriter.contents sexps_rewriter))
   in
   let t =
     Dune_linter.Library.create
@@ -462,9 +462,15 @@ let%expect_test "create_then_rewrite" =
   test t {| (library (name mylib)) |};
   [%expect
     {|
-    (library (name mylib) (instrumentation (backend bisect_ppx))
-     (instrumentation (backend landmarks)))
+    (library
+     (name mylib)
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
     |}];
+  (* The fields without a matching entry are left untouched, unless the field is marked
+     for removal. *)
   test
     t
     {|
@@ -472,26 +478,36 @@ let%expect_test "create_then_rewrite" =
   (name mylib)
   (instrumentation (backend landmarks))
   (instrumentation (backend other))
-  (instrumentation (backend bisect_ppx))
-)
+  (instrumentation (backend bisect_ppx)))
  |};
   [%expect
     {|
-    (library (name mylib) (instrumentation (backend landmarks))
-     (instrumentation (backend bisect_ppx)))
+    (library
+     (name mylib)
+     (instrumentation
+      (backend landmarks))
+     (instrumentation
+      (backend other))
+     (instrumentation
+      (backend bisect_ppx)))
     |}];
   test
     t
     {|
 (library
   (name mylib)
-  (instrumentation (backend other))
-)
+  (instrumentation (backend other)))
  |};
   [%expect
     {|
-    (library (name mylib) (instrumentation (backend bisect_ppx))
-     (instrumentation (backend landmarks)))
+    (library
+     (name mylib)
+     (instrumentation
+      (backend other))
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
     |}];
   test
     t
@@ -502,8 +518,13 @@ let%expect_test "create_then_rewrite" =
  |};
   [%expect
     {|
-    (library (name mylib) (instrumentation (backend bisect_ppx))
-     (instrumentation (backend landmarks)))
+    (library
+     (name mylib)
+     (instrumentation invalid)
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
     |}];
   test
     t
@@ -514,8 +535,31 @@ let%expect_test "create_then_rewrite" =
  |};
   [%expect
     {|
-    (library (name mylib) (instrumentation (backend bisect_ppx))
-     (instrumentation (backend landmarks)))
+    (library
+     (name mylib)
+     (instrumentation
+      (backend invalid!backend))
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
+    |}];
+  (* This is also the case without entries. *)
+  let t = Dune_linter.Library.create () in
+  test t {| (library (name mylib) (instrumentation (backend bisect_ppx))) |};
+  [%expect
+    {|
+    (library
+     (name mylib)
+     (instrumentation
+      (backend bisect_ppx)))
+    |}];
+  Dune_linter.Library.enforce t ~condition:(not_ (has_field `instrumentation));
+  test t {| (library (name mylib) (instrumentation (backend bisect_ppx))) |};
+  [%expect
+    {|
+    (library
+     (name mylib))
     |}];
   ()
 ;;

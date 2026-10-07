@@ -40,20 +40,14 @@ let insertion_overlaps ~present_args ~new_args =
   | _ -> false
 ;;
 
-let rewrite t ~args =
+let rewrite t ~args ~marked_for_removal =
   match
-    match find_instrumentation_backend args with
-    | None -> `No_entry
-    | Some name ->
-      (match
-         List.find t.instrumentations ~f:(fun instrumentation ->
-           Instrumentation.has_backend_name instrumentation ~name)
-       with
-       | None -> `No_entry
-       | Some instrumentation -> `Rewrite_with instrumentation)
+    Option.bind (find_instrumentation_backend args) ~f:(fun name ->
+      List.find t.instrumentations ~f:(fun instrumentation ->
+        Instrumentation.has_backend_name instrumentation ~name))
   with
-  | `Rewrite_with _ as rewrite -> rewrite
-  | `No_entry -> if is_empty t then `Remove_if_marked else `Remove
+  | Some instrumentation -> `Rewrite_with instrumentation
+  | None -> if marked_for_removal then `Remove else `Keep
 ;;
 
 let find_entry t ~name =

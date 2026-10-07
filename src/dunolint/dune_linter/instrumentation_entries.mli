@@ -33,10 +33,13 @@ val find_instrumentation_backend
     Returns [true] iif the args mention the same instrumentation backend. *)
 val insertion_overlaps : present_args:Sexp.t list -> new_args:Sexp.t list -> bool
 
+(** A field without a matching entry is left untouched, unless the field is marked for
+    removal. *)
 val rewrite
   :  t
   -> args:Sexp.t list
-  -> [ `Remove_if_marked | `Remove | `Rewrite_with of Instrumentation.t ]
+  -> marked_for_removal:bool
+  -> [ `Keep | `Remove | `Rewrite_with of Instrumentation.t ]
 
 val eval : t -> condition:Dune.Instrumentation.Predicate.t Blang.t -> Dunolint.Trilang.t
 val enforce : t -> condition:Dune.Instrumentation.Predicate.t Blang.t -> unit

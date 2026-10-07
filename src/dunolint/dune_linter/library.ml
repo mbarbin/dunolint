@@ -491,40 +491,45 @@ let rewrite t ~sexps_rewriter ~field =
     let range = Sexps_rewriter.range sexps_rewriter field in
     File_rewriter.remove file_rewriter ~range
   in
-  let remove_if_marked field_name field =
-    if Field_name_table.mem t.marked_for_removal field_name then remove field
-  in
-  let maybe_remove state field_name field =
-    if Option.is_none state then remove_if_marked field_name field
+  let remove_if_unset_and_marked state field_name field =
+    if Option.is_none state && Field_name_table.mem t.marked_for_removal field_name
+    then remove field
   in
   List.iter fields ~f:(fun field ->
     match (field : Sexp.t) with
     | List (Atom "name" :: _) ->
       Option.iter t.name ~f:(fun t -> Name.rewrite t ~sexps_rewriter ~field);
-      maybe_remove t.name `name field
+      remove_if_unset_and_marked t.name `name field
     | List (Atom "public_name" :: _) ->
       Option.iter t.public_name ~f:(fun t -> Public_name.rewrite t ~sexps_rewriter ~field);
-      maybe_remove t.public_name `public_name field
+      remove_if_unset_and_marked t.public_name `public_name field
     | List (Atom "package" :: _) ->
       Option.iter t.package ~f:(fun t -> Package.rewrite t ~sexps_rewriter ~field);
-      maybe_remove t.package `package field
-    | List (Atom "inline_tests" :: _) -> maybe_remove t.inline_tests `inline_tests field
+      remove_if_unset_and_marked t.package `package field
+    | List (Atom "inline_tests" :: _) ->
+      remove_if_unset_and_marked t.inline_tests `inline_tests field
     | List (Atom "modes" :: _) ->
       Option.iter t.modes ~f:(fun t -> Modes.rewrite t ~sexps_rewriter ~field);
-      maybe_remove t.modes `modes field
+      remove_if_unset_and_marked t.modes `modes field
     | List (Atom "flags" :: _) -> Flags.rewrite t.flags ~sexps_rewriter ~field
     | List (Atom "libraries" :: _) -> Libraries.rewrite t.libraries ~sexps_rewriter ~field
     | List (Atom "instrumentation" :: args) ->
-      (match Instrumentation_entries.rewrite t.instrumentations ~args with
-       | `Remove_if_marked -> remove_if_marked `instrumentation field
+      (match
+         Instrumentation_entries.rewrite
+           t.instrumentations
+           ~args
+           ~marked_for_removal:
+             (Field_name_table.mem t.marked_for_removal `instrumentation)
+       with
+       | `Keep -> ()
        | `Remove -> remove field
        | `Rewrite_with t -> Instrumentation.rewrite t ~sexps_rewriter ~field)
     | List (Atom "lint" :: _) ->
       Option.iter t.lint ~f:(fun t -> Lint.rewrite t ~sexps_rewriter ~field);
-      maybe_remove t.lint `lint field
+      remove_if_unset_and_marked t.lint `lint field
     | List (Atom "preprocess" :: _) ->
       Option.iter t.preprocess ~f:(fun t -> Preprocess.rewrite t ~sexps_rewriter ~field);
-      maybe_remove t.preprocess `preprocess field
+      remove_if_unset_and_marked t.preprocess `preprocess field
     | _ -> ())
 ;;
 

@@ -363,7 +363,7 @@ let%expect_test "create_then_rewrite" =
   let test t str =
     let sexps_rewriter, field = Common.read str in
     Dune_linter.Executable.rewrite t ~sexps_rewriter ~field;
-    print_s (Sexps_rewriter.contents sexps_rewriter |> Parsexp.Single.parse_string_exn)
+    print_string (format_dune_file ~new_contents:(Sexps_rewriter.contents sexps_rewriter))
   in
   let t =
     Dune_linter.Executable.create
@@ -378,9 +378,15 @@ let%expect_test "create_then_rewrite" =
   test t {| (executable (name main)) |};
   [%expect
     {|
-    (executable (name main) (instrumentation (backend bisect_ppx))
-     (instrumentation (backend landmarks)))
+    (executable
+     (name main)
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
     |}];
+  (* The fields without a matching entry are left untouched, unless the field is marked
+     for removal. *)
   test
     t
     {|
@@ -388,26 +394,36 @@ let%expect_test "create_then_rewrite" =
   (name main)
   (instrumentation (backend landmarks))
   (instrumentation (backend other))
-  (instrumentation (backend bisect_ppx))
-)
+  (instrumentation (backend bisect_ppx)))
  |};
   [%expect
     {|
-    (executable (name main) (instrumentation (backend landmarks))
-     (instrumentation (backend bisect_ppx)))
+    (executable
+     (name main)
+     (instrumentation
+      (backend landmarks))
+     (instrumentation
+      (backend other))
+     (instrumentation
+      (backend bisect_ppx)))
     |}];
   test
     t
     {|
 (executable
   (name main)
-  (instrumentation (backend other))
-)
+  (instrumentation (backend other)))
  |};
   [%expect
     {|
-    (executable (name main) (instrumentation (backend bisect_ppx))
-     (instrumentation (backend landmarks)))
+    (executable
+     (name main)
+     (instrumentation
+      (backend other))
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
     |}];
   test
     t
@@ -418,8 +434,30 @@ let%expect_test "create_then_rewrite" =
  |};
   [%expect
     {|
-    (executable (name main) (instrumentation (backend bisect_ppx))
-     (instrumentation (backend landmarks)))
+    (executable
+     (name main)
+     (instrumentation invalid)
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
+    |}];
+  (* This is also the case without entries. *)
+  let t = Dune_linter.Executable.create () in
+  test t {| (executable (name main) (instrumentation (backend bisect_ppx))) |};
+  [%expect
+    {|
+    (executable
+     (name main)
+     (instrumentation
+      (backend bisect_ppx)))
+    |}];
+  Dune_linter.Executable.enforce t ~condition:(not_ (has_field `instrumentation));
+  test t {| (executable (name main) (instrumentation (backend bisect_ppx))) |};
+  [%expect
+    {|
+    (executable
+     (name main))
     |}];
   ()
 ;;
