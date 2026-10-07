@@ -14,39 +14,59 @@ Linting stanzas with several instrumentation fields.
   >  (preprocess no_preprocessing))
   > EOF
 
+The file is formatted first, so that the edits below are shown on a formatted file.
+
+  $ dunolint tools lint-file dune --in-place
+
+  $ cat dune
+  (library
+   (name mylib)
+   (instrumentation
+    (backend bisect_ppx))
+   (instrumentation
+    (backend landmarks))
+   (preprocess no_preprocessing))
+
 A [backend] condition targets the field with that backend, or adds one if there is none.
 Other fields are left untouched.
 
   $ dunolint lint --dry-run --enforce '(dune (instrumentation (backend bisect_ppx --x)))'
   dry-run: Would edit file "dune":
-  @@ -1,5 +1,5 @@
+  @@ -1,7 +1,7 @@
     (library
      (name mylib)
-  -| (instrumentation (backend bisect_ppx))
-  +| (instrumentation (backend bisect_ppx --x))
-     (instrumentation (backend landmarks))
+     (instrumentation
+  -|  (backend bisect_ppx))
+  +|  (backend bisect_ppx --x))
+     (instrumentation
+      (backend landmarks))
      (preprocess no_preprocessing))
 
   $ dunolint lint --dry-run --enforce '(dune (instrumentation (backend other)))'
   dry-run: Would edit file "dune":
-  @@ -1,5 +1,6 @@
+  @@ -1,7 +1,9 @@
     (library
      (name mylib)
-     (instrumentation (backend bisect_ppx))
-     (instrumentation (backend landmarks))
-  +| (instrumentation (backend other))
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks))
+  +| (instrumentation
+  +|  (backend other))
      (preprocess no_preprocessing))
 
 The instrumentation fields are a collection: a negated [backend] holds when no field has
 that backend. It is not auto-fixed, and the failure is located at the stanza.
 
   $ dunolint lint --dry-run --enforce '(dune (instrumentation (not (backend landmarks))))'
-  File "dune", lines 1-5, characters 0-133:
+  File "dune", lines 1-7, characters 0-137:
   1 | (library
   2 |  (name mylib)
-  3 |  (instrumentation (backend bisect_ppx))
-  4 |  (instrumentation (backend landmarks))
-  5 |  (preprocess no_preprocessing))
+  3 |  (instrumentation
+  4 |   (backend bisect_ppx))
+  5 |  (instrumentation
+  6 |   (backend landmarks))
+  7 |  (preprocess no_preprocessing))
   Error: Enforce Failure.
   The following condition does not hold: (not (backend landmarks))
   Dunolint is able to suggest automatic modifications to satisfy linting rules
@@ -58,12 +78,14 @@ When a condition cannot be enforced, the failure is reported once and the stanza
 unchanged.
 
   $ dunolint lint --dry-run --enforce '(dune (instrumentation (and (backend other) (not (backend other)))))'
-  File "dune", lines 1-5, characters 0-133:
+  File "dune", lines 1-7, characters 0-137:
   1 | (library
   2 |  (name mylib)
-  3 |  (instrumentation (backend bisect_ppx))
-  4 |  (instrumentation (backend landmarks))
-  5 |  (preprocess no_preprocessing))
+  3 |  (instrumentation
+  4 |   (backend bisect_ppx))
+  5 |  (instrumentation
+  6 |   (backend landmarks))
+  7 |  (preprocess no_preprocessing))
   Error: Enforce Failure.
   The following condition does not hold:
     (and (backend other) (not (backend other)))
