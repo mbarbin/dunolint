@@ -42,6 +42,17 @@ let enforce_diff (((sexps_rewriter, _), _) as input) conditions =
   Myers.diff original changed ~context:3 |> print_string
 ;;
 
+(* In production, enforce failures are reported and linting resumes, after
+   which the stanza is rewritten. This helper reproduces that flow. *)
+let enforce_and_resume ((sexps_rewriter, field), t) conditions =
+  Sexps_rewriter.reset sexps_rewriter;
+  Err.For_test.protect (fun () ->
+    Dunolinter.Handler.emit_error_and_resume () ~loc:Loc.none ~f:(fun () ->
+      List.iter conditions ~f:(fun condition -> Dune_linter.Library.enforce t ~condition));
+    Dune_linter.Library.rewrite t ~sexps_rewriter ~field;
+    print_string (format_dune_file ~new_contents:(Sexps_rewriter.contents sexps_rewriter)))
+;;
+
 let%expect_test "two backends" =
   let ((_, t) as dune) =
     parse
@@ -513,6 +524,241 @@ let%expect_test "create_then_rewrite" =
     {|
     (library (name mylib) (instrumentation (backend bisect_ppx))
      (instrumentation (backend landmarks)))
+    |}];
+  ()
+;;
+
+let%expect_test "backend change" =
+  (* Linting rules do not rename the backend of a field. Instead, a field is
+     added for the required backend, and the existing one is left untouched,
+     preserving its other arguments (such as [deps]), its comments and its
+     position. *)
+  let dune =
+    parse
+      {|
+(library
+ (name mylib)
+ (instrumentation (backend other) (deps foo.txt)) ; Keep me.
+ (preprocess no_preprocessing)
+)
+|}
+  in
+  enforce dune [ instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx")) ];
+  [%expect
+    {|
+    (library
+     (name mylib)
+     (instrumentation
+      (backend other)
+      (deps foo.txt)) ; Keep me.
+     (instrumentation
+      (backend bisect_ppx))
+     (preprocess no_preprocessing))
+    |}];
+  ()
+;;
+
+let%expect_test "adding a backend" =
+  (* When adding a backend, the existing field is left untouched, regardless of
+     the order in which the conditions are enforced. *)
+  let test conditions =
+    let dune =
+      parse
+        {|
+(library
+ (name mylib)
+ (instrumentation (backend bisect_ppx) (deps foo.txt))
+)
+|}
+    in
+    enforce_diff dune conditions
+  in
+  test
+    [ instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx"))
+    ; instrumentation (backend (Dune.Instrumentation.Backend.v "landmarks"))
+    ];
+  [%expect
+    {|
+    @@ -2,4 +2,6 @@
+       (name mylib)
+       (instrumentation
+        (backend bisect_ppx)
+    -|  (deps foo.txt)))
+    +|  (deps foo.txt))
+    +| (instrumentation
+    +|  (backend landmarks)))
+    |}];
+  test
+    [ instrumentation (backend (Dune.Instrumentation.Backend.v "landmarks"))
+    ; instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx"))
+    ];
+  [%expect
+    {|
+    @@ -2,4 +2,6 @@
+       (name mylib)
+       (instrumentation
+        (backend bisect_ppx)
+    -|  (deps foo.txt)))
+    +|  (deps foo.txt))
+    +| (instrumentation
+    +|  (backend landmarks)))
+    |}];
+  ()
+;;
+
+let%expect_test "no instrumentation field" =
+  (* When there is no instrumentation field, no [backend] predicate holds. Conditions that
+     hold nonetheless are left as is, a [backend] is added when required, and the
+     conditions that cannot be fixed fail. *)
+  let test condition =
+    let dune = parse {| (library (name mylib)) |} in
+    enforce_and_resume dune [ condition ]
+  in
+  test
+    (instrumentation
+       (or_
+          [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
+          ; backend (Dune.Instrumentation.Backend.v "landmarks")
+          ]));
+  [%expect
+    {|
+    File "<none>", line 1, characters 0-0:
+    Error: Enforce Failure.
+    The following condition does not hold:
+      (or (backend bisect_ppx) (backend landmarks))
+    Dunolint is able to suggest automatic modifications to satisfy linting rules
+    when a strategy is implemented, however in this case there is none available.
+    Hint: You need to attend and fix manually.
+    [123]
+    (library
+     (name mylib))
+    |}];
+  test (instrumentation true_);
+  [%expect
+    {|
+    (library
+     (name mylib))
+    |}];
+  test (instrumentation (not_ (backend (Dune.Instrumentation.Backend.v "landmarks"))));
+  [%expect
+    {|
+    (library
+     (name mylib))
+    |}];
+  test (instrumentation (backend (Dune.Instrumentation.Backend.v "landmarks")));
+  [%expect
+    {|
+    (library
+     (name mylib)
+     (instrumentation
+      (backend landmarks)))
+    |}];
+  ()
+;;
+
+let%expect_test "eval and enforce agree" =
+  (* BUG: Evaluation and enforcement disagree. The conditions below should not hold,
+     since the stanza has a field for each of [bisect_ppx] and [landmarks]. Instead,
+     they are evaluated against a single field, which satisfies them. *)
+  let test condition =
+    let ((_, t) as dune) =
+      parse
+        {|
+(library
+ (name mylib)
+ (instrumentation (backend bisect_ppx))
+ (instrumentation (backend landmarks))
+)
+|}
+    in
+    Test_helpers.is_true
+      (Dune_linter.Library.eval t ~predicate:(`instrumentation condition));
+    enforce_and_resume dune [ instrumentation condition ]
+  in
+  test (not_ (backend (Dune.Instrumentation.Backend.v "bisect_ppx")));
+  [%expect
+    {|
+    File "<none>", line 1, characters 0-0:
+    Error: Enforce Failure.
+    The following condition does not hold: (not (backend bisect_ppx))
+    Dunolint is able to suggest automatic modifications to satisfy linting rules
+    when a strategy is implemented, however in this case there is none available.
+    Hint: You need to attend and fix manually.
+    [123]
+    (library
+     (name mylib)
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
+    |}];
+  test
+    (and_
+       [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
+       ; not_ (backend (Dune.Instrumentation.Backend.v "landmarks"))
+       ]);
+  [%expect
+    {|
+    File "<none>", line 1, characters 0-0:
+    Error: Enforce Failure.
+    The following condition does not hold: (not (backend landmarks))
+    Dunolint is able to suggest automatic modifications to satisfy linting rules
+    when a strategy is implemented, however in this case there is none available.
+    Hint: You need to attend and fix manually.
+    [123]
+    (library
+     (name mylib)
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
+    |}];
+  ()
+;;
+
+let%expect_test "no partial changes on failure" =
+  (* BUG: When a condition cannot be enforced, the stanza should be left unchanged, but
+     the fields added while trying to enforce it remain. *)
+  let dune =
+    parse
+      {|
+(library
+ (name mylib)
+ (instrumentation (backend other))
+)
+|}
+  in
+  enforce_and_resume
+    dune
+    [ instrumentation
+        (and_
+           [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
+           ; not_ (backend (Dune.Instrumentation.Backend.v "bisect_ppx"))
+           ])
+    ];
+  [%expect
+    {|
+    File "<none>", line 1, characters 0-0:
+    Error: Enforce Failure.
+    The following condition does not hold: (not (backend bisect_ppx))
+    Dunolint is able to suggest automatic modifications to satisfy linting rules
+    when a strategy is implemented, however in this case there is none available.
+    Hint: You need to attend and fix manually.
+
+    File "<none>", line 1, characters 0-0:
+    Error: Enforce Failure.
+    The following condition does not hold:
+      (instrumentation (and (backend bisect_ppx) (not (backend bisect_ppx))))
+    Dunolint is able to suggest automatic modifications to satisfy linting rules
+    when a strategy is implemented, however in this case there is none available.
+    Hint: You need to attend and fix manually.
+    [123]
+    (library
+     (name mylib)
+     (instrumentation
+      (backend other))
+     (instrumentation
+      (backend bisect_ppx)))
     |}];
   ()
 ;;
