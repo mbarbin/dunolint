@@ -4,9 +4,24 @@
 (*_  SPDX-License-Identifier: LGPL-3.0-or-later WITH LGPL-3.0-linking-exception   *)
 (*_********************************************************************************)
 
-(** Shared utils for supporting stanzas with several instrumentation fields. *)
+(** Shared utils for supporting stanzas with several instrumentation fields.
 
-type t = Instrumentation.t list
+    This is a mutable container holding the instrumentation entries of a stanza. *)
+
+type t
+
+val create : Instrumentation.t list -> t
+val to_list : t -> Instrumentation.t list
+val is_empty : t -> bool
+
+(** Write the entries as a list of [instrumentation] fields. *)
+val write : t -> Sexp.t list
+
+(** Remove all entries. *)
+val clear : t -> unit
+
+(** Add an entry with the default backend if there are none. *)
+val initialize_if_empty : t -> unit
 
 (** In the sexp arguments of the [instrumentation] field locate a valid backend
     name. *)
@@ -24,9 +39,4 @@ val rewrite
   -> [ `Remove_if_marked | `Remove | `Rewrite_with of Instrumentation.t ]
 
 val eval : t -> condition:Dune.Instrumentation.Predicate.t Blang.t -> Dunolint.Trilang.t
-
-val enforce
-  :  t
-  -> condition:Dune.Instrumentation.Predicate.t Blang.t
-  -> insert_instrumentation:(Instrumentation.t -> unit)
-  -> unit
+val enforce : t -> condition:Dune.Instrumentation.Predicate.t Blang.t -> unit

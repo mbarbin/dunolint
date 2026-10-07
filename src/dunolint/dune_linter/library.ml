@@ -84,7 +84,7 @@ type t =
   ; flags : Flags.t
   ; libraries : Libraries.t
   ; mutable libraries_to_open_via_flags : string list
-  ; mutable instrumentations : Instrumentation.t list
+  ; instrumentations : Instrumentation_entries.t
   ; mutable lint : Lint.t option
   ; mutable preprocess : Preprocess.t option
   ; marked_for_removal : unit Field_name_table.t
@@ -133,7 +133,7 @@ let sexp_of_t
                      (List.map libraries_to_open_via_flags ~f:(fun s -> Sexp.Atom s))
                  ]
              ])
-        ; List.map instrumentations ~f:(fun v ->
+        ; List.map (Instrumentation_entries.to_list instrumentations) ~f:(fun v ->
             Sexp.List [ Atom "instrumentation"; Instrumentation.sexp_of_t v ])
         ; opt lint ~f:(fun v -> Sexp.List [ Atom "lint"; Lint.sexp_of_t v ])
         ; opt preprocess ~f:(fun v ->
@@ -369,7 +369,7 @@ let create
     ; flags
     ; libraries
     ; libraries_to_open_via_flags
-    ; instrumentations
+    ; instrumentations = Instrumentation_entries.create instrumentations
     ; lint
     ; preprocess
     ; marked_for_removal
@@ -426,7 +426,7 @@ let read ~sexps_rewriter ~field =
   ; flags
   ; libraries
   ; libraries_to_open_via_flags = []
-  ; instrumentations = List.rev !instrumentations
+  ; instrumentations = Instrumentation_entries.create (List.rev !instrumentations)
   ; lint = !lint
   ; preprocess = !preprocess
   ; marked_for_removal = Field_name_table.create 16
@@ -462,7 +462,7 @@ let write_fields
     ; opt modes ~f:Modes.write
     ; (if Flags.is_empty flags then [] else [ Flags.write flags ])
     ; (if Libraries.is_empty libraries then [] else [ Libraries.write libraries ])
-    ; List.map instrumentations ~f:Instrumentation.write
+    ; Instrumentation_entries.write instrumentations
     ; opt lint ~f:Lint.write
     ; opt preprocess ~f:Preprocess.write
     ]
@@ -589,7 +589,7 @@ let eval t ~predicate =
      | `package -> Option.is_some t.package
      | `inline_tests -> Option.is_some t.inline_tests
      | `modes -> Option.is_some t.modes
-     | `instrumentation -> not (List.is_empty t.instrumentations)
+     | `instrumentation -> not (Instrumentation_entries.is_empty t.instrumentations)
      | `lint -> Option.is_some t.lint
      | `preprocess -> Option.is_some t.preprocess)
     |> Dunolint.Trilang.const
@@ -611,7 +611,7 @@ let enforce =
             | `package -> t.package <- None
             | `inline_tests -> t.inline_tests <- None
             | `modes -> t.modes <- None
-            | `instrumentation -> t.instrumentations <- []
+            | `instrumentation -> Instrumentation_entries.clear t.instrumentations
             | `lint -> t.lint <- None
             | `preprocess -> t.preprocess <- None);
            Ok
@@ -733,17 +733,10 @@ let enforce =
            then t.modes <- Some modes);
         Ok
       | T (`has_field `instrumentation) ->
-        (match t.instrumentations with
-         | _ :: _ -> Ok
-         | [] ->
-           t.instrumentations <- [ Instrumentation.initialize ~condition:Blang.true_ ];
-           Ok)
+        Instrumentation_entries.initialize_if_empty t.instrumentations;
+        Ok
       | T (`instrumentation condition) ->
-        Instrumentation_entries.enforce
-          t.instrumentations
-          ~condition
-          ~insert_instrumentation:(fun instrumentation ->
-            t.instrumentations <- t.instrumentations @ [ instrumentation ]);
+        Instrumentation_entries.enforce t.instrumentations ~condition;
         (* We accept the enforcement only if it is stable through further evaluation. *)
         Eval
       | T (`has_field `lint) ->

@@ -51,7 +51,7 @@ type t =
   ; mutable public_name : Public_name.t option
   ; flags : Flags.t
   ; libraries : Libraries.t
-  ; mutable instrumentations : Instrumentation.t list
+  ; instrumentations : Instrumentation_entries.t
   ; mutable lint : Lint.t option
   ; mutable preprocess : Preprocess.t option
   ; marked_for_removal : unit Field_name_table.t
@@ -84,7 +84,7 @@ let sexp_of_t
         ; (if Libraries.is_empty libraries
            then []
            else [ Sexp.List [ Atom "libraries"; Libraries.sexp_of_t libraries ] ])
-        ; List.map instrumentations ~f:(fun v ->
+        ; List.map (Instrumentation_entries.to_list instrumentations) ~f:(fun v ->
             Sexp.List [ Atom "instrumentation"; Instrumentation.sexp_of_t v ])
         ; opt lint ~f:(fun v -> Sexp.List [ Atom "lint"; Lint.sexp_of_t v ])
         ; opt preprocess ~f:(fun v ->
@@ -144,7 +144,7 @@ let create
     ; public_name
     ; flags
     ; libraries
-    ; instrumentations
+    ; instrumentations = Instrumentation_entries.create instrumentations
     ; lint
     ; preprocess
     ; marked_for_removal = Field_name_table.create 16
@@ -191,7 +191,7 @@ let read ~sexps_rewriter ~field =
   ; public_name = !public_name
   ; flags
   ; libraries
-  ; instrumentations = List.rev !instrumentations
+  ; instrumentations = Instrumentation_entries.create (List.rev !instrumentations)
   ; lint = !lint
   ; preprocess = !preprocess
   ; marked_for_removal = Field_name_table.create 16
@@ -220,7 +220,7 @@ let write_fields
     ; opt public_name ~f:Public_name.write
     ; (if Flags.is_empty flags then [] else [ Flags.write flags ])
     ; (if Libraries.is_empty libraries then [] else [ Libraries.write libraries ])
-    ; List.map instrumentations ~f:Instrumentation.write
+    ; Instrumentation_entries.write instrumentations
     ; opt lint ~f:Lint.write
     ; opt preprocess ~f:Preprocess.write
     ]
@@ -315,7 +315,7 @@ let eval t ~predicate =
      | `name -> Option.is_some t.name
      | `public_name -> Option.is_some t.public_name
      | `lint -> Option.is_some t.lint
-     | `instrumentation -> not (List.is_empty t.instrumentations)
+     | `instrumentation -> not (Instrumentation_entries.is_empty t.instrumentations)
      | `preprocess -> Option.is_some t.preprocess)
     |> Dunolint.Trilang.const
 ;;
@@ -333,7 +333,7 @@ let enforce =
            (match has_field with
             | `name -> t.name <- None
             | `public_name -> t.public_name <- None
-            | `instrumentation -> t.instrumentations <- []
+            | `instrumentation -> Instrumentation_entries.clear t.instrumentations
             | `lint -> t.lint <- None
             | `preprocess -> t.preprocess <- None);
            Ok
@@ -395,17 +395,10 @@ let enforce =
               Public_name.enforce public_name ~condition;
               Ok))
       | T (`has_field `instrumentation) ->
-        (match t.instrumentations with
-         | _ :: _ -> Ok
-         | [] ->
-           t.instrumentations <- [ Instrumentation.initialize ~condition:Blang.true_ ];
-           Ok)
+        Instrumentation_entries.initialize_if_empty t.instrumentations;
+        Ok
       | T (`instrumentation condition) ->
-        Instrumentation_entries.enforce
-          t.instrumentations
-          ~condition
-          ~insert_instrumentation:(fun instrumentation ->
-            t.instrumentations <- t.instrumentations @ [ instrumentation ]);
+        Instrumentation_entries.enforce t.instrumentations ~condition;
         (* We accept the enforcement only if it is stable through further evaluation. *)
         Eval
       | T (`libraries condition) ->
