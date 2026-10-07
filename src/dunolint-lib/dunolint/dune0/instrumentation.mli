@@ -32,7 +32,11 @@ module Backend : sig
 end
 
 module Predicate : sig
-  type t = [ `backend of Backend.t ]
+  type t =
+    [ `backend of Backend.t
+    | `present of Backend.Name.t Nonempty_list.t
+    | `absent of Backend.Name.t Nonempty_list.t
+    ]
 
   val equal : t -> t -> bool
 

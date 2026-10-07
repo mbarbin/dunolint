@@ -461,3 +461,33 @@ let%expect_test "create_then_rewrite" =
     |}];
   ()
 ;;
+
+let%expect_test "present and absent" =
+  (* Replacing a backend by another one is done with [present] and [absent]. *)
+  let dune =
+    parse
+      {|
+(executable
+ (name main)
+ (instrumentation (backend bisect_ppx))
+ (instrumentation (backend landmarks)))
+|}
+  in
+  enforce_diff
+    dune
+    [ instrumentation
+        (and_
+           [ present [ Dune.Instrumentation.Backend.Name.v "other" ]
+           ; absent [ Dune.Instrumentation.Backend.Name.v "landmarks" ]
+           ])
+    ];
+  [%expect
+    {|
+    @@ -3,4 +3,4 @@
+       (instrumentation
+        (backend bisect_ppx))
+       (instrumentation
+    -|  (backend landmarks)))
+    +|  (backend other)))
+    |}]
+;;

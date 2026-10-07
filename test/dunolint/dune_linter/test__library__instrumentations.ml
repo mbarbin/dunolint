@@ -858,3 +858,218 @@ let%expect_test "no partial changes on failure" =
     |}];
   ()
 ;;
+
+let%expect_test "present and absent" =
+  let name = Dune.Instrumentation.Backend.Name.v in
+  let two_backends =
+    {|
+(library
+ (name mylib)
+ (instrumentation (backend bisect_ppx))
+ (instrumentation (backend landmarks)))
+|}
+  in
+  (* [present] and [absent] are evaluated against the set of instrumentation fields. *)
+  let _, t = parse two_backends in
+  let eval condition =
+    Dune_linter.Library.eval t ~predicate:(`instrumentation condition)
+  in
+  Test_helpers.is_true (eval (present [ name "bisect_ppx"; name "landmarks" ]));
+  Test_helpers.is_false (eval (present [ name "bisect_ppx"; name "other" ]));
+  Test_helpers.is_true (eval (absent [ name "other"; name "another" ]));
+  Test_helpers.is_false (eval (absent [ name "other"; name "landmarks" ]));
+  [%expect {||}];
+  (* Without instrumentation fields, the collection is empty. *)
+  let _, t = parse {| (library (name mylib)) |} in
+  let eval condition =
+    Dune_linter.Library.eval t ~predicate:(`instrumentation condition)
+  in
+  Test_helpers.is_false (eval (present [ name "bisect_ppx" ]));
+  Test_helpers.is_true (eval (absent [ name "bisect_ppx" ]));
+  Test_helpers.is_true (eval true_);
+  Test_helpers.is_false (eval false_);
+  Test_helpers.is_false
+    (eval
+       (and_
+          [ absent [ name "bisect_ppx" ]
+          ; backend (Dune.Instrumentation.Backend.v "landmarks")
+          ]));
+  Test_helpers.is_true
+    (eval (if_ (present [ name "bisect_ppx" ]) false_ (absent [ name "landmarks" ])));
+  Test_helpers.is_false
+    (eval
+       (if_
+          (backend (Dune.Instrumentation.Backend.v "landmarks"))
+          true_
+          (present [ name "bisect_ppx" ])));
+  Test_helpers.is_true
+    (eval
+       (if_
+          (backend (Dune.Instrumentation.Backend.v "landmarks"))
+          (present [ name "bisect_ppx" ])
+          true_));
+  [%expect {||}];
+  (* Enforcing [present] adds the missing fields. *)
+  enforce_diff
+    (parse {| (library (name mylib) (instrumentation (backend bisect_ppx))) |})
+    [ instrumentation (present [ name "bisect_ppx"; name "landmarks" ]) ];
+  [%expect
+    {|
+    @@ -1,4 +1,6 @@
+      (library
+       (name mylib)
+       (instrumentation
+    -|  (backend bisect_ppx)))
+    +|  (backend bisect_ppx))
+    +| (instrumentation
+    +|  (backend landmarks)))
+    |}];
+  (* Enforcing [absent] removes the fields, including the last one. *)
+  enforce_diff (parse two_backends) [ instrumentation (absent [ name "landmarks" ]) ];
+  [%expect
+    {|
+    @@ -1,6 +1,4 @@
+      (library
+       (name mylib)
+       (instrumentation
+    -|  (backend bisect_ppx))
+    -| (instrumentation
+    -|  (backend landmarks)))
+    +|  (backend bisect_ppx)))
+    |}];
+  enforce_diff
+    (parse two_backends)
+    [ instrumentation (absent [ name "bisect_ppx"; name "landmarks" ]) ];
+  [%expect
+    {|
+    @@ -1,6 +1,2 @@
+      (library
+    -| (name mylib)
+    -| (instrumentation
+    -|  (backend bisect_ppx))
+    -| (instrumentation
+    -|  (backend landmarks)))
+    +| (name mylib))
+    |}];
+  (* Migrating from a backend to another. *)
+  enforce_diff
+    (parse {| (library (name mylib) (instrumentation (backend landmarks))) |})
+    [ instrumentation (present [ name "bisect_ppx" ])
+    ; instrumentation (absent [ name "landmarks" ])
+    ];
+  [%expect
+    {|
+    @@ -1,4 +1,4 @@
+      (library
+       (name mylib)
+       (instrumentation
+    -|  (backend landmarks)))
+    +|  (backend bisect_ppx)))
+    |}];
+  (* [present] and [backend] can be combined: each [backend] targets the field with that
+     backend, adding it if needed. *)
+  enforce_diff
+    (parse {| (library (name mylib) (instrumentation (backend landmarks))) |})
+    [ instrumentation
+        (and_
+           [ present [ name "landmarks" ]
+           ; backend (Dune.Instrumentation.Backend.v "bisect_ppx" ~flags:[ "--x" ])
+           ])
+    ];
+  [%expect
+    {|
+    @@ -1,4 +1,6 @@
+      (library
+       (name mylib)
+       (instrumentation
+    -|  (backend landmarks)))
+    +|  (backend landmarks))
+    +| (instrumentation
+    +|  (backend bisect_ppx --x)))
+    |}];
+  enforce_diff
+    (parse two_backends)
+    [ instrumentation
+        (and_
+           [ present [ name "landmarks" ]
+           ; backend (Dune.Instrumentation.Backend.v "bisect_ppx" ~flags:[ "--x" ])
+           ])
+    ];
+  [%expect
+    {|
+    @@ -1,6 +1,6 @@
+      (library
+       (name mylib)
+       (instrumentation
+    -|  (backend bisect_ppx))
+    +|  (backend bisect_ppx --x))
+       (instrumentation
+        (backend landmarks)))
+    |}];
+  require_does_raise (fun () ->
+    enforce_diff
+      (parse two_backends)
+      [ instrumentation
+          (and_
+             [ present [ name "bisect_ppx" ]
+             ; not_ (backend (Dune.Instrumentation.Backend.v "landmarks"))
+             ])
+      ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure
+     (condition (and (present bisect_ppx) (not (backend landmarks)))))
+    |}];
+  (* The negation of a single backend is enforced like its opposite. *)
+  enforce_diff
+    (parse two_backends)
+    [ instrumentation (not_ (present [ name "landmarks" ])) ];
+  [%expect
+    {|
+    @@ -1,6 +1,4 @@
+      (library
+       (name mylib)
+       (instrumentation
+    -|  (backend bisect_ppx))
+    -| (instrumentation
+    -|  (backend landmarks)))
+    +|  (backend bisect_ppx)))
+    |}];
+  enforce_diff
+    (parse {| (library (name mylib) (instrumentation (backend bisect_ppx))) |})
+    [ instrumentation (not_ (absent [ name "landmarks" ])) ];
+  [%expect
+    {|
+    @@ -1,4 +1,6 @@
+      (library
+       (name mylib)
+       (instrumentation
+    -|  (backend bisect_ppx)))
+    +|  (backend bisect_ppx))
+    +| (instrumentation
+    +|  (backend landmarks)))
+    |}];
+  (* With more than one backend, the negation is only checked. *)
+  enforce_diff
+    (parse two_backends)
+    [ instrumentation (not_ (present [ name "landmarks"; name "other" ]))
+    ; instrumentation (not_ (absent [ name "landmarks"; name "other" ]))
+    ];
+  [%expect {||}];
+  require_does_raise (fun () ->
+    enforce_diff
+      (parse two_backends)
+      [ instrumentation (not_ (present [ name "bisect_ppx"; name "landmarks" ])) ]);
+  [%expect
+    {|
+    (Dunolinter.Handler.Enforce_failure
+     (condition (not (present bisect_ppx landmarks))))
+    |}];
+  require_does_raise (fun () ->
+    enforce_diff
+      (parse two_backends)
+      [ instrumentation (not_ (absent [ name "other"; name "another" ])) ]);
+  [%expect
+    {| (Dunolinter.Handler.Enforce_failure (condition (not (absent other another)))) |}];
+  ()
+;;

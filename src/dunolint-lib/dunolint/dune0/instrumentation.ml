@@ -64,17 +64,29 @@ end
 module Predicate = struct
   let error_source = "instrumentation.t"
 
-  type t = [ `backend of Backend.t ]
+  type t =
+    [ `backend of Backend.t
+    | `present of Backend.Name.t Nonempty_list.t
+    | `absent of Backend.Name.t Nonempty_list.t
+    ]
 
   let equal (a : t) (b : t) =
     if phys_equal a b
     then true
     else (
       match a, b with
-      | `backend va, `backend vb -> Backend.equal va vb)
+      | `backend va, `backend vb -> Backend.equal va vb
+      | `present (a :: va), `present (b :: vb) | `absent (a :: va), `absent (b :: vb) ->
+        equal_list Backend.Name.equal (a :: va) (b :: vb)
+      | (`backend _ | `present _ | `absent _), _ -> false)
   ;;
 
   let variant_spec : t Sexp_helpers.Variant_spec.t =
+    let names (f : Backend.Name.t Nonempty_list.t -> t) =
+      Sexp_helpers.Variant_spec.Nonempty
+        (fun ~context:_ ~fields:(hd :: tl) ->
+          f (Backend.Name.t_of_sexp hd :: List.map tl ~f:Backend.Name.t_of_sexp))
+    in
     [ { atom = "backend"
       ; conv =
           Nonempty
@@ -91,6 +103,8 @@ module Predicate = struct
                   ~message:"The construct [backend] expects the name of a backend first."
                   ~suggestion:"Replace by: (backend NAME FLAG...)")
       }
+    ; { atom = "present"; conv = names (fun v -> `present v) }
+    ; { atom = "absent"; conv = names (fun v -> `absent v) }
     ]
   ;;
 
@@ -105,5 +119,9 @@ module Predicate = struct
         (Atom "backend"
          :: Backend.Name.sexp_of_t name
          :: List.map flags ~f:Backend.Flag.sexp_of_t)
+    | `present (hd :: tl) ->
+      List (Atom "present" :: List.map (hd :: tl) ~f:Backend.Name.sexp_of_t)
+    | `absent (hd :: tl) ->
+      List (Atom "absent" :: List.map (hd :: tl) ~f:Backend.Name.sexp_of_t)
   ;;
 end

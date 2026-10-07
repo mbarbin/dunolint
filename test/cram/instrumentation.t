@@ -93,3 +93,17 @@ unchanged.
   when a strategy is implemented, however in this case there is none available.
   Hint: You need to attend and fix manually.
   [123]
+
+Migrating from a backend to another is done with [present] and [absent].
+
+  $ dunolint lint --dry-run --enforce '(dune (instrumentation (and (present other) (absent landmarks))))'
+  dry-run: Would edit file "dune":
+  @@ -1,7 +1,7 @@
+    (library
+     (name mylib)
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+  -|  (backend landmarks))
+  +|  (backend other))
+     (preprocess no_preprocessing))
