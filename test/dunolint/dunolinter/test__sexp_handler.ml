@@ -25,13 +25,15 @@ let%expect_test "rewrite" =
   ()
 ;;
 
+let sexps_rewriter original_contents =
+  match Sexps_rewriter.create ~path:(Fpath.v "file") ~original_contents with
+  | Ok r -> r
+  | Error { loc; message } -> Err.raise ~loc [ Pp.text message ] [@coverage off]
+;;
+
 let%expect_test "insert" =
   let insert ?overlaps original_contents ~indicative_field_ordering ~new_fields =
-    let sexps_rewriter =
-      match Sexps_rewriter.create ~path:(Fpath.v "file") ~original_contents with
-      | Ok r -> r
-      | Error { loc; message } -> Err.raise ~loc [ Pp.text message ] [@coverage off]
-    in
+    let sexps_rewriter = sexps_rewriter original_contents in
     let fields = Sexps_rewriter.original_sexps sexps_rewriter in
     let overlaps =
       match overlaps with
@@ -96,5 +98,67 @@ let%expect_test "insert" =
           | _ -> false)
       | _ -> true);
   [%expect {| ((a a) (a a-new) (b b) (b b-new) (c c) (d d-new) (e e) (f f)) |}];
+  ()
+;;
+
+let%expect_test "insert - with end of line comments" =
+  let insert original_contents ~indicative_field_ordering ~new_fields =
+    let sexps_rewriter = sexps_rewriter original_contents in
+    let fields = Sexps_rewriter.original_sexps sexps_rewriter in
+    Dunolinter.Sexp_handler.insert_new_fields
+      ~sexps_rewriter
+      ~indicative_field_ordering
+      ~fields
+      ~new_fields
+      ~overlaps:(fun ~field_name:_ ~present_args:_ ~new_args:_ -> false);
+    print_endline (Sexps_rewriter.contents sexps_rewriter)
+  in
+  (* BUG: The comment placed on the same line as the field after which the new field is
+     inserted ends up after the new field. *)
+  insert
+    {|
+(a a) ; About a.
+(c c)
+|}
+    ~indicative_field_ordering:[ "a"; "b"; "c" ]
+    ~new_fields:[ Sexp.List [ Atom "b"; Atom "b" ] ];
+  [%expect
+    {|
+    (a a)
+    (b b) ; About a.
+    (c c)
+    |}];
+  (* Same when inserting another instance of a field after the last one. *)
+  insert
+    {|
+(a a)
+(b b1) ; About b1.
+(c c)
+|}
+    ~indicative_field_ordering:[ "a"; "b"; "c" ]
+    ~new_fields:[ Sexp.List [ Atom "b"; Atom "b2" ] ];
+  [%expect
+    {|
+    (a a)
+    (b b1)
+    (b b2) ; About b1.
+    (c c)
+    |}];
+  (* Comments on their own line are left in place. *)
+  insert
+    {|
+(a a)
+; About c.
+(c c)
+|}
+    ~indicative_field_ordering:[ "a"; "b"; "c" ]
+    ~new_fields:[ Sexp.List [ Atom "b"; Atom "b" ] ];
+  [%expect
+    {|
+    (a a)
+    (b b)
+    ; About c.
+    (c c)
+    |}];
   ()
 ;;
