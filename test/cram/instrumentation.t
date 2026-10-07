@@ -55,27 +55,22 @@ Other fields are left untouched.
   +|  (backend other))
      (preprocess no_preprocessing))
 
-The instrumentation fields are a collection: a negated [backend] holds when no field has
-that backend. It is not auto-fixed, and the failure is located at the stanza.
+A [backend] condition without flags holds when there is a field with that backend, so its
+negation is the same as [absent], and is enforced by removing the field.
 
   $ dunolint lint --dry-run --enforce '(dune (instrumentation (not (backend landmarks))))'
-  File "dune", lines 1-7, characters 0-137:
-  1 | (library
-  2 |  (name mylib)
-  3 |  (instrumentation
-  4 |   (backend bisect_ppx))
-  5 |  (instrumentation
-  6 |   (backend landmarks))
-  7 |  (preprocess no_preprocessing))
-  Error: Enforce Failure.
-  The following condition does not hold: (not (backend landmarks))
-  Dunolint is able to suggest automatic modifications to satisfy linting rules
-  when a strategy is implemented, however in this case there is none available.
-  Hint: You need to attend and fix manually.
-  [123]
+  dry-run: Would edit file "dune":
+  @@ -1,7 +1,5 @@
+    (library
+     (name mylib)
+     (instrumentation
+      (backend bisect_ppx))
+  -| (instrumentation
+  -|  (backend landmarks))
+     (preprocess no_preprocessing))
 
-When a condition cannot be enforced, the failure is reported once and the stanza is left
-unchanged.
+When a condition cannot be enforced, the failure is reported once, located at the stanza,
+and the stanza is left unchanged.
 
   $ dunolint lint --dry-run --enforce '(dune (instrumentation (and (backend other) (not (backend other)))))'
   File "dune", lines 1-7, characters 0-137:

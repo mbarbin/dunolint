@@ -70,14 +70,23 @@ let find_entry t ~name =
 
 let mem t ~name = Option.is_some (find_entry t ~name)
 
-(* The entries are seen as a collection: [backend] holds when one of the entries has
-   that backend, with the same flags, [present] when there is an entry for each of the
-   backends, and [absent] when there is none for any of them. *)
+let has_flag flags flag =
+  List.exists flags ~f:(Dune.Instrumentation.Backend.Flag.equal flag)
+;;
+
+(* The entries are seen as a collection: [backend] holds when there is an entry for that
+   backend, with at least its flags in any order, [present] when there is an entry for
+   each of the backends, and [absent] when there is none for any of them. *)
 let eval_predicate t ~(predicate : Dune.Instrumentation.Predicate.t) =
   match predicate with
   | `backend backend ->
-    List.exists t.instrumentations ~f:(fun instrumentation ->
-      Dune.Instrumentation.Backend.equal backend (Instrumentation.backend instrumentation))
+    (match find_entry t ~name:(Dune.Instrumentation.Backend.name backend) with
+     | None -> false
+     | Some instrumentation ->
+       let flags =
+         Dune.Instrumentation.Backend.flags (Instrumentation.backend instrumentation)
+       in
+       List.for_all (Dune.Instrumentation.Backend.flags backend) ~f:(has_flag flags))
   | `present names -> Nonempty_list.for_all names ~f:(fun name -> mem t ~name)
   | `absent names -> Nonempty_list.for_all names ~f:(fun name -> not (mem t ~name))
 ;;
@@ -89,11 +98,23 @@ let holds t ~condition =
 let eval t ~condition = Dunolint.Trilang.const (holds t ~condition)
 
 (* A [backend] predicate targets the entry with that backend name, which is added if
-   there is none. Existing entries are not renamed. *)
+   there is none. Existing entries are not renamed, and keep their flags, after which the
+   missing ones are added. *)
 let set_backend t ~backend =
-  match find_entry t ~name:(Dune.Instrumentation.Backend.name backend) with
-  | Some instrumentation -> Instrumentation.set_backend instrumentation ~backend
+  let name = Dune.Instrumentation.Backend.name backend in
+  match find_entry t ~name with
   | None -> insert t (Instrumentation.create ~backend)
+  | Some instrumentation ->
+    let flags =
+      List.fold
+        (Dune.Instrumentation.Backend.flags backend)
+        ~init:
+          (Dune.Instrumentation.Backend.flags (Instrumentation.backend instrumentation))
+        ~f:(fun flags flag -> if has_flag flags flag then flags else flags @ [ flag ])
+    in
+    Instrumentation.set_backend
+      instrumentation
+      ~backend:(Dune.Instrumentation.Backend.create ~name ~flags)
 ;;
 
 let add t ~name =
@@ -127,10 +148,16 @@ let enforce_predicates =
       | T (`absent names) | Not (`present ([ _ ] as names)) ->
         Nonempty_list.iter names ~f:(fun name -> remove t ~name);
         Ok
-      | Not (`backend _) ->
-        (* This could be enforced by removing the field or by changing its flags, and
-           neither is clearly the intent. Left as future work. *)
-        Eval
+      | Not (`backend backend) ->
+        (match Dune.Instrumentation.Backend.flags backend with
+         | [] ->
+           (* Without flags, [backend] is the same as [present]. *)
+           remove t ~name:(Dune.Instrumentation.Backend.name backend);
+           Ok
+         | _ :: _ ->
+           (* With flags, the negation is only checked, like [pp_with_flag] for [pps].
+              Left as future work. *)
+           Eval)
       | Not (`present (_ :: _ :: _)) | Not (`absent (_ :: _ :: _)) ->
         (* With more than one backend, the negation of [present] or [absent] only
            requires one of them to be absent (or present), which doesn't determine
