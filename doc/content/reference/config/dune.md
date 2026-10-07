@@ -255,19 +255,23 @@ Condition: `(dune (include_subdirs PREDICATE))`
 
 ## instrumentation
 
-`(dune (instrumentation _))` is a selector for the *instrumentation* field found in stanzas *library*, *executable* and *executables*.
+`(dune (instrumentation _))` is a selector for the *instrumentation* fields found in stanzas *library*, *executable* and *executables*.
 
-Stanza:
+A stanza may have several *instrumentation* fields, one per backend:
+
 ```dune
 (library
+ (instrumentation <FRAGMENT>)
  (instrumentation <FRAGMENT>))
 ```
 
-Its predicate are:
+The selector considers these fields as a collection: its predicates are about the backends of the stanza, rather than about one field in particular.
+
+Its predicates are:
 
 1. `(backend NAME FLAGS...)`
 
-Returns *true* iif the backend name and flags supplied are an exact match for the arguments present in the FRAGMENT.
+Returns *true* iff there is a field with the backend NAME, and at least the flags supplied, in any order. The field may have other flags. Without flags, this returns *true* iff there is a field for the backend NAME, regardless of its flags.
 
 Some backends require additional flags. For example, *ppx_windtrap* uses the `--coverage` flag:
 
@@ -276,14 +280,52 @@ Some backends require additional flags. For example, *ppx_windtrap* uses the `--
  (backend ppx_windtrap --coverage))
 ```
 
-When enforced, *dunolint* suggests to replace the entire backend specification (name and flags) with the one specified by the predicate. Doesn't support suggestion when negated.
+When enforced, *dunolint* suggests adding the missing flags to the field that has the backend NAME, after its existing flags. If there is no such field, it suggests adding an `(instrumentation (backend NAME FLAGS...))` field. Fields with other backends are left untouched, in particular they are never renamed: see [Migrating to another backend](#migrating-to-another-backend).
+
+**Negation of `backend`**:
+
+- Without flags, `(not (backend a))` is equivalent to `(absent a)`, and is enforced as such.
+- With flags, the negation is only checked, and an enforcement failure is reported when it doesn't hold. This is the same as for the `pp_with_flag` predicate of the *pps* selector.
+
+2. `(present BACKEND_NAMES)`
+
+Returns *true* iff there is a field for each of the backends specified, regardless of their flags.
+
+When enforced, *dunolint* suggests adding an `(instrumentation (backend NAME))` field for each backend not already present.
+
+3. `(absent BACKEND_NAMES)`
+
+Returns *true* iff there is no field for any of the backends specified.
+
+When enforced, *dunolint* suggests removing the fields of these backends.
+
+**Negation of `present` and `absent`**: They follow the same rules as for the *libraries* selector: with a single backend, they are enforced as their opposite, and with several backends, they are only checked.
+
+Prefer `absent` over a negated `present`, and `present` over a negated `absent`: `(absent a b)` requires that there is no field for any of these backends, and `(present a b)` that there is one for each of them, which *dunolint* can always enforce.
+
+**Empty arguments**: `present` and `absent` expect at least one backend name.
+
+**Semantics:**
+
+Let *F* be the set of *instrumentation* fields of the stanza, where each field *f* has a backend *name(f)* and a set of flags *flags(f)*. The predicates are defined as:
+
+- `(backend n x1 ... xk)` holds iff ∃ *f* ∈ *F*, *name(f)* = *n* ∧ {*x1*, ..., *xk*} ⊆ *flags(f)*
+- `(present n1 ... nk)` holds iff ∀ *i*, ∃ *f* ∈ *F*, *name(f)* = *ni*
+- `(absent n1 ... nk)` holds iff ∀ *i*, ∄ *f* ∈ *F*, *name(f)* = *ni*
+
+The boolean constructs `and`, `or`, `not` and `if` combine these as usual, all of them being evaluated against the same set *F*. For example, `(and (backend a) (backend b))` holds when the stanza has a field for *a* and another one for *b*.
+
+When the stanza has no *instrumentation* field, *F* is empty: `backend` and `present` are *false*, and `absent` is *true*. Thus the conditions are evaluated even when there is no such field, and enforcing `backend` or `present` adds the field. Separately, enforcing `(has_field instrumentation)` adds an `(instrumentation (backend bisect_ppx))` field.
+
+**Enforcement:** The predicates of a condition are enforced one after the other, as described above. When a condition cannot be enforced, the failure is reported once for the whole condition, and the fields are left unchanged.
 
 **Examples:**
 
-Stanza with name-only backend:
+Stanza:
 ```dune
 (library
- (instrumentation (backend bisect_ppx)))
+ (instrumentation (backend bisect_ppx))
+ (instrumentation (backend landmarks)))
 ```
 
 Condition: `(dune (library (instrumentation PREDICATE)))`
@@ -291,7 +333,14 @@ Condition: `(dune (library (instrumentation PREDICATE)))`
 | Predicate | Result  |
 | --------- | ------- |
 | (backend bisect_ppx) | True |
-| (backend ppx_windtrap --coverage) | False. Suggestion: replace with `(backend ppx_windtrap --coverage)` |
+| (backend bisect_ppx --flag) | False. Suggestion: add `--flag` to the *bisect_ppx* field |
+| (backend other) | False. Suggestion: add `(instrumentation (backend other))` |
+| (present bisect_ppx landmarks) | True |
+| (present bisect_ppx other) | False. Suggestion: add `(instrumentation (backend other))` |
+| (absent other) | True |
+| (absent landmarks) | False. Suggestion: remove the *landmarks* field |
+| (not (backend landmarks)) | False. Suggestion: remove the *landmarks* field |
+| (not (present bisect_ppx landmarks)) | Enforcement failure: removing either field would do |
 
 Stanza with backend flags:
 ```dune
@@ -303,8 +352,27 @@ Condition: `(dune (library (instrumentation PREDICATE)))`
 
 | Predicate | Result  |
 | --------- | ------- |
+| (backend ppx_windtrap) | True |
 | (backend ppx_windtrap --coverage) | True |
-| (backend bisect_ppx) | False. Suggestion: replace with `(backend bisect_ppx)` |
+| (present ppx_windtrap) | True |
+| (backend bisect_ppx) | False. Suggestion: add `(instrumentation (backend bisect_ppx))` |
+| (not (backend ppx_windtrap --coverage)) | Enforcement failure: the negation of `backend` with flags is only checked |
+
+### Migrating to another backend
+
+Linting rules never rename the backend of a field. To migrate from a backend to another, combine a condition requiring the new backend with a condition forbidding the old one:
+
+```dune
+(rule
+ (enforce
+  (dune
+   (instrumentation
+    (and
+     (present bisect_ppx)
+     (absent landmarks))))))
+```
+
+With this configuration, `(instrumentation (backend landmarks) (deps foo.txt))` is replaced with `(instrumentation (backend bisect_ppx))`. Note that the other arguments of the removed field (such as `deps`) are specific to its backend, and are not carried over to the new field.
 
 ## library
 
