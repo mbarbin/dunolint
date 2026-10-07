@@ -11,17 +11,14 @@ type t
 
 val create : backend:Dune.Instrumentation.Backend.t -> t
 
-(** When the field appears in the condition blang, we create a first value to
-    initialize when the field is not originally present. *)
-val initialize : condition:Dune.Instrumentation.Predicate.t Blang.t -> t
-
-(** A shallow copy, used to restore entries when an enforcement fails. *)
+(** A shallow copy, used to enforce conditions on a copy of the entries. *)
 val copy : t -> t
 
-include
-  Dunolinter.Stanza_linter.S
-  with type t := t
-   and type predicate := Dune.Instrumentation.Predicate.t
+val sexp_of_t : t -> Sexp.t
+
+(** The conditions of stanzas about their instrumentation fields are evaluated and
+    enforced by [Instrumentation_entries]. *)
+include Dunolinter.Sexp_handler.S with type t := t
 
 (** {1 Getters} *)
 

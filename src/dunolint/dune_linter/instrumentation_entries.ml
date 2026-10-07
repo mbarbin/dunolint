@@ -11,11 +11,12 @@ let to_list t = t.instrumentations
 let is_empty t = List.is_empty t.instrumentations
 let write t = List.map t.instrumentations ~f:Instrumentation.write
 let clear t = t.instrumentations <- []
+let default_backend = Dune.Instrumentation.Backend.v "bisect_ppx"
 
 let initialize_if_empty t =
   match t.instrumentations with
   | _ :: _ -> ()
-  | [] -> t.instrumentations <- [ Instrumentation.initialize ~condition:Blang.true_ ]
+  | [] -> t.instrumentations <- [ Instrumentation.create ~backend:default_backend ]
 ;;
 
 let insert t instrumentation =
