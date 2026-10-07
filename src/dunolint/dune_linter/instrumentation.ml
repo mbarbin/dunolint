@@ -11,6 +11,7 @@ let sexp_of_t { backend } : Sexp.t =
 ;;
 
 let create ~backend = { backend }
+let copy t = { backend = t.backend }
 let backend t = t.backend
 
 let has_backend_name t ~name =

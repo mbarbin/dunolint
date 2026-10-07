@@ -433,7 +433,9 @@ let%expect_test "eval" =
   Test_helpers.is_false
     (Dune_linter.Library.eval t ~predicate:(`modes (present [ `best ])));
   [%expect {||}];
-  Test_helpers.is_undefined
+  (* The instrumentation fields are a collection, and without any of them no [backend]
+     holds. *)
+  Test_helpers.is_false
     (Dune_linter.Library.eval
        t
        ~predicate:
@@ -1111,7 +1113,9 @@ let%expect_test "field_conditions" =
   ()
 ;;
 
-let%expect_test "inconsistent_and_conditions" =
+let%expect_test "and_conditions" =
+  (* Requiring several backends adds a field for each of them, whether the conjunction is
+     inside or outside the [instrumentation] selector. *)
   let init = {| (library (name my-lib)) |} in
   let t = parse init in
   enforce
@@ -1131,19 +1135,22 @@ let%expect_test "inconsistent_and_conditions" =
       (backend landmarks)))
     |}];
   let t = parse init in
-  require_does_raise (fun () ->
-    enforce
-      t
-      [ instrumentation
-          (and_
-             [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
-             ; backend (Dune.Instrumentation.Backend.v "landmarks")
-             ])
-      ]);
+  enforce
+    t
+    [ instrumentation
+        (and_
+           [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
+           ; backend (Dune.Instrumentation.Backend.v "landmarks")
+           ])
+    ];
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (instrumentation (and (backend bisect_ppx) (backend landmarks)))))
+    (library
+     (name my-lib)
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
     |}];
   let init = {| (library (name my-lib) (instrumentation (backend other))) |} in
   let t = parse init in
@@ -1166,19 +1173,24 @@ let%expect_test "inconsistent_and_conditions" =
       (backend landmarks)))
     |}];
   let t = parse init in
-  require_does_raise (fun () ->
-    enforce
-      t
-      [ instrumentation
-          (and_
-             [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
-             ; backend (Dune.Instrumentation.Backend.v "landmarks")
-             ])
-      ]);
+  enforce
+    t
+    [ instrumentation
+        (and_
+           [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
+           ; backend (Dune.Instrumentation.Backend.v "landmarks")
+           ])
+    ];
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (instrumentation (and (backend bisect_ppx) (backend landmarks)))))
+    (library
+     (name my-lib)
+     (instrumentation
+      (backend other))
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
     |}];
   ()
 ;;

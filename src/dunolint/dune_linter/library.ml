@@ -737,8 +737,7 @@ let enforce =
         Ok
       | T (`instrumentation condition) ->
         Instrumentation_entries.enforce t.instrumentations ~condition;
-        (* We accept the enforcement only if it is stable through further evaluation. *)
-        Eval
+        Ok
       | T (`has_field `lint) ->
         (match t.lint with
          | Some _ -> Ok

@@ -55,61 +55,72 @@ let rewrite t ~args =
   | `No_entry -> if is_empty t then `Remove_if_marked else `Remove
 ;;
 
-let find_target_instrumentation t ~condition =
-  match
-    Dunolinter.Linter.find_init_value condition ~f:(function `backend backend ->
-        Some (Dune.Instrumentation.Backend.name backend))
-  with
-  | None -> None
-  | Some name ->
-    List.find t.instrumentations ~f:(fun instrumentation ->
-      Instrumentation.has_backend_name instrumentation ~name)
+let find_entry t ~name =
+  List.find t.instrumentations ~f:(fun instrumentation ->
+    Instrumentation.has_backend_name instrumentation ~name)
 ;;
 
-let eval t ~condition =
-  match t.instrumentations with
-  | [] -> Dunolint.Trilang.Undefined
-  | _ :: _ ->
-    (match find_target_instrumentation t ~condition with
-     | Some instrumentation ->
-       Dunolint.Trilang.eval condition ~f:(fun predicate ->
-         Instrumentation.eval instrumentation ~predicate)
-     | None ->
-       Dunolint.Trilang.exists t.instrumentations ~f:(fun instrumentation ->
-         Dunolint.Trilang.eval condition ~f:(fun predicate ->
-           Instrumentation.eval instrumentation ~predicate)))
+(* The entries are seen as a collection: [backend] holds when one of the entries has
+   that backend, with the same flags. *)
+let eval_predicate t ~(predicate : Dune.Instrumentation.Predicate.t) =
+  match predicate with
+  | `backend backend ->
+    List.exists t.instrumentations ~f:(fun instrumentation ->
+      Dune.Instrumentation.Backend.equal backend (Instrumentation.backend instrumentation))
+;;
+
+let holds t ~condition =
+  Blang.eval condition (fun predicate -> eval_predicate t ~predicate)
+;;
+
+let eval t ~condition = Dunolint.Trilang.const (holds t ~condition)
+
+(* A [backend] predicate targets the entry with that backend name, which is added if
+   there is none. Existing entries are not renamed. *)
+let set_backend t ~backend =
+  match find_entry t ~name:(Dune.Instrumentation.Backend.name backend) with
+  | Some instrumentation -> Instrumentation.set_backend instrumentation ~backend
+  | None -> insert t (Instrumentation.create ~backend)
+;;
+
+let enforce_predicates =
+  Dunolinter.Linter.enforce
+    (module Dune.Instrumentation.Predicate)
+    ~eval:(fun t ~predicate -> Dunolint.Trilang.const (eval_predicate t ~predicate))
+    ~enforce:(fun t predicate ->
+      match predicate with
+      | T (`backend backend) ->
+        set_backend t ~backend;
+        Ok
+      | Not (`backend _) -> Eval)
+;;
+
+(* Returns whether an enforce failure was raised while running [f], resuming after
+   each of them. *)
+let has_enforce_failures f =
+  match f () with
+  | () -> false
+  | effect Dunolinter.Handler.Enforce_failure _, k ->
+    ignore (Effect.Deep.continue k () : bool);
+    true
 ;;
 
 let enforce t ~condition =
-  Dunolinter.Linter.enforce
-    (module Dune.Instrumentation.Predicate)
-    ~eval:(fun t ~predicate ->
-      match predicate with
-      | `backend backend ->
-        List.exists t.instrumentations ~f:(fun instrumentation ->
-          Dune.Instrumentation.Backend.equal
-            backend
-            (Instrumentation.backend instrumentation))
-        |> Dunolint.Trilang.const)
-    ~enforce:(fun t predicate ->
-      match predicate with
-      | Not (`backend _) -> Eval
-      | T (`backend backend as predicate) ->
-        let name = Dune.Instrumentation.Backend.name backend in
-        let instrumentation =
-          match
-            List.find t.instrumentations ~f:(fun instrumentation ->
-              Instrumentation.has_backend_name instrumentation ~name)
-          with
-          | Some instrumentation -> instrumentation
-          | None ->
-            (* Existing entries are not renamed, a new one is added instead. *)
-            let instrumentation = Instrumentation.create ~backend in
-            insert t instrumentation;
-            instrumentation
-        in
-        Instrumentation.enforce instrumentation ~condition:(Blang.base predicate);
-        Ok)
-    t
-    ~condition
+  (* The condition is enforced on a copy of the entries, which replaces them only if the
+     enforcement succeeds, so that a failure leaves the entries unchanged. *)
+  let candidate =
+    { instrumentations = List.map t.instrumentations ~f:Instrumentation.copy }
+  in
+  let has_failures =
+    has_enforce_failures (fun () -> enforce_predicates candidate ~condition)
+  in
+  (* The enforcement fails if one of its steps did, or if the condition does not hold
+     in the end. In this case, the failure is reported once for the whole condition. *)
+  if has_failures || not (holds candidate ~condition)
+  then
+    Dunolinter.Handler.enforce_failure
+      (module Dune.Instrumentation.Predicate)
+      ~loc:Loc.none
+      ~condition
+  else t.instrumentations <- candidate.instrumentations
 ;;

@@ -15,6 +15,9 @@ val create : backend:Dune.Instrumentation.Backend.t -> t
     initialize when the field is not originally present. *)
 val initialize : condition:Dune.Instrumentation.Predicate.t Blang.t -> t
 
+(** A shallow copy, used to restore entries when an enforcement fails. *)
+val copy : t -> t
+
 include
   Dunolinter.Stanza_linter.S
   with type t := t

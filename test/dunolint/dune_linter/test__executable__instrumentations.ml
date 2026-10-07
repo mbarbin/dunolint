@@ -55,11 +55,8 @@ let%expect_test "two backends" =
 )
 |}
   in
-  (* Conditions are matched by backend name, otherwise they are bound existentially
-     to the present fields : they evaluate to [True] if they are satisfied by
-     one of them and [False] if all the fields negate them. [Undefined] would be
-     returned otherwise, although that does not currently happen with the
-     predicates currently available. *)
+  (* The instrumentation fields are a collection: [backend] holds when one of the
+     fields has that backend, with the same flags. *)
   Test_helpers.is_true
     (Dune_linter.Executable.eval
        t
@@ -72,8 +69,8 @@ let%expect_test "two backends" =
        ~predicate:
          (`instrumentation (backend (Dune.Instrumentation.Backend.v "landmarks"))));
   [%expect {| |}];
-  (* No field satisfies both backends at once. *)
-  Test_helpers.is_false
+  (* Each backend has a field. *)
+  Test_helpers.is_true
     (Dune_linter.Executable.eval
        t
        ~predicate:
@@ -302,7 +299,7 @@ let%expect_test "two backends" =
         ]
     ];
   [%expect {| |}];
-  (* However it cannot be enforced by an inner clause which may never be satisfied. *)
+  (* The same holds with an inner [and] clause. *)
   let dune =
     parse
       {|
@@ -314,20 +311,15 @@ let%expect_test "two backends" =
 )
 |}
   in
-  require_does_raise (fun () ->
-    enforce_diff
-      dune
-      [ instrumentation
-          (and_
-             [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
-             ; backend (Dune.Instrumentation.Backend.v "landmarks")
-             ])
-      ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (instrumentation (and (backend bisect_ppx) (backend landmarks)))))
-    |}];
+  enforce_diff
+    dune
+    [ instrumentation
+        (and_
+           [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
+           ; backend (Dune.Instrumentation.Backend.v "landmarks")
+           ])
+    ];
+  [%expect {||}];
   (* When an enforced condition does not target a field in particular it is left up
      to evaluation and won't support any auto-fix. *)
   let dune =

@@ -64,11 +64,8 @@ let%expect_test "two backends" =
 )
 |}
   in
-  (* Conditions are matched by backend name, otherwise they are bound existentially
-     to the present fields : they evaluate to [True] if they are satisfied by
-     one of them and [False] if all the fields negate them. [Undefined] would be
-     returned otherwise, although that does not currently happen with the
-     predicates currently available. *)
+  (* The instrumentation fields are a collection: [backend] holds when one of the
+     fields has that backend, with the same flags. *)
   Test_helpers.is_true
     (Dune_linter.Library.eval
        t
@@ -81,8 +78,8 @@ let%expect_test "two backends" =
        ~predicate:
          (`instrumentation (backend (Dune.Instrumentation.Backend.v "landmarks"))));
   [%expect {| |}];
-  (* No field satisfies both backends at once. *)
-  Test_helpers.is_false
+  (* Each backend has a field. *)
+  Test_helpers.is_true
     (Dune_linter.Library.eval
        t
        ~predicate:
@@ -331,7 +328,7 @@ let%expect_test "two backends" =
         ]
     ];
   [%expect {| |}];
-  (* However it cannot be enforced by an inner clause which may never be satisfied. *)
+  (* The same holds with an inner [and] clause. *)
   let dune =
     parse
       {|
@@ -343,20 +340,15 @@ let%expect_test "two backends" =
 )
 |}
   in
-  require_does_raise (fun () ->
-    enforce_diff
-      dune
-      [ instrumentation
-          (and_
-             [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
-             ; backend (Dune.Instrumentation.Backend.v "landmarks")
-             ])
-      ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (instrumentation (and (backend bisect_ppx) (backend landmarks)))))
-    |}];
+  enforce_diff
+    dune
+    [ instrumentation
+        (and_
+           [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
+           ; backend (Dune.Instrumentation.Backend.v "landmarks")
+           ])
+    ];
+  [%expect {||}];
   (* Exercising the outer and from zero instrumentation field. *)
   let dune =
     parse
@@ -657,9 +649,8 @@ let%expect_test "no instrumentation field" =
 ;;
 
 let%expect_test "eval and enforce agree" =
-  (* BUG: Evaluation and enforcement disagree. The conditions below should not hold,
-     since the stanza has a field for each of [bisect_ppx] and [landmarks]. Instead,
-     they are evaluated against a single field, which satisfies them. *)
+  (* Evaluation and enforcement agree. The conditions below do not hold, since the
+     stanza has a field for each of [bisect_ppx] and [landmarks]. *)
   let test condition =
     let ((_, t) as dune) =
       parse
@@ -671,7 +662,7 @@ let%expect_test "eval and enforce agree" =
 )
 |}
     in
-    Test_helpers.is_true
+    Test_helpers.is_false
       (Dune_linter.Library.eval t ~predicate:(`instrumentation condition));
     enforce_and_resume dune [ instrumentation condition ]
   in
@@ -701,7 +692,8 @@ let%expect_test "eval and enforce agree" =
     {|
     File "<none>", line 1, characters 0-0:
     Error: Enforce Failure.
-    The following condition does not hold: (not (backend landmarks))
+    The following condition does not hold:
+      (and (backend bisect_ppx) (not (backend landmarks)))
     Dunolint is able to suggest automatic modifications to satisfy linting rules
     when a strategy is implemented, however in this case there is none available.
     Hint: You need to attend and fix manually.
@@ -717,8 +709,7 @@ let%expect_test "eval and enforce agree" =
 ;;
 
 let%expect_test "no partial changes on failure" =
-  (* BUG: When a condition cannot be enforced, the stanza should be left unchanged, but
-     the fields added while trying to enforce it remain. *)
+  (* When a condition cannot be enforced, the stanza is left unchanged. *)
   let dune =
     parse
       {|
@@ -740,15 +731,8 @@ let%expect_test "no partial changes on failure" =
     {|
     File "<none>", line 1, characters 0-0:
     Error: Enforce Failure.
-    The following condition does not hold: (not (backend bisect_ppx))
-    Dunolint is able to suggest automatic modifications to satisfy linting rules
-    when a strategy is implemented, however in this case there is none available.
-    Hint: You need to attend and fix manually.
-
-    File "<none>", line 1, characters 0-0:
-    Error: Enforce Failure.
     The following condition does not hold:
-      (instrumentation (and (backend bisect_ppx) (not (backend bisect_ppx))))
+      (and (backend bisect_ppx) (not (backend bisect_ppx)))
     Dunolint is able to suggest automatic modifications to satisfy linting rules
     when a strategy is implemented, however in this case there is none available.
     Hint: You need to attend and fix manually.
@@ -756,9 +740,77 @@ let%expect_test "no partial changes on failure" =
     (library
      (name mylib)
      (instrumentation
-      (backend other))
+      (backend other)))
+    |}];
+  (* A step that fails makes the enforcement fail, even if the following steps lead to
+     a state where the condition holds. *)
+  let dune =
+    parse
+      {|
+(library
+ (name mylib)
+ (instrumentation (backend other))
+)
+|}
+  in
+  enforce_and_resume
+    dune
+    [ instrumentation
+        (and_
+           [ or_
+               [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
+               ; backend (Dune.Instrumentation.Backend.v "landmarks")
+               ]
+           ; backend (Dune.Instrumentation.Backend.v "bisect_ppx")
+           ])
+    ];
+  [%expect
+    {|
+    File "<none>", line 1, characters 0-0:
+    Error: Enforce Failure.
+    The following condition does not hold:
+      (and (or (backend bisect_ppx) (backend landmarks)) (backend bisect_ppx))
+    Dunolint is able to suggest automatic modifications to satisfy linting rules
+    when a strategy is implemented, however in this case there is none available.
+    Hint: You need to attend and fix manually.
+    [123]
+    (library
+     (name mylib)
      (instrumentation
-      (backend bisect_ppx)))
+      (backend other)))
+    |}];
+  (* Same when the steps succeed but undo each other. *)
+  let dune =
+    parse
+      {|
+(library
+ (name mylib)
+ (instrumentation (backend other))
+)
+|}
+  in
+  enforce_and_resume
+    dune
+    [ instrumentation
+        (and_
+           [ backend (Dune.Instrumentation.Backend.v "bisect_ppx" ~flags:[ "--x" ])
+           ; backend (Dune.Instrumentation.Backend.v "bisect_ppx")
+           ])
+    ];
+  [%expect
+    {|
+    File "<none>", line 1, characters 0-0:
+    Error: Enforce Failure.
+    The following condition does not hold:
+      (and (backend bisect_ppx --x) (backend bisect_ppx))
+    Dunolint is able to suggest automatic modifications to satisfy linting rules
+    when a strategy is implemented, however in this case there is none available.
+    Hint: You need to attend and fix manually.
+    [123]
+    (library
+     (name mylib)
+     (instrumentation
+      (backend other)))
     |}];
   ()
 ;;
