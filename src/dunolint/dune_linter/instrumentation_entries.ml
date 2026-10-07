@@ -103,15 +103,10 @@ let enforce t ~condition =
           with
           | Some instrumentation -> instrumentation
           | None ->
-            (match
-               List.find t.instrumentations ~f:(fun instrumentation ->
-                 not (Instrumentation.is_pinned instrumentation))
-             with
-             | Some instrumentation -> instrumentation
-             | None ->
-               let instrumentation = Instrumentation.create ~backend in
-               insert t instrumentation;
-               instrumentation)
+            (* Existing entries are not renamed, a new one is added instead. *)
+            let instrumentation = Instrumentation.create ~backend in
+            insert t instrumentation;
+            instrumentation
         in
         Instrumentation.enforce instrumentation ~condition:(Blang.base predicate);
         Ok)

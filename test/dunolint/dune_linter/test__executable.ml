@@ -695,6 +695,8 @@ let%expect_test "inconsistent_and_conditions" =
     (executable
      (name my-exec)
      (instrumentation
+      (backend other))
+     (instrumentation
       (backend bisect_ppx))
      (instrumentation
       (backend landmarks)))
@@ -864,11 +866,11 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
   test [ instrumentation (backend (Dune.Instrumentation.Backend.v "coverage")) ];
   [%expect
     {|
-    @@ -2,7 +2,7 @@
-       (name my-exe)
+    @@ -3,6 +3,8 @@
        (public_name my-cli)
        (instrumentation
-    -|  (backend bisect_ppx))
+        (backend bisect_ppx))
+    +| (instrumentation
     +|  (backend coverage))
        (lint
         (pps ppx_linter))

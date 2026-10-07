@@ -4,18 +4,14 @@
 (*  SPDX-License-Identifier: LGPL-3.0-or-later WITH LGPL-3.0-linking-exception   *)
 (*********************************************************************************)
 
-type t =
-  { mutable backend : Dune.Instrumentation.Backend.t
-  ; mutable is_pinned : bool
-  }
+type t = { mutable backend : Dune.Instrumentation.Backend.t }
 
-let sexp_of_t { backend; is_pinned = _ } : Sexp.t =
+let sexp_of_t { backend } : Sexp.t =
   List [ List [ Atom "backend"; Dune.Instrumentation.Backend.sexp_of_t backend ] ]
 ;;
 
-let create ~backend = { backend; is_pinned = true }
+let create ~backend = { backend }
 let backend t = t.backend
-let is_pinned t = t.is_pinned
 
 let has_backend_name t ~name =
   Dune.Instrumentation.Backend.Name.equal
@@ -23,11 +19,7 @@ let has_backend_name t ~name =
     (Dune.Instrumentation.Backend.name t.backend)
 ;;
 
-let set_backend t ~backend =
-  t.backend <- backend;
-  t.is_pinned <- true
-;;
-
+let set_backend t ~backend = t.backend <- backend
 let field_name = "instrumentation"
 
 let read ~sexps_rewriter ~field =
@@ -41,7 +33,7 @@ let read ~sexps_rewriter ~field =
              ~flags:(List.map flag_sexps ~f:Dune.Instrumentation.Backend.Flag.t_of_sexp))
       | _ -> None)
   with
-  | Some backend -> { backend; is_pinned = false }
+  | Some backend -> create ~backend
   | None ->
     let loc = Sexps_rewriter.loc sexps_rewriter field in
     Err.raise
@@ -154,5 +146,5 @@ let initialize ~condition =
         Some backend)
     |> Option.value ~default:default_backend
   in
-  { backend; is_pinned = false }
+  { backend }
 ;;

@@ -1159,6 +1159,8 @@ let%expect_test "inconsistent_and_conditions" =
     (library
      (name my-lib)
      (instrumentation
+      (backend other))
+     (instrumentation
       (backend bisect_ppx))
      (instrumentation
       (backend landmarks)))
@@ -1412,11 +1414,11 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
   test [ instrumentation (backend (Dune.Instrumentation.Backend.v "coverage")) ];
   [%expect
     {|
-    @@ -3,7 +3,7 @@
-       (public_name my-public-lib)
+    @@ -4,6 +4,8 @@
        (modes byte native)
        (instrumentation
-    -|  (backend bisect_ppx))
+        (backend bisect_ppx))
+    +| (instrumentation
     +|  (backend coverage))
        (lint
         (pps ppx_linter))

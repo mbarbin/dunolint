@@ -25,10 +25,6 @@ include
 val backend : t -> Dune.Instrumentation.Backend.t
 val has_backend_name : t -> name:Dune.Instrumentation.Backend.Name.t -> bool
 
-(** A pin carries the meaning that such entry has been associated with its backend
-    and that dunolint should prefer not changing it further. *)
-val is_pinned : t -> bool
-
 (** {1 Setters} *)
 
 val set_backend : t -> backend:Dune.Instrumentation.Backend.t -> unit

@@ -208,7 +208,7 @@ let%expect_test "two backends" =
     ; instrumentation (backend (Dune.Instrumentation.Backend.v "landmarks"))
     ];
   [%expect {| |}];
-  (* The addition is auto suggested, replacing another backend in place if any. *)
+  (* The addition is auto suggested, without renaming another backend. *)
   let dune =
     parse
       {|
@@ -226,11 +226,13 @@ let%expect_test "two backends" =
     ];
   [%expect
     {|
-    @@ -3,4 +3,4 @@
+    @@ -3,4 +3,6 @@
        (instrumentation
         (backend landmarks))
        (instrumentation
     -|  (backend third_backend)))
+    +|  (backend third_backend))
+    +| (instrumentation
     +|  (backend bisect_ppx)))
     |}];
   (* Trying the same from zero instrumentation field. *)
