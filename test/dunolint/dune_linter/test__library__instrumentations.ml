@@ -564,6 +564,68 @@ let%expect_test "create_then_rewrite" =
   ()
 ;;
 
+let%expect_test "backend flags" =
+  let dune () =
+    parse
+      {|
+(library
+ (name mylib)
+ (instrumentation (backend bisect_ppx --x --y)))
+|}
+  in
+  let _, t = dune () in
+  let eval condition =
+    Dune_linter.Library.eval t ~predicate:(`instrumentation condition)
+  in
+  let backend ?flags name = backend (Dune.Instrumentation.Backend.v ?flags name) in
+  (* CHANGE: [backend] holds when the field has exactly these flags, in the same order.
+     We'd like it to hold when the field has at least these flags, in any order, so that
+     without flags it holds when the field is present, like [pp] does for [pps]. *)
+  Test_helpers.is_true (eval (backend "bisect_ppx" ~flags:[ "--x"; "--y" ]));
+  Test_helpers.is_false (eval (backend "bisect_ppx"));
+  Test_helpers.is_false (eval (backend "bisect_ppx" ~flags:[ "--y" ]));
+  Test_helpers.is_false (eval (backend "bisect_ppx" ~flags:[ "--y"; "--x" ]));
+  Test_helpers.is_false (eval (backend "bisect_ppx" ~flags:[ "--x"; "--z" ]));
+  [%expect {||}];
+  (* CHANGE: As a consequence, [(not (backend bisect_ppx))] holds even though the stanza
+     has a [bisect_ppx] field. We'd like it to be the same as [(absent bisect_ppx)],
+     and be enforced by removing the field. *)
+  Test_helpers.is_true (eval (not_ (backend "bisect_ppx")));
+  enforce_diff (dune ()) [ instrumentation (not_ (backend "bisect_ppx")) ];
+  [%expect {||}];
+  (* CHANGE: Same with flags. We'd like this one to fail, the negation being only
+     checked, like [pp_with_flag] for [pps]. *)
+  enforce_diff
+    (dune ())
+    [ instrumentation (not_ (backend "bisect_ppx" ~flags:[ "--x" ])) ];
+  [%expect {||}];
+  (* CHANGE: Enforcing [backend] replaces the flags of the field. We'd like it to keep the
+     existing flags, and add the missing ones. *)
+  enforce_diff (dune ()) [ instrumentation (backend "bisect_ppx") ];
+  [%expect
+    {|
+    @@ -1,4 +1,4 @@
+      (library
+       (name mylib)
+       (instrumentation
+    -|  (backend bisect_ppx --x --y)))
+    +|  (backend bisect_ppx)))
+    |}];
+  enforce_diff
+    (dune ())
+    [ instrumentation (backend "bisect_ppx" ~flags:[ "--z"; "--x"; "--w" ]) ];
+  [%expect
+    {|
+    @@ -1,4 +1,4 @@
+      (library
+       (name mylib)
+       (instrumentation
+    -|  (backend bisect_ppx --x --y)))
+    +|  (backend bisect_ppx --z --x --w)))
+    |}];
+  ()
+;;
+
 let%expect_test "backend change" =
   (* Linting rules do not rename the backend of a field. Instead, a field is
      added for the required backend, and the existing one is left untouched,
