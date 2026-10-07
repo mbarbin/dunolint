@@ -113,8 +113,8 @@ let%expect_test "insert - with end of line comments" =
       ~overlaps:(fun ~field_name:_ ~present_args:_ ~new_args:_ -> false);
     print_endline (Sexps_rewriter.contents sexps_rewriter)
   in
-  (* BUG: The comment placed on the same line as the field after which the new field is
-     inserted ends up after the new field. *)
+  (* The comment placed on the same line as the field after which the new field is
+     inserted stays with that field. *)
   insert
     {|
 (a a) ; About a.
@@ -124,8 +124,8 @@ let%expect_test "insert - with end of line comments" =
     ~new_fields:[ Sexp.List [ Atom "b"; Atom "b" ] ];
   [%expect
     {|
-    (a a)
-    (b b) ; About a.
+    (a a) ; About a.
+    (b b)
     (c c)
     |}];
   (* Same when inserting another instance of a field after the last one. *)
@@ -140,8 +140,8 @@ let%expect_test "insert - with end of line comments" =
   [%expect
     {|
     (a a)
-    (b b1)
-    (b b2) ; About b1.
+    (b b1) ; About b1.
+    (b b2)
     (c c)
     |}];
   (* Comments on their own line are left in place. *)
