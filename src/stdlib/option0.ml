@@ -6,6 +6,14 @@
 
 include Stdlib.Option
 
+let bind t ~f = bind t f
+
+let exists t ~f =
+  match t with
+  | None -> false
+  | Some v -> f v
+;;
+
 let iter t ~f = iter f t
 let map t ~f = map f t
 
