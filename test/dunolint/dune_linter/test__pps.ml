@@ -484,7 +484,7 @@ let%expect_test "enforce" =
   enforce t [ true_ ];
   [%expect {| (pps ppx_deriving) |}];
   require_does_raise (fun () -> enforce t [ false_ ]);
-  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition false)) |}];
   enforce
     t
     [ and_ [ not_ (pp (Dune.Pp.Name.v "ppx_other")); pp (Dune.Pp.Name.v "ppx_deriving") ]
@@ -499,10 +499,7 @@ let%expect_test "enforce" =
   require_does_raise (fun () ->
     enforce t [ or_ [ pp (Dune.Pp.Name.v "qualified"); pp (Dune.Pp.Name.v "no") ] ]);
   [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (or (pp qualified) (pp no))))
-    |}];
+    {| (Dunolinter.Handler.Enforce_failure (condition (or (pp qualified) (pp no)))) |}];
   (* When defined, [if] enforces the clause that applies. *)
   let invariant =
     if_
@@ -556,7 +553,7 @@ let%expect_test "enforce" =
     enforce t [ flag { name = "--driver"; param = `some; applies_to = `driver } ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (flag (name --driver) (param some) (applies_to driver))))
     |}];
   let t = parse {| (pps --driver=screw) |} in
@@ -570,7 +567,7 @@ let%expect_test "enforce" =
     enforce t [ flag { name = "--driver"; param = `some; applies_to = `driver } ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (flag (name --driver) (param some) (applies_to driver))))
     |}];
   let t = parse {| (pps) |} in
@@ -670,14 +667,14 @@ let%expect_test "enforce - present and absent" =
     enforce t [ not_ (present [ pp "ppx_jane"; pp "ppx_john" ]) ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (not (present ppx_jane ppx_john))))
     |}];
   require_does_raise (fun () ->
     enforce t [ not_ (absent [ pp "ppx_eve"; pp "ppx_other" ]) ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (not (absent ppx_eve ppx_other))))
     |}];
   ()

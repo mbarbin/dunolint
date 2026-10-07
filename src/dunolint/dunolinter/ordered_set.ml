@@ -131,7 +131,7 @@ let mem
   =
   let open Evaluation_result.Monad_syntax in
   let compare = M.compare in
-  let equal a b = compare a b = 0 in
+  let equal a b = Int.equal (compare a b) 0 in
   let rec aux t =
     match (t : _ t) with
     | Element a -> return (equal a elt)

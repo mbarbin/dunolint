@@ -169,7 +169,7 @@ let%expect_test "enforce" =
   enforce t [ true_ ];
   [%expect {| (implicit_transitive_deps true) |}];
   require_does_raise (fun () -> enforce t [ false_ ]);
-  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition false)) |}];
   enforce t [ and_ [ not_ (equals `False); equals `True ] ];
   [%expect {| (implicit_transitive_deps true) |}];
   (* [or] does not have an enforcement strategy when its invariant is
@@ -179,7 +179,7 @@ let%expect_test "enforce" =
   require_does_raise (fun () -> enforce t [ or_ [ equals `False; equals `False ] ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (or (equals false) (equals false))))
     |}];
   (* When defined, [if] enforces the clause that applies. *)
@@ -243,7 +243,7 @@ let%expect_test "Linter.enforce" =
   enforce t [ true_ ];
   [%expect {| (implicit_transitive_deps true) |}];
   require_does_raise (fun () -> enforce t [ false_ ]);
-  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition false)) |}];
   enforce t [ implicit_transitive_deps (not_ (equals `True)) ];
   [%expect {| (implicit_transitive_deps false) |}];
   enforce

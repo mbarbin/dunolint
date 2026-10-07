@@ -214,7 +214,9 @@ let%expect_test "eval" =
        t
        ~predicate:(`lint (pps (pp (Dune.Pp.Name.v "ppx_linter")))));
   [%expect {||}];
-  Test_helpers.is_undefined
+  (* The instrumentation fields are a collection, and without any of them no [backend]
+     holds. *)
+  Test_helpers.is_false
     (Dune_linter.Executable.eval
        t
        ~predicate:
@@ -329,8 +331,7 @@ let%expect_test "enforce" =
      requires the user's intervention. *)
   require_does_raise (fun () ->
     enforce t [ name (not_ (equals (Dune.Executable.Name.v "main"))) ]);
-  [%expect
-    {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (not (equals main)))) |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition (not (equals main)))) |}];
   (* When there is no public_name, enforcing the equality with a value results
      in dunolint adding a new public_name field. *)
   let t = parse {| (executable (name main)) |} in
@@ -349,7 +350,7 @@ let%expect_test "enforce" =
     enforce t [ public_name (not_ (equals (Dune.Executable.Public_name.v "my-cli"))) ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (public_name (not (equals my-cli)))))
     |}];
   ()
@@ -416,17 +417,9 @@ let%expect_test "add_name_via_enforce" =
     |}];
   (* [is_prefix] and [is_suffix] cannot provide initial values - enforcement fails. *)
   test_fails [ name (is_prefix "hey") ];
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (name (is_prefix hey))))
-    |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition (name (is_prefix hey)))) |}];
   test_fails [ name (is_suffix "hey") ];
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (name (is_suffix hey))))
-    |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition (name (is_suffix hey)))) |}];
   (* When [equals] is combined with other predicates in [and_], the initial
      value from [equals] is used. *)
   test [ name (and_ [ equals main; is_prefix "ma" ]) ];
@@ -456,23 +449,20 @@ let%expect_test "add_name_via_enforce" =
   test_fails [ name (or_ [ equals main; is_prefix "hey" ]) ];
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (name (or (equals main) (is_prefix hey)))))
     |}];
   test_fails [ name (if_ (is_prefix "hey") (is_suffix "ho") (equals main)) ];
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (name (if (is_prefix hey) (is_suffix ho) (equals main)))))
     |}];
   test_fails [ name (not_ (equals main)) ];
   [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (name (not (equals main)))))
-    |}];
+    {| (Dunolinter.Handler.Enforce_failure (condition (name (not (equals main))))) |}];
   test_fails [ name false_ ];
-  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (name false))) |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition (name false))) |}];
   ()
 ;;
 
@@ -486,14 +476,9 @@ let%expect_test "enforce_failures" =
   (* Certain fields don't have heuristics in place for initializing a value if
      it isn't there. *)
   require_does_raise (fun () -> test [ has_field `name ]);
-  [%expect
-    {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (has_field name))) |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition (has_field name))) |}];
   require_does_raise (fun () -> test [ has_field `public_name ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (has_field public_name)))
-    |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition (has_field public_name))) |}];
   let init = {| (executable (name my_exe)) |} in
   let test cond =
     let t = parse init in
@@ -516,13 +501,13 @@ let%expect_test "enforce_failures" =
   test_fails [ public_name (is_prefix "prefix_") ];
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (public_name (is_prefix prefix_))))
     |}];
   test_fails [ public_name (is_suffix "_suffix") ];
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (public_name (is_suffix _suffix))))
     |}];
   ()
@@ -643,6 +628,88 @@ let%expect_test "field_conditions" =
     (executable
      (name my-exe)
      (preprocess no_preprocessing))
+    |}];
+  ()
+;;
+
+let%expect_test "and_conditions" =
+  (* Requiring several backends adds a field for each of them, whether the conjunction is
+     inside or outside the [instrumentation] selector. *)
+  let init = {| (executable (name my-exec)) |} in
+  let t = parse init in
+  enforce
+    t
+    [ and_
+        [ instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx"))
+        ; instrumentation (backend (Dune.Instrumentation.Backend.v "landmarks"))
+        ]
+    ];
+  [%expect
+    {|
+    (executable
+     (name my-exec)
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
+    |}];
+  let t = parse init in
+  enforce
+    t
+    [ instrumentation
+        (and_
+           [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
+           ; backend (Dune.Instrumentation.Backend.v "landmarks")
+           ])
+    ];
+  [%expect
+    {|
+    (executable
+     (name my-exec)
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
+    |}];
+  let init = {| (executable (name my-exec) (instrumentation (backend other))) |} in
+  let t = parse init in
+  enforce
+    t
+    [ and_
+        [ instrumentation (backend (Dune.Instrumentation.Backend.v "bisect_ppx"))
+        ; instrumentation (backend (Dune.Instrumentation.Backend.v "landmarks"))
+        ]
+    ];
+  [%expect
+    {|
+    (executable
+     (name my-exec)
+     (instrumentation
+      (backend other))
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
+    |}];
+  let t = parse init in
+  enforce
+    t
+    [ instrumentation
+        (and_
+           [ backend (Dune.Instrumentation.Backend.v "bisect_ppx")
+           ; backend (Dune.Instrumentation.Backend.v "landmarks")
+           ])
+    ];
+  [%expect
+    {|
+    (executable
+     (name my-exec)
+     (instrumentation
+      (backend other))
+     (instrumentation
+      (backend bisect_ppx))
+     (instrumentation
+      (backend landmarks)))
     |}];
   ()
 ;;
@@ -794,11 +861,11 @@ let%expect_test "field_condition_enforcement_with_existing_fields" =
   test [ instrumentation (backend (Dune.Instrumentation.Backend.v "coverage")) ];
   [%expect
     {|
-    @@ -2,7 +2,7 @@
-       (name my-exe)
+    @@ -3,6 +3,8 @@
        (public_name my-cli)
        (instrumentation
-    -|  (backend bisect_ppx))
+        (backend bisect_ppx))
+    +| (instrumentation
     +|  (backend coverage))
        (lint
         (pps ppx_linter))
@@ -906,14 +973,10 @@ let%expect_test "Linter.enforce stanza" =
   (* The linter doesn't change the kind of a stanza, thus enforcing an unsatisfied
      [stanza] invariant reports a failure. *)
   require_does_raise (fun () -> apply (stanza (Blang.base `library)));
-  [%expect
-    {| (Dunolinter.Handler.Enforce_failure (loc _) (condition (stanza library))) |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition (stanza library))) |}];
   require_does_raise (fun () -> apply (not_ (stanza (Blang.base `executable))));
   [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (not (stanza executable))))
-    |}];
+    {| (Dunolinter.Handler.Enforce_failure (condition (not (stanza executable)))) |}];
   ()
 ;;
 

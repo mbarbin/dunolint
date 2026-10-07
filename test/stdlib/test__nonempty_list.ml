@@ -24,8 +24,8 @@ let%expect_test "iter" =
 ;;
 
 let%expect_test "for_all" =
-  require (Nonempty_list.for_all [ 2; 4 ] ~f:(fun i -> i mod 2 = 0));
-  require (not (Nonempty_list.for_all [ 2; 3 ] ~f:(fun i -> i mod 2 = 0)));
+  require (Nonempty_list.for_all [ 2; 4 ] ~f:(fun i -> Int.equal (i mod 2) 0));
+  require (not (Nonempty_list.for_all [ 2; 3 ] ~f:(fun i -> Int.equal (i mod 2) 0)));
   [%expect {||}];
   ()
 ;;

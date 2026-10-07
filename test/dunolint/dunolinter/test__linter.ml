@@ -32,3 +32,34 @@ let%expect_test "public_name_is_prefix" =
   (* If this is really what you want, you can always manually adjust as needed. *)
   ()
 ;;
+
+let%expect_test "find_init_value" =
+  let test condition =
+    print_dyn
+      (Dyn.option
+         Dyn.int
+         (Dunolinter.Linter.find_init_value condition ~f:(fun i ->
+            if i > 0 then Some i else None)))
+  in
+  let open Blang.O in
+  (* Values are found in positive positions, the first one being returned. *)
+  test (base 1);
+  [%expect {| Some 1 |}];
+  test (and_ [ base 0; base 2; base 3 ]);
+  [%expect {| Some 2 |}];
+  (* [f] may decline to provide a value. *)
+  test (base 0);
+  [%expect {| None |}];
+  (* Other positions are not considered. *)
+  test true_;
+  [%expect {| None |}];
+  test false_;
+  [%expect {| None |}];
+  test (not_ (base 1));
+  [%expect {| None |}];
+  test (or_ [ base 1; base 2 ]);
+  [%expect {| None |}];
+  test (if_ (base 1) (base 2) (base 3));
+  [%expect {| None |}];
+  ()
+;;

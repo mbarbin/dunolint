@@ -191,7 +191,7 @@ let%expect_test "enforce" =
     enforce t [ not_ (pps (pp (Dune.Pp.Name.v "ppx_sexp_conv"))) ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (not (pps (pp ppx_sexp_conv)))))
     |}];
   (* Enforcing the presence of a new pp adds it. *)
@@ -210,11 +210,7 @@ let%expect_test "enforce" =
   [%expect {| (preprocess no_preprocessing) |}];
   (* Enforcing the negation of [no_preprocessing] triggers an error. *)
   require_does_raise (fun () -> enforce t [ not_ no_preprocessing ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (not no_preprocessing)))
-    |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition (not no_preprocessing))) |}];
   (* Enforcing the presence of a present pp adds a pps section with it. *)
   let t = parse {| (preprocess no_preprocessing) |} in
   enforce t [ pps (pp (Dune.Pp.Name.v "ppx_sexp_conv")) ];
@@ -228,7 +224,7 @@ let%expect_test "enforce" =
   enforce t [ true_ ];
   [%expect {| (preprocess (pps ppx_sexp_conv)) |}];
   require_does_raise (fun () -> enforce t [ false_ ]);
-  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition false)) |}];
   enforce
     t
     [ pps
@@ -244,7 +240,7 @@ let%expect_test "enforce" =
     enforce t [ or_ [ pps (pp (Dune.Pp.Name.v "ppx_absent")); no_preprocessing ] ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (or (pps (pp ppx_absent)) no_preprocessing)))
     |}];
   (* When defined, [if] enforces the clause that applies. *)

@@ -128,6 +128,45 @@ let%expect_test "Predicate.equal" =
   (* Backends with flags: same name different flags are not equal. *)
   require (not (equal backend_c backend_d));
   [%expect {||}];
+  (* [present] and [absent] *)
+  let present_a : Dune.Instrumentation.Predicate.t =
+    `present [ Dune.Instrumentation.Backend.Name.v "bisect_ppx" ]
+  in
+  require (Dune.Instrumentation.Predicate.equal present_a present_a);
+  require
+    (Dune.Instrumentation.Predicate.equal
+       present_a
+       (`present [ Dune.Instrumentation.Backend.Name.v "bisect_ppx" ]));
+  require
+    (not
+       (Dune.Instrumentation.Predicate.equal
+          present_a
+          (`present [ Dune.Instrumentation.Backend.Name.v "landmarks" ])));
+  require
+    (not
+       (Dune.Instrumentation.Predicate.equal
+          present_a
+          (`absent [ Dune.Instrumentation.Backend.Name.v "bisect_ppx" ])));
+  require
+    (Dune.Instrumentation.Predicate.equal
+       (`absent [ Dune.Instrumentation.Backend.Name.v "bisect_ppx" ])
+       (`absent [ Dune.Instrumentation.Backend.Name.v "bisect_ppx" ]));
+  require
+    (not
+       (Dune.Instrumentation.Predicate.equal
+          (`absent [ Dune.Instrumentation.Backend.Name.v "bisect_ppx" ])
+          present_a));
+  require
+    (not
+       (Dune.Instrumentation.Predicate.equal
+          present_a
+          (`backend (Dune.Instrumentation.Backend.v "bisect_ppx"))));
+  require
+    (not
+       (Dune.Instrumentation.Predicate.equal
+          (`backend (Dune.Instrumentation.Backend.v "bisect_ppx"))
+          present_a));
+  [%expect {||}];
   ()
 ;;
 
@@ -172,5 +211,13 @@ let%expect_test "predicate" =
   [%expect {| (backend bisect_ppx) |}];
   test (backend (Dune.Instrumentation.Backend.v "ppx_windtrap" ~flags:[ "--coverage" ]));
   [%expect {| (backend ppx_windtrap --coverage) |}];
+  test
+    (present
+       [ Dune.Instrumentation.Backend.Name.v "bisect_ppx"
+       ; Dune.Instrumentation.Backend.Name.v "landmarks"
+       ]);
+  [%expect {| (present bisect_ppx landmarks) |}];
+  test (absent [ Dune.Instrumentation.Backend.Name.v "landmarks" ]);
+  [%expect {| (absent landmarks) |}];
   ()
 ;;

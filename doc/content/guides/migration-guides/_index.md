@@ -8,5 +8,6 @@ sort_by = "weight"
 
 | Version | Guide |
 | ------- | ----- |
+| 0.0.2026XXXX | [Instrumentation backends](@/guides/migration-guides/instrumentation-backends.md) |
 | 0.0.2026XXXX | [Backend type change in OCaml EDSL](@/guides/migration-guides/backend-type-change-in-ocaml-edsl.md) |
 | 0.0.20260103 | [is_prefix/is_suffix on absent fields](@/guides/migration-guides/is-prefix-is-suffix-on-absent-fields.md) |

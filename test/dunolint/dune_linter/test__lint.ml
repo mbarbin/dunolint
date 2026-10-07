@@ -142,16 +142,13 @@ let%expect_test "enforce" =
   require_does_raise (fun () ->
     enforce t [ not_ (pps (Blang.base (`pp (Dune.Pp.Name.v "ppx_other")))) ]);
   [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (not (pps (pp ppx_other)))))
-    |}];
+    {| (Dunolinter.Handler.Enforce_failure (condition (not (pps (pp ppx_other))))) |}];
   (* Blang. *)
   let t = parse {| (lint (pps ppx_js_style)) |} in
   enforce t [ true_ ];
   [%expect {| (lint (pps ppx_js_style)) |}];
   require_does_raise (fun () -> enforce t [ false_ ]);
-  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition false)) |}];
   enforce
     t
     [ and_
@@ -180,7 +177,7 @@ let%expect_test "enforce" =
       ]);
   [%expect
     {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
+    (Dunolinter.Handler.Enforce_failure
      (condition (or (pps (pp qualified)) (pps (pp no)))))
     |}];
   (* When defined, [if] enforces the clause that applies. *)

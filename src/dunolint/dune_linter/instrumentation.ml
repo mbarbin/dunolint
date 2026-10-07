@@ -11,7 +11,15 @@ let sexp_of_t { backend } : Sexp.t =
 ;;
 
 let create ~backend = { backend }
+let copy t = { backend = t.backend }
 let backend t = t.backend
+
+let has_backend_name t ~name =
+  Dune.Instrumentation.Backend.Name.equal
+    name
+    (Dune.Instrumentation.Backend.name t.backend)
+;;
+
 let set_backend t ~backend = t.backend <- backend
 let field_name = "instrumentation"
 
@@ -109,35 +117,4 @@ let rewrite t ~sexps_rewriter ~field =
         ~desired:desired_flags
         ~actual:actual_flags
     | _ -> ())
-;;
-
-type predicate = Dune.Instrumentation.Predicate.t
-
-let eval t ~predicate =
-  match (predicate : predicate) with
-  | `backend backend ->
-    Dune.Instrumentation.Backend.equal backend t.backend |> Dunolint.Trilang.const
-;;
-
-let enforce =
-  Dunolinter.Linter.enforce
-    (module Dune.Instrumentation.Predicate)
-    ~eval
-    ~enforce:(fun t predicate ->
-      match predicate with
-      | Not (`backend _) -> Eval
-      | T (`backend backend) ->
-        t.backend <- backend;
-        Ok)
-;;
-
-let default_backend = Dune.Instrumentation.Backend.v "bisect_ppx"
-
-let initialize ~condition =
-  let backend =
-    Dunolinter.Linter.find_init_value condition ~f:(function `backend backend ->
-        Some backend)
-    |> Option.value ~default:default_backend
-  in
-  { backend }
 ;;

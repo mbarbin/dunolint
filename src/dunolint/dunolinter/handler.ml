@@ -8,7 +8,6 @@ type _ Stdlib.Effect.t +=
   | Enforce_failure :
       { condition : 'a
       ; sexp_of_condition : 'a -> Sexp.t
-      ; loc : Loc.t
       }
       -> unit Stdlib.Effect.t
 
@@ -18,21 +17,16 @@ module type Predicate = sig
   val sexp_of_t : t -> Sexp.t
 end
 
-let enforce_failure
-      (type a)
-      (module Predicate : Predicate with type t = a)
-      ~loc
-      ~condition
-  =
+let enforce_failure (type a) (module Predicate : Predicate with type t = a) ~condition =
   Stdlib.Effect.perform
     (Enforce_failure
-       { condition; sexp_of_condition = Blang.sexp_of_t Predicate.sexp_of_t; loc })
+       { condition; sexp_of_condition = Blang.sexp_of_t Predicate.sexp_of_t })
 ;;
 
 let emit_error_and_resume a ~loc ~f =
   match f a with
   | r -> r
-  | effect Enforce_failure { condition; sexp_of_condition; loc = _ }, k ->
+  | effect Enforce_failure { condition; sexp_of_condition }, k ->
     Err.error
       ~loc
       Pp.O.
@@ -54,20 +48,15 @@ let emit_error_and_resume a ~loc ~f =
 ;;
 
 module Exn = struct
-  exception
-    Enforce_failure of
-      { loc : Loc.t
-      ; condition : Sexp.t
-      }
+  exception Enforce_failure of { condition : Sexp.t }
 
   let () =
     Sexplib0.Sexp_conv.Exn_converter.add
       [%extension_constructor Enforce_failure]
       (function
-      | Enforce_failure { loc; condition } ->
+      | Enforce_failure { condition } ->
         List
           [ Atom "Dunolinter.Handler.Enforce_failure"
-          ; List [ Atom "loc"; Loc.sexp_of_t loc ]
           ; List [ Atom "condition"; condition ]
           ]
       | _ -> assert false)
@@ -77,8 +66,8 @@ end
 let raise ~f =
   match f () with
   | r -> r
-  | effect Enforce_failure { condition; sexp_of_condition; loc }, k ->
+  | effect Enforce_failure { condition; sexp_of_condition }, k ->
     Stdlib.Effect.Deep.discontinue
       k
-      (Exn.Enforce_failure { loc; condition = sexp_of_condition condition })
+      (Exn.Enforce_failure { condition = sexp_of_condition condition })
 ;;

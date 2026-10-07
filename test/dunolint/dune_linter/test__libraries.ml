@@ -489,7 +489,7 @@ let%expect_test "enforce" =
   enforce t [ true_ ];
   [%expect {| (libraries foo bar) |}];
   require_does_raise (fun () -> enforce t [ false_ ]);
-  [%expect {| (Dunolinter.Handler.Enforce_failure (loc _) (condition false)) |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition false)) |}];
   ()
 ;;
 
@@ -594,17 +594,9 @@ let%expect_test "enforce - present and absent" =
     [ not_ (present [ lib "foo"; lib "qux" ]); not_ (absent [ lib "foo"; lib "qux" ]) ];
   [%expect {| (libraries foo bar) |}];
   require_does_raise (fun () -> enforce t [ not_ (present [ lib "foo"; lib "bar" ]) ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (not (present foo bar))))
-    |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition (not (present foo bar)))) |}];
   require_does_raise (fun () -> enforce t [ not_ (absent [ lib "baz"; lib "qux" ]) ]);
-  [%expect
-    {|
-    (Dunolinter.Handler.Enforce_failure (loc _)
-     (condition (not (absent baz qux))))
-    |}];
+  [%expect {| (Dunolinter.Handler.Enforce_failure (condition (not (absent baz qux)))) |}];
   ()
 ;;
 

@@ -8,6 +8,8 @@ include module type of struct
   include Option
 end
 
+val bind : 'a t -> f:('a -> 'b t) -> 'b t
+val exists : 'a t -> f:('a -> bool) -> bool
 val iter : 'a t -> f:('a -> unit) -> unit
 val map : 'a t -> f:('a -> 'b) -> 'b t
 val value_map : 'a t -> default:'b -> f:('a -> 'b) -> 'b

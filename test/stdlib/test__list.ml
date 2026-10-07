@@ -23,13 +23,13 @@ let%expect_test "count - all match" =
 ;;
 
 let%expect_test "count - partial match" =
-  print_dyn (Dyn.int (List.count [ 1; 2; 3; 4; 5 ] ~f:(fun x -> x mod 2 = 0)));
+  print_dyn (Dyn.int (List.count [ 1; 2; 3; 4; 5 ] ~f:(fun x -> Int.equal (x mod 2) 0)));
   [%expect {| 2 |}];
   ()
 ;;
 
 let%expect_test "count - singleton" =
-  print_dyn (Dyn.int (List.count [ 42 ] ~f:(fun x -> x = 42)));
+  print_dyn (Dyn.int (List.count [ 42 ] ~f:(fun x -> Int.equal x 42)));
   [%expect {| 1 |}];
   ()
 ;;
@@ -80,19 +80,20 @@ let%expect_test "find - empty list" =
 ;;
 
 let%expect_test "find - found" =
-  print_dyn (Dyn.option Dyn.int (List.find [ 1; 2; 3 ] ~f:(fun x -> x = 2)));
+  print_dyn (Dyn.option Dyn.int (List.find [ 1; 2; 3 ] ~f:(fun x -> Int.equal x 2)));
   [%expect {| Some 2 |}];
   ()
 ;;
 
 let%expect_test "find - not found" =
-  print_dyn (Dyn.option Dyn.int (List.find [ 1; 2; 3 ] ~f:(fun x -> x = 42)));
+  print_dyn (Dyn.option Dyn.int (List.find [ 1; 2; 3 ] ~f:(fun x -> Int.equal x 42)));
   [%expect {| None |}];
   ()
 ;;
 
 let%expect_test "find - returns first match" =
-  print_dyn (Dyn.option Dyn.int (List.find [ 1; 2; 3; 4 ] ~f:(fun x -> x mod 2 = 0)));
+  print_dyn
+    (Dyn.option Dyn.int (List.find [ 1; 2; 3; 4 ] ~f:(fun x -> Int.equal (x mod 2) 0)));
   [%expect {| Some 2 |}];
   ()
 ;;

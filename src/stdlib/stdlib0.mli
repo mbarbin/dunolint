@@ -35,6 +35,10 @@ module Sexpable = Sexpable0
 module String = String0
 module With_equal_and_sexp = With_equal_and_sexp0
 
+(** Shadows the polymorphic equality to prevent its use. Use the [equal] function of
+    the relevant module instead, such as [Int.equal]. *)
+val ( = ) : [ `Use_a_specialized_equal ] -> [ `Use_a_specialized_equal ] -> bool
+
 val phys_equal : 'a -> 'a -> bool
 val print_dyn : Dyn.t -> unit
 val require : bool -> unit
