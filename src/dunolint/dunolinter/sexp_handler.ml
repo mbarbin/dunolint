@@ -214,9 +214,14 @@ let insert_new_fields
         let pred_indent = pred_pos.pos_cnum - pred_pos.pos_bol in
         String.make pred_indent ' '
       in
+      (* The new field is inserted after the comment placed on the same line as the
+         preceding field, if any, so that the comment stays with that field. *)
+      let offset =
+        (Comment_handler.sexp_extended_range ~sexps_rewriter ~arg:pred_field).stop
+      in
       File_rewriter.insert
         file_rewriter
-        ~offset:(Loc.stop_offset pred_loc)
+        ~offset
         ~text:("\n" ^ indentation ^ Sexp.to_string_hum new_field)))
 ;;
 
