@@ -113,32 +113,6 @@ struct
   ;;
 end
 
-module Make_sexpable_ordered_set
-    (M : sig
-       val field_name : string
-     end)
-    (S : Sexpable.S) =
-struct
-  type t = S.t Ordered_set.t
-
-  let field_name = M.field_name
-  let read_element ~sexps_rewriter:_ sexp = S.t_of_sexp sexp
-
-  let read ~sexps_rewriter ~field =
-    let args = get_args ~field_name:M.field_name ~sexps_rewriter ~field in
-    Ordered_set.read ~read_element ~sexps_rewriter args
-  ;;
-
-  let write (t : t) =
-    let values = Ordered_set.write ~write_a:S.sexp_of_t t in
-    Sexp.List (Atom M.field_name :: values)
-  ;;
-
-  let rewrite (t : t) ~sexps_rewriter ~field =
-    replace_field ~sexps_rewriter ~field ~new_field:(write t)
-  ;;
-end
-
 module Field_name_set = MoreLabels.Set.Make (String)
 
 let insert_new_fields

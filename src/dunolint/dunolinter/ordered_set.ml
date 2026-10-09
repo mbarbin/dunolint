@@ -244,3 +244,31 @@ let canonical_sort (type a) (module M : With_compare.S with type t = a) t =
   in
   aux t
 ;;
+
+type 'a ordered_set = 'a t
+
+module Make_sexp_handler
+    (M : sig
+       val field_name : string
+     end)
+    (S : Sexpable.S) =
+struct
+  type t = S.t ordered_set
+
+  let field_name = M.field_name
+  let read_element ~sexps_rewriter:_ sexp = S.t_of_sexp sexp
+
+  let read ~sexps_rewriter ~field =
+    let args = Sexp_handler.get_args ~field_name ~sexps_rewriter ~field in
+    read ~read_element ~sexps_rewriter args
+  ;;
+
+  let write (t : t) =
+    let values = write ~write_a:S.sexp_of_t t in
+    Sexp.List (Atom field_name :: values)
+  ;;
+
+  let rewrite (t : t) ~sexps_rewriter ~field =
+    Sexp_handler.replace_field ~sexps_rewriter ~field ~new_field:(write t)
+  ;;
+end

@@ -71,3 +71,17 @@ val remove : (module With_compare.S with type t = 'a) -> 'a t -> 'a -> 'a t
 (** A canonical sort defined by dunolint when the order has no particular
     meaning. *)
 val canonical_sort : (module With_compare.S with type t = 'a) -> 'a t -> 'a t
+
+(** {1 Sexp handler} *)
+
+type 'a ordered_set := 'a t
+
+(** A util to create a handler for an ordered set where individual elements have
+    the same sexpable type. The handler will expect a list of arguments, will
+    support and parse the ordered set constructors of dune, and parse the
+    elements according to the sexp serializer provided. *)
+module Make_sexp_handler
+    (_ : sig
+       val field_name : string
+     end)
+    (M : Sexpable.S) : Sexp_handler.S with type t = M.t ordered_set

@@ -21,7 +21,7 @@ let sexp_of_t { modes } : Sexp.t =
 let field_name = "modes"
 
 module Handler =
-  Dunolinter.Sexp_handler.Make_sexpable_ordered_set
+  Dunolinter.Ordered_set.Make_sexp_handler
     (struct
       let field_name = field_name
     end)
