@@ -15,6 +15,7 @@ module Libraries = Libraries
 module Lint = Lint
 module Pps = Pps
 module Preprocess = Preprocess
+module Vendored_dirs = Vendored_dirs
 
 type t =
   { path : Relative_path.t
@@ -44,6 +45,7 @@ type Stanza.t +=
   | Include_subdirs of Include_subdirs.t
   | Library of Library.t
   | Executable of Executable.t
+  | Vendored_dirs of Vendored_dirs.t
   | Unhandled
 
 module Linter = struct
@@ -115,6 +117,7 @@ let linters =
     ; T { impl = (module Include_subdirs); wrap = (fun a -> Include_subdirs a) }
     ; T { impl = (module Library); wrap = (fun a -> Library a) }
     ; T { impl = (module Executable); wrap = (fun a -> Executable a) }
+    ; T { impl = (module Vendored_dirs); wrap = (fun a -> Vendored_dirs a) }
     ]
   |> Dunolinter.Linters.create ~field_name:Linter.field_name
 ;;

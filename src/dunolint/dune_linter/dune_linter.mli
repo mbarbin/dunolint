@@ -15,6 +15,7 @@ module Libraries = Libraries
 module Lint = Lint
 module Pps = Pps
 module Preprocess = Preprocess
+module Vendored_dirs = Vendored_dirs
 
 type t
 
@@ -26,3 +27,4 @@ type Stanza.t +=
   | Include_subdirs of Include_subdirs.t
   | Library of Library.t
   | Executable of Executable.t
+  | Vendored_dirs of Vendored_dirs.t

@@ -51,3 +51,12 @@ The data_only_dirs stanza is a plain list of directories, sorted the same way.
    doc
    examples ; Not built.
    test_data)
+
+So is the vendored_dirs stanza.
+
+  $ cat > dune <<EOF
+  > (vendored_dirs zarith base)
+  > EOF
+
+  $ dunolint tools lint-file dune
+  (vendored_dirs base zarith)
