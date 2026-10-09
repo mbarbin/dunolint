@@ -12,6 +12,12 @@
 
 (** {1 Parsing Fields} *)
 
+(** Parse [original_contents], which is expected to contain exactly one sexp, and
+    return it along with the [Sexps_rewriter.t] holding its positions. Raises if
+    there are zero or several sexps.
+
+    This is meant to test the handling of a field, such as [(name foo)], isolated
+    from the stanza it belongs to. *)
 val read_sexp_field : path:Fpath.t -> string -> Sexps_rewriter.t * Sexp.t
 
 val parse
