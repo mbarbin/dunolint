@@ -102,24 +102,28 @@ After your first run, you'll see one of these patterns:
 ## Possible Next Steps
 
 ### Apply and Move On
+
 If you like what you see:
 1. Run `dunolint lint --yes` to apply all changes
 2. Commit them in a "normalize dune files" PR
 3. Continue development as before
 
 ### Gradual Adoption
+
 If you want to ease into it:
 1. Apply changes file by file as you work on different parts
 2. Run `dunolint lint --below=some/path` to lint specific directories
 3. Get comfortable before adding to CI
 
 ### Regular Cleanup
+
 Even without CI enforcement:
 1. Run `dunolint lint --dry-run` before releases
 2. Apply changes in dedicated cleanup PRs
 3. Keep things tidy without strict enforcement
 
 ### Full Enforcement
+
 Ready to automate:
 1. Apply all current changes
 2. Add `dunolint lint --check` to your CI pipeline
@@ -128,15 +132,18 @@ Ready to automate:
 For GitHub Actions users, there's a [dunolint-actions](https://github.com/mbarbin/dunolint-actions) repository that provides reusable workflows. These actions use pre-built binaries and typically run in 10-20 seconds. This is an area of active development, and we're planning a dedicated CI tutorial in the future.
 
 ### The Ultimate: Format on Save
+
 Some developers go even further and configure their editor to run `dunolint lint` on every save. Yes, you'll see fields reordering as you save — this might be too extreme for some, but others love the immediate feedback. Currently, this is only supported in Emacs (see [setup guide](@/guides/reformatter.md)). Support for other editors would be a welcome contribution if there's interest!
 
 ### Custom Configuration
+
 Want different rules:
 1. Create a `dunolint` file in your project root
 2. Define your own rules (see [config reference](@/reference/config/_index.md))
 3. Go beyond the defaults
 
 ### Working with Build Constraints
+
 In rare cases, library dependencies must be in a specific order due to build constraints. If you have documented this with comments, dunolint respects section boundaries. See [Comments in Libraries](@/explanation/linting-equilibrium/comments-in-libraries.md) for how to structure your dependencies to work with the linter while preserving required ordering.
 
 ## Not for Everyone

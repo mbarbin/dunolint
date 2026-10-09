@@ -12,6 +12,7 @@ Without any configuration, dunolint enforces a canonical ordering for various fi
 ### What Gets Sorted
 
 #### Library Dependencies
+
 In `(libraries ...)` stanzas, dependencies are sorted alphabetically:
 
 ```dune,title=Before
@@ -23,6 +24,7 @@ In `(libraries ...)` stanzas, dependencies are sorted alphabetically:
 ```
 
 #### PPX Preprocessors
+
 In `(preprocess (pps ...))` stanzas, PPX rewriters are sorted alphabetically:
 
 ```dune,title=Before
