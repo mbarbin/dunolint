@@ -4,6 +4,7 @@
 (*_  SPDX-License-Identifier: LGPL-3.0-or-later WITH LGPL-3.0-linking-exception   *)
 (*_********************************************************************************)
 
+module Dirs = Dirs
 module Executable = Executable
 module Flags = Flags
 module Include_subdirs = Include_subdirs
@@ -19,6 +20,7 @@ type t
 include Dunolinter.S with type t := t
 
 type Stanza.t +=
+  | Dirs of Dirs.t
   | Include_subdirs of Include_subdirs.t
   | Library of Library.t
   | Executable of Executable.t

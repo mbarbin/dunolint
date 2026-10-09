@@ -4,6 +4,7 @@
 (*  SPDX-License-Identifier: LGPL-3.0-or-later WITH LGPL-3.0-linking-exception   *)
 (*********************************************************************************)
 
+module Dirs = Dirs
 module Executable = Executable
 module Flags = Flags
 module Include_subdirs = Include_subdirs
@@ -37,6 +38,7 @@ module Stanza = struct
 end
 
 type Stanza.t +=
+  | Dirs of Dirs.t
   | Include_subdirs of Include_subdirs.t
   | Library of Library.t
   | Executable of Executable.t
@@ -106,7 +108,8 @@ end
 
 let linters =
   Linter.
-    [ T { impl = (module Include_subdirs); wrap = (fun a -> Include_subdirs a) }
+    [ T { impl = (module Dirs); wrap = (fun a -> Dirs a) }
+    ; T { impl = (module Include_subdirs); wrap = (fun a -> Include_subdirs a) }
     ; T { impl = (module Library); wrap = (fun a -> Library a) }
     ; T { impl = (module Executable); wrap = (fun a -> Executable a) }
     ]

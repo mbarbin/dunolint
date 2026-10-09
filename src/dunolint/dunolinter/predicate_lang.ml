@@ -167,9 +167,9 @@ module Operand = struct
     | [], _ :: _ -> Lt
     | _ :: _, [] -> Gt
     | a :: tl_a, b :: tl_b ->
-      (match compare a b with
-       | Ordering.Eq -> compare_lists ~compare tl_a tl_b
-       | (Lt | Gt) as ordering -> ordering)
+      (match (compare a b : Ordering.t) with
+       | (Lt | Gt) as ordering -> ordering
+       | Eq -> compare_lists ~compare tl_a tl_b)
   ;;
 
   (* The unknown constructs compare equal, so that they keep their original order. *)
@@ -178,8 +178,8 @@ module Operand = struct
     | Name a, Name b -> Ordering.of_int (String.compare a b)
     | Compound a, Compound b ->
       (match Ordering.of_int (Int.compare (Kind.rank a.kind) (Kind.rank b.kind)) with
-       | Eq -> compare_lists ~compare:(compare_lists ~compare) a.segments b.segments
-       | (Lt | Gt) as ordering -> ordering)
+       | (Lt | Gt) as ordering -> ordering
+       | Eq -> compare_lists ~compare:(compare_lists ~compare) a.segments b.segments)
     | (Standard | Name _ | Compound _ | Unknown), _ ->
       Ordering.of_int (Int.compare (rank a) (rank b))
   ;;
