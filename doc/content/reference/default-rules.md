@@ -35,6 +35,38 @@ In `(preprocess (pps ...))` stanzas, PPX rewriters are sorted alphabetically:
 (preprocess (pps ppx_assert ppx_deriving.std ppx_jane))
 ```
 
+#### Directories
+
+In `(dirs ...)` stanzas, the directories are sorted alphabetically:
+
+```dune,title=Before
+(dirs test src bin)
+```
+
+```dune,title=After
+(dirs bin src test)
+```
+
+The stanza uses dune's [predicate language](https://dune.readthedocs.io/en/stable/reference/predicate-language.html), and only the operands whose order doesn't matter are sorted. `:standard` comes first, then the names and globs, then the nested forms (lists without an operator, then `(or ...)`, `(and ...)` and `(not ...)`), whose own operands are sorted too. The constructs dunolint doesn't know come last, unchanged. The directories are sorted on each side of a difference, but never moved across the `\`:
+
+```dune,title=Before
+(dirs foo :standard \ test* bench)
+```
+
+```dune,title=After
+(dirs :standard foo \ bench test*)
+```
+
+The lists of the `(data_only_dirs ...)` and `(vendored_dirs ...)` stanzas are sorted the same way:
+
+```dune,title=Before
+(vendored_dirs zarith base)
+```
+
+```dune,title=After
+(vendored_dirs base zarith)
+```
+
 ### Future Scope
 
 We've focused on fields that have been most impactful in our experience, but we believe there are more opportunities to apply canonical ordering principles. We plan to expand the scope of fields covered by these rules in future versions of dunolint. The specific fields included will evolve with the configuration language and tool versions.
