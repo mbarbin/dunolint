@@ -37,6 +37,15 @@ let get_args ~field_name ~sexps_rewriter ~field =
         ]
 ;;
 
+let get_string ~sexps_rewriter (sexp : Sexp.t) =
+  match sexp with
+  | Atom string -> string
+  | List _ ->
+    Err.raise
+      ~loc:(Sexps_rewriter.loc sexps_rewriter sexp)
+      [ Pp.text "Atom or quoted string expected." ]
+;;
+
 module Make_sexpable
     (M : sig
        val field_name : string

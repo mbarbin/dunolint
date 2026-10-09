@@ -38,3 +38,16 @@ difference, but not across it.
 
   $ dunolint tools lint-file dune
   (dirs :standard foo \ bench test*)
+
+The data_only_dirs stanza is a plain list of directories, sorted the same way.
+
+  $ cat > dune <<EOF
+  > (data_only_dirs test_data examples ; Not built.
+  >  doc)
+  > EOF
+
+  $ dunolint tools lint-file dune
+  (data_only_dirs
+   doc
+   examples ; Not built.
+   test_data)

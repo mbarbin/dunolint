@@ -6,34 +6,26 @@
 
 let field_name = "dirs"
 
-(* A directory, or a glob, of the stanza. [name] is its value, and [sexp] the atom of the
-   source, kept for its identity in the [sexps_rewriter]. *)
-module Element = struct
-  type t =
-    { name : string
-    ; sexp : Sexp.t
-    }
-
-  let sexp_of_t { name; sexp = _ } : Sexp.t = Atom name
-end
-
 (* [args] are the arguments of the stanza, as in the source, and [dirs] their model. *)
 type t =
   { args : Sexp.t list
-  ; dirs : Element.t Dunolinter.Predicate_lang.t
+  ; dirs : Directory_element.t Dunolinter.Predicate_lang.t
   }
 
 let sexp_of_t { args = _; dirs } : Sexp.t =
   List
-    [ List [ Atom "dirs"; Dunolinter.Predicate_lang.sexp_of_t Element.sexp_of_t dirs ] ]
+    [ List
+        [ Atom "dirs"
+        ; Dunolinter.Predicate_lang.sexp_of_t Directory_element.sexp_of_t dirs
+        ]
+    ]
 ;;
 
 let read ~sexps_rewriter ~field =
   let args = Dunolinter.Sexp_handler.get_args ~field_name ~sexps_rewriter ~field in
   let dirs =
     Dunolinter.Predicate_lang.read
-      ~read_element:(fun ~sexps_rewriter:_ (sexp : Sexp.t) : Element.t ->
-        { name = String.t_of_sexp sexp; sexp })
+      ~read_element:Directory_element.read
       ~sexps_rewriter
       args
   in

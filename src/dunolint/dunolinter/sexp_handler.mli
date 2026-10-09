@@ -84,6 +84,10 @@ val get_args
   -> field:Sexp.t
   -> Sexp.t list
 
+(** Return the string of an atom, quoted or not. If the sexp is a list, an error is
+    raised, using a location found via [sexps_rewriter]. *)
+val get_string : sexps_rewriter:Sexps_rewriter.t -> Sexp.t -> string
+
 (** During a dunolint lint, insert all fields found in [new_fields] that are
     not present in the existing [fields]. For those that are already present,
     it will be necessary to merge them with the expected value, see the
