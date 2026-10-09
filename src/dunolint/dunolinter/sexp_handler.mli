@@ -54,16 +54,6 @@ module Make_sexpable_list
      end)
     (M : Sexpable.S) : S with type t = M.t list
 
-(** A util to create a handler for an ordered set where individual elements have
-    the same sexpable type. The handler will expect a list of arguments, will
-    support and parse the ordered set constructors of dune, and parse the
-    elements according to the sexp serializer provided. *)
-module Make_sexpable_ordered_set
-    (_ : sig
-       val field_name : string
-     end)
-    (M : Sexpable.S) : S with type t = M.t Ordered_set.t
-
 (** {1 Utils} *)
 
 (** Replace a field in a sexps_rewriter if the new field is different from the
@@ -93,6 +83,10 @@ val get_args
   -> sexps_rewriter:Sexps_rewriter.t
   -> field:Sexp.t
   -> Sexp.t list
+
+(** Return the string of an atom, quoted or not. If the sexp is a list, an error is
+    raised, using a location found via [sexps_rewriter]. *)
+val get_string : sexps_rewriter:Sexps_rewriter.t -> Sexp.t -> string
 
 (** During a dunolint lint, insert all fields found in [new_fields] that are
     not present in the existing [fields]. For those that are already present,

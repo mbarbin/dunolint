@@ -4,6 +4,8 @@
 (*  SPDX-License-Identifier: LGPL-3.0-or-later WITH LGPL-3.0-linking-exception   *)
 (*********************************************************************************)
 
+module Data_only_dirs = Data_only_dirs
+module Dirs = Dirs
 module Executable = Executable
 module Flags = Flags
 module Include_subdirs = Include_subdirs
@@ -13,6 +15,7 @@ module Libraries = Libraries
 module Lint = Lint
 module Pps = Pps
 module Preprocess = Preprocess
+module Vendored_dirs = Vendored_dirs
 
 type t =
   { path : Relative_path.t
@@ -37,9 +40,12 @@ module Stanza = struct
 end
 
 type Stanza.t +=
+  | Data_only_dirs of Data_only_dirs.t
+  | Dirs of Dirs.t
   | Include_subdirs of Include_subdirs.t
   | Library of Library.t
   | Executable of Executable.t
+  | Vendored_dirs of Vendored_dirs.t
   | Unhandled
 
 module Linter = struct
@@ -106,9 +112,12 @@ end
 
 let linters =
   Linter.
-    [ T { impl = (module Include_subdirs); wrap = (fun a -> Include_subdirs a) }
+    [ T { impl = (module Data_only_dirs); wrap = (fun a -> Data_only_dirs a) }
+    ; T { impl = (module Dirs); wrap = (fun a -> Dirs a) }
+    ; T { impl = (module Include_subdirs); wrap = (fun a -> Include_subdirs a) }
     ; T { impl = (module Library); wrap = (fun a -> Library a) }
     ; T { impl = (module Executable); wrap = (fun a -> Executable a) }
+    ; T { impl = (module Vendored_dirs); wrap = (fun a -> Vendored_dirs a) }
     ]
   |> Dunolinter.Linters.create ~field_name:Linter.field_name
 ;;

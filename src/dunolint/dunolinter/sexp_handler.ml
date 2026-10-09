@@ -37,6 +37,15 @@ let get_args ~field_name ~sexps_rewriter ~field =
         ]
 ;;
 
+let get_string ~sexps_rewriter (sexp : Sexp.t) =
+  match sexp with
+  | Atom string -> string
+  | List _ ->
+    Err.raise
+      ~loc:(Sexps_rewriter.loc sexps_rewriter sexp)
+      [ Pp.text "Atom or quoted string expected." ]
+;;
+
 module Make_sexpable
     (M : sig
        val field_name : string
@@ -107,32 +116,6 @@ struct
   ;;
 
   let write (t : t) = Sexp.List (Atom M.field_name :: List.map t ~f:S.sexp_of_t)
-
-  let rewrite (t : t) ~sexps_rewriter ~field =
-    replace_field ~sexps_rewriter ~field ~new_field:(write t)
-  ;;
-end
-
-module Make_sexpable_ordered_set
-    (M : sig
-       val field_name : string
-     end)
-    (S : Sexpable.S) =
-struct
-  type t = S.t Ordered_set.t
-
-  let field_name = M.field_name
-  let read_element ~sexps_rewriter:_ sexp = S.t_of_sexp sexp
-
-  let read ~sexps_rewriter ~field =
-    let args = get_args ~field_name:M.field_name ~sexps_rewriter ~field in
-    Ordered_set.read ~read_element ~sexps_rewriter args
-  ;;
-
-  let write (t : t) =
-    let values = Ordered_set.write ~write_a:S.sexp_of_t t in
-    Sexp.List (Atom M.field_name :: values)
-  ;;
 
   let rewrite (t : t) ~sexps_rewriter ~field =
     replace_field ~sexps_rewriter ~field ~new_field:(write t)

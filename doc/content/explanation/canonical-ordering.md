@@ -14,15 +14,19 @@ Dunolint is built on the principle that consistency through automation reduces c
 For those who do choose to use it, canonical ordering removes an entire category of decisions from daily development:
 
 ### No More Nitpicking
+
 When dependencies are always alphabetical, there's nothing to debate in code reviews. The tool decides, you move on.
 
 ### Predictable Patterns
+
 AI coding assistants and automated tools work better with consistent patterns. When your codebase follows predictable conventions, these tools can more accurately suggest changes.
 
 ### Reduced Merge Conflicts
+
 When everyone adds dependencies in the same order, you're less likely to hit conflicts when multiple developers modify the same build file.
 
 ### Visual Scanning
+
 Alphabetically sorted lists are easier to scan. Looking for a specific dependency? You know exactly where to look.
 
 ## The Trade-offs
